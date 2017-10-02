@@ -29,10 +29,13 @@
     <ClCompile Include="imgui\examples\directx9_example\imgui_impl_dx9.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="ScreenQuad.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="d3d9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitQuad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -64,10 +67,10 @@
     <ClInclude Include="simpleini\SimpleIni.h">
       <Filter>simpleini</Filter>
     </ClInclude>
-    <ClInclude Include="ScreenQuad.h">
+    <ClInclude Include="main.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="main.h">
+    <ClInclude Include="UnitQuad.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

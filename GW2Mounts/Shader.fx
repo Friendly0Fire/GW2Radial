@@ -8,25 +8,48 @@ shared float4 g_fScreenSize;
 
 struct VS_SCREEN
 {
-	float4 Position : POSITION;   // vertex position 
-	float2 vTexCoord0 : TEXCOORD0;  // vertex texture coords 
+	float4 Position : POSITION;
+	float2 UV : TEXCOORD0;
 };
 
 texture texMountImage;
+texture texPattern;
 
 sampler2D texMountImageSampler =
 sampler_state
 {
-	texture = <texMountImage>;
-	MipFilter = NONE;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-
+    texture = <texMountImage>;
+    MipFilter = NONE;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
 };
+
+sampler2D texPatternSampler =
+sampler_state
+{
+    texture = <texMountImage>;
+    MipFilter = NONE;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+
+VS_SCREEN MountImage_VS(in float2 UV : TEXCOORD0)
+{
+    VS_SCREEN Out = (VS_SCREEN)0;
+
+    Out.UV = UV;
+    Out.Position = UV;
+
+    return Out;
+}
 
 float4 MountImage_PS(VS_SCREEN In) : COLOR0
 {
-	return 1;
+    return 1;
 }
 
 technique MountImage
@@ -39,6 +62,7 @@ technique MountImage
 		AlphaTestEnable = false;
 		AlphaBlendEnable = true;
 
-		PixelShader = compile ps_3_0 MountImage_PS();
-	}
+        VertexShader = compile vs_3_0 MountImage_VS();
+        PixelShader = compile ps_3_0 MountImage_PS();
+    }
 }

@@ -4,13 +4,12 @@
 
 struct ScreenVertex
 {
-	D3DXVECTOR4 position;
 	D3DXVECTOR2 uv;
 };
 
-struct ScreenQuad
+struct UnitQuad
 {
-	ScreenQuad(IDirect3DDevice9* device, uint width, uint height);
+	UnitQuad(IDirect3DDevice9* device);
 	ScreenVertex points[4];
 	static uint size() { return sizeof(ScreenVertex) * 4; }
 	static uint stride() { return sizeof(ScreenVertex); }
@@ -18,6 +17,7 @@ struct ScreenQuad
 	static const D3DVERTEXELEMENT9* def();
 
 	void Bind(uint stream = 0, uint offset = 0);
+	void Draw();
 
 private:
 	IDirect3DDevice9* _device = nullptr;
