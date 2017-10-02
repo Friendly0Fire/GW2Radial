@@ -122,6 +122,9 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
   </ItemGroup>
   <ItemGroup>
     <None Include="main.def" />
+    <Resource Include="Shader.cso">
+      <FileType>Document</FileType>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader.fx">
