@@ -19,6 +19,7 @@ typedef std::basic_string<TCHAR> tstring;
 
 bool LoadedFromGame = true;
 
+// Config file settings
 CSimpleIniA ini;
 tstring ConfigFolder;
 static const TCHAR* ConfigName = TEXT("config.ini");
@@ -26,17 +27,21 @@ static const TCHAR* ImGuiConfigName = TEXT("imgui_config.ini");
 TCHAR ConfigLocation[MAX_PATH];
 char ImGuiConfigLocation[MAX_PATH];
 
-WNDPROC BaseWndProc;
-std::set<uint> DownKeys;
-std::set<uint> DownKeyLs;
+// Config data
 std::set<uint> MountOverlayKeybind;
-bool DisplayMountOverlay = false;
-bool DisplayOptionsWindow = false;
-char KeybindDisplayString[256];
-bool SettingKeybind = false;
+std::set<uint> MountKeybinds[5];
 bool ShowGriffon = false;
 
-HMODULE OriginalD3D9;
+// Active state
+std::set<uint> DownKeys;
+bool DisplayMountOverlay = false;
+bool DisplayOptionsWindow = false;
+
+char KeybindDisplayString[256];
+bool SettingKeybind = false;
+
+WNDPROC BaseWndProc;
+HMODULE OriginalD3D9 = nullptr;
 
 /// <summary>
 /// Converts a std::string into the equivalent std::wstring.
@@ -77,21 +82,15 @@ std::string GetKeyName(unsigned int virtualKey)
 	case VK_INSERT: case VK_DELETE:
 	case VK_DIVIDE: // numpad slash
 	case VK_NUMLOCK:
-	{
 		scanCode |= 0x100; // set extended bit
 		break;
-	}
 	}
 
 	char keyName[50];
 	if (GetKeyNameTextA(scanCode << 16, keyName, sizeof(keyName)) != 0)
-	{
 		return keyName;
-	}
 	else
-	{
 		return "[Error]";
-	}
 }
 
 void SplitFilename(const tstring& str, tstring* folder, tstring* file)
@@ -114,10 +113,13 @@ void SetKeybindDisplayString(const std::set<uint>& keys)
 
 IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
 {
-	TCHAR path[MAX_PATH];
-	GetSystemDirectory(path, MAX_PATH);
-	_tcscat_s(path, TEXT("\\d3d9.dll"));
-	OriginalD3D9 = LoadLibrary(path);
+	if (!OriginalD3D9)
+	{
+		TCHAR path[MAX_PATH];
+		GetSystemDirectory(path, MAX_PATH);
+		_tcscat_s(path, TEXT("\\d3d9.dll"));
+		OriginalD3D9 = LoadLibrary(path);
+	}
 	orig_Direct3DCreate9 = (D3DC9)GetProcAddress(OriginalD3D9, "Direct3DCreate9");
 
 	if(LoadedFromGame)
@@ -170,7 +172,10 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	case DLL_PROCESS_DETACH:
 	{
 		if (OriginalD3D9)
+		{
 			FreeLibrary(OriginalD3D9);
+			OriginalD3D9 = nullptr;
+		}
 	}
 	}
 	return true;
@@ -200,6 +205,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	if (effective_msg == WM_KEYDOWN || effective_msg == WM_KEYUP)
 	{
 		DisplayMountOverlay = !MountOverlayKeybind.empty() && DownKeys == MountOverlayKeybind;
+		if (effective_msg == WM_KEYUP && MountOverlayKeybind.count(wParam))
+			DisplayMountOverlay = false;
 
 		if (isMenuKeybind)
 			DisplayOptionsWindow = true;
@@ -329,6 +336,13 @@ HRESULT f_IDirect3DDevice9::EndScene()
 			ini.SetValue("General", "show_fifth_mount", ShowGriffon ? "true" : "false");
 			ini.SaveFile(ConfigLocation);
 		}
+		ImGui::End();
+	}
+
+	if (DisplayMountOverlay)
+	{
+		ImGui::Begin("Mounts Selector", &DisplayMountOverlay, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar);
+		ImGui::LabelText("Test", "Test");
 		ImGui::End();
 	}
 
