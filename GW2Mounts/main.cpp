@@ -1,21 +1,17 @@
+#include "main.h"
 #include "d3d9.h"
-#include <windows.h>
 #include <tchar.h>
 #include <imgui.h>
 #include <examples\directx9_example\imgui_impl_dx9.h>
 #include "simpleini\SimpleIni.h"
 #include <set>
-#include <vector>
 #include <sstream>
-#include <string>
 #include <Shlobj.h>
 #include <iomanip>
 #include <locale>
 #include <codecvt>
-
-typedef unsigned char uchar;
-typedef unsigned int uint;
-typedef std::basic_string<TCHAR> tstring;
+#include "ScreenQuad.h"
+#include <d3dx9.h>
 
 bool LoadedFromGame = true;
 
@@ -42,6 +38,12 @@ bool SettingKeybind = false;
 
 WNDPROC BaseWndProc;
 HMODULE OriginalD3D9 = nullptr;
+IDirect3DDevice9* RealDevice = nullptr;
+
+// Rendering
+uint ScreenWidth, ScreenHeight;
+std::unique_ptr<ScreenQuad> Quad;
+ID3DXEffect* MainEffect = nullptr;
 
 /// <summary>
 /// Converts a std::string into the equivalent std::wstring.
@@ -205,7 +207,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	if (effective_msg == WM_KEYDOWN || effective_msg == WM_KEYUP)
 	{
 		DisplayMountOverlay = !MountOverlayKeybind.empty() && DownKeys == MountOverlayKeybind;
-		if (effective_msg == WM_KEYUP && MountOverlayKeybind.count(wParam))
+		if (effective_msg == WM_KEYUP && MountOverlayKeybind.count((uint)wParam))
 			DisplayMountOverlay = false;
 
 		if (isMenuKeybind)
@@ -291,6 +293,7 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 	// Create and initialize device
 	IDirect3DDevice9* temp_device = nullptr;
 	HRESULT hr = f_pD3D->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
+	RealDevice = temp_device;
 	*ppReturnedDeviceInterface = new f_IDirect3DDevice9(temp_device);
 
 	// Init ImGui
@@ -299,6 +302,13 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 
 	// Setup ImGui binding
 	ImGui_ImplDX9_Init(hFocusWindow, temp_device);
+
+	// Initialize graphics
+	ScreenWidth = pPresentationParameters->BackBufferWidth;
+	ScreenHeight = pPresentationParameters->BackBufferHeight;
+	Quad = std::make_unique<ScreenQuad>(RealDevice, ScreenWidth / 2, ScreenHeight / 2);
+	//D3DXCreateEffectFromResource(RealDevice, nullptr, )
+	//MainEffect = 
 
 	// Initialize reference count for device object
 	GameRefCount = 1;
@@ -341,9 +351,34 @@ HRESULT f_IDirect3DDevice9::EndScene()
 
 	if (DisplayMountOverlay)
 	{
-		ImGui::Begin("Mounts Selector", &DisplayMountOverlay, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar);
-		ImGui::LabelText("Test", "Test");
-		ImGui::End();
+		// Backup the DX9 state
+		IDirect3DStateBlock9* d3d9_state_block = NULL;
+		if (RealDevice->CreateStateBlock(D3DSBT_ALL, &d3d9_state_block) >= 0)
+		{
+			Quad->Bind();
+
+			// Setup viewport
+			D3DVIEWPORT9 vp;
+			vp.X = vp.Y = 0;
+			vp.Width = (DWORD)ScreenWidth;
+			vp.Height = (DWORD)ScreenHeight;
+			vp.MinZ = 0.0f;
+			vp.MaxZ = 1.0f;
+			RealDevice->SetViewport(&vp);
+
+			// Setup render state: fully shader-based
+			RealDevice->SetPixelShader(NULL);
+			RealDevice->SetVertexShader(NULL);
+
+			/*
+			ImGui::Begin("Mounts Selector", &DisplayMountOverlay, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar);
+			ImGui::LabelText("Test", "Test");
+			ImGui::End();*/
+
+			// Restore the DX9 state
+			d3d9_state_block->Apply();
+			d3d9_state_block->Release();
+		}
 	}
 
 	ImGui::Render();

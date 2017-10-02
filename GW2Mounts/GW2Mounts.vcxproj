@@ -45,11 +45,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)imgui\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)imgui\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)imgui\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)imgui\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -64,7 +66,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>d3d9.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
+      <AdditionalDependencies>d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y $(TargetPath) "C:\Program Files\Guild Wars 2\d3d9.dll"
@@ -87,7 +90,8 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>d3d9.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
+      <AdditionalDependencies>d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y $(TargetPath) "C:\Program Files\Guild Wars 2\d3d9.dll"
@@ -95,11 +99,12 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="d3d9.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="imgui\examples\directx9_example\imgui_impl_dx9.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="ScreenQuad.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3d9.h" />
@@ -110,10 +115,20 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
     <ClInclude Include="imgui\stb_rect_pack.h" />
     <ClInclude Include="imgui\stb_textedit.h" />
     <ClInclude Include="imgui\stb_truetype.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="ScreenQuad.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="d3d9.def" />
+    <None Include="main.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shader.fx">
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">2.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">3.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Effect</ShaderType>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
