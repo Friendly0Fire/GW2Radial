@@ -10,6 +10,7 @@ struct ScreenVertex
 struct UnitQuad
 {
 	UnitQuad(IDirect3DDevice9* device);
+	~UnitQuad();
 	ScreenVertex points[4];
 	static uint size() { return sizeof(ScreenVertex) * 4; }
 	static uint stride() { return sizeof(ScreenVertex); }

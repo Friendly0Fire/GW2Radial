@@ -9,6 +9,8 @@ const D3DVERTEXELEMENT9 ScreenVertexDefinition[2] =
 UnitQuad::UnitQuad(IDirect3DDevice9* device)
 	: _device(device)
 {
+	_device->AddRef();
+
 	points[0].uv = D3DXVECTOR2(0.f, 0.f);
 	points[1].uv = D3DXVECTOR2(1.f, 0.f);
 	points[2].uv = D3DXVECTOR2(0.f, 1.f);
@@ -22,6 +24,18 @@ UnitQuad::UnitQuad(IDirect3DDevice9* device)
 	_buffer->Lock(0, 0, &ptr, 0);
 	CopyMemory(ptr, points, size());
 	_buffer->Unlock();
+}
+
+UnitQuad::~UnitQuad()
+{
+	if (_device)
+		_device->Release();
+
+	if (_vd)
+		_vd->Release();
+
+	if (_buffer)
+		_buffer->Release();
 }
 
 const D3DVERTEXELEMENT9 * UnitQuad::def()

@@ -37,19 +37,25 @@ sampler_state
     AddressV = WRAP;
 };
 
+float4 g_vSpriteCenter, g_vScreenSize;
+
 VS_SCREEN MountImage_VS(in float2 UV : TEXCOORD0)
 {
     VS_SCREEN Out = (VS_SCREEN)0;
 
+	float2 dims = (UV * 2 - 1) * 0.4f;
+	dims.x *= g_vScreenSize.y * g_vScreenSize.z;
+
     Out.UV = UV;
-    Out.Position = float4(UV, 0.5f, 1.f);
+    Out.Position = float4(dims + g_vSpriteCenter.xy * 2 - 1, 0.5f, 1.f);
+	Out.Position.y *= -1;
 
     return Out;
 }
 
 float4 MountImage_PS(VS_SCREEN In) : COLOR0
 {
-    return 1;
+    return float4(In.UV, 0, 1);
 }
 
 technique MountImage

@@ -13,6 +13,15 @@
 #include "UnitQuad.h"
 #include <d3dx9.h>
 
+mstime timeInMS()
+{
+	mstime iCount;
+	QueryPerformanceCounter((LARGE_INTEGER*)&iCount);
+	mstime iFreq;
+	QueryPerformanceFrequency((LARGE_INTEGER*)&iFreq);
+	return 1000 * iCount / iFreq;
+}
+
 bool LoadedFromGame = true;
 
 // Config file settings
@@ -35,6 +44,8 @@ bool DisplayOptionsWindow = false;
 
 char KeybindDisplayString[256];
 bool SettingKeybind = false;
+D3DXVECTOR2 OverlayPosition;
+mstime OverlayTime;
 
 WNDPROC BaseWndProc;
 HMODULE OriginalD3D9 = nullptr;
@@ -209,9 +220,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	if (effective_msg == WM_KEYDOWN || effective_msg == WM_KEYUP)
 	{
+		bool oldMountOverlay = DisplayMountOverlay;
+
 		DisplayMountOverlay = !MountOverlayKeybind.empty() && DownKeys == MountOverlayKeybind;
 		if (effective_msg == WM_KEYUP && MountOverlayKeybind.count((uint)wParam))
 			DisplayMountOverlay = false;
+
+		if (DisplayMountOverlay && !oldMountOverlay)
+		{
+			auto io = ImGui::GetIO();
+			OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
+			OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
+			OverlayTime = timeInMS();
+		}
 
 		if (isMenuKeybind)
 			DisplayOptionsWindow = true;
@@ -310,7 +331,7 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 	ScreenWidth = pPresentationParameters->BackBufferWidth;
 	ScreenHeight = pPresentationParameters->BackBufferHeight;
 	Quad = std::make_unique<UnitQuad>(RealDevice);
-	hr = D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_RCDATA1), nullptr, nullptr, 0, nullptr, &MainEffect, nullptr);
+	HRESULT hr2 = D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_RCDATA1), nullptr, nullptr, 0, nullptr, &MainEffect, nullptr);
 
 	// Initialize reference count for device object
 	GameRefCount = 1;
@@ -321,10 +342,12 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters)
 {
 	ImGui_ImplDX9_InvalidateDeviceObjects();
+	Quad.reset();
 
 	HRESULT hr = f_pD3DDevice->Reset(pPresentationParameters);
 
 	ImGui_ImplDX9_CreateDeviceObjects();
+	Quad = std::make_unique<UnitQuad>(RealDevice);
 
 	return hr;
 }
@@ -351,7 +374,7 @@ HRESULT f_IDirect3DDevice9::EndScene()
 		ImGui::End();
 	}
 
-	if (DisplayMountOverlay)
+	if (DisplayMountOverlay && MainEffect)
 	{
 		// Backup the DX9 state
 		IDirect3DStateBlock9* d3d9_state_block = NULL;
@@ -368,18 +391,36 @@ HRESULT f_IDirect3DDevice9::EndScene()
 			vp.MaxZ = 1.0f;
 			RealDevice->SetViewport(&vp);
 
+			auto io = ImGui::GetIO();
+
+			D3DXVECTOR4 baseSpriteCenter;
+			baseSpriteCenter.x = OverlayPosition.x;
+			baseSpriteCenter.y = OverlayPosition.y;
+
+			D3DXVECTOR4 screenSize(ScreenWidth, ScreenHeight, 1.f / ScreenWidth, 1.f / ScreenHeight);
+
 			// Setup render state: fully shader-based
 			MainEffect->SetTechnique("MountImage");
-			uint passes = 0;
-			MainEffect->Begin(&passes, 0);
+			MainEffect->SetVector("g_vScreenSize", &screenSize);
 
-			for (uint i = 0; i < passes; i++)
+			for (uint j = 0; j < 4; j++)
 			{
-				MainEffect->BeginPass(i);
+				auto spriteCenter = baseSpriteCenter;
+				spriteCenter.x += ((j % 2 == 0) ? 0.2f : -0.2f) * screenSize.y * screenSize.z;
+				spriteCenter.y += (j / 2 == 1) ? 0.2f : -0.2f;
 
-				Quad->Draw();
+				MainEffect->SetVector("g_vSpriteCenter", &spriteCenter);
+				uint passes = 0;
+				MainEffect->Begin(&passes, 0);
 
-				MainEffect->EndPass();
+				for (uint i = 0; i < passes; i++)
+				{
+					MainEffect->BeginPass(i);
+
+					Quad->Draw();
+
+					MainEffect->EndPass();
+				}
 			}
 
 			/*
@@ -401,6 +442,10 @@ HRESULT f_IDirect3DDevice9::EndScene()
 void Shutdown()
 {
 	ImGui_ImplDX9_Shutdown();
+
+	Quad.reset();
+	if (MainEffect)
+		MainEffect->Release();
 }
 
 ULONG f_IDirect3DDevice9::AddRef()
@@ -414,5 +459,6 @@ ULONG f_IDirect3DDevice9::Release()
 	GameRefCount--;
 	if (GameRefCount == 0)
 		Shutdown();
+
 	return f_pD3DDevice->Release();
 }

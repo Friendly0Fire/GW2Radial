@@ -12,3 +12,4 @@
 typedef unsigned char uchar;
 typedef unsigned int uint;
 typedef std::basic_string<TCHAR> tstring;
+typedef unsigned __int64 mstime;
