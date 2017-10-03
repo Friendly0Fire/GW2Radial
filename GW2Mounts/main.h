@@ -7,6 +7,8 @@
 #include <string>
 #include <memory>
 
+#define COM_RELEASE(x) { if((x)) { (x)->Release(); (x) = nullptr; } }
+
 #include "resource.h"
 
 typedef unsigned char uchar;

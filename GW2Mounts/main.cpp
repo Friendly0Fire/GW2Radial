@@ -47,8 +47,6 @@ std::unique_ptr<UnitQuad> Quad;
 ID3DXEffect* MainEffect = nullptr;
 IDirect3DTexture9* MountsTexture = nullptr;
 IDirect3DTexture9* MountTextures[4];
-IDirect3DTexture9* StagingTexture = nullptr;
-IDirect3DSurface9* StagingSurface = nullptr;
 
 void SetKeybindDisplayString(const std::set<uint>& keys)
 {
@@ -66,32 +64,14 @@ void LoadMountTextures()
 	D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNTS), &MountsTexture);
 	for (uint i = 0; i < 4; i++)
 		D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNT1 + i), &MountTextures[i]);
-
-	RealDevice->CreateTexture(ScreenWidth, ScreenHeight, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &StagingTexture, nullptr);
-	StagingTexture->GetSurfaceLevel(0, &StagingSurface);
 }
 
 void UnloadMountTextures()
 {
-	if (MountsTexture)
-		MountsTexture->Release();
-	MountsTexture = nullptr;
+	COM_RELEASE(MountsTexture);
 
 	for (uint i = 0; i < 4; i++)
-	{
-		if (MountTextures[i])
-		{
-			MountTextures[i]->Release();
-			MountTextures[i] = nullptr;
-		}
-	}
-
-	if (StagingSurface)
-		StagingSurface->Release();
-	StagingSurface = nullptr;
-	if (StagingTexture)
-		StagingTexture->Release();
-	StagingTexture = nullptr;
+		COM_RELEASE(MountTextures[i]);
 }
 
 IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
@@ -361,7 +341,7 @@ HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters
 	ImGui_ImplDX9_InvalidateDeviceObjects();
 	Quad.reset();
 	UnloadMountTextures();
-	MainEffect->Release();
+	COM_RELEASE(MainEffect);
 
 	pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
 
@@ -394,13 +374,6 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 
 	if (DisplayMountOverlay || DisplayOptionsWindow)
 	{
-		//IDirect3DSurface9* backBuffer;
-		//RealDevice->GetRenderTarget(0, &backBuffer);
-
-		//RealDevice->StretchRect(backBuffer, nullptr, StagingSurface, nullptr, D3DTEXF_POINT);
-
-		//RealDevice->SetRenderTarget(0, StagingSurface);
-
 		if (DisplayOptionsWindow)
 		{
 			ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
@@ -497,12 +470,6 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 				MainEffect->End();
 			}
 		}
-
-		//RealDevice->StretchRect(StagingSurface, nullptr, backBuffer, nullptr, D3DTEXF_POINT);
-
-		//RealDevice->SetRenderTarget(0, backBuffer);
-
-		//backBuffer->Release();
 	}
 
 	f_pD3DDevice->EndScene();
@@ -515,9 +482,7 @@ void Shutdown()
 	ImGui_ImplDX9_Shutdown();
 
 	Quad.reset();
-	if (MainEffect)
-		MainEffect->Release();
-	MainEffect = nullptr;
+	COM_RELEASE(MainEffect);
 
 	UnloadMountTextures();
 }
