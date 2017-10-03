@@ -338,8 +338,6 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 	BaseWndProc = (WNDPROC)GetWindowLongPtr(hFocusWindow, GWLP_WNDPROC);
 	SetWindowLongPtr(hFocusWindow, GWLP_WNDPROC, (LONG_PTR)&WndProc);
 
-	pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
-
 	// Create and initialize device
 	IDirect3DDevice9* temp_device = nullptr;
 	HRESULT hr = f_pD3D->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
@@ -379,8 +377,6 @@ HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters
 	Quad.reset();
 	UnloadMountTextures();
 	COM_RELEASE(MainEffect);
-
-	pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
 
 	HRESULT hr = f_pD3DDevice->Reset(pPresentationParameters);
 
