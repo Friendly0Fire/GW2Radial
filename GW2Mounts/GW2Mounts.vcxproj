@@ -99,6 +99,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="d3d9.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="imgui\examples\directx9_example\imgui_impl_dx9.cpp" />
@@ -106,8 +107,10 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="UnitQuad.cpp" />
+    <ClCompile Include="Utility.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Config.h" />
     <ClInclude Include="d3d9.h" />
     <ClInclude Include="imgui\examples\directx9_example\imgui_impl_dx9.h" />
     <ClInclude Include="imgui\imconfig.h" />
@@ -120,6 +123,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
     <ClInclude Include="resource.h" />
     <ClInclude Include="UnitQuad.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />
+    <ClInclude Include="Utility.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="main.def" />

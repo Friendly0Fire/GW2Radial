@@ -38,6 +38,12 @@
     <ClCompile Include="UnitQuad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3d9.h">
@@ -73,7 +79,13 @@
     <ClInclude Include="UnitQuad.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="Config.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="main.def">
@@ -82,7 +94,9 @@
     <None Include="rt_rcdat.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Shader.cso" />
+    <None Include="Shader.cso">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader.fx">

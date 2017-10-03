@@ -3,42 +3,18 @@
 #include <tchar.h>
 #include <imgui.h>
 #include <examples\directx9_example\imgui_impl_dx9.h>
-#include "simpleini\SimpleIni.h"
 #include <set>
 #include <sstream>
-#include <Shlobj.h>
-#include <iomanip>
-#include <locale>
-#include <codecvt>
 #include "UnitQuad.h"
 #include <d3dx9.h>
-
-mstime timeInMS()
-{
-	mstime iCount;
-	QueryPerformanceCounter((LARGE_INTEGER*)&iCount);
-	mstime iFreq;
-	QueryPerformanceFrequency((LARGE_INTEGER*)&iFreq);
-	return 1000 * iCount / iFreq;
-}
+#include "Config.h"
+#include "Utility.h"
 
 const float BaseSpriteSize = 0.4f;
 const float CircleRadiusScreen = 256.f / 1664.f * BaseSpriteSize * 0.5f;
 
 bool LoadedFromGame = true;
-
-// Config file settings
-CSimpleIniA ini;
-tstring ConfigFolder;
-static const TCHAR* ConfigName = TEXT("config.ini");
-static const TCHAR* ImGuiConfigName = TEXT("imgui_config.ini");
-TCHAR ConfigLocation[MAX_PATH];
-char ImGuiConfigLocation[MAX_PATH];
-
-// Config data
-std::set<uint> MountOverlayKeybind;
-std::set<uint> MountKeybinds[5];
-bool ShowGriffon = false;
+Config Cfg;
 
 // Active state
 std::set<uint> DownKeys;
@@ -73,69 +49,6 @@ IDirect3DTexture9* MountsTexture = nullptr;
 IDirect3DTexture9* MountTextures[4];
 IDirect3DTexture9* StagingTexture = nullptr;
 IDirect3DSurface9* StagingSurface = nullptr;
-
-/// <summary>
-/// Converts a std::string into the equivalent std::wstring.
-/// </summary>
-/// <param name="str">The std::string.</param>
-/// <returns>The converted std::wstring.</returns>
-inline std::wstring s2ws(const std::string& str)
-{
-	typedef std::codecvt_utf8<wchar_t> convert_typeX;
-	std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-	return converterX.from_bytes(str);
-}
-
-/// <summary>
-/// Converts a std::wstring into the equivalent std::string. Possible loss of character information.
-/// </summary>
-/// <param name="wstr">The std::wstring.</param>
-/// <returns>The converted std::string.</returns>
-inline std::string ws2s(const std::wstring& wstr)
-{
-	typedef std::codecvt_utf8<wchar_t> convert_typeX;
-	std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-	return converterX.to_bytes(wstr);
-}
-
-std::string GetKeyName(unsigned int virtualKey)
-{
-	unsigned int scanCode = MapVirtualKey(virtualKey, MAPVK_VK_TO_VSC);
-
-	// because MapVirtualKey strips the extended bit for some keys
-	switch (virtualKey)
-	{
-	case VK_LBUTTON:
-		return "LMB";
-	case VK_RBUTTON:
-		return "RMB";
-	case VK_MBUTTON:
-		return "MMB";
-	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // arrow keys
-	case VK_PRIOR: case VK_NEXT: // page up and page down
-	case VK_END: case VK_HOME:
-	case VK_INSERT: case VK_DELETE:
-	case VK_DIVIDE: // numpad slash
-	case VK_NUMLOCK:
-		scanCode |= 0x100; // set extended bit
-		break;
-	}
-
-	char keyName[50];
-	if (GetKeyNameTextA(scanCode << 16, keyName, sizeof(keyName)) != 0)
-		return keyName;
-	else
-		return "[Error]";
-}
-
-void SplitFilename(const tstring& str, tstring* folder, tstring* file)
-{
-	size_t found = str.find_last_of(TEXT("/\\"));
-	if(folder) *folder = str.substr(0, found);
-	if(file) *file = str.substr(found + 1);
-}
 
 void SetKeybindDisplayString(const std::set<uint>& keys)
 {
@@ -206,40 +119,9 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	{
 		DllModule = hModule;
 
-		// Create folders
-		TCHAR exeFullPath[MAX_PATH];
-		GetModuleFileName(0, exeFullPath, MAX_PATH);
-		tstring exeFolder;
-		SplitFilename(exeFullPath, &exeFolder, nullptr);
-		ConfigFolder = exeFolder + TEXT("\\addons\\mounts\\");
-		_tcscpy_s(ConfigLocation, (ConfigFolder + ConfigName).c_str());
-#if _UNICODE
-		strcpy_s(ImGuiConfigLocation, ws2s(ConfigFolder + ImGuiConfigName).c_str());
-#else
-		strcpy_s(ImGuiConfigLocation, (ConfigFolder + ImGuiConfigName).c_str());
-#endif
-		SHCreateDirectoryEx(nullptr, ConfigFolder.c_str(), nullptr);
+		Cfg.Load();
 
-		// Load INI settings
-		ini.SetUnicode();
-		ini.LoadFile(ConfigLocation);
-		ShowGriffon = _stricmp(ini.GetValue("General", "show_fifth_mount", "false"), "true") == 0;
-		const char* keys = ini.GetValue("Keybinds", "mount_wheel", nullptr);
-		if (keys)
-		{
-			std::stringstream ss(keys);
-			std::vector<std::string> result;
-
-			while (ss.good())
-			{
-				std::string substr;
-				std::getline(ss, substr, ',');
-				int val = std::stoi(substr);
-				MountOverlayKeybind.insert((uint)val);
-			}
-
-			SetKeybindDisplayString(MountOverlayKeybind);
-		}
+		SetKeybindDisplayString(Cfg.MountOverlayKeybind());
 	}
 	case DLL_PROCESS_DETACH:
 	{
@@ -331,13 +213,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		bool oldMountOverlay = DisplayMountOverlay;
 
-		DisplayMountOverlay = !MountOverlayKeybind.empty() && DownKeys == MountOverlayKeybind;
+		DisplayMountOverlay = !Cfg.MountOverlayKeybind().empty() && DownKeys == Cfg.MountOverlayKeybind();
 		if (input_key_up && 
 			(
-				(effective_msg == WM_KEYUP && MountOverlayKeybind.count((uint)wParam)) ||
-				(effective_msg == WM_LBUTTONUP && MountOverlayKeybind.count(VK_LBUTTON)) ||
-				(effective_msg == WM_MBUTTONUP && MountOverlayKeybind.count(VK_MBUTTON)) ||
-				(effective_msg == WM_RBUTTONUP && MountOverlayKeybind.count(VK_RBUTTON))
+				(effective_msg == WM_KEYUP && Cfg.MountOverlayKeybind().count((uint)wParam)) ||
+				(effective_msg == WM_LBUTTONUP && Cfg.MountOverlayKeybind().count(VK_LBUTTON)) ||
+				(effective_msg == WM_MBUTTONUP && Cfg.MountOverlayKeybind().count(VK_MBUTTON)) ||
+				(effective_msg == WM_RBUTTONUP && Cfg.MountOverlayKeybind().count(VK_RBUTTON))
 			))
 			DisplayMountOverlay = false;
 
@@ -367,16 +249,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				break;
 			default:
 				SettingKeybind = false;
-				MountOverlayKeybind = DownKeys;
 
-				{
-					std::string setting_value = "";
-					for (const auto& k : MountOverlayKeybind)
-						setting_value += std::to_string(k) + ", ";
-
-					ini.SetValue("Keybinds", "mount_wheel", (setting_value.size() > 0 ? setting_value.substr(0, setting_value.size() - 2) : setting_value).c_str());
-					ini.SaveFile(ConfigLocation);
-				}
+				Cfg.MountOverlayKeybind(DownKeys);
 			}
 		}
 	}
@@ -457,7 +331,7 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 
 	// Init ImGui
 	ImGuiIO& imio = ImGui::GetIO();
-	imio.IniFilename = ImGuiConfigLocation;
+	imio.IniFilename = Cfg.ImGuiConfigLocation();
 
 	// Setup ImGui binding
 	ImGui_ImplDX9_Init(hFocusWindow, temp_device);
@@ -533,15 +407,11 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 			ImGui::InputText("Keybind", KeybindDisplayString, 256, ImGuiInputTextFlags_ReadOnly);
 			if (ImGui::Button("Set Keybind"))
 			{
-				MountOverlayKeybind.clear();
 				SettingKeybind = true;
 				KeybindDisplayString[0] = '\0';
 			}
-			if (ImGui::Checkbox("Show 5th mount", &ShowGriffon))
-			{
-				ini.SetValue("General", "show_fifth_mount", ShowGriffon ? "true" : "false");
-				ini.SaveFile(ConfigLocation);
-			}
+			if (Cfg.ShowGriffon() != ImGui::Checkbox("Show 5th mount", &Cfg.ShowGriffon()))
+				Cfg.ShowGriffonSave();
 			ImGui::End();
 		}
 
