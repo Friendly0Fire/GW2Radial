@@ -9,6 +9,9 @@ const D3DVERTEXELEMENT9 ScreenVertexDefinition[2] =
 UnitQuad::UnitQuad(IDirect3DDevice9* device)
 	: _device(device)
 {
+	if (!_device)
+		throw std::exception();
+
 	_device->AddRef();
 
 	points[0].uv = D3DXVECTOR2(0.f, 0.f);
@@ -16,14 +19,26 @@ UnitQuad::UnitQuad(IDirect3DDevice9* device)
 	points[2].uv = D3DXVECTOR2(0.f, 1.f);
 	points[3].uv = D3DXVECTOR2(1.f, 1.f);
 
-	_device->CreateVertexDeclaration(UnitQuad::def(), &_vd);
+	HRESULT hr = _device->CreateVertexDeclaration(UnitQuad::def(), &_vd);
+	if (FAILED(hr))
+		throw std::exception();
 
-	_device->CreateVertexBuffer(size(), D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &_buffer, nullptr);
+	hr = _device->CreateVertexBuffer(size(), D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &_buffer, nullptr);
+	if (FAILED(hr))
+		throw std::exception();
 
 	LPVOID ptr = nullptr;
-	_buffer->Lock(0, 0, &ptr, 0);
+	hr = _buffer->Lock(0, 0, &ptr, 0);
+
+	if (FAILED(hr))
+		throw std::exception();
+
 	CopyMemory(ptr, points, size());
-	_buffer->Unlock();
+
+	hr = _buffer->Unlock();
+
+	if (FAILED(hr))
+		throw std::exception();
 }
 
 UnitQuad::~UnitQuad()
@@ -45,6 +60,9 @@ const D3DVERTEXELEMENT9 * UnitQuad::def()
 
 void UnitQuad::Bind(uint stream, uint offset)
 {
+	if (!_device || !_vd || !_buffer)
+		return;
+
 	_device->SetVertexDeclaration(_vd);
 
 	_device->SetStreamSource(stream, _buffer, offset, stride());
@@ -52,5 +70,8 @@ void UnitQuad::Bind(uint stream, uint offset)
 
 void UnitQuad::Draw()
 {
+	if (!_device)
+		return;
+
 	_device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 }

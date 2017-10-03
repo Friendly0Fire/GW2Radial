@@ -122,7 +122,6 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
     <ClInclude Include="simpleini\SimpleIni.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="cursor1.cur" />
     <None Include="main.def" />
     <None Include="rt_rcdat.bin" />
     <None Include="Shader.cso">

@@ -22,6 +22,9 @@ mstime timeInMS()
 	return 1000 * iCount / iFreq;
 }
 
+const float BaseSpriteSize = 0.4f;
+const float CircleRadiusScreen = 256.f / 1664.f * BaseSpriteSize * 0.5f;
+
 bool LoadedFromGame = true;
 
 // Config file settings
@@ -45,7 +48,17 @@ bool DisplayOptionsWindow = false;
 char KeybindDisplayString[256];
 bool SettingKeybind = false;
 D3DXVECTOR2 OverlayPosition;
-mstime OverlayTime;
+mstime OverlayTime, MountHoverTime;
+
+enum CurrentMountHovered_t
+{
+	CMH_NONE = -1,
+	CMH_RAPTOR = 0,
+	CMH_SPRINGER = 1,
+	CMH_SKIMMER = 2,
+	CMH_JACKAL = 3
+};
+CurrentMountHovered_t CurrentMountHovered = CMH_NONE;
 
 WNDPROC BaseWndProc;
 HMODULE OriginalD3D9 = nullptr;
@@ -56,6 +69,10 @@ IDirect3DDevice9* RealDevice = nullptr;
 uint ScreenWidth, ScreenHeight;
 std::unique_ptr<UnitQuad> Quad;
 ID3DXEffect* MainEffect = nullptr;
+IDirect3DTexture9* MountsTexture = nullptr;
+IDirect3DTexture9* MountTextures[4];
+IDirect3DTexture9* StagingTexture = nullptr;
+IDirect3DSurface9* StagingSurface = nullptr;
 
 /// <summary>
 /// Converts a std::string into the equivalent std::wstring.
@@ -90,6 +107,12 @@ std::string GetKeyName(unsigned int virtualKey)
 	// because MapVirtualKey strips the extended bit for some keys
 	switch (virtualKey)
 	{
+	case VK_LBUTTON:
+		return "LMB";
+	case VK_RBUTTON:
+		return "RMB";
+	case VK_MBUTTON:
+		return "MMB";
 	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // arrow keys
 	case VK_PRIOR: case VK_NEXT: // page up and page down
 	case VK_END: case VK_HOME:
@@ -123,6 +146,39 @@ void SetKeybindDisplayString(const std::set<uint>& keys)
 	}
 
 	strcpy_s(KeybindDisplayString, (keybind.size() > 0 ? keybind.substr(0, keybind.size() - 3) : keybind).c_str());
+}
+
+void LoadMountTextures()
+{
+	D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNTS), &MountsTexture);
+	for (uint i = 0; i < 4; i++)
+		D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNT1 + i), &MountTextures[i]);
+
+	RealDevice->CreateTexture(ScreenWidth, ScreenHeight, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &StagingTexture, nullptr);
+	StagingTexture->GetSurfaceLevel(0, &StagingSurface);
+}
+
+void UnloadMountTextures()
+{
+	if (MountsTexture)
+		MountsTexture->Release();
+	MountsTexture = nullptr;
+
+	for (uint i = 0; i < 4; i++)
+	{
+		if (MountTextures[i])
+		{
+			MountTextures[i]->Release();
+			MountTextures[i] = nullptr;
+		}
+	}
+
+	if (StagingSurface)
+		StagingSurface->Release();
+	StagingSurface = nullptr;
+	if (StagingTexture)
+		StagingTexture->Release();
+	StagingTexture = nullptr;
 }
 
 IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
@@ -213,17 +269,76 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	if (msg == WM_SYSKEYUP)
 		effective_msg = WM_KEYUP;
 
-	if (effective_msg == WM_KEYDOWN)
+	bool input_key_down = false, input_key_up = false;
+	switch (effective_msg)
+	{
+	case WM_KEYDOWN:
 		DownKeys.insert((uint)wParam);
+		input_key_down = true;
+		break;
+	case WM_LBUTTONDOWN:
+		DownKeys.insert(VK_LBUTTON);
+		input_key_down = true;
+		break;
+	case WM_MBUTTONDOWN:
+		DownKeys.insert(VK_MBUTTON);
+		input_key_down = true;
+		break;
+	case WM_RBUTTONDOWN:
+		DownKeys.insert(VK_RBUTTON);
+		input_key_down = true;
+		break;
+	case WM_KEYUP:
+	case WM_LBUTTONUP:
+	case WM_MBUTTONUP:
+	case WM_RBUTTONUP:
+		input_key_up = true;
+		break;
+	}
+
+	if (DisplayMountOverlay && effective_msg == WM_MOUSEMOVE)
+	{
+		auto io = ImGui::GetIO();
+
+		D3DXVECTOR2 MousePos;
+		MousePos.x = io.MousePos.x / (float)ScreenWidth;
+		MousePos.y = io.MousePos.y / (float)ScreenHeight;
+		MousePos -= OverlayPosition;
+
+		CurrentMountHovered_t LastMountHovered = CurrentMountHovered;
+
+		if (D3DXVec2LengthSq(&MousePos) > CircleRadiusScreen * CircleRadiusScreen)
+		{
+			if (MousePos.x < 0 && abs(MousePos.x) > abs(MousePos.y)) // Raptor, 0
+				CurrentMountHovered = CMH_RAPTOR;
+			else if (MousePos.x > 0 && abs(MousePos.x) > abs(MousePos.y)) // Jackal, 3
+				CurrentMountHovered = CMH_JACKAL;
+			else if (MousePos.y < 0 && abs(MousePos.x) < abs(MousePos.y)) // Springer, 1
+				CurrentMountHovered = CMH_SPRINGER;
+			else if (MousePos.y > 0 && abs(MousePos.x) < abs(MousePos.y)) // Skimmer, 2
+				CurrentMountHovered = CMH_SKIMMER;
+		}
+		else
+			CurrentMountHovered = CMH_NONE;
+
+		if (LastMountHovered != CurrentMountHovered)
+			MountHoverTime = timeInMS();
+	}
 
 	bool isMenuKeybind = GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_MENU) && wParam == 'M';
 
-	if (effective_msg == WM_KEYDOWN || effective_msg == WM_KEYUP)
+	if (input_key_down || input_key_up)
 	{
 		bool oldMountOverlay = DisplayMountOverlay;
 
 		DisplayMountOverlay = !MountOverlayKeybind.empty() && DownKeys == MountOverlayKeybind;
-		if (effective_msg == WM_KEYUP && MountOverlayKeybind.count((uint)wParam))
+		if (input_key_up && 
+			(
+				(effective_msg == WM_KEYUP && MountOverlayKeybind.count((uint)wParam)) ||
+				(effective_msg == WM_LBUTTONUP && MountOverlayKeybind.count(VK_LBUTTON)) ||
+				(effective_msg == WM_MBUTTONUP && MountOverlayKeybind.count(VK_MBUTTON)) ||
+				(effective_msg == WM_RBUTTONUP && MountOverlayKeybind.count(VK_RBUTTON))
+			))
 			DisplayMountOverlay = false;
 
 		if (DisplayMountOverlay && !oldMountOverlay)
@@ -232,6 +347,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
 			OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
 			OverlayTime = timeInMS();
+		}
+		else if (!DisplayMountOverlay && oldMountOverlay)
+		{
+			CurrentMountHovered = CMH_NONE;
 		}
 
 		if (isMenuKeybind)
@@ -264,10 +383,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	if (msg == WM_SYSKEYUP)
 		DownKeys.erase(VK_MENU);
-	if (effective_msg == WM_KEYUP)
-		DownKeys.erase((uint)wParam);
 
-	if ((effective_msg == WM_KEYDOWN || effective_msg == WM_KEYUP) && isMenuKeybind)
+	switch (effective_msg)
+	{
+	case WM_KEYUP:
+		DownKeys.erase((uint)wParam);
+		break;
+	case WM_LBUTTONUP:
+		DownKeys.erase(VK_LBUTTON);
+		break;
+	case WM_MBUTTONUP:
+		DownKeys.erase(VK_MBUTTON);
+		break;
+	case WM_RBUTTONUP:
+		DownKeys.erase(VK_RBUTTON);
+		break;
+	}
+
+	if ((input_key_down || input_key_up) && isMenuKeybind)
 		return true;
 
 	ImGui_ImplDX9_WndProcHandler(hWnd, msg, wParam, lParam);
@@ -314,6 +447,8 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 	BaseWndProc = (WNDPROC)GetWindowLongPtr(hFocusWindow, GWLP_WNDPROC);
 	SetWindowLongPtr(hFocusWindow, GWLP_WNDPROC, (LONG_PTR)&WndProc);
 
+	pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
+
 	// Create and initialize device
 	IDirect3DDevice9* temp_device = nullptr;
 	HRESULT hr = f_pD3D->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
@@ -330,8 +465,16 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 	// Initialize graphics
 	ScreenWidth = pPresentationParameters->BackBufferWidth;
 	ScreenHeight = pPresentationParameters->BackBufferHeight;
-	Quad = std::make_unique<UnitQuad>(RealDevice);
-	HRESULT hr2 = D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_RCDATA1), nullptr, nullptr, 0, nullptr, &MainEffect, nullptr);
+	try
+	{
+		Quad = std::make_unique<UnitQuad>(RealDevice);
+	}
+	catch (...)
+	{
+		Quad = nullptr;
+	}
+	D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr, &MainEffect, nullptr);
+	LoadMountTextures();
 
 	// Initialize reference count for device object
 	GameRefCount = 1;
@@ -343,43 +486,73 @@ HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters
 {
 	ImGui_ImplDX9_InvalidateDeviceObjects();
 	Quad.reset();
+	UnloadMountTextures();
+	MainEffect->Release();
+
+	pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
 
 	HRESULT hr = f_pD3DDevice->Reset(pPresentationParameters);
 
+	ScreenWidth = pPresentationParameters->BackBufferWidth;
+	ScreenHeight = pPresentationParameters->BackBufferHeight;
+
 	ImGui_ImplDX9_CreateDeviceObjects();
-	Quad = std::make_unique<UnitQuad>(RealDevice);
+	D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr, &MainEffect, nullptr);
+	LoadMountTextures();
+	try
+	{
+		Quad = std::make_unique<UnitQuad>(RealDevice);
+	}
+	catch (...)
+	{
+		Quad = nullptr;
+	}
 
 	return hr;
 }
 
-HRESULT f_IDirect3DDevice9::EndScene()
+
+HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRect, HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion)
 {
+	f_pD3DDevice->BeginScene();
+
 	ImGui_ImplDX9_NewFrame();
 
-	if (DisplayOptionsWindow)
+	if (DisplayMountOverlay || DisplayOptionsWindow)
 	{
-		ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
-		ImGui::InputText("Keybind", KeybindDisplayString, 256, ImGuiInputTextFlags_ReadOnly);
-		if (ImGui::Button("Set Keybind"))
-		{
-			MountOverlayKeybind.clear();
-			SettingKeybind = true;
-			KeybindDisplayString[0] = '\0';
-		}
-		if (ImGui::Checkbox("Show 5th mount", &ShowGriffon))
-		{
-			ini.SetValue("General", "show_fifth_mount", ShowGriffon ? "true" : "false");
-			ini.SaveFile(ConfigLocation);
-		}
-		ImGui::End();
-	}
+		//IDirect3DSurface9* backBuffer;
+		//RealDevice->GetRenderTarget(0, &backBuffer);
 
-	if (DisplayMountOverlay && MainEffect)
-	{
-		// Backup the DX9 state
-		IDirect3DStateBlock9* d3d9_state_block = NULL;
-		if (RealDevice->CreateStateBlock(D3DSBT_ALL, &d3d9_state_block) >= 0)
+		//RealDevice->StretchRect(backBuffer, nullptr, StagingSurface, nullptr, D3DTEXF_POINT);
+
+		//RealDevice->SetRenderTarget(0, StagingSurface);
+
+		if (DisplayOptionsWindow)
 		{
+			ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
+			ImGui::InputText("Keybind", KeybindDisplayString, 256, ImGuiInputTextFlags_ReadOnly);
+			if (ImGui::Button("Set Keybind"))
+			{
+				MountOverlayKeybind.clear();
+				SettingKeybind = true;
+				KeybindDisplayString[0] = '\0';
+			}
+			if (ImGui::Checkbox("Show 5th mount", &ShowGriffon))
+			{
+				ini.SetValue("General", "show_fifth_mount", ShowGriffon ? "true" : "false");
+				ini.SaveFile(ConfigLocation);
+			}
+			ImGui::End();
+		}
+
+		ImGui::Render();
+
+		if (DisplayMountOverlay && MainEffect && Quad)
+		{
+			auto currentTime = timeInMS();
+
+			uint passes = 0;
+
 			Quad->Bind();
 
 			// Setup viewport
@@ -391,52 +564,80 @@ HRESULT f_IDirect3DDevice9::EndScene()
 			vp.MaxZ = 1.0f;
 			RealDevice->SetViewport(&vp);
 
-			auto io = ImGui::GetIO();
+			D3DXVECTOR4 screenSize((float)ScreenWidth, (float)ScreenHeight, 1.f / ScreenWidth, 1.f / ScreenHeight);
 
-			D3DXVECTOR4 baseSpriteCenter;
-			baseSpriteCenter.x = OverlayPosition.x;
-			baseSpriteCenter.y = OverlayPosition.y;
-
-			D3DXVECTOR4 screenSize(ScreenWidth, ScreenHeight, 1.f / ScreenWidth, 1.f / ScreenHeight);
+			D3DXVECTOR4 baseSpriteDimensions;
+			baseSpriteDimensions.x = OverlayPosition.x;
+			baseSpriteDimensions.y = OverlayPosition.y;
+			baseSpriteDimensions.z = BaseSpriteSize * screenSize.y * screenSize.z;
+			baseSpriteDimensions.w = BaseSpriteSize;
 
 			// Setup render state: fully shader-based
 			MainEffect->SetTechnique("MountImage");
 			MainEffect->SetVector("g_vScreenSize", &screenSize);
 
-			for (uint j = 0; j < 4; j++)
+			MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
+			MainEffect->SetTexture("texMountImage", MountsTexture);
+			MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime) / 1000.f * 6));
+
+			MainEffect->Begin(&passes, 0);
+			MainEffect->BeginPass(0);
+			Quad->Draw();
+			MainEffect->EndPass();
+			MainEffect->End();
+
+
+			if (CurrentMountHovered != CMH_NONE)
 			{
-				auto spriteCenter = baseSpriteCenter;
-				spriteCenter.x += ((j % 2 == 0) ? 0.2f : -0.2f) * screenSize.y * screenSize.z;
-				spriteCenter.y += (j / 2 == 1) ? 0.2f : -0.2f;
+				D3DXVECTOR4 overlaySpriteDimensions = baseSpriteDimensions;
 
-				MainEffect->SetVector("g_vSpriteCenter", &spriteCenter);
-				uint passes = 0;
-				MainEffect->Begin(&passes, 0);
-
-				for (uint i = 0; i < passes; i++)
+				if (CurrentMountHovered == CMH_RAPTOR)
 				{
-					MainEffect->BeginPass(i);
-
-					Quad->Draw();
-
-					MainEffect->EndPass();
+					overlaySpriteDimensions.x -= 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
+					overlaySpriteDimensions.z *= 0.5f;
+					overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
 				}
+				else if (CurrentMountHovered == CMH_JACKAL)
+				{
+					overlaySpriteDimensions.x += 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
+					overlaySpriteDimensions.z *= 0.5f;
+					overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
+				}
+				else if (CurrentMountHovered == CMH_SPRINGER)
+				{
+					overlaySpriteDimensions.y -= 0.5f * BaseSpriteSize * 0.5f;
+					overlaySpriteDimensions.w *= 0.5f;
+					overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
+				}
+				else if (CurrentMountHovered == CMH_SKIMMER) // Skimmer, 2
+				{
+					overlaySpriteDimensions.y += 0.5f * BaseSpriteSize * 0.5f;
+					overlaySpriteDimensions.w *= 0.5f;
+					overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
+				}
+
+				MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
+				MainEffect->SetTexture("texMountImage", MountTextures[CurrentMountHovered]);
+				MainEffect->SetVector("g_vSpriteDimensions", &overlaySpriteDimensions);
+
+				MainEffect->Begin(&passes, 0);
+				MainEffect->BeginPass(0);
+				Quad->Draw();
+				MainEffect->EndPass();
+				MainEffect->End();
 			}
-
-			/*
-			ImGui::Begin("Mounts Selector", &DisplayMountOverlay, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar);
-			ImGui::LabelText("Test", "Test");
-			ImGui::End();*/
-
-			// Restore the DX9 state
-			d3d9_state_block->Apply();
-			d3d9_state_block->Release();
 		}
+
+		//RealDevice->StretchRect(StagingSurface, nullptr, backBuffer, nullptr, D3DTEXF_POINT);
+
+		//RealDevice->SetRenderTarget(0, backBuffer);
+
+		//backBuffer->Release();
 	}
 
-	ImGui::Render();
+	f_pD3DDevice->EndScene();
 
-	return f_pD3DDevice->EndScene();
+	return f_pD3DDevice->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }
 
 void Shutdown()
@@ -446,6 +647,9 @@ void Shutdown()
 	Quad.reset();
 	if (MainEffect)
 		MainEffect->Release();
+	MainEffect = nullptr;
+
+	UnloadMountTextures();
 }
 
 ULONG f_IDirect3DDevice9::AddRef()

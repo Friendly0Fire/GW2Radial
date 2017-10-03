@@ -82,9 +82,7 @@
     <None Include="rt_rcdat.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="cursor1.cur">
-      <Filter>Resource Files</Filter>
-    </None>
+    <None Include="Shader.cso" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader.fx">
@@ -92,9 +90,6 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Shader.cso">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
     <ResourceCompile Include="Resource.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
