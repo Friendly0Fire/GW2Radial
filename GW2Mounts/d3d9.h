@@ -3,7 +3,7 @@
 IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion);
 
 typedef IDirect3D9 *(WINAPI *D3DC9)(UINT);
-D3DC9 orig_Direct3DCreate9;
+extern D3DC9 orig_Direct3DCreate9;
 
 /*************************
 D3D Wrapper Class

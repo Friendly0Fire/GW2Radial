@@ -38,6 +38,7 @@ bool SettingKeybind = false;
 
 WNDPROC BaseWndProc;
 HMODULE OriginalD3D9 = nullptr;
+HMODULE DllModule = nullptr;
 IDirect3DDevice9* RealDevice = nullptr;
 
 // Rendering
@@ -136,6 +137,8 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	{
 	case DLL_PROCESS_ATTACH:
 	{
+		DllModule = hModule;
+
 		// Create folders
 		TCHAR exeFullPath[MAX_PATH];
 		GetModuleFileName(0, exeFullPath, MAX_PATH);
@@ -307,8 +310,7 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 	ScreenWidth = pPresentationParameters->BackBufferWidth;
 	ScreenHeight = pPresentationParameters->BackBufferHeight;
 	Quad = std::make_unique<UnitQuad>(RealDevice);
-	//D3DXCreateEffectFromResource(RealDevice, nullptr, )
-	//MainEffect = 
+	hr = D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_RCDATA1), nullptr, nullptr, 0, nullptr, &MainEffect, nullptr);
 
 	// Initialize reference count for device object
 	GameRefCount = 1;
@@ -367,8 +369,18 @@ HRESULT f_IDirect3DDevice9::EndScene()
 			RealDevice->SetViewport(&vp);
 
 			// Setup render state: fully shader-based
-			RealDevice->SetPixelShader(NULL);
-			RealDevice->SetVertexShader(NULL);
+			MainEffect->SetTechnique("MountImage");
+			uint passes = 0;
+			MainEffect->Begin(&passes, 0);
+
+			for (uint i = 0; i < passes; i++)
+			{
+				MainEffect->BeginPass(i);
+
+				Quad->Draw();
+
+				MainEffect->EndPass();
+			}
 
 			/*
 			ImGui::Begin("Mounts Selector", &DisplayMountOverlay, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar);

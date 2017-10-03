@@ -42,7 +42,7 @@ VS_SCREEN MountImage_VS(in float2 UV : TEXCOORD0)
     VS_SCREEN Out = (VS_SCREEN)0;
 
     Out.UV = UV;
-    Out.Position = UV;
+    Out.Position = float4(UV, 0.5f, 1.f);
 
     return Out;
 }

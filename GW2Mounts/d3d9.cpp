@@ -1,5 +1,7 @@
 #include "d3d9.h"
 
+D3DC9 orig_Direct3DCreate9;
+
 /*************************
 Bare D3D Callbacks
 *************************/

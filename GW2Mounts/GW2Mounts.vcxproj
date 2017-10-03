@@ -117,14 +117,17 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
     <ClInclude Include="imgui\stb_textedit.h" />
     <ClInclude Include="imgui\stb_truetype.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="UnitQuad.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cursor1.cur" />
     <None Include="main.def" />
-    <Resource Include="Shader.cso">
+    <None Include="rt_rcdat.bin" />
+    <None Include="Shader.cso">
       <FileType>Document</FileType>
-    </Resource>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader.fx">
@@ -134,6 +137,9 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Effect</ShaderType>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
