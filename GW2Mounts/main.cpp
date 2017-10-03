@@ -21,10 +21,44 @@ std::set<uint> DownKeys;
 bool DisplayMountOverlay = false;
 bool DisplayOptionsWindow = false;
 
-char KeybindDisplayString[256];
-bool SettingKeybind = false;
+struct KeybindSettingsMenu
+{
+	char DisplayString[256];
+	bool Setting = false;
+
+	void SetDisplayString(const std::set<uint>& keys)
+	{
+		std::string keybind = "";
+		for (const auto& k : keys)
+		{
+			keybind += GetKeyName(k) + std::string(" + ");
+		}
+
+		strcpy_s(DisplayString, (keybind.size() > 0 ? keybind.substr(0, keybind.size() - 3) : keybind).c_str());
+	}
+};
+KeybindSettingsMenu MainKeybind;
+KeybindSettingsMenu MountKeybinds[5];
+
 D3DXVECTOR2 OverlayPosition;
 mstime OverlayTime, MountHoverTime;
+
+const char* GetMountName(CurrentMountHovered_t m)
+{
+	switch (m)
+	{
+	case CMH_RAPTOR:
+		return "Raptor";
+	case CMH_SPRINGER:
+		return "Springer";
+	case CMH_SKIMMER:
+		return "Skimmer";
+	case CMH_JACKAL:
+		return "Jackal";
+	case CMH_GRIFFON:
+		return "Griffon";
+	}
+}
 
 enum CurrentMountHovered_t
 {
@@ -32,7 +66,8 @@ enum CurrentMountHovered_t
 	CMH_RAPTOR = 0,
 	CMH_SPRINGER = 1,
 	CMH_SKIMMER = 2,
-	CMH_JACKAL = 3
+	CMH_JACKAL = 3,
+	CMH_GRIFFON = 4
 };
 CurrentMountHovered_t CurrentMountHovered = CMH_NONE;
 
@@ -47,17 +82,6 @@ std::unique_ptr<UnitQuad> Quad;
 ID3DXEffect* MainEffect = nullptr;
 IDirect3DTexture9* MountsTexture = nullptr;
 IDirect3DTexture9* MountTextures[4];
-
-void SetKeybindDisplayString(const std::set<uint>& keys)
-{
-	std::string keybind = "";
-	for (const auto& k : keys)
-	{
-		keybind += GetKeyName(k) + std::string(" + ");
-	}
-
-	strcpy_s(KeybindDisplayString, (keybind.size() > 0 ? keybind.substr(0, keybind.size() - 3) : keybind).c_str());
-}
 
 void LoadMountTextures()
 {
@@ -101,7 +125,7 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 
 		Cfg.Load();
 
-		SetKeybindDisplayString(Cfg.MountOverlayKeybind());
+		MainKeybind.SetDisplayString(Cfg.MountOverlayKeybind());
 	}
 	case DLL_PROCESS_DETACH:
 	{
@@ -217,20 +241,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		if (isMenuKeybind)
 			DisplayOptionsWindow = true;
-		else if (SettingKeybind)
+		else
 		{
-			SetKeybindDisplayString(DownKeys);
+			bool is_final_key = wParam != VK_MENU && wParam != VK_CONTROL && wParam != VK_SHIFT;
 
-			switch (wParam)
+			if (MainKeybind.Setting)
 			{
-			case VK_MENU:
-			case VK_CONTROL:
-			case VK_SHIFT:
-				break;
-			default:
-				SettingKeybind = false;
+				MainKeybind.SetDisplayString(DownKeys);
 
-				Cfg.MountOverlayKeybind(DownKeys);
+				if (is_final_key)
+				{
+					MainKeybind.Setting = false;
+					Cfg.MountOverlayKeybind(DownKeys);
+				}
+			}
+
+			for (uint i = 0; i < 5; i++)
+			{
+				if (MountKeybinds[i].Setting)
+				{
+					MountKeybinds[i].SetDisplayString(DownKeys);
+
+					if (is_final_key)
+					{
+						MountKeybinds[i].Setting = false;
+						Cfg.MountKeybind(i, DownKeys);
+					}
+				}
 			}
 		}
 	}
@@ -377,14 +414,34 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 		if (DisplayOptionsWindow)
 		{
 			ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
-			ImGui::InputText("Keybind", KeybindDisplayString, 256, ImGuiInputTextFlags_ReadOnly);
-			if (ImGui::Button("Set Keybind"))
+			ImGui::LabelText("OverlayKeybindLabel", "Overlay keybind:");
+			ImGui::SameLine();
+			ImGui::InputText("OverlayKeybind", MainKeybind.DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
+			ImGui::SameLine();
+			if (ImGui::Button("Set"))
 			{
-				SettingKeybind = true;
-				KeybindDisplayString[0] = '\0';
+				MainKeybind.Setting = true;
+				MainKeybind.DisplayString[0] = '\0';
 			}
 			if (Cfg.ShowGriffon() != ImGui::Checkbox("Show 5th mount", &Cfg.ShowGriffon()))
 				Cfg.ShowGriffonSave();
+
+			ImGui::Separator();
+			ImGui::LabelText("GameKeybinds", "Mount keybinds:");
+
+			for (uint i = 0; i < Cfg.ShowGriffon() ? 5 : 4; i++)
+			{
+				ImGui::LabelText(("MountKeybindLabel" + std::to_string(i)).c_str(), GetMountName(i));
+				ImGui::SameLine();
+				ImGui::InputText(("MountKeybind" + std::to_string(i)).c_str(), MountKeybinds[i].DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
+				ImGui::SameLine();
+				if (ImGui::Button("Set"))
+				{
+					MountKeybinds[i].Setting = true;
+					MountKeybinds[i].DisplayString[0] = '\0';
+				}
+			}
+
 			ImGui::End();
 		}
 
