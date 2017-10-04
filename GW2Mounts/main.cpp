@@ -140,9 +140,17 @@ void SendKeybind(const std::set<uint>& vkeys)
 	if (vkeys.empty())
 		return;
 
+	std::list<uint> vkeys_sorted(vkeys.begin(), vkeys.end());
+	vkeys_sorted.sort([](uint& a, uint& b) {
+		if (a == VK_CONTROL || a == VK_SHIFT || a == VK_MENU)
+			return true;
+		else
+			return a < b;
+	});
+
 	mstime currentTime = timeInMS() + 10;
 
-	for (const auto& vk : vkeys)
+	for (const auto& vk : vkeys_sorted)
 	{
 		if (DownKeys.count(vk))
 			continue;
@@ -154,7 +162,7 @@ void SendKeybind(const std::set<uint>& vkeys)
 
 	currentTime += 200;
 
-	for (const auto& vk : reverse(vkeys))
+	for (const auto& vk : reverse(vkeys_sorted))
 	{
 		if (DownKeys.count(vk))
 			continue;
