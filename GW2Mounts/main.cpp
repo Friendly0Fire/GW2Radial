@@ -338,7 +338,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		bool oldMountOverlay = DisplayMountOverlay;
 
-		DisplayMountOverlay = !Cfg.MountOverlayKeybind().empty() && DownKeys == Cfg.MountOverlayKeybind();
+		DisplayMountOverlay = !Cfg.MountOverlayKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayKeybind().begin(), Cfg.MountOverlayKeybind().end());
 		if (input_key_up && 
 			(
 				(effective_msg == WM_KEYUP && Cfg.MountOverlayKeybind().count((uint)wParam)) ||
@@ -432,14 +432,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_MOUSEWHEEL:
 		if (io.WantCaptureMouse)
 			return true;
-		if (DownKeys == Cfg.MountOverlayKeybind())
-			return true;
 		break;
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 		if (io.WantCaptureKeyboard)
-			return true;
-		if (DownKeys == Cfg.MountOverlayKeybind())
 			return true;
 		break;
 	case WM_CHAR:
