@@ -13,6 +13,23 @@ Config::~Config()
 {
 }
 
+void LoadKeybindString(const char* keys, std::set<uint>& out)
+{
+	if (keys)
+	{
+		std::stringstream ss(keys);
+		std::vector<std::string> result;
+
+		while (ss.good())
+		{
+			std::string substr;
+			std::getline(ss, substr, ',');
+			int val = std::stoi(substr);
+			out.insert((uint)val);
+		}
+	}
+}
+
 void Config::Load()
 {
 	// Create folders
@@ -33,19 +50,14 @@ void Config::Load()
 	_INI.SetUnicode();
 	_INI.LoadFile(_ConfigLocation);
 	_ShowGriffon = _stricmp(_INI.GetValue("General", "show_fifth_mount", "false"), "true") == 0;
-	const char* keys = _INI.GetValue("Keybinds", "mount_wheel", nullptr);
-	if (keys)
-	{
-		std::stringstream ss(keys);
-		std::vector<std::string> result;
 
-		while (ss.good())
-		{
-			std::string substr;
-			std::getline(ss, substr, ',');
-			int val = std::stoi(substr);
-			_MountOverlayKeybind.insert((uint)val);
-		}
+	const char* keys = _INI.GetValue("Keybinds", "mount_wheel", nullptr);
+	LoadKeybindString(keys, _MountOverlayKeybind);
+
+	for (uint i = 0; i < 5; i++)
+	{
+		const char* keys_mount = _INI.GetValue("Keybinds", ("mount_" + std::to_string(i)).c_str(), nullptr);
+		LoadKeybindString(keys_mount, _MountKeybinds[i]);
 	}
 }
 

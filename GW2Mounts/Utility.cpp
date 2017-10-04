@@ -8,7 +8,7 @@
 /// </summary>
 /// <param name="str">The std::string.</param>
 /// <returns>The converted std::wstring.</returns>
-inline std::wstring s2ws(const std::string& str)
+std::wstring s2ws(const std::string& str)
 {
 	typedef std::codecvt_utf8<wchar_t> convert_typeX;
 	std::wstring_convert<convert_typeX, wchar_t> converterX;
@@ -21,7 +21,7 @@ inline std::wstring s2ws(const std::string& str)
 /// </summary>
 /// <param name="wstr">The std::wstring.</param>
 /// <returns>The converted std::string.</returns>
-inline std::string ws2s(const std::wstring& wstr)
+std::string ws2s(const std::wstring& wstr)
 {
 	typedef std::codecvt_utf8<wchar_t> convert_typeX;
 	std::wstring_convert<convert_typeX, wchar_t> converterX;

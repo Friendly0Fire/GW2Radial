@@ -43,6 +43,17 @@ KeybindSettingsMenu MountKeybinds[5];
 D3DXVECTOR2 OverlayPosition;
 mstime OverlayTime, MountHoverTime;
 
+enum CurrentMountHovered_t
+{
+	CMH_NONE = -1,
+	CMH_RAPTOR = 0,
+	CMH_SPRINGER = 1,
+	CMH_SKIMMER = 2,
+	CMH_JACKAL = 3,
+	CMH_GRIFFON = 4
+};
+CurrentMountHovered_t CurrentMountHovered = CMH_NONE;
+
 const char* GetMountName(CurrentMountHovered_t m)
 {
 	switch (m)
@@ -57,19 +68,10 @@ const char* GetMountName(CurrentMountHovered_t m)
 		return "Jackal";
 	case CMH_GRIFFON:
 		return "Griffon";
+	default:
+		return "[Unknown]";
 	}
 }
-
-enum CurrentMountHovered_t
-{
-	CMH_NONE = -1,
-	CMH_RAPTOR = 0,
-	CMH_SPRINGER = 1,
-	CMH_SKIMMER = 2,
-	CMH_JACKAL = 3,
-	CMH_GRIFFON = 4
-};
-CurrentMountHovered_t CurrentMountHovered = CMH_NONE;
 
 WNDPROC BaseWndProc;
 HMODULE OriginalD3D9 = nullptr;
@@ -126,6 +128,8 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		Cfg.Load();
 
 		MainKeybind.SetDisplayString(Cfg.MountOverlayKeybind());
+		for (uint i = 0; i < 5; i++)
+			MountKeybinds[i].SetDisplayString(Cfg.MountKeybind(i));
 	}
 	case DLL_PROCESS_DETACH:
 	{
@@ -410,32 +414,33 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 		if (DisplayOptionsWindow)
 		{
 			ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
-			ImGui::LabelText("OverlayKeybindLabel", "Overlay keybind:");
+			ImGui::InputText("##Overlay Keybind", MainKeybind.DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
 			ImGui::SameLine();
-			ImGui::InputText("OverlayKeybind", MainKeybind.DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
-			ImGui::SameLine();
-			if (ImGui::Button("Set"))
+			if (ImGui::Button("Set##OverlayKeybind"))
 			{
 				MainKeybind.Setting = true;
 				MainKeybind.DisplayString[0] = '\0';
 			}
+			ImGui::SameLine();
+			ImGui::Text("Overlay Keybind");
+
 			if (Cfg.ShowGriffon() != ImGui::Checkbox("Show 5th mount", &Cfg.ShowGriffon()))
 				Cfg.ShowGriffonSave();
 
 			ImGui::Separator();
-			ImGui::LabelText("GameKeybinds", "Mount keybinds:");
+			ImGui::Text("Mount Keybinds");
 
-			for (uint i = 0; i < Cfg.ShowGriffon() ? 5 : 4; i++)
+			for (uint i = 0; i < (Cfg.ShowGriffon() ? 5u : 4u); i++)
 			{
-				ImGui::LabelText(("MountKeybindLabel" + std::to_string(i)).c_str(), GetMountName(i));
+				ImGui::InputText((std::string("##") + GetMountName((CurrentMountHovered_t)i)).c_str(), MountKeybinds[i].DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
 				ImGui::SameLine();
-				ImGui::InputText(("MountKeybind" + std::to_string(i)).c_str(), MountKeybinds[i].DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
-				ImGui::SameLine();
-				if (ImGui::Button("Set"))
+				if (ImGui::Button(("Set##MountKeybind" + std::to_string(i)).c_str()))
 				{
 					MountKeybinds[i].Setting = true;
 					MountKeybinds[i].DisplayString[0] = '\0';
 				}
+				ImGui::SameLine();
+				ImGui::Text(GetMountName((CurrentMountHovered_t)i));
 			}
 
 			ImGui::End();
