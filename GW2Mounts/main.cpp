@@ -201,9 +201,11 @@ std::unique_ptr<UnitQuad> Quad;
 ID3DXEffect* MainEffect = nullptr;
 IDirect3DTexture9* MountsTexture = nullptr;
 IDirect3DTexture9* MountTextures[4];
+IDirect3DTexture9* BgTexture = nullptr;
 
 void LoadMountTextures()
 {
+	D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_BG), &BgTexture);
 	D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNTS), &MountsTexture);
 	for (uint i = 0; i < 4; i++)
 		D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNT1 + i), &MountTextures[i]);
@@ -212,6 +214,7 @@ void LoadMountTextures()
 void UnloadMountTextures()
 {
 	COM_RELEASE(MountsTexture);
+	COM_RELEASE(BgTexture);
 
 	for (uint i = 0; i < 4; i++)
 		COM_RELEASE(MountTextures[i]);
@@ -616,6 +619,62 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 			baseSpriteDimensions.z = BaseSpriteSize * screenSize.y * screenSize.z;
 			baseSpriteDimensions.w = BaseSpriteSize;
 
+			D3DXVECTOR4 overlaySpriteDimensions = baseSpriteDimensions;
+			D3DXVECTOR4 direction;
+
+			if (CurrentMountHovered != CMH_NONE)
+			{
+				if (CurrentMountHovered == CMH_RAPTOR)
+				{
+					overlaySpriteDimensions.x -= 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
+					overlaySpriteDimensions.z *= 0.5f;
+					overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
+					direction = D3DXVECTOR4(-1.f, 0, 0.f, 0.f);
+				}
+				else if (CurrentMountHovered == CMH_JACKAL)
+				{
+					overlaySpriteDimensions.x += 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
+					overlaySpriteDimensions.z *= 0.5f;
+					overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
+					direction = D3DXVECTOR4(1.f, 0, 0.f, 0.f);
+				}
+				else if (CurrentMountHovered == CMH_SPRINGER)
+				{
+					overlaySpriteDimensions.y -= 0.5f * BaseSpriteSize * 0.5f;
+					overlaySpriteDimensions.w *= 0.5f;
+					overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
+					direction = D3DXVECTOR4(0, -1.f, 0.f, 0.f);
+				}
+				else if (CurrentMountHovered == CMH_SKIMMER) // Skimmer, 2
+				{
+					overlaySpriteDimensions.y += 0.5f * BaseSpriteSize * 0.5f;
+					overlaySpriteDimensions.w *= 0.5f;
+					overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
+					direction = D3DXVECTOR4(0, 1.f, 0.f, 0.f);
+				}
+
+				direction.z = fmod(currentTime / 1000.f, 60000.f);
+			}
+
+			if (CurrentMountHovered != CMH_NONE)
+			{
+				D3DXVECTOR4 highlightSpriteDimensions = baseSpriteDimensions;
+				highlightSpriteDimensions.z *= 1.5f;
+				highlightSpriteDimensions.w *= 1.5f;
+
+				MainEffect->SetTechnique("MountImageHighlight");
+				MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
+				MainEffect->SetTexture("texMountImage", BgTexture);
+				MainEffect->SetVector("g_vSpriteDimensions", &highlightSpriteDimensions);
+				MainEffect->SetVector("g_vDirection", &direction);
+
+				MainEffect->Begin(&passes, 0);
+				MainEffect->BeginPass(0);
+				Quad->Draw();
+				MainEffect->EndPass();
+				MainEffect->End();
+			}
+
 			// Setup render state: fully shader-based
 			MainEffect->SetTechnique("MountImage");
 			MainEffect->SetVector("g_vScreenSize", &screenSize);
@@ -630,36 +689,9 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 			MainEffect->EndPass();
 			MainEffect->End();
 
-
 			if (CurrentMountHovered != CMH_NONE)
 			{
-				D3DXVECTOR4 overlaySpriteDimensions = baseSpriteDimensions;
-
-				if (CurrentMountHovered == CMH_RAPTOR)
-				{
-					overlaySpriteDimensions.x -= 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
-					overlaySpriteDimensions.z *= 0.5f;
-					overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
-				}
-				else if (CurrentMountHovered == CMH_JACKAL)
-				{
-					overlaySpriteDimensions.x += 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
-					overlaySpriteDimensions.z *= 0.5f;
-					overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
-				}
-				else if (CurrentMountHovered == CMH_SPRINGER)
-				{
-					overlaySpriteDimensions.y -= 0.5f * BaseSpriteSize * 0.5f;
-					overlaySpriteDimensions.w *= 0.5f;
-					overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
-				}
-				else if (CurrentMountHovered == CMH_SKIMMER) // Skimmer, 2
-				{
-					overlaySpriteDimensions.y += 0.5f * BaseSpriteSize * 0.5f;
-					overlaySpriteDimensions.w *= 0.5f;
-					overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
-				}
-
+				MainEffect->SetTechnique("MountImage");
 				MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
 				MainEffect->SetTexture("texMountImage", MountTextures[CurrentMountHovered]);
 				MainEffect->SetVector("g_vSpriteDimensions", &overlaySpriteDimensions);

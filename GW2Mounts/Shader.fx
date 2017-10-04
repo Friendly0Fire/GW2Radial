@@ -13,7 +13,6 @@ struct VS_SCREEN
 };
 
 texture texMountImage;
-texture texPattern;
 
 sampler2D texMountImageSampler =
 sampler_state
@@ -24,17 +23,6 @@ sampler_state
     MagFilter = LINEAR;
     AddressU = CLAMP;
     AddressV = CLAMP;
-};
-
-sampler2D texPatternSampler =
-sampler_state
-{
-    texture = <texMountImage>;
-    MipFilter = NONE;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
-    AddressU = WRAP;
-    AddressV = WRAP;
 };
 
 float4 g_vSpriteDimensions, g_vScreenSize;
@@ -55,7 +43,32 @@ VS_SCREEN MountImage_VS(in float2 UV : TEXCOORD0)
 
 float4 MountImage_PS(VS_SCREEN In) : COLOR0
 {
-	return tex2D(texMountImageSampler, In.UV) * g_fTimer;
+	float4 baseImage = tex2D(texMountImageSampler, In.UV);
+	return baseImage * g_fTimer;
+}
+
+float4 g_vDirection;
+
+float4 MountImageHighlight_PS(VS_SCREEN In) : COLOR0
+{
+	float4 baseImage = 0;
+	float2 border = (In.UV * 2 - 1);
+
+	float d1 = abs(dot(border, g_vDirection.xy));
+	float d2 = abs(dot(border, g_vDirection.yx));
+
+	if ((dot(border, g_vDirection.xy)) > 0 && d1 > d2)
+	{
+		float smoothrandom1 = sin(14 * In.UV.x + g_vDirection.z * 1.3f) + sin(17 * In.UV.y + g_vDirection.z * 2.3f);
+		float smoothrandom2 = sin(17 * In.UV.x + g_vDirection.z * 1.7f) + sin(14 * In.UV.y + g_vDirection.z * 3.1f);
+
+		baseImage = tex2D(texMountImageSampler, In.UV + float2(smoothrandom1, smoothrandom2) * 0.003f);
+		float radius = length(border);
+		baseImage *= (1.f - smoothstep(0.6f, 1.f, radius)) * smoothstep(0.0f, 0.2f, radius);
+		baseImage *= 1 - 0.5f * saturate(abs(d1 - d2));
+		baseImage *= lerp(0.8f, 1.1f, saturate((4 + smoothrandom1 + smoothrandom2) / 8));
+	}
+	return baseImage * g_fTimer;
 }
 
 technique MountImage
@@ -72,7 +85,26 @@ technique MountImage
 		DestBlend = InvSrcAlpha;
 		BlendOp = Add;
 
-        VertexShader = compile vs_3_0 MountImage_VS();
-        PixelShader = compile ps_3_0 MountImage_PS();
-    }
+		VertexShader = compile vs_3_0 MountImage_VS();
+		PixelShader = compile ps_3_0 MountImage_PS();
+	}
+}
+
+technique MountImageHighlight
+{
+	pass P0
+	{
+		ZEnable = false;
+		ZWriteEnable = false;
+		CullMode = None;
+		AlphaTestEnable = false;
+		AlphaBlendEnable = true;
+
+		SrcBlend = SrcAlpha;
+		DestBlend = InvSrcAlpha;
+		BlendOp = Add;
+
+		VertexShader = compile vs_3_0 MountImage_VS();
+		PixelShader = compile ps_3_0 MountImageHighlight_PS();
+	}
 }
