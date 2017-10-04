@@ -15,6 +15,7 @@ const float CircleRadiusScreen = 256.f / 1664.f * BaseSpriteSize * 0.5f;
 
 bool LoadedFromGame = true;
 Config Cfg;
+HWND GameWindow = 0;
 
 // Active state
 std::set<uint> DownKeys;
@@ -71,6 +72,114 @@ const char* GetMountName(CurrentMountHovered_t m)
 	default:
 		return "[Unknown]";
 	}
+}
+
+struct DelayedInput
+{
+	uint msg;
+	WPARAM wParam;
+	LPARAM lParam;
+
+	mstime t;
+};
+
+DelayedInput TransformVKey(uint vk, bool down, mstime t)
+{
+	DelayedInput i;
+	i.t = t;
+	if (vk == VK_LBUTTON || vk == VK_MBUTTON || vk == VK_RBUTTON)
+	{
+		i.wParam = i.lParam = 0;
+		if (DownKeys.count(VK_CONTROL))
+			i.wParam += MK_CONTROL;
+		if (DownKeys.count(VK_SHIFT))
+			i.wParam += MK_SHIFT;
+		if (DownKeys.count(VK_LBUTTON))
+			i.wParam += MK_LBUTTON;
+		if (DownKeys.count(VK_RBUTTON))
+			i.wParam += MK_RBUTTON;
+		if (DownKeys.count(VK_MBUTTON))
+			i.wParam += MK_MBUTTON;
+
+		const auto& io = ImGui::GetIO();
+
+		i.lParam = MAKELPARAM(((int)io.MousePos.x), ((int)io.MousePos.y));
+	}
+	else
+	{
+		i.wParam = vk;
+		i.lParam = 1;
+		i.lParam += (MapVirtualKeyEx(vk, MAPVK_VK_TO_VSC, 0) & 0xFF) << 16;
+		if (!down)
+			i.lParam += (1 << 30) + (1 << 31);
+	}
+
+	switch (vk)
+	{
+	case VK_LBUTTON:
+		i.msg = down ? WM_LBUTTONDOWN : WM_LBUTTONUP;
+		break;
+	case VK_MBUTTON:
+		i.msg = down ? WM_MBUTTONDOWN : WM_MBUTTONUP;
+		break;
+	case VK_RBUTTON:
+		i.msg = down ? WM_RBUTTONDOWN : WM_RBUTTONUP;
+		break;
+	default:
+		i.msg = down ? WM_KEYDOWN : WM_KEYUP;
+	}
+
+	return i;
+}
+
+
+std::list<DelayedInput> QueuedInputs;
+
+void SendKeybind(const std::set<uint>& vkeys)
+{
+	if (vkeys.empty())
+		return;
+
+	mstime currentTime = timeInMS() + 10;
+
+	for (const auto& vk : vkeys)
+	{
+		if (DownKeys.count(vk))
+			continue;
+
+		DelayedInput i = TransformVKey(vk, true, currentTime);
+		QueuedInputs.push_back(i);
+		currentTime += 50;
+	}
+
+	currentTime += 200;
+
+	for (const auto& vk : reverse(vkeys))
+	{
+		if (DownKeys.count(vk))
+			continue;
+
+		DelayedInput i = TransformVKey(vk, false, currentTime);
+		QueuedInputs.push_back(i);
+		currentTime += 50;
+	}
+}
+
+void SendQueuedInputs()
+{
+	if (QueuedInputs.empty())
+		return;
+
+	mstime currentTime = timeInMS();
+
+	auto& qi = QueuedInputs.front();
+
+	if (currentTime < qi.t)
+		return;
+
+	PostMessage(GameWindow, qi.msg, qi.wParam, qi.lParam);
+
+	QueuedInputs.pop_front();
 }
 
 WNDPROC BaseWndProc;
@@ -240,6 +349,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else if (!DisplayMountOverlay && oldMountOverlay)
 		{
+			if (CurrentMountHovered != CMH_NONE)
+				SendKeybind(Cfg.MountKeybind((uint)CurrentMountHovered));
+
 			CurrentMountHovered = CMH_NONE;
 		}
 
@@ -312,10 +424,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_MOUSEWHEEL:
 		if (io.WantCaptureMouse)
 			return true;
+		if (DownKeys == Cfg.MountOverlayKeybind())
+			return true;
 		break;
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 		if (io.WantCaptureKeyboard)
+			return true;
+		if (DownKeys == Cfg.MountOverlayKeybind())
 			return true;
 		break;
 	case WM_CHAR:
@@ -323,6 +439,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			return true;
 		break;
 	}
+
+#if 0
+	if(input_key_down || input_key_up)
+	{
+		std::string keybind = "";
+		for (const auto& k : DownKeys)
+		{
+			keybind += GetKeyName(k) + std::string(" + ");
+		}
+		keybind = keybind.substr(0, keybind.size() - 2) + "\n";
+
+		OutputDebugStringA(("Current keys down: " + keybind).c_str());
+
+		char buf[1024];
+		sprintf_s(buf, "msg=%u wParam=%u lParam=%u\n", msg, (uint)wParam, (uint)lParam);
+		OutputDebugStringA(buf);
+	}
+#endif
 
 	return CallWindowProc(BaseWndProc, hWnd, msg, wParam, lParam);
 }
@@ -338,6 +472,8 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 	D3DPRESENT_PARAMETERS *pPresentationParameters,
 	IDirect3DDevice9 **ppReturnedDeviceInterface)
 {
+	GameWindow = hFocusWindow;
+
 	// Hook WndProc
 	BaseWndProc = (WNDPROC)GetWindowLongPtr(hFocusWindow, GWLP_WNDPROC);
 	SetWindowLongPtr(hFocusWindow, GWLP_WNDPROC, (LONG_PTR)&WndProc);
@@ -405,6 +541,8 @@ HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters
 
 HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRect, HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion)
 {
+	SendQueuedInputs();
+
 	f_pD3DDevice->BeginScene();
 
 	ImGui_ImplDX9_NewFrame();
@@ -429,6 +567,7 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 
 			ImGui::Separator();
 			ImGui::Text("Mount Keybinds");
+			ImGui::Text("(set to relevant game keybinds)");
 
 			for (uint i = 0; i < (Cfg.ShowGriffon() ? 5u : 4u); i++)
 			{
