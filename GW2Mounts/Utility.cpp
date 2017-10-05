@@ -37,11 +37,15 @@ std::string GetKeyName(unsigned int virtualKey)
 	switch (virtualKey)
 	{
 	case VK_LBUTTON:
-		return "LMB";
+		return "M1";
 	case VK_RBUTTON:
-		return "RMB";
+		return "M2";
 	case VK_MBUTTON:
-		return "MMB";
+		return "M3";
+	case VK_XBUTTON1:
+		return "M4";
+	case VK_XBUTTON2:
+		return "M5";
 	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // arrow keys
 	case VK_PRIOR: case VK_NEXT: // page up and page down
 	case VK_END: case VK_HOME:
@@ -73,4 +77,12 @@ mstime timeInMS()
 	mstime iFreq;
 	QueryPerformanceFrequency((LARGE_INTEGER*)&iFreq);
 	return 1000 * iCount / iFreq;
+}
+
+bool FileExists(const TCHAR* path)
+{
+	DWORD dwAttrib = GetFileAttributes(path);
+
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
+		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }

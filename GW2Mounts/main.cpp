@@ -225,8 +225,17 @@ IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
 	if (!OriginalD3D9)
 	{
 		TCHAR path[MAX_PATH];
-		GetSystemDirectory(path, MAX_PATH);
-		_tcscat_s(path, TEXT("\\d3d9.dll"));
+
+		// Try to chainload first
+		GetCurrentDirectory(MAX_PATH, path);
+		_tcscat_s(path, TEXT("\\d3d9_mchain.dll"));
+
+		if (!FileExists(path))
+		{
+			GetSystemDirectory(path, MAX_PATH);
+			_tcscat_s(path, TEXT("\\d3d9.dll"));
+		}
+
 		OriginalD3D9 = LoadLibrary(path);
 	}
 	orig_Direct3DCreate9 = (D3DC9)GetProcAddress(OriginalD3D9, "Direct3DCreate9");
@@ -298,10 +307,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		DownKeys.insert(VK_RBUTTON);
 		input_key_down = true;
 		break;
+	case WM_XBUTTONDOWN:
+		DownKeys.insert(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2);
+		input_key_down = true;
+		break;
 	case WM_KEYUP:
 	case WM_LBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP:
+	case WM_XBUTTONUP:
 		input_key_up = true;
 		break;
 	}
@@ -347,7 +361,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				(effective_msg == WM_KEYUP && Cfg.MountOverlayKeybind().count((uint)wParam)) ||
 				(effective_msg == WM_LBUTTONUP && Cfg.MountOverlayKeybind().count(VK_LBUTTON)) ||
 				(effective_msg == WM_MBUTTONUP && Cfg.MountOverlayKeybind().count(VK_MBUTTON)) ||
-				(effective_msg == WM_RBUTTONUP && Cfg.MountOverlayKeybind().count(VK_RBUTTON))
+				(effective_msg == WM_RBUTTONUP && Cfg.MountOverlayKeybind().count(VK_RBUTTON)) ||
+				(effective_msg == WM_XBUTTONUP && GET_XBUTTON_WPARAM(wParam) == XBUTTON1 && Cfg.MountOverlayKeybind().count(VK_XBUTTON1)) ||
+				(effective_msg == WM_XBUTTONUP && GET_XBUTTON_WPARAM(wParam) == XBUTTON2 && Cfg.MountOverlayKeybind().count(VK_XBUTTON2))
 			))
 			DisplayMountOverlay = false;
 
@@ -416,6 +432,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONUP:
 		DownKeys.erase(VK_RBUTTON);
 		break;
+	case WM_XBUTTONUP:
+		DownKeys.erase(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2);
+		break;
 	}
 
 	if ((input_key_down || input_key_up) && isMenuKeybind)
@@ -432,6 +451,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONUP:
 	case WM_MBUTTONDOWN:
 	case WM_MBUTTONUP:
+	case WM_XBUTTONDOWN:
+	case WM_XBUTTONUP:
 	case WM_MOUSEWHEEL:
 		if (io.WantCaptureMouse)
 			return true;
