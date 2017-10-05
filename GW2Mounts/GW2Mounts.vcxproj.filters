@@ -85,7 +85,9 @@
     <ClInclude Include="resource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utility.h" />
+    <ClInclude Include="Utility.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="main.def">
