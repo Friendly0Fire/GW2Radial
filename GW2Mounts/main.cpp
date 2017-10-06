@@ -157,10 +157,10 @@ void SendKeybind(const std::set<uint>& vkeys)
 
 		DelayedInput i = TransformVKey(vk, true, currentTime);
 		QueuedInputs.push_back(i);
-		currentTime += 50;
+		currentTime += 20;
 	}
 
-	currentTime += 200;
+	currentTime += 50;
 
 	for (const auto& vk : reverse(vkeys_sorted))
 	{
@@ -169,7 +169,7 @@ void SendKeybind(const std::set<uint>& vkeys)
 
 		DelayedInput i = TransformVKey(vk, false, currentTime);
 		QueuedInputs.push_back(i);
-		currentTime += 50;
+		currentTime += 20;
 	}
 }
 
@@ -200,14 +200,14 @@ uint ScreenWidth, ScreenHeight;
 std::unique_ptr<UnitQuad> Quad;
 ID3DXEffect* MainEffect = nullptr;
 IDirect3DTexture9* MountsTexture = nullptr;
-IDirect3DTexture9* MountTextures[4];
+IDirect3DTexture9* MountTextures[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 IDirect3DTexture9* BgTexture = nullptr;
 
 void LoadMountTextures()
 {
 	D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_BG), &BgTexture);
 	D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNTS), &MountsTexture);
-	for (uint i = 0; i < 4; i++)
+	for (uint i = 0; i < 5; i++)
 		D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNT1 + i), &MountTextures[i]);
 }
 
@@ -216,12 +216,13 @@ void UnloadMountTextures()
 	COM_RELEASE(MountsTexture);
 	COM_RELEASE(BgTexture);
 
-	for (uint i = 0; i < 4; i++)
+	for (uint i = 0; i < 5; i++)
 		COM_RELEASE(MountTextures[i]);
 }
 
 IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
 {
+	assert(SDKVersion == D3D_SDK_VERSION);
 	if (!OriginalD3D9)
 	{
 		TCHAR path[MAX_PATH];
@@ -229,6 +230,12 @@ IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
 		// Try to chainload first
 		GetCurrentDirectory(MAX_PATH, path);
 		_tcscat_s(path, TEXT("\\d3d9_mchain.dll"));
+
+		if (!FileExists(path))
+		{
+			GetCurrentDirectory(MAX_PATH, path);
+			_tcscat_s(path, TEXT("\\bin64\\d3d9_mchain.dll"));
+		}
 
 		if (!FileExists(path))
 		{
@@ -530,7 +537,9 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 	{
 		Quad = nullptr;
 	}
-	D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr, &MainEffect, nullptr);
+	ID3DXBuffer* errorBuffer = nullptr;
+	D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr, &MainEffect, &errorBuffer);
+	COM_RELEASE(errorBuffer);
 	LoadMountTextures();
 
 	// Initialize reference count for device object
@@ -552,7 +561,9 @@ HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters
 	ScreenHeight = pPresentationParameters->BackBufferHeight;
 
 	ImGui_ImplDX9_CreateDeviceObjects();
-	D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr, &MainEffect, nullptr);
+	ID3DXBuffer* errorBuffer = nullptr;
+	D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr, &MainEffect, &errorBuffer);
+	COM_RELEASE(errorBuffer);
 	LoadMountTextures();
 	try
 	{

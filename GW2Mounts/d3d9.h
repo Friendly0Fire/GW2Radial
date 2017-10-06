@@ -2,6 +2,9 @@
 
 IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion);
 
+// Heavily based off this Gist: https://gist.github.com/shaunlebron/3854bf4eec5bec297907
+// Minor modifications where necessary
+
 typedef IDirect3D9 *(WINAPI *D3DC9)(UINT);
 extern D3DC9 orig_Direct3DCreate9;
 
