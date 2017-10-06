@@ -125,8 +125,16 @@ DelayedInput TransformVKey(uint vk, bool down, mstime t)
 	case VK_RBUTTON:
 		i.msg = down ? WM_RBUTTONDOWN : WM_RBUTTONUP;
 		break;
+	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // arrow keys
+	case VK_PRIOR: case VK_NEXT: // page up and page down
+	case VK_END: case VK_HOME:
+	case VK_INSERT: case VK_DELETE:
+	case VK_DIVIDE: // numpad slash
+	case VK_NUMLOCK:
+		i.lParam |= 1 << 24; // set extended bit
 	default:
 		i.msg = down ? WM_KEYDOWN : WM_KEYUP;
+		break;
 	}
 
 	return i;
