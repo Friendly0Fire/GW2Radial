@@ -200,14 +200,14 @@ uint ScreenWidth, ScreenHeight;
 std::unique_ptr<UnitQuad> Quad;
 ID3DXEffect* MainEffect = nullptr;
 IDirect3DTexture9* MountsTexture = nullptr;
-IDirect3DTexture9* MountTextures[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
+IDirect3DTexture9* MountTextures[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 IDirect3DTexture9* BgTexture = nullptr;
 
 void LoadMountTextures()
 {
 	D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_BG), &BgTexture);
 	D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNTS), &MountsTexture);
-	for (uint i = 0; i < 5; i++)
+	for (uint i = 0; i < 6; i++)
 		D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNT1 + i), &MountTextures[i]);
 }
 
@@ -216,7 +216,7 @@ void UnloadMountTextures()
 	COM_RELEASE(MountsTexture);
 	COM_RELEASE(BgTexture);
 
-	for (uint i = 0; i < 5; i++)
+	for (uint i = 0; i < 6; i++)
 		COM_RELEASE(MountTextures[i]);
 }
 
@@ -348,7 +348,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				CurrentMountHovered = CMH_SPRINGER;
 			else if (MousePos.y > 0 && abs(MousePos.x) < abs(MousePos.y)) // Skimmer, 2
 				CurrentMountHovered = CMH_SKIMMER;
+			else
+				CurrentMountHovered = CMH_NONE;
 		}
+		else if (Cfg.ShowGriffon())
+			CurrentMountHovered = CMH_GRIFFON;
 		else
 			CurrentMountHovered = CMH_NONE;
 
@@ -380,6 +384,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
 			OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
 			OverlayTime = timeInMS();
+
+			CurrentMountHovered = Cfg.ShowGriffon() ? CMH_GRIFFON : CMH_NONE;
 		}
 		else if (!DisplayMountOverlay && oldMountOverlay)
 		{
@@ -678,12 +684,18 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 				overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
 				direction = D3DXVECTOR4(0, -1.f, 0.f, 0.f);
 			}
-			else if (CurrentMountHovered == CMH_SKIMMER) // Skimmer, 2
+			else if (CurrentMountHovered == CMH_SKIMMER)
 			{
 				overlaySpriteDimensions.y += 0.5f * BaseSpriteSize * 0.5f;
 				overlaySpriteDimensions.w *= 0.5f;
 				overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
 				direction = D3DXVECTOR4(0, 1.f, 0.f, 0.f);
+			}
+			else if (CurrentMountHovered == CMH_GRIFFON)
+			{
+				overlaySpriteDimensions.z *= 512.f / 1664.f;
+				overlaySpriteDimensions.w *= 512.f / 1664.f;
+				direction = D3DXVECTOR4(0, 0.f, 0.f, 0.f);
 			}
 
 			direction.z = fmod(currentTime / 1000.f, 60000.f);
@@ -692,10 +704,15 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 		if (CurrentMountHovered != CMH_NONE)
 		{
 			D3DXVECTOR4 highlightSpriteDimensions = baseSpriteDimensions;
+			if (CurrentMountHovered == CMH_GRIFFON)
+			{
+				highlightSpriteDimensions.z *= 512.f / 1664.f;
+				highlightSpriteDimensions.w *= 512.f / 1664.f;
+			}
 			highlightSpriteDimensions.z *= 1.5f;
 			highlightSpriteDimensions.w *= 1.5f;
 
-			MainEffect->SetTechnique("MountImageHighlight");
+			MainEffect->SetTechnique(CurrentMountHovered == CMH_GRIFFON ? "MountImageHighlightGriffon" : "MountImageHighlight");
 			MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
 			MainEffect->SetTexture("texMountImage", BgTexture);
 			MainEffect->SetVector("g_vSpriteDimensions", &highlightSpriteDimensions);
@@ -710,10 +727,26 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 
 		MainEffect->SetTechnique("MountImage");
 		MainEffect->SetVector("g_vScreenSize", &screenSize);
+		MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime) / 1000.f * 6));
+
+		if (Cfg.ShowGriffon())
+		{
+			D3DXVECTOR4 griffonSpriteDimensions = baseSpriteDimensions;
+			griffonSpriteDimensions.z *= 512.f / 1664.f;
+			griffonSpriteDimensions.w *= 512.f / 1664.f;
+
+			MainEffect->SetVector("g_vSpriteDimensions", &griffonSpriteDimensions);
+			MainEffect->SetTexture("texMountImage", MountTextures[5]);
+
+			MainEffect->Begin(&passes, 0);
+			MainEffect->BeginPass(0);
+			Quad->Draw();
+			MainEffect->EndPass();
+			MainEffect->End();
+		}
 
 		MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
 		MainEffect->SetTexture("texMountImage", MountsTexture);
-		MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime) / 1000.f * 6));
 
 		MainEffect->Begin(&passes, 0);
 		MainEffect->BeginPass(0);
