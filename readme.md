@@ -12,6 +12,14 @@ A plugin to show a convenient, customizable [radial menu overlay](https://giant.
 - Set each game keybind for the mounts (you must set these first in your game options, under controls, after you've unlocked the mounts). These are used by the plugin to trigger mounting.
 - Hold the main key to show overlay, move mouse in the desired direction, release key to trigger mounting/dismounting.
 
+## Credits
+- Cerulean Dream for providing me with the initial motivator and inspiration in making his AutoHotkey-based radial menu
+- Lavender for showing me where to get the mount concept art (especially the separate Skimmer image)
+- deltaconnected and Bhagawan for their amazing addons which helped frame this and direct the approach to take
+- Shaun Lebron for his nice, straightforward [D3D9 wrapper](https://gist.github.com/shaunlebron/3854bf4eec5bec297907)
+- Dulfy and /u/Levi4than for the Griffon ingame art screenshot
+- /u/that_shaman for another really nice radial menu concept which requires far better Photoshop skills than I have to reproduce
+
 ## FAQ
 
 ### Q: I want to load up ReShade/SweetFX/GW2Hooks/something else which also needs to be called ``d3d9.dll``, how do I load both?
