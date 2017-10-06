@@ -20,6 +20,7 @@ HWND GameWindow = 0;
 // Active state
 std::set<uint> DownKeys;
 bool DisplayMountOverlay = false;
+bool DisplayOverlayCursor = false;
 bool DisplayOptionsWindow = false;
 
 struct KeybindSettingsMenu
@@ -39,6 +40,7 @@ struct KeybindSettingsMenu
 	}
 };
 KeybindSettingsMenu MainKeybind;
+KeybindSettingsMenu MainLockedKeybind;
 KeybindSettingsMenu MountKeybinds[5];
 
 D3DXVECTOR2 OverlayPosition;
@@ -272,6 +274,7 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		Cfg.Load();
 
 		MainKeybind.SetDisplayString(Cfg.MountOverlayKeybind());
+		MainLockedKeybind.SetDisplayString(Cfg.MountOverlayLockedKeybind());
 		for (uint i = 0; i < 5; i++)
 			MountKeybinds[i].SetDisplayString(Cfg.MountKeybind(i));
 	}
@@ -285,6 +288,39 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	}
 	}
 	return true;
+}
+
+void DetermineHoveredMount()
+{
+	const auto io = ImGui::GetIO();
+
+	D3DXVECTOR2 MousePos;
+	MousePos.x = io.MousePos.x / (float)ScreenWidth;
+	MousePos.y = io.MousePos.y / (float)ScreenHeight;
+	MousePos -= OverlayPosition;
+
+	CurrentMountHovered_t LastMountHovered = CurrentMountHovered;
+
+	if (D3DXVec2LengthSq(&MousePos) > CircleRadiusScreen * CircleRadiusScreen)
+	{
+		if (MousePos.x < 0 && abs(MousePos.x) > abs(MousePos.y)) // Raptor, 0
+			CurrentMountHovered = CMH_RAPTOR;
+		else if (MousePos.x > 0 && abs(MousePos.x) > abs(MousePos.y)) // Jackal, 3
+			CurrentMountHovered = CMH_JACKAL;
+		else if (MousePos.y < 0 && abs(MousePos.x) < abs(MousePos.y)) // Springer, 1
+			CurrentMountHovered = CMH_SPRINGER;
+		else if (MousePos.y > 0 && abs(MousePos.x) < abs(MousePos.y)) // Skimmer, 2
+			CurrentMountHovered = CMH_SKIMMER;
+		else
+			CurrentMountHovered = CMH_NONE;
+	}
+	else if (Cfg.ShowGriffon())
+		CurrentMountHovered = CMH_GRIFFON;
+	else
+		CurrentMountHovered = CMH_NONE;
+
+	if (LastMountHovered != CurrentMountHovered)
+		MountHoverTime = timeInMS();
 }
 
 extern LRESULT ImGui_ImplDX9_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -336,37 +372,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 
 	if (DisplayMountOverlay && effective_msg == WM_MOUSEMOVE)
-	{
-		auto io = ImGui::GetIO();
-
-		D3DXVECTOR2 MousePos;
-		MousePos.x = io.MousePos.x / (float)ScreenWidth;
-		MousePos.y = io.MousePos.y / (float)ScreenHeight;
-		MousePos -= OverlayPosition;
-
-		CurrentMountHovered_t LastMountHovered = CurrentMountHovered;
-
-		if (D3DXVec2LengthSq(&MousePos) > CircleRadiusScreen * CircleRadiusScreen)
-		{
-			if (MousePos.x < 0 && abs(MousePos.x) > abs(MousePos.y)) // Raptor, 0
-				CurrentMountHovered = CMH_RAPTOR;
-			else if (MousePos.x > 0 && abs(MousePos.x) > abs(MousePos.y)) // Jackal, 3
-				CurrentMountHovered = CMH_JACKAL;
-			else if (MousePos.y < 0 && abs(MousePos.x) < abs(MousePos.y)) // Springer, 1
-				CurrentMountHovered = CMH_SPRINGER;
-			else if (MousePos.y > 0 && abs(MousePos.x) < abs(MousePos.y)) // Skimmer, 2
-				CurrentMountHovered = CMH_SKIMMER;
-			else
-				CurrentMountHovered = CMH_NONE;
-		}
-		else if (Cfg.ShowGriffon())
-			CurrentMountHovered = CMH_GRIFFON;
-		else
-			CurrentMountHovered = CMH_NONE;
-
-		if (LastMountHovered != CurrentMountHovered)
-			MountHoverTime = timeInMS();
-	}
+		DetermineHoveredMount();
 
 	bool isMenuKeybind = GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_MENU) && wParam == 'M';
 
@@ -374,26 +380,61 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		bool oldMountOverlay = DisplayMountOverlay;
 
-		DisplayMountOverlay = !Cfg.MountOverlayKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayKeybind().begin(), Cfg.MountOverlayKeybind().end());
-		if (input_key_up && 
-			(
+		bool mountOverlay = !Cfg.MountOverlayKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayKeybind().begin(), Cfg.MountOverlayKeybind().end());
+		bool mountOverlayLocked = !Cfg.MountOverlayLockedKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayLockedKeybind().begin(), Cfg.MountOverlayLockedKeybind().end());
+
+		DisplayMountOverlay = mountOverlayLocked || mountOverlay;
+		if (input_key_up)
+		{
+			if (
 				(effective_msg == WM_KEYUP && Cfg.MountOverlayKeybind().count((uint)wParam)) ||
 				(effective_msg == WM_LBUTTONUP && Cfg.MountOverlayKeybind().count(VK_LBUTTON)) ||
 				(effective_msg == WM_MBUTTONUP && Cfg.MountOverlayKeybind().count(VK_MBUTTON)) ||
 				(effective_msg == WM_RBUTTONUP && Cfg.MountOverlayKeybind().count(VK_RBUTTON)) ||
 				(effective_msg == WM_XBUTTONUP && GET_XBUTTON_WPARAM(wParam) == XBUTTON1 && Cfg.MountOverlayKeybind().count(VK_XBUTTON1)) ||
 				(effective_msg == WM_XBUTTONUP && GET_XBUTTON_WPARAM(wParam) == XBUTTON2 && Cfg.MountOverlayKeybind().count(VK_XBUTTON2))
-			))
-			DisplayMountOverlay = false;
+				)
+				DisplayMountOverlay = false;
+
+			if (
+				(effective_msg == WM_KEYUP && Cfg.MountOverlayLockedKeybind().count((uint)wParam)) ||
+				(effective_msg == WM_LBUTTONUP && Cfg.MountOverlayLockedKeybind().count(VK_LBUTTON)) ||
+				(effective_msg == WM_MBUTTONUP && Cfg.MountOverlayLockedKeybind().count(VK_MBUTTON)) ||
+				(effective_msg == WM_RBUTTONUP && Cfg.MountOverlayLockedKeybind().count(VK_RBUTTON)) ||
+				(effective_msg == WM_XBUTTONUP && GET_XBUTTON_WPARAM(wParam) == XBUTTON1 && Cfg.MountOverlayLockedKeybind().count(VK_XBUTTON1)) ||
+				(effective_msg == WM_XBUTTONUP && GET_XBUTTON_WPARAM(wParam) == XBUTTON2 && Cfg.MountOverlayLockedKeybind().count(VK_XBUTTON2))
+				)
+				DisplayMountOverlay = false;
+		}
 
 		if (DisplayMountOverlay && !oldMountOverlay)
 		{
-			auto io = ImGui::GetIO();
-			OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
-			OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
+			DisplayOverlayCursor = mountOverlayLocked;
+
+			if (DisplayOverlayCursor)
+			{
+				OverlayPosition.x = OverlayPosition.y = 0.5f;
+
+				RECT rect = { 0 };
+				if (GetWindowRect(GameWindow, &rect))
+				{
+					if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
+					{
+						auto& io = ImGui::GetIO();
+						io.MousePos.x = ScreenWidth * 0.5f;
+						io.MousePos.y = ScreenHeight * 0.5f;
+					}
+				}
+			}
+			else
+			{
+				const auto& io = ImGui::GetIO();
+				OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
+				OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
+			}
 			OverlayTime = timeInMS();
 
-			CurrentMountHovered = Cfg.ShowGriffon() ? CMH_GRIFFON : CMH_NONE;
+			DetermineHoveredMount();
 		}
 		else if (!DisplayMountOverlay && oldMountOverlay)
 		{
@@ -417,6 +458,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				{
 					MainKeybind.Setting = false;
 					Cfg.MountOverlayKeybind(DownKeys);
+				}
+			}
+
+			if (MainLockedKeybind.Setting)
+			{
+				MainLockedKeybind.SetDisplayString(DownKeys);
+
+				if (is_final_key)
+				{
+					MainLockedKeybind.Setting = false;
+					Cfg.MountOverlayLockedKeybind(DownKeys);
 				}
 			}
 
@@ -462,7 +514,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		return true;
 
 	ImGui_ImplDX9_WndProcHandler(hWnd, msg, wParam, lParam);
-	ImGuiIO& io = ImGui::GetIO();
+	const auto& io = ImGui::GetIO();
 
 	switch (effective_msg)
 	{
@@ -534,7 +586,7 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 	*ppReturnedDeviceInterface = new f_IDirect3DDevice9(temp_device);
 
 	// Init ImGui
-	ImGuiIO& imio = ImGui::GetIO();
+	auto& imio = ImGui::GetIO();
 	imio.IniFilename = Cfg.ImGuiConfigLocation();
 
 	// Setup ImGui binding
@@ -606,6 +658,7 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 	if (DisplayOptionsWindow)
 	{
 		ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
+
 		ImGui::InputText("##Overlay Keybind", MainKeybind.DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
 		ImGui::SameLine();
 		if (ImGui::Button("Set##OverlayKeybind"))
@@ -615,6 +668,16 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 		}
 		ImGui::SameLine();
 		ImGui::Text("Overlay Keybind");
+
+		ImGui::InputText("##Overlay Keybind (Center Locked)", MainLockedKeybind.DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
+		ImGui::SameLine();
+		if (ImGui::Button("Set##OverlayKeybindCenterLocked"))
+		{
+			MainLockedKeybind.Setting = true;
+			MainLockedKeybind.DisplayString[0] = '\0';
+		}
+		ImGui::SameLine();
+		ImGui::Text("Overlay Keybind (Center Locked)");
 
 		if (Cfg.ShowGriffon() != ImGui::Checkbox("Show 5th mount", &Cfg.ShowGriffon()))
 			Cfg.ShowGriffonSave();
@@ -768,6 +831,22 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 			MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
 			MainEffect->SetTexture("texMountImage", MountTextures[CurrentMountHovered]);
 			MainEffect->SetVector("g_vSpriteDimensions", &overlaySpriteDimensions);
+
+			MainEffect->Begin(&passes, 0);
+			MainEffect->BeginPass(0);
+			Quad->Draw();
+			MainEffect->EndPass();
+			MainEffect->End();
+		}
+
+		if (DisplayOverlayCursor)
+		{
+			const auto& io = ImGui::GetIO();
+
+			MainEffect->SetTechnique("Cursor");
+			MainEffect->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
+			MainEffect->SetTexture("texMountImage", BgTexture);
+			MainEffect->SetVector("g_vSpriteDimensions", &D3DXVECTOR4(io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f));
 
 			MainEffect->Begin(&passes, 0);
 			MainEffect->BeginPass(0);

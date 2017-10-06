@@ -53,6 +53,8 @@ void Config::Load()
 
 	const char* keys = _INI.GetValue("Keybinds", "mount_wheel", nullptr);
 	LoadKeybindString(keys, _MountOverlayKeybind);
+	const char* keys_locked = _INI.GetValue("Keybinds", "mount_wheel_locked", nullptr);
+	LoadKeybindString(keys_locked, _MountOverlayLockedKeybind);
 
 	for (uint i = 0; i < 5; i++)
 	{
@@ -69,6 +71,17 @@ void Config::MountOverlayKeybind(std::set<uint>& val)
 		setting_value += std::to_string(k) + ", ";
 
 	_INI.SetValue("Keybinds", "mount_wheel", (setting_value.size() > 0 ? setting_value.substr(0, setting_value.size() - 2) : setting_value).c_str());
+	_INI.SaveFile(_ConfigLocation);
+}
+
+void Config::MountOverlayLockedKeybind(std::set<uint>& val)
+{
+	_MountOverlayLockedKeybind = val;
+	std::string setting_value = "";
+	for (const auto& k : _MountOverlayLockedKeybind)
+		setting_value += std::to_string(k) + ", ";
+
+	_INI.SetValue("Keybinds", "mount_wheel_locked", (setting_value.size() > 0 ? setting_value.substr(0, setting_value.size() - 2) : setting_value).c_str());
 	_INI.SaveFile(_ConfigLocation);
 }
 

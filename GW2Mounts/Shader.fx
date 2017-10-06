@@ -127,3 +127,35 @@ technique MountImageHighlightGriffon
 		PixelShader = compile ps_3_0 MountImageHighlight_PS(true);
 	}
 }
+
+float4 Cursor_PS(VS_SCREEN In) : COLOR0
+{
+	float smoothrandom1 = sin(15 * In.UV.x + g_fTimer * 1.4f) + sin(18 * In.UV.y + g_fTimer * 2.1f);
+	float smoothrandom2 = sin(18 * In.UV.x + g_fTimer * 1.9f) + sin(15 * In.UV.y + g_fTimer * 3.7f);
+
+	float4 baseImage = tex2D(texMountImageSampler, In.UV + float2(smoothrandom1, smoothrandom2) * 0.003f);
+	float radius = length(In.UV * 2 - 1);
+	baseImage *= pow(1.f - smoothstep(0.1f, 1.f, radius), 4.f);
+	baseImage *= lerp(0.8f, 1.1f, saturate((4 + smoothrandom1 + smoothrandom2) / 8));
+
+	return baseImage;
+}
+
+technique Cursor
+{
+	pass P0
+	{
+		ZEnable = false;
+		ZWriteEnable = false;
+		CullMode = None;
+		AlphaTestEnable = false;
+		AlphaBlendEnable = true;
+
+		SrcBlend = One;
+		DestBlend = One;
+		BlendOp = Add;
+
+		VertexShader = compile vs_3_0 MountImage_VS();
+		PixelShader = compile ps_3_0 Cursor_PS();
+	}
+}
