@@ -26,6 +26,12 @@ A plugin to show a convenient, customizable [radial menu overlay](https://giant.
 
 A: You have two options: either the other thing you want to run supports *chainloading* this, in which case you should look up the documentation for that plugin (e.g. ArcDPS supports chainloading by renaming this plugin to ``d3d9_chainload.dll``), or you can make this plugin chainload something else by renaming that other plugin to ``d3d9_mchain.dll``.
 
+### Q: What is the "center locked" keybind used for?
+
+A: It's a convenience feature for Action Camera users. When using Action Camera, the cursor is hidden and replaced with a targeting reticule fixed in the middle of the screen. Since that means the radial menu would appear all over the place, that keybind can be used to make it show up in the middle of the screen instead. As a bonus, it'll recenter the mouse to the middle of the radial menu so it's as easy as possible to select a mount *and* it'll show a temporary cursor so you know exactly where you're pointing.
+
+Unfortunately, I can't make this automatic (i.e. switching to that mode when Action Camera is enabled) without hooking game functions, which would then require this become closed source again to avoid cheaters using it. On top of that, I'd be far more likely to break the EULA, so I'm afraid it's off limits without an official API.
+
 ### Q: Does this support the [REDACTED] mount?
 
 A: Yes, activate it in the settings! It'll appear in the middle of the radial menu such that merely pressing and immediately releasing the main keybind (without moving the mouse) will select it.
