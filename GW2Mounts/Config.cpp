@@ -6,6 +6,9 @@
 
 Config::Config()
 {
+	_SettingsKeybind.insert(VK_SHIFT);
+	_SettingsKeybind.insert(VK_MENU);
+	_SettingsKeybind.insert('M');
 }
 
 

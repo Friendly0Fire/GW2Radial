@@ -20,6 +20,8 @@ public:
 	const auto& MountKeybind(uint i) { return _MountKeybinds[i]; }
 	void MountKeybind(uint i, std::set<uint>& val);
 
+	const auto& SettingsKeybind() { return _SettingsKeybind; }
+
 	auto& ShowGriffon() { return _ShowGriffon; }
 	void ShowGriffonSave();
 
@@ -39,6 +41,7 @@ protected:
 	std::set<uint> _MountOverlayKeybind;
 	std::set<uint> _MountOverlayLockedKeybind;
 	std::set<uint> _MountKeybinds[5];
+	std::set<uint> _SettingsKeybind;
 	bool _ShowGriffon = false;
 };
 

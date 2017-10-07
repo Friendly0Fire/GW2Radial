@@ -326,57 +326,75 @@ void DetermineHoveredMount()
 extern LRESULT ImGui_ImplDX9_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	// Transform SYSKEY* messages into KEY* messages instead
-	UINT effective_msg = msg;
-	if (msg == WM_SYSKEYDOWN)
+	struct EventKey
 	{
-		effective_msg = WM_KEYDOWN;
-		if (((lParam >> 29) & 1) == 1)
-			DownKeys.insert(VK_MENU);
-		else
-			DownKeys.erase(VK_MENU);
-	}
-	if (msg == WM_SYSKEYUP)
-		effective_msg = WM_KEYUP;
+		uint vk : 31;
+		bool down : 1;
+	};
 
-	bool input_key_down = false, input_key_up = false;
-	switch (effective_msg)
+	std::list<EventKey> eventKeys;
+
+	// Generate our EventKey list for the current message
 	{
-	case WM_KEYDOWN:
-		DownKeys.insert((uint)wParam);
-		input_key_down = true;
-		break;
-	case WM_LBUTTONDOWN:
-		DownKeys.insert(VK_LBUTTON);
-		input_key_down = true;
-		break;
-	case WM_MBUTTONDOWN:
-		DownKeys.insert(VK_MBUTTON);
-		input_key_down = true;
-		break;
-	case WM_RBUTTONDOWN:
-		DownKeys.insert(VK_RBUTTON);
-		input_key_down = true;
-		break;
-	case WM_XBUTTONDOWN:
-		DownKeys.insert(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2);
-		input_key_down = true;
-		break;
-	case WM_KEYUP:
-	case WM_LBUTTONUP:
-	case WM_MBUTTONUP:
-	case WM_RBUTTONUP:
-	case WM_XBUTTONUP:
-		input_key_up = true;
-		break;
+		bool eventDown = false;
+		switch (msg)
+		{
+		case WM_SYSKEYDOWN:
+		case WM_KEYDOWN:
+			eventDown = true;
+		case WM_SYSKEYUP:
+		case WM_KEYUP:
+			if (msg == WM_SYSKEYDOWN || msg == WM_SYSKEYUP)
+			{
+				if (((lParam >> 29) & 1) == 1)
+					eventKeys.push_back({ VK_MENU, true });
+				else
+					eventKeys.push_back({ VK_MENU, false });
+			}
+
+			eventKeys.push_back({ wParam, eventDown });
+			break;
+
+		case WM_LBUTTONDOWN:
+			eventDown = true;
+		case WM_LBUTTONUP:
+			eventKeys.push_back({ VK_LBUTTON, eventDown });
+			break;
+		case WM_MBUTTONDOWN:
+			eventDown = true;
+		case WM_MBUTTONUP:
+			eventKeys.push_back({ VK_MBUTTON, eventDown });
+			break;
+		case WM_RBUTTONDOWN:
+			eventDown = true;
+		case WM_RBUTTONUP:
+			eventKeys.push_back({ VK_RBUTTON, eventDown });
+			break;
+		case WM_XBUTTONDOWN:
+			eventDown = true;
+		case WM_XBUTTONUP:
+			eventKeys.push_back({ (GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2), eventDown });
+			break;
+		}
 	}
 
-	if (DisplayMountOverlay && effective_msg == WM_MOUSEMOVE)
+	// Apply key down events now
+	for (const auto& k : eventKeys)
+		if (k.down)
+			DownKeys.insert(k.vk);
+
+			
+	
+	// Detect hovered section of the radial menu, if visible
+	if (DisplayMountOverlay && msg == WM_MOUSEMOVE)
 		DetermineHoveredMount();
+		
+	// Very exclusive test: *only* consider the menu keybind to be activated if they're the *only* keys currently down
+	// This minimizes the likelihood of the menu randomly popping up when it shouldn't
+	bool isMenuKeybind = DownKeys == Cfg.SettingsKeybind();
 
-	bool isMenuKeybind = GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_MENU) && wParam == 'M';
-
-	if (input_key_down || input_key_up)
+	// Only run these for key down/key up (incl. mouse buttons) events
+	if (!eventKeys.empty())
 	{
 		bool oldMountOverlay = DisplayMountOverlay;
 
@@ -488,61 +506,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 	}
 
-	if (msg == WM_SYSKEYUP)
-		DownKeys.erase(VK_MENU);
-
-	switch (effective_msg)
-	{
-	case WM_KEYUP:
-		DownKeys.erase((uint)wParam);
-		break;
-	case WM_LBUTTONUP:
-		DownKeys.erase(VK_LBUTTON);
-		break;
-	case WM_MBUTTONUP:
-		DownKeys.erase(VK_MBUTTON);
-		break;
-	case WM_RBUTTONUP:
-		DownKeys.erase(VK_RBUTTON);
-		break;
-	case WM_XBUTTONUP:
-		DownKeys.erase(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2);
-		break;
-	}
-
-	if ((input_key_down || input_key_up) && isMenuKeybind)
-		return true;
-
-	ImGui_ImplDX9_WndProcHandler(hWnd, msg, wParam, lParam);
-	const auto& io = ImGui::GetIO();
-
-	switch (effective_msg)
-	{
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:
-	case WM_XBUTTONDOWN:
-	case WM_XBUTTONUP:
-	case WM_MOUSEWHEEL:
-		if (io.WantCaptureMouse)
-			return true;
-		break;
-	case WM_KEYDOWN:
-	case WM_KEYUP:
-		if (io.WantCaptureKeyboard)
-			return true;
-		break;
-	case WM_CHAR:
-		if (io.WantTextInput)
-			return true;
-		break;
-	}
+	// Apply key up events now
+	for (const auto& k : eventKeys)
+		if (!k.down)
+			DownKeys.erase(k.vk);
 
 #if 0
-	if(input_key_down || input_key_up)
+	if (input_key_down || input_key_up)
 	{
 		std::string keybind = "";
 		for (const auto& k : DownKeys)
@@ -559,6 +529,47 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 #endif
 
+	ImGui_ImplDX9_WndProcHandler(hWnd, msg, wParam, lParam);
+
+	// Prevent game from receiving the settings menu keybind
+	if (!eventKeys.empty() && isMenuKeybind)
+		return true;
+
+
+	// Prevent game from receiving input if ImGui requests capture
+	const auto& io = ImGui::GetIO();
+	switch (msg)
+	{
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+	case WM_XBUTTONDOWN:
+	case WM_XBUTTONUP:
+	case WM_MOUSEWHEEL:
+	case WM_LBUTTONDBLCLK:
+	case WM_RBUTTONDBLCLK:
+	case WM_MBUTTONDBLCLK:
+	case WM_XBUTTONDBLCLK:
+		if (io.WantCaptureMouse)
+			return true;
+		break;
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+	case WM_SYSKEYDOWN:
+	case WM_SYSKEYUP:
+		if (io.WantCaptureKeyboard)
+			return true;
+		break;
+	case WM_CHAR:
+		if (io.WantTextInput)
+			return true;
+		break;
+	}
+
+	// Whatever's left should be sent to the game
 	return CallWindowProc(BaseWndProc, hWnd, msg, wParam, lParam);
 }
 
