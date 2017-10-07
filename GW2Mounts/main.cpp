@@ -9,6 +9,7 @@
 #include <d3dx9.h>
 #include "Config.h"
 #include "Utility.h"
+#include <functional>
 
 const float BaseSpriteSize = 0.4f;
 const float CircleRadiusScreen = 256.f / 1664.f * BaseSpriteSize * 0.5f;
@@ -27,6 +28,7 @@ struct KeybindSettingsMenu
 {
 	char DisplayString[256];
 	bool Setting = false;
+	std::function<void(const std::set<uint>&)> SetCallback;
 
 	void SetDisplayString(const std::set<uint>& keys)
 	{
@@ -37,6 +39,19 @@ struct KeybindSettingsMenu
 		}
 
 		strcpy_s(DisplayString, (keybind.size() > 0 ? keybind.substr(0, keybind.size() - 3) : keybind).c_str());
+	}
+
+	void CheckSetKeybind(const std::set<uint>& keys, bool apply)
+	{
+		if (Setting)
+		{
+			SetDisplayString(keys);
+			if (apply)
+			{
+				Setting = false;
+				SetCallback(keys);
+			}
+		}
 	}
 };
 KeybindSettingsMenu MainKeybind;
@@ -56,6 +71,59 @@ enum CurrentMountHovered_t
 	CMH_GRIFFON = 4
 };
 CurrentMountHovered_t CurrentMountHovered = CMH_NONE;
+
+ImVec4 operator/(const ImVec4& v, float f)
+{
+	return ImVec4(v.x / f, v.y / f, v.z / f, v.w / f);
+}
+
+void ImGuiKeybindInput(const std::string& name, KeybindSettingsMenu& setting)
+{
+	std::string suffix = "##" + name;
+
+	float windowWidth = ImGui::GetWindowWidth();
+
+	ImGui::PushItemWidth(windowWidth * 0.3f);
+
+	int popcount = 1;
+	if (setting.Setting)
+	{
+		popcount = 3;
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(201, 215, 255, 200) / 255.f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 0, 0, 1));
+		ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImVec4(0, 0, 0, 1));
+	}
+	else
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.15f, 0.15f, 0.15f, 1));
+
+	ImGui::InputText(suffix.c_str(), setting.DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
+
+	ImGui::PopItemWidth();
+
+	ImGui::PopStyleColor(popcount);
+
+	ImGui::SameLine();
+
+	if (!setting.Setting && ImGui::Button(("Set" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
+	{
+		setting.Setting = true;
+		setting.DisplayString[0] = '\0';
+	}
+	else if (setting.Setting && ImGui::Button(("Clear" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
+	{
+		setting.Setting = false;
+		setting.DisplayString[0] = '\0';
+		setting.SetCallback(std::set<uint>());
+	}
+
+	ImGui::SameLine();
+
+	ImGui::PushItemWidth(windowWidth * 0.5f);
+
+	ImGui::Text(name.c_str());
+
+	ImGui::PopItemWidth();
+}
 
 const char* GetMountName(CurrentMountHovered_t m)
 {
@@ -274,9 +342,14 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		Cfg.Load();
 
 		MainKeybind.SetDisplayString(Cfg.MountOverlayKeybind());
+		MainKeybind.SetCallback = [](const std::set<uint>& val) { Cfg.MountOverlayKeybind(val); };
 		MainLockedKeybind.SetDisplayString(Cfg.MountOverlayLockedKeybind());
+		MainLockedKeybind.SetCallback = [](const std::set<uint>& val) { Cfg.MountOverlayLockedKeybind(val); };
 		for (uint i = 0; i < 5; i++)
+		{
 			MountKeybinds[i].SetDisplayString(Cfg.MountKeybind(i));
+			MountKeybinds[i].SetCallback = [i](const std::set<uint>& val) { Cfg.MountKeybind(i, val); };
+		}
 	}
 	case DLL_PROCESS_DETACH:
 	{
@@ -468,38 +541,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
 			fullKeybind.erase(VK_LBUTTON);
 
-			if (MainKeybind.Setting)
-			{
-				MainKeybind.SetDisplayString(fullKeybind);
-				if (keyLifted)
-				{
-					MainKeybind.Setting = false;
-					Cfg.MountOverlayKeybind(fullKeybind);
-				}
-			}
-
-			if (MainLockedKeybind.Setting)
-			{
-				MainLockedKeybind.SetDisplayString(fullKeybind);
-				if (keyLifted)
-				{
-					MainLockedKeybind.Setting = false;
-					Cfg.MountOverlayLockedKeybind(fullKeybind);
-				}
-			}
+			MainKeybind.CheckSetKeybind(fullKeybind, keyLifted);
+			MainLockedKeybind.CheckSetKeybind(fullKeybind, keyLifted);
 
 			for (uint i = 0; i < 5; i++)
-			{
-				if (MountKeybinds[i].Setting)
-				{
-					MountKeybinds[i].SetDisplayString(fullKeybind);
-					if (keyLifted)
-					{
-						MountKeybinds[i].Setting = false;
-						Cfg.MountKeybind(i, fullKeybind);
-					}
-				}
-			}
+				MountKeybinds[i].CheckSetKeybind(fullKeybind, keyLifted);
 		}
 	}
 
@@ -662,25 +708,8 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 	{
 		ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
 
-		ImGui::InputText("##Overlay Keybind", MainKeybind.DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
-		ImGui::SameLine();
-		if (ImGui::Button("Set##OverlayKeybind"))
-		{
-			MainKeybind.Setting = true;
-			MainKeybind.DisplayString[0] = '\0';
-		}
-		ImGui::SameLine();
-		ImGui::Text("Overlay Keybind");
-
-		ImGui::InputText("##Overlay Keybind (Center Locked)", MainLockedKeybind.DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
-		ImGui::SameLine();
-		if (ImGui::Button("Set##OverlayKeybindCenterLocked"))
-		{
-			MainLockedKeybind.Setting = true;
-			MainLockedKeybind.DisplayString[0] = '\0';
-		}
-		ImGui::SameLine();
-		ImGui::Text("Overlay Keybind (Center Locked)");
+		ImGuiKeybindInput("Overlay Keybind", MainKeybind);
+		ImGuiKeybindInput("Overlay Keybind (Center Locked)", MainLockedKeybind);
 
 		if (Cfg.ShowGriffon() != ImGui::Checkbox("Show 5th mount", &Cfg.ShowGriffon()))
 			Cfg.ShowGriffonSave();
@@ -692,17 +721,7 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 		ImGui::Text("(set to relevant game keybinds)");
 
 		for (uint i = 0; i < (Cfg.ShowGriffon() ? 5u : 4u); i++)
-		{
-			ImGui::InputText((std::string("##") + GetMountName((CurrentMountHovered_t)i)).c_str(), MountKeybinds[i].DisplayString, 256, ImGuiInputTextFlags_ReadOnly);
-			ImGui::SameLine();
-			if (ImGui::Button(("Set##MountKeybind" + std::to_string(i)).c_str()))
-			{
-				MountKeybinds[i].Setting = true;
-				MountKeybinds[i].DisplayString[0] = '\0';
-			}
-			ImGui::SameLine();
-			ImGui::Text(GetMountName((CurrentMountHovered_t)i));
-		}
+			ImGuiKeybindInput(GetMountName((CurrentMountHovered_t)i), MountKeybinds[i]);
 
 		ImGui::End();
 	}
