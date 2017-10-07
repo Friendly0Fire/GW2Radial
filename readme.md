@@ -3,6 +3,7 @@
 A plugin to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/SnoopyEarlyBlacknorwegianelkhound.mp4) to select a mount on the fly for *Guild Wars 2: Path of Fire*.
 
 ## Installation
+- Download the archive ``gw2_mounts.zip`` found in the [latest release](https://github.com/Friendly0Fire/GW2Addons/releases/latest) (link is at the very bottom).
 - Place ``d3d9.dll`` in your bin64 directory (default path: ``C:\Program Files\Guild Wars 2\bin64``).
 - Run the game!
 
