@@ -3,13 +3,13 @@
 A plugin to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/SnoopyEarlyBlacknorwegianelkhound.mp4) to select a mount on the fly for *Guild Wars 2: Path of Fire*.
 
 ## Installation
-- Place in your bin64 directory (default path: ``C:\Program Files\Guild Wars 2\bin64``).
+- Place ``d3d9.dll`` in your bin64 directory (default path: ``C:\Program Files\Guild Wars 2\bin64``).
 - Run the game!
 
 ## Usage
 - When in game, press ``Shift+Alt+M`` for the options menu.
 - Set a keybind to use the overlay. This is the only keybind you will use in practice.
-- Set each game keybind for the mounts (you must set these first in your game options, under controls, after you've unlocked the mounts). These are used by the plugin to trigger mounting.
+- Set each game keybind for the mounts (you must set these first in your game options, under controls, after you've unlocked the mounts). These are used by the plugin to trigger mounting. They should be matching up like so (credit /u/Mikun for the image): ![Keybinds](https://i.imgur.com/y1aG8jA.png)
 - Hold the main key to show overlay, move mouse in the desired direction, release key to trigger mounting/dismounting.
 
 ## Credits
