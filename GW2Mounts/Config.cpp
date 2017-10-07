@@ -54,6 +54,7 @@ void Config::Load()
 	_INI.LoadFile(_ConfigLocation);
 	_ShowGriffon = _stricmp(_INI.GetValue("General", "show_fifth_mount", "false"), "true") == 0;
 	_ResetCursorOnLockedKeybind = _stricmp(_INI.GetValue("General", "reset_cursor_on_locked_keybind", "true"), "true") == 0;
+	_LockCameraWhenOverlayed = _stricmp(_INI.GetValue("General", "lock_camera_when_overlayed", "true"), "true") == 0;
 
 	const char* keys = _INI.GetValue("Keybinds", "mount_wheel", nullptr);
 	LoadKeybindString(keys, _MountOverlayKeybind);
@@ -109,5 +110,11 @@ void Config::ShowGriffonSave()
 void Config::ResetCursorOnLockedKeybindSave()
 {
 	_INI.SetValue("General", "reset_cursor_on_locked_keybind", _ResetCursorOnLockedKeybind ? "true" : "false");
+	_INI.SaveFile(_ConfigLocation);
+}
+
+void Config::LockCameraWhenOverlayedSave()
+{
+	_INI.SetValue("General", "lock_camera_when_overlayed", _LockCameraWhenOverlayed ? "true" : "false");
 	_INI.SaveFile(_ConfigLocation);
 }

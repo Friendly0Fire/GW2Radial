@@ -21,7 +21,6 @@ HWND GameWindow = 0;
 // Active state
 std::set<uint> DownKeys;
 bool DisplayMountOverlay = false;
-bool DisplayOverlayCursor = false;
 bool DisplayOptionsWindow = false;
 
 struct KeybindSettingsMenu
@@ -482,8 +481,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			// Mount overlay is turned on
 
-			DisplayOverlayCursor = mountOverlayLocked;
-			if (DisplayOverlayCursor)
+			if (mountOverlayLocked)
 			{
 				OverlayPosition.x = OverlayPosition.y = 0.5f;
 
@@ -573,6 +571,52 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	if (!eventKeys.empty() && isMenuKeybind)
 		return true;
 
+	// Prevent game cursor/camera from moving when the overlay is displayed
+	if (DisplayMountOverlay && Cfg.LockCameraWhenOverlayed())
+	{
+		switch (msg)
+		{
+		case WM_MOUSEMOVE:
+			return true;
+		case WM_INPUT:
+		{
+			UINT dwSize = 40;
+			static BYTE lpb[40];
+
+			GetRawInputData((HRAWINPUT)lParam, RID_INPUT,
+				lpb, &dwSize, sizeof(RAWINPUTHEADER));
+
+			RAWINPUT* raw = (RAWINPUT*)lpb;
+
+			if (raw->header.dwType == RIM_TYPEMOUSE)
+				return true;
+
+			break;
+		}
+		case WM_LBUTTONDOWN:
+		case WM_LBUTTONUP:
+		case WM_RBUTTONDOWN:
+		case WM_RBUTTONUP:
+		case WM_MBUTTONDOWN:
+		case WM_MBUTTONUP:
+		case WM_XBUTTONDOWN:
+		case WM_XBUTTONUP:
+		case WM_MOUSEWHEEL:
+		case WM_LBUTTONDBLCLK:
+		case WM_RBUTTONDBLCLK:
+		case WM_MBUTTONDBLCLK:
+		case WM_XBUTTONDBLCLK:
+		{
+			const auto& io2 = ImGui::GetIO();
+
+			short mx, my;
+			mx = io2.MousePos.x;
+			my = io2.MousePos.y;
+			lParam = MAKELPARAM(mx, my);
+			break;
+		}
+		}
+	}
 
 	// Prevent game from receiving input if ImGui requests capture
 	const auto& io = ImGui::GetIO();
@@ -715,6 +759,8 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 			Cfg.ShowGriffonSave();
 		if (Cfg.ResetCursorOnLockedKeybind() != ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
 			Cfg.ResetCursorOnLockedKeybindSave();
+		if (Cfg.LockCameraWhenOverlayed() != ImGui::Checkbox("Lock camera when overlay is displayed", &Cfg.LockCameraWhenOverlayed()))
+			Cfg.LockCameraWhenOverlayedSave();
 
 		ImGui::Separator();
 		ImGui::Text("Mount Keybinds");
@@ -863,7 +909,6 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 			MainEffect->End();
 		}
 
-		if (DisplayOverlayCursor)
 		{
 			const auto& io = ImGui::GetIO();
 

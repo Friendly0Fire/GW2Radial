@@ -28,6 +28,9 @@ public:
 	auto& ResetCursorOnLockedKeybind() { return _ResetCursorOnLockedKeybind; }
 	void ResetCursorOnLockedKeybindSave();
 
+	auto& LockCameraWhenOverlayed() { return _LockCameraWhenOverlayed; }
+	void LockCameraWhenOverlayedSave();
+
 	const auto& ImGuiConfigLocation() { return _ImGuiConfigLocation; }
 
 protected:
@@ -47,5 +50,6 @@ protected:
 	std::set<uint> _SettingsKeybind;
 	bool _ShowGriffon = false;
 	bool _ResetCursorOnLockedKeybind = true;
+	bool _LockCameraWhenOverlayed = true;
 };
 
