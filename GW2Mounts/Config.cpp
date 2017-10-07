@@ -18,7 +18,7 @@ Config::~Config()
 
 void LoadKeybindString(const char* keys, std::set<uint>& out)
 {
-	if (keys)
+	if (strnlen_s(keys, 256) > 0)
 	{
 		std::stringstream ss(keys);
 		std::vector<std::string> result;
@@ -67,7 +67,7 @@ void Config::Load()
 	}
 }
 
-void Config::MountOverlayKeybind(std::set<uint>& val)
+void Config::MountOverlayKeybind(const std::set<uint>& val)
 {
 	_MountOverlayKeybind = val;
 	std::string setting_value = "";
@@ -78,7 +78,7 @@ void Config::MountOverlayKeybind(std::set<uint>& val)
 	_INI.SaveFile(_ConfigLocation);
 }
 
-void Config::MountOverlayLockedKeybind(std::set<uint>& val)
+void Config::MountOverlayLockedKeybind(const std::set<uint>& val)
 {
 	_MountOverlayLockedKeybind = val;
 	std::string setting_value = "";
@@ -89,7 +89,7 @@ void Config::MountOverlayLockedKeybind(std::set<uint>& val)
 	_INI.SaveFile(_ConfigLocation);
 }
 
-void Config::MountKeybind(uint i, std::set<uint>& val)
+void Config::MountKeybind(uint i, const std::set<uint>& val)
 {
 	_MountKeybinds[i] = val;
 	std::string setting_value = "";

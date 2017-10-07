@@ -12,13 +12,13 @@ public:
 	void Load();
 
 	const auto& MountOverlayKeybind() { return _MountOverlayKeybind; }
-	void MountOverlayKeybind(std::set<uint>& val);
+	void MountOverlayKeybind(const std::set<uint>& val);
 
 	const auto& MountOverlayLockedKeybind() { return _MountOverlayLockedKeybind; }
-	void MountOverlayLockedKeybind(std::set<uint>& val);
+	void MountOverlayLockedKeybind(const std::set<uint>& val);
 
 	const auto& MountKeybind(uint i) { return _MountKeybinds[i]; }
-	void MountKeybind(uint i, std::set<uint>& val);
+	void MountKeybind(uint i, const std::set<uint>& val);
 
 	const auto& SettingsKeybind() { return _SettingsKeybind; }
 
