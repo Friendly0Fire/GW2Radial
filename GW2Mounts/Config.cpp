@@ -53,6 +53,7 @@ void Config::Load()
 	_INI.SetUnicode();
 	_INI.LoadFile(_ConfigLocation);
 	_ShowGriffon = _stricmp(_INI.GetValue("General", "show_fifth_mount", "false"), "true") == 0;
+	_ResetCursorOnLockedKeybind = _stricmp(_INI.GetValue("General", "reset_cursor_on_locked_keybind", "true"), "true") == 0;
 
 	const char* keys = _INI.GetValue("Keybinds", "mount_wheel", nullptr);
 	LoadKeybindString(keys, _MountOverlayKeybind);
@@ -102,5 +103,11 @@ void Config::MountKeybind(uint i, std::set<uint>& val)
 void Config::ShowGriffonSave()
 {
 	_INI.SetValue("General", "show_fifth_mount", _ShowGriffon ? "true" : "false");
+	_INI.SaveFile(_ConfigLocation);
+}
+
+void Config::ResetCursorOnLockedKeybindSave()
+{
+	_INI.SetValue("General", "reset_cursor_on_locked_keybind", _ResetCursorOnLockedKeybind ? "true" : "false");
 	_INI.SaveFile(_ConfigLocation);
 }

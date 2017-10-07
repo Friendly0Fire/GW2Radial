@@ -352,7 +352,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					eventKeys.push_back({ VK_MENU, false });
 			}
 
-			eventKeys.push_back({ wParam, eventDown });
+			eventKeys.push_back({ (uint)wParam, eventDown });
 			break;
 
 		case WM_LBUTTONDOWN:
@@ -373,15 +373,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_XBUTTONDOWN:
 			eventDown = true;
 		case WM_XBUTTONUP:
-			eventKeys.push_back({ (GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2), eventDown });
+			eventKeys.push_back({ (uint)(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2), eventDown });
 			break;
 		}
 	}
 
-	// Apply key down events now
+	// Apply key events now
 	for (const auto& k : eventKeys)
 		if (k.down)
 			DownKeys.insert(k.vk);
+		else
+			DownKeys.erase(k.vk);
 
 			
 	
@@ -402,45 +404,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		bool mountOverlayLocked = !Cfg.MountOverlayLockedKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayLockedKeybind().begin(), Cfg.MountOverlayLockedKeybind().end());
 
 		DisplayMountOverlay = mountOverlayLocked || mountOverlay;
-		if (input_key_up)
-		{
-			if (
-				(effective_msg == WM_KEYUP && Cfg.MountOverlayKeybind().count((uint)wParam)) ||
-				(effective_msg == WM_LBUTTONUP && Cfg.MountOverlayKeybind().count(VK_LBUTTON)) ||
-				(effective_msg == WM_MBUTTONUP && Cfg.MountOverlayKeybind().count(VK_MBUTTON)) ||
-				(effective_msg == WM_RBUTTONUP && Cfg.MountOverlayKeybind().count(VK_RBUTTON)) ||
-				(effective_msg == WM_XBUTTONUP && GET_XBUTTON_WPARAM(wParam) == XBUTTON1 && Cfg.MountOverlayKeybind().count(VK_XBUTTON1)) ||
-				(effective_msg == WM_XBUTTONUP && GET_XBUTTON_WPARAM(wParam) == XBUTTON2 && Cfg.MountOverlayKeybind().count(VK_XBUTTON2))
-				)
-				DisplayMountOverlay = false;
-
-			if (
-				(effective_msg == WM_KEYUP && Cfg.MountOverlayLockedKeybind().count((uint)wParam)) ||
-				(effective_msg == WM_LBUTTONUP && Cfg.MountOverlayLockedKeybind().count(VK_LBUTTON)) ||
-				(effective_msg == WM_MBUTTONUP && Cfg.MountOverlayLockedKeybind().count(VK_MBUTTON)) ||
-				(effective_msg == WM_RBUTTONUP && Cfg.MountOverlayLockedKeybind().count(VK_RBUTTON)) ||
-				(effective_msg == WM_XBUTTONUP && GET_XBUTTON_WPARAM(wParam) == XBUTTON1 && Cfg.MountOverlayLockedKeybind().count(VK_XBUTTON1)) ||
-				(effective_msg == WM_XBUTTONUP && GET_XBUTTON_WPARAM(wParam) == XBUTTON2 && Cfg.MountOverlayLockedKeybind().count(VK_XBUTTON2))
-				)
-				DisplayMountOverlay = false;
-		}
 
 		if (DisplayMountOverlay && !oldMountOverlay)
 		{
-			DisplayOverlayCursor = mountOverlayLocked;
+			// Mount overlay is turned on
 
+			DisplayOverlayCursor = mountOverlayLocked;
 			if (DisplayOverlayCursor)
 			{
 				OverlayPosition.x = OverlayPosition.y = 0.5f;
 
-				RECT rect = { 0 };
-				if (GetWindowRect(GameWindow, &rect))
+				// Attempt to move the cursor to the middle of the screen
+				if (Cfg.ResetCursorOnLockedKeybind())
 				{
-					if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
+					RECT rect = { 0 };
+					if (GetWindowRect(GameWindow, &rect))
 					{
-						auto& io = ImGui::GetIO();
-						io.MousePos.x = ScreenWidth * 0.5f;
-						io.MousePos.y = ScreenHeight * 0.5f;
+						if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
+						{
+							auto& io = ImGui::GetIO();
+							io.MousePos.x = ScreenWidth * 0.5f;
+							io.MousePos.y = ScreenHeight * 0.5f;
+						}
 					}
 				}
 			}
@@ -450,12 +435,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
 				OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
 			}
+
 			OverlayTime = timeInMS();
 
 			DetermineHoveredMount();
 		}
 		else if (!DisplayMountOverlay && oldMountOverlay)
 		{
+			// Mount overlay is turned off, send the keybind
 			if (CurrentMountHovered != CMH_NONE)
 				SendKeybind(Cfg.MountKeybind((uint)CurrentMountHovered));
 
@@ -466,27 +453,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			DisplayOptionsWindow = true;
 		else
 		{
-			bool is_final_key = wParam != VK_MENU && wParam != VK_CONTROL && wParam != VK_SHIFT;
+			// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
+			bool keyLifted = false;
+			auto fullKeybind = DownKeys;
+			for (const auto& ek : eventKeys)
+			{
+				if (!ek.down)
+				{
+					fullKeybind.insert(ek.vk);
+					keyLifted = true;
+				}
+			}
+
+			// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
+			fullKeybind.erase(VK_LBUTTON);
 
 			if (MainKeybind.Setting)
 			{
-				MainKeybind.SetDisplayString(DownKeys);
-
-				if (is_final_key)
+				MainKeybind.SetDisplayString(fullKeybind);
+				if (keyLifted)
 				{
 					MainKeybind.Setting = false;
-					Cfg.MountOverlayKeybind(DownKeys);
+					Cfg.MountOverlayKeybind(fullKeybind);
 				}
 			}
 
 			if (MainLockedKeybind.Setting)
 			{
-				MainLockedKeybind.SetDisplayString(DownKeys);
-
-				if (is_final_key)
+				MainLockedKeybind.SetDisplayString(fullKeybind);
+				if (keyLifted)
 				{
 					MainLockedKeybind.Setting = false;
-					Cfg.MountOverlayLockedKeybind(DownKeys);
+					Cfg.MountOverlayLockedKeybind(fullKeybind);
 				}
 			}
 
@@ -494,22 +492,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				if (MountKeybinds[i].Setting)
 				{
-					MountKeybinds[i].SetDisplayString(DownKeys);
-
-					if (is_final_key)
+					MountKeybinds[i].SetDisplayString(fullKeybind);
+					if (keyLifted)
 					{
 						MountKeybinds[i].Setting = false;
-						Cfg.MountKeybind(i, DownKeys);
+						Cfg.MountKeybind(i, fullKeybind);
 					}
 				}
 			}
 		}
 	}
-
-	// Apply key up events now
-	for (const auto& k : eventKeys)
-		if (!k.down)
-			DownKeys.erase(k.vk);
 
 #if 0
 	if (input_key_down || input_key_up)
@@ -692,6 +684,8 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 
 		if (Cfg.ShowGriffon() != ImGui::Checkbox("Show 5th mount", &Cfg.ShowGriffon()))
 			Cfg.ShowGriffonSave();
+		if (Cfg.ResetCursorOnLockedKeybind() != ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
+			Cfg.ResetCursorOnLockedKeybindSave();
 
 		ImGui::Separator();
 		ImGui::Text("Mount Keybinds");
