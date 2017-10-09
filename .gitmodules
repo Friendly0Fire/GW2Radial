@@ -4,3 +4,6 @@
 [submodule "GW2Mounts/simpleini"]
 	path = GW2Mounts/simpleini
 	url = https://github.com/brofield/simpleini.git
+[submodule "GW2Mounts/minhook"]
+	path = GW2Mounts/minhook
+	url = https://github.com/TsudaKageyu/minhook.git

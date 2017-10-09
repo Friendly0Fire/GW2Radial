@@ -1,5 +1,6 @@
 #include "main.h"
 #include "d3d9.h"
+#include "d3d9ex.h"
 #include <tchar.h>
 #include <imgui.h>
 #include <examples\directx9_example\imgui_impl_dx9.h>
@@ -10,6 +11,8 @@
 #include "Config.h"
 #include "Utility.h"
 #include <functional>
+#include "minhook/include/MinHook.h"
+#include <Shlwapi.h>
 
 const float BaseSpriteSize = 0.4f;
 const float CircleRadiusScreen = 256.f / 1664.f * BaseSpriteSize * 0.5f;
@@ -297,9 +300,46 @@ void UnloadMountTextures()
 		COM_RELEASE(MountTextures[i]);
 }
 
-IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
+typedef DWORD(WINAPI *GetModuleFileNameW_t)(
+	_In_opt_ HMODULE hModule,
+	_Out_    LPTSTR  lpFilename,
+	_In_     DWORD   nSize
+	);
+GetModuleFileNameW_t real_GetModuleFileNameW = nullptr;
+
+DWORD WINAPI hook_GetModuleFileNameW(
+	_In_opt_ HMODULE hModule,
+	_Out_    LPTSTR  lpFilename,
+	_In_     DWORD   nSize
+)
 {
-	assert(SDKVersion == D3D_SDK_VERSION);
+	if(hModule == DllModule || hModule == nullptr)
+		return real_GetModuleFileNameW(hModule, lpFilename, nSize);
+
+	wchar_t cpath[MAX_PATH];
+	DWORD r = real_GetModuleFileNameW(hModule, cpath, MAX_PATH);
+	if (r == ERROR_INSUFFICIENT_BUFFER)
+		return r;
+
+	if (StrStrIW(cpath, L"bin64") == NULL)
+		return r;
+
+	const wchar_t* query = L"d3d9_mchain.dll";
+	const wchar_t* replacement = L"d3d9.dll2";
+
+	std::wstring path = cpath;
+
+	size_t index = path.find(query, 0);
+	if (index != std::string::npos)
+		path.replace(index, wcslen(query), replacement);
+
+	wcscpy_s(lpFilename, nSize, path.c_str());
+
+	return min(r, (DWORD)path.length());
+}
+
+void OnD3DCreate()
+{
 	if (!OriginalD3D9)
 	{
 		TCHAR path[MAX_PATH];
@@ -322,12 +362,30 @@ IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
 
 		OriginalD3D9 = LoadLibrary(path);
 	}
+}
+
+IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
+{
+	OnD3DCreate();
+
 	orig_Direct3DCreate9 = (D3DC9)GetProcAddress(OriginalD3D9, "Direct3DCreate9");
 
-	if(LoadedFromGame)
+	if (LoadedFromGame)
 		return new f_iD3D9(orig_Direct3DCreate9(SDKVersion));
 	else
 		return orig_Direct3DCreate9(SDKVersion);
+}
+
+IDirect3D9Ex *WINAPI Direct3DCreate9Ex(UINT SDKVersion)
+{
+	OnD3DCreate();
+
+	orig_Direct3DCreate9Ex = (D3DC9Ex)GetProcAddress(OriginalD3D9, "Direct3DCreate9Ex");
+
+	if (LoadedFromGame)
+		return new f_iD3D9Ex(orig_Direct3DCreate9Ex(SDKVersion));
+	else
+		return orig_Direct3DCreate9Ex(SDKVersion);
 }
 
 bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
@@ -337,6 +395,12 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	case DLL_PROCESS_ATTACH:
 	{
 		DllModule = hModule;
+
+		assert(MH_Initialize() == MH_OK);
+
+		MH_CreateHook(&GetModuleFileNameW, hook_GetModuleFileNameW, reinterpret_cast<LPVOID*>(&real_GetModuleFileNameW));
+
+		MH_EnableHook(MH_ALL_HOOKS);
 
 		Cfg.Load();
 
@@ -349,6 +413,8 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 			MountKeybinds[i].SetDisplayString(Cfg.MountKeybind(i));
 			MountKeybinds[i].SetCallback = [i](const std::set<uint>& val) { Cfg.MountKeybind(i, val); };
 		}
+
+		break;
 	}
 	case DLL_PROCESS_DETACH:
 	{
@@ -357,6 +423,10 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 			FreeLibrary(OriginalD3D9);
 			OriginalD3D9 = nullptr;
 		}
+
+		MH_Uninitialize();
+
+		break;
 	}
 	}
 	return true;
@@ -457,93 +527,95 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		else
 			DownKeys.erase(k.vk);
 
-			
-	
 	// Detect hovered section of the radial menu, if visible
 	if (DisplayMountOverlay && msg == WM_MOUSEMOVE)
 		DetermineHoveredMount();
-		
-	// Very exclusive test: *only* consider the menu keybind to be activated if they're the *only* keys currently down
-	// This minimizes the likelihood of the menu randomly popping up when it shouldn't
-	bool isMenuKeybind = DownKeys == Cfg.SettingsKeybind();
+
+	bool isMenuKeybind = false;
 
 	// Only run these for key down/key up (incl. mouse buttons) events
 	if (!eventKeys.empty())
 	{
-		bool oldMountOverlay = DisplayMountOverlay;
+		// Very exclusive test: *only* consider the menu keybind to be activated if they're the *only* keys currently down
+		// This minimizes the likelihood of the menu randomly popping up when it shouldn't
+		isMenuKeybind = DownKeys == Cfg.SettingsKeybind();
 
-		bool mountOverlay = !Cfg.MountOverlayKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayKeybind().begin(), Cfg.MountOverlayKeybind().end());
-		bool mountOverlayLocked = !Cfg.MountOverlayLockedKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayLockedKeybind().begin(), Cfg.MountOverlayLockedKeybind().end());
-
-		DisplayMountOverlay = mountOverlayLocked || mountOverlay;
-
-		if (DisplayMountOverlay && !oldMountOverlay)
-		{
-			// Mount overlay is turned on
-
-			if (mountOverlayLocked)
-			{
-				OverlayPosition.x = OverlayPosition.y = 0.5f;
-
-				// Attempt to move the cursor to the middle of the screen
-				if (Cfg.ResetCursorOnLockedKeybind())
-				{
-					RECT rect = { 0 };
-					if (GetWindowRect(GameWindow, &rect))
-					{
-						if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
-						{
-							auto& io = ImGui::GetIO();
-							io.MousePos.x = ScreenWidth * 0.5f;
-							io.MousePos.y = ScreenHeight * 0.5f;
-						}
-					}
-				}
-			}
-			else
-			{
-				const auto& io = ImGui::GetIO();
-				OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
-				OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
-			}
-
-			OverlayTime = timeInMS();
-
-			DetermineHoveredMount();
-		}
-		else if (!DisplayMountOverlay && oldMountOverlay)
-		{
-			// Mount overlay is turned off, send the keybind
-			if (CurrentMountHovered != CMH_NONE)
-				SendKeybind(Cfg.MountKeybind((uint)CurrentMountHovered));
-
-			CurrentMountHovered = CMH_NONE;
-		}
-
-		if (isMenuKeybind)
+		if(isMenuKeybind)
 			DisplayOptionsWindow = true;
 		else
 		{
-			// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
-			bool keyLifted = false;
-			auto fullKeybind = DownKeys;
-			for (const auto& ek : eventKeys)
+			bool oldMountOverlay = DisplayMountOverlay;
+
+			bool mountOverlay = !Cfg.MountOverlayKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayKeybind().begin(), Cfg.MountOverlayKeybind().end());
+			bool mountOverlayLocked = !Cfg.MountOverlayLockedKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayLockedKeybind().begin(), Cfg.MountOverlayLockedKeybind().end());
+
+			DisplayMountOverlay = mountOverlayLocked || mountOverlay;
+
+			if (DisplayMountOverlay && !oldMountOverlay)
 			{
-				if (!ek.down)
+				// Mount overlay is turned on
+
+				if (mountOverlayLocked)
 				{
-					fullKeybind.insert(ek.vk);
-					keyLifted = true;
+					OverlayPosition.x = OverlayPosition.y = 0.5f;
+
+					// Attempt to move the cursor to the middle of the screen
+					if (Cfg.ResetCursorOnLockedKeybind())
+					{
+						RECT rect = { 0 };
+						if (GetWindowRect(GameWindow, &rect))
+						{
+							if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
+							{
+								auto& io = ImGui::GetIO();
+								io.MousePos.x = ScreenWidth * 0.5f;
+								io.MousePos.y = ScreenHeight * 0.5f;
+							}
+						}
+					}
 				}
+				else
+				{
+					const auto& io = ImGui::GetIO();
+					OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
+					OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
+				}
+
+				OverlayTime = timeInMS();
+
+				DetermineHoveredMount();
+			}
+			else if (!DisplayMountOverlay && oldMountOverlay)
+			{
+				// Mount overlay is turned off, send the keybind
+				if (CurrentMountHovered != CMH_NONE)
+					SendKeybind(Cfg.MountKeybind((uint)CurrentMountHovered));
+
+				CurrentMountHovered = CMH_NONE;
 			}
 
-			// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
-			fullKeybind.erase(VK_LBUTTON);
+			{
+				// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
+				bool keyLifted = false;
+				auto fullKeybind = DownKeys;
+				for (const auto& ek : eventKeys)
+				{
+					if (!ek.down)
+					{
+						fullKeybind.insert(ek.vk);
+						keyLifted = true;
+					}
+				}
 
-			MainKeybind.CheckSetKeybind(fullKeybind, keyLifted);
-			MainLockedKeybind.CheckSetKeybind(fullKeybind, keyLifted);
+				// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
+				fullKeybind.erase(VK_LBUTTON);
 
-			for (uint i = 0; i < 5; i++)
-				MountKeybinds[i].CheckSetKeybind(fullKeybind, keyLifted);
+				MainKeybind.CheckSetKeybind(fullKeybind, keyLifted);
+				MainLockedKeybind.CheckSetKeybind(fullKeybind, keyLifted);
+
+				for (uint i = 0; i < 5; i++)
+					MountKeybinds[i].CheckSetKeybind(fullKeybind, keyLifted);
+			}
 		}
 	}
 
@@ -610,8 +682,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			const auto& io2 = ImGui::GetIO();
 
 			short mx, my;
-			mx = io2.MousePos.x;
-			my = io2.MousePos.y;
+			mx = (short)io2.MousePos.x;
+			my = (short)io2.MousePos.y;
 			lParam = MAKELPARAM(mx, my);
 			break;
 		}
@@ -661,29 +733,23 @@ Augmented Callbacks
 
 ULONG GameRefCount = 1;
 
-HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
-	HWND hFocusWindow, DWORD BehaviorFlags,
-	D3DPRESENT_PARAMETERS *pPresentationParameters,
-	IDirect3DDevice9 **ppReturnedDeviceInterface)
+void PreCreateDevice(HWND hFocusWindow)
 {
 	GameWindow = hFocusWindow;
 
 	// Hook WndProc
 	BaseWndProc = (WNDPROC)GetWindowLongPtr(hFocusWindow, GWLP_WNDPROC);
 	SetWindowLongPtr(hFocusWindow, GWLP_WNDPROC, (LONG_PTR)&WndProc);
+}
 
-	// Create and initialize device
-	IDirect3DDevice9* temp_device = nullptr;
-	HRESULT hr = f_pD3D->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
-	RealDevice = temp_device;
-	*ppReturnedDeviceInterface = new f_IDirect3DDevice9(temp_device);
-
+void PostCreateDevice(IDirect3DDevice9* temp_device, D3DPRESENT_PARAMETERS *pPresentationParameters)
+{
 	// Init ImGui
 	auto& imio = ImGui::GetIO();
 	imio.IniFilename = Cfg.ImGuiConfigLocation();
 
 	// Setup ImGui binding
-	ImGui_ImplDX9_Init(hFocusWindow, temp_device);
+	ImGui_ImplDX9_Init(GameWindow, temp_device);
 
 	// Initialize graphics
 	ScreenWidth = pPresentationParameters->BackBufferWidth;
@@ -703,19 +769,66 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
 
 	// Initialize reference count for device object
 	GameRefCount = 1;
+}
+
+HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
+	HWND hFocusWindow, DWORD BehaviorFlags,
+	D3DPRESENT_PARAMETERS *pPresentationParameters,
+	IDirect3DDevice9 **ppReturnedDeviceInterface)
+{
+	PreCreateDevice(hFocusWindow);
+
+	// Create and initialize device
+	IDirect3DDevice9* temp_device = nullptr;
+	HRESULT hr = f_pD3D->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
+	RealDevice = temp_device;
+	*ppReturnedDeviceInterface = new f_IDirect3DDevice9(temp_device);
+
+	PostCreateDevice(temp_device, pPresentationParameters);
 
 	return hr;
 }
 
-HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters)
+HRESULT f_iD3D9Ex::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS * pPresentationParameters, D3DDISPLAYMODEEX * pFullscreenDisplayMode, IDirect3DDevice9Ex ** ppReturnedDeviceInterface)
+{
+	PreCreateDevice(hFocusWindow);
+
+	// Create and initialize device
+	IDirect3DDevice9Ex* temp_device = nullptr;
+	HRESULT hr = f_pD3DEx->CreateDeviceEx(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode, &temp_device);
+	RealDevice = temp_device;
+	*ppReturnedDeviceInterface = new f_IDirect3DDevice9Ex(temp_device);
+
+	PostCreateDevice(temp_device, pPresentationParameters);
+
+	return hr;
+}
+
+HRESULT f_iD3D9Ex::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS * pPresentationParameters, IDirect3DDevice9 ** ppReturnedDeviceInterface)
+{
+	PreCreateDevice(hFocusWindow);
+
+	// Create and initialize device
+	IDirect3DDevice9* temp_device = nullptr;
+	HRESULT hr = f_pD3DEx->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
+	RealDevice = temp_device;
+	*ppReturnedDeviceInterface = new f_IDirect3DDevice9(temp_device);
+
+	PostCreateDevice(temp_device, pPresentationParameters);
+
+	return hr;
+}
+
+void PreReset()
 {
 	ImGui_ImplDX9_InvalidateDeviceObjects();
 	Quad.reset();
 	UnloadMountTextures();
 	COM_RELEASE(MainEffect);
+}
 
-	HRESULT hr = f_pD3DDevice->Reset(pPresentationParameters);
-
+void PostReset(D3DPRESENT_PARAMETERS *pPresentationParameters)
+{
 	ScreenWidth = pPresentationParameters->BackBufferWidth;
 	ScreenHeight = pPresentationParameters->BackBufferHeight;
 
@@ -732,19 +845,49 @@ HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters
 	{
 		Quad = nullptr;
 	}
+}
+
+HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters)
+{
+	PreReset();
+
+	HRESULT hr = f_pD3DDevice->Reset(pPresentationParameters);
+
+	PostReset(pPresentationParameters);
 
 	return hr;
 }
 
+HRESULT f_IDirect3DDevice9Ex::ResetEx(D3DPRESENT_PARAMETERS * pPresentationParameters, D3DDISPLAYMODEEX * pFullscreenDisplayMode)
+{
+	PreReset();
 
-HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRect, HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion)
+	HRESULT hr = f_pD3DDeviceEx->ResetEx(pPresentationParameters, pFullscreenDisplayMode);
+
+	PostReset(pPresentationParameters);
+
+	return hr;
+}
+
+HRESULT f_IDirect3DDevice9Ex::Reset(D3DPRESENT_PARAMETERS * pPresentationParameters)
+{
+	PreReset();
+
+	HRESULT hr = f_pD3DDeviceEx->Reset(pPresentationParameters);
+
+	PostReset(pPresentationParameters);
+
+	return hr;
+}
+
+void Draw(IDirect3DDevice9* dev)
 {
 	// This is the closest we have to a reliable "update" function, so use it as one
 	SendQueuedInputs();
 
 	// We have to use Present rather than hooking EndScene because the game seems to do final UI compositing after EndScene
 	// This unfortunately means that we have to call Begin/EndScene before Present so we can render things, but thankfully for modern GPUs that doesn't cause bugs
-	f_pD3DDevice->BeginScene();
+	dev->BeginScene();
 
 	ImGui_ImplDX9_NewFrame();
 
@@ -925,9 +1068,28 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 		}
 	}
 
-	f_pD3DDevice->EndScene();
+	dev->EndScene();
+}
+
+HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRect, HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion)
+{
+	Draw(f_pD3DDevice);
 
 	return f_pD3DDevice->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+}
+
+HRESULT f_IDirect3DDevice9Ex::PresentEx(CONST RECT * pSourceRect, CONST RECT * pDestRect, HWND hDestWindowOverride, CONST RGNDATA * pDirtyRegion, DWORD dwFlags)
+{
+	Draw(f_pD3DDeviceEx);
+
+	return f_pD3DDeviceEx->PresentEx(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+}
+
+HRESULT f_IDirect3DDevice9Ex::Present(CONST RECT *pSourceRect, CONST RECT *pDestRect, HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion)
+{
+	Draw(f_pD3DDeviceEx);
+
+	return f_pD3DDeviceEx->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }
 
 void Shutdown()

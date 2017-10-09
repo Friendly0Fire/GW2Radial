@@ -1,25 +1,22 @@
 #pragma once
-#include <d3d9.h>
+#include "d3d9.h"
 
-IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion);
+IDirect3D9Ex *WINAPI Direct3DCreate9Ex(UINT SDKVersion);
 
-// Heavily based off this Gist: https://gist.github.com/shaunlebron/3854bf4eec5bec297907
-// Minor modifications where necessary
-
-typedef IDirect3D9 *(WINAPI *D3DC9)(UINT);
-extern D3DC9 orig_Direct3DCreate9;
+typedef IDirect3D9Ex *(WINAPI *D3DC9Ex)(UINT);
+extern D3DC9Ex orig_Direct3DCreate9Ex;
 
 /*************************
-D3D Wrapper Class
+D3DEx Wrapper Class
 *************************/
-class f_iD3D9 : public IDirect3D9
+class f_iD3D9Ex : public IDirect3D9Ex
 {
 private:
-	LPDIRECT3D9 f_pD3D;
+	LPDIRECT3D9EX f_pD3DEx;
 
 public:
-	f_iD3D9(LPDIRECT3D9 pDirect3D) { f_pD3D = pDirect3D; }
-	f_iD3D9() { f_pD3D = NULL; }
+	f_iD3D9Ex(LPDIRECT3D9EX pDirect3D) { f_pD3DEx = pDirect3D; }
+	f_iD3D9Ex() { f_pD3DEx = NULL; }
 
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
@@ -41,19 +38,24 @@ public:
 	STDMETHOD(GetDeviceCaps)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, D3DCAPS9* pCaps);
 	STDMETHOD_(HMONITOR, GetAdapterMonitor)(THIS_ UINT Adapter);
 	STDMETHOD(CreateDevice)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface);
+	STDMETHOD_(UINT, GetAdapterModeCountEx)(THIS_ UINT Adapter, CONST D3DDISPLAYMODEFILTER* pFilter);
+	STDMETHOD(EnumAdapterModesEx)(THIS_ UINT Adapter, CONST D3DDISPLAYMODEFILTER* pFilter, UINT Mode, D3DDISPLAYMODEEX* pMode);
+	STDMETHOD(GetAdapterDisplayModeEx)(THIS_ UINT Adapter, D3DDISPLAYMODEEX* pMode, D3DDISPLAYROTATION* pRotation);
+	STDMETHOD(CreateDeviceEx)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* pFullscreenDisplayMode, IDirect3DDevice9Ex** ppReturnedDeviceInterface);
+	STDMETHOD(GetAdapterLUID)(THIS_ UINT Adapter, LUID * pLUID);
 };
 
 /*************************
-Device Wrapper Class
+DeviceEx Wrapper Class
 *************************/
-class f_IDirect3DDevice9 : public IDirect3DDevice9
+class f_IDirect3DDevice9Ex : public IDirect3DDevice9Ex
 {
 private:
-	LPDIRECT3DDEVICE9 f_pD3DDevice;
+	LPDIRECT3DDEVICE9EX f_pD3DDeviceEx;
 
 public:
-	f_IDirect3DDevice9(LPDIRECT3DDEVICE9 pDevice);
-	f_IDirect3DDevice9() { f_pD3DDevice = NULL; }
+	f_IDirect3DDevice9Ex(LPDIRECT3DDEVICE9EX pDevice);
+	f_IDirect3DDevice9Ex() { f_pD3DDeviceEx = NULL; }
 
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
@@ -177,4 +179,19 @@ public:
 	STDMETHOD(DrawTriPatch)(THIS_ UINT Handle, CONST float* pNumSegs, CONST D3DTRIPATCH_INFO* pTriPatchInfo);
 	STDMETHOD(DeletePatch)(THIS_ UINT Handle);
 	STDMETHOD(CreateQuery)(THIS_ D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery);
+	STDMETHOD(SetConvolutionMonoKernel)(THIS_ UINT width, UINT height, float* rows, float* columns);
+	STDMETHOD(ComposeRects)(THIS_ IDirect3DSurface9* pSrc, IDirect3DSurface9* pDst, IDirect3DVertexBuffer9* pSrcRectDescs, UINT NumRects, IDirect3DVertexBuffer9* pDstRectDescs, D3DCOMPOSERECTSOP Operation, int Xoffset, int Yoffset);
+	STDMETHOD(PresentEx)(THIS_ CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags);
+	STDMETHOD(GetGPUThreadPriority)(THIS_ INT* pPriority);
+	STDMETHOD(SetGPUThreadPriority)(THIS_ INT Priority);
+	STDMETHOD(WaitForVBlank)(THIS_ UINT iSwapChain);
+	STDMETHOD(CheckResourceResidency)(THIS_ IDirect3DResource9** pResourceArray, UINT32 NumResources);
+	STDMETHOD(SetMaximumFrameLatency)(THIS_ UINT MaxLatency);
+	STDMETHOD(GetMaximumFrameLatency)(THIS_ UINT* pMaxLatency);
+	STDMETHOD(CheckDeviceState)(THIS_ HWND hDestinationWindow);
+	STDMETHOD(CreateRenderTargetEx)(THIS_ UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle, DWORD Usage);
+	STDMETHOD(CreateOffscreenPlainSurfaceEx)(THIS_ UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle, DWORD Usage);
+	STDMETHOD(CreateDepthStencilSurfaceEx)(THIS_ UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle, DWORD Usage);
+	STDMETHOD(ResetEx)(THIS_ D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode);
+	STDMETHOD(GetDisplayModeEx)(THIS_ UINT iSwapChain, D3DDISPLAYMODEEX* pMode, D3DDISPLAYROTATION* pRotation);
 };
