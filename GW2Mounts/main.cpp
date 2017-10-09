@@ -1,6 +1,4 @@
 #include "main.h"
-#include "d3d9.h"
-#include "d3d9ex.h"
 #include <tchar.h>
 #include <imgui.h>
 #include <examples\directx9_example\imgui_impl_dx9.h>
@@ -13,11 +11,115 @@
 #include <functional>
 #include "minhook/include/MinHook.h"
 #include <Shlwapi.h>
+#include <d3d9.h>
+#include "vftable.h"
+
+typedef IDirect3D9* (WINAPI *Direct3DCreate9_t)(UINT SDKVersion);
+typedef IDirect3D9Ex* (WINAPI *Direct3DCreate9Ex_t)(UINT SDKVersion);
+
+void PreCreateDevice(HWND hFocusWindow);
+void PostCreateDevice(IDirect3DDevice9* temp_device, D3DPRESENT_PARAMETERS *pPresentationParameters);
+
+CreateDevice_t CreateDevice_real = nullptr;
+HRESULT WINAPI CreateDevice_hook(IDirect3D9* _this, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface)
+{
+	PreCreateDevice(hFocusWindow);
+
+	IDirect3DDevice9* temp_device = nullptr;
+	HRESULT hr = CreateDevice_real(_this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
+	if (hr != D3D_OK)
+		return hr;
+
+	*ppReturnedDeviceInterface = temp_device;
+
+	PostCreateDevice(temp_device, pPresentationParameters);
+
+	return hr;
+}
+
+CreateDeviceEx_t CreateDeviceEx_real = nullptr;
+HRESULT WINAPI CreateDeviceEx_hook(IDirect3D9Ex* _this, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* pFullscreenDisplayMode, IDirect3DDevice9** ppReturnedDeviceInterface)
+{
+	PreCreateDevice(hFocusWindow);
+
+	IDirect3DDevice9Ex* temp_device = nullptr;
+	HRESULT hr = CreateDeviceEx_real(_this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode, &temp_device);
+	if (hr != D3D_OK)
+		return hr;
+
+	*ppReturnedDeviceInterface = temp_device;
+
+	PostCreateDevice(temp_device, pPresentationParameters);
+
+	return hr;
+}
+
+void Draw(IDirect3DDevice9* dev);
+
+Present_t Present_real = nullptr;
+HRESULT WINAPI Present_hook(IDirect3DDevice9* _this, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
+{
+	Draw(_this);
+
+	return Present_real(_this, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+}
+
+PresentEx_t PresentEx_real = nullptr;
+HRESULT WINAPI PresentEx_hook(IDirect3DDevice9Ex* _this, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags)
+{
+	Draw(_this);
+
+	return PresentEx_real(_this, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+}
+
+void PreReset();
+void PostReset(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS *pPresentationParameters);
+
+Reset_t Reset_real = nullptr;
+HRESULT WINAPI Reset_hook(IDirect3DDevice9* _this, D3DPRESENT_PARAMETERS* pPresentationParameters)
+{
+	PreReset();
+
+	HRESULT hr = Reset_real(_this, pPresentationParameters);
+	if (hr != D3D_OK)
+		return hr;
+
+	PostReset(_this, pPresentationParameters);
+
+	return D3D_OK;
+}
+
+ResetEx_t ResetEx_real = nullptr;
+HRESULT WINAPI ResetEx_hook(IDirect3DDevice9Ex* _this, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
+{
+	PreReset();
+
+	HRESULT hr = ResetEx_real(_this, pPresentationParameters, pFullscreenDisplayMode);
+	if (hr != D3D_OK)
+		return hr;
+
+	PostReset(_this, pPresentationParameters);
+
+	return D3D_OK;
+}
+
+Release_t Release_real = nullptr;
+ULONG WINAPI Release_hook(IDirect3DDevice9* _this)
+{
+	ULONG refcount = Release_real(_this);
+
+	return refcount;
+}
+
+AddRef_t AddRef_real = nullptr;
+ULONG WINAPI AddRef_hook(IDirect3DDevice9* _this)
+{
+	return AddRef_real(_this);
+}
 
 const float BaseSpriteSize = 0.4f;
 const float CircleRadiusScreen = 256.f / 1664.f * BaseSpriteSize * 0.5f;
 
-bool LoadedFromGame = true;
 Config Cfg;
 HWND GameWindow = 0;
 
@@ -271,9 +373,10 @@ void SendQueuedInputs()
 }
 
 WNDPROC BaseWndProc;
-HMODULE OriginalD3D9 = nullptr;
 HMODULE DllModule = nullptr;
-IDirect3DDevice9* RealDevice = nullptr;
+
+HMODULE RealD3D9Module = nullptr;
+HMODULE ChainD3D9Module = nullptr;
 
 // Rendering
 uint ScreenWidth, ScreenHeight;
@@ -283,12 +386,12 @@ IDirect3DTexture9* MountsTexture = nullptr;
 IDirect3DTexture9* MountTextures[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 IDirect3DTexture9* BgTexture = nullptr;
 
-void LoadMountTextures()
+void LoadMountTextures(IDirect3DDevice9* dev)
 {
-	D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_BG), &BgTexture);
-	D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNTS), &MountsTexture);
+	D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_BG), &BgTexture);
+	D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_MOUNTS), &MountsTexture);
 	for (uint i = 0; i < 6; i++)
-		D3DXCreateTextureFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_MOUNT1 + i), &MountTextures[i]);
+		D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_MOUNT1 + i), &MountTextures[i]);
 }
 
 void UnloadMountTextures()
@@ -325,7 +428,7 @@ DWORD WINAPI hook_GetModuleFileNameW(
 		return r;
 
 	const wchar_t* query = L"d3d9_mchain.dll";
-	const wchar_t* replacement = L"d3d9.dll2";
+	const wchar_t* replacement = L"d3d9.dll";
 
 	std::wstring path = cpath;
 
@@ -340,11 +443,20 @@ DWORD WINAPI hook_GetModuleFileNameW(
 
 void OnD3DCreate()
 {
-	if (!OriginalD3D9)
+	if (!RealD3D9Module)
 	{
 		TCHAR path[MAX_PATH];
 
-		// Try to chainload first
+		GetSystemDirectory(path, MAX_PATH);
+		_tcscat_s(path, TEXT("\\d3d9.dll"));
+
+		RealD3D9Module = LoadLibrary(path);
+	}
+
+	if(!ChainD3D9Module)
+	{
+		TCHAR path[MAX_PATH];
+
 		GetCurrentDirectory(MAX_PATH, path);
 		_tcscat_s(path, TEXT("\\d3d9_mchain.dll"));
 
@@ -354,38 +466,136 @@ void OnD3DCreate()
 			_tcscat_s(path, TEXT("\\bin64\\d3d9_mchain.dll"));
 		}
 
-		if (!FileExists(path))
-		{
-			GetSystemDirectory(path, MAX_PATH);
-			_tcscat_s(path, TEXT("\\d3d9.dll"));
-		}
-
-		OriginalD3D9 = LoadLibrary(path);
+		if (FileExists(path))
+			ChainD3D9Module = LoadLibrary(path);
 	}
 }
+
+void Shutdown()
+{
+	PreReset();
+	ImGui_ImplDX9_Shutdown();
+}
+
+D3DPRESENT_PARAMETERS SetupHookDevice(HWND &hWnd)
+{
+	WNDCLASSEXA wc = { 0 };
+	wc.cbSize = sizeof(wc);
+	wc.style = CS_CLASSDC;
+	wc.lpfnWndProc = DefWindowProc;
+	wc.hInstance = GetModuleHandleA(NULL);
+	wc.lpszClassName = "DXTMP";
+	RegisterClassExA(&wc);
+
+	hWnd = CreateWindowA("DXTMP", 0, WS_OVERLAPPEDWINDOW, 100, 100, 300, 300, GetDesktopWindow(), 0, wc.hInstance, 0);
+
+	D3DPRESENT_PARAMETERS d3dPar = { 0 };
+	d3dPar.Windowed = TRUE;
+	d3dPar.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	d3dPar.hDeviceWindow = hWnd;
+	d3dPar.BackBufferCount = 1;
+	d3dPar.BackBufferFormat = D3DFMT_X8R8G8B8;
+	d3dPar.BackBufferHeight = 300;
+	d3dPar.BackBufferHeight = 300;
+
+	return d3dPar;
+}
+
+void DeleteHookDevice(IDirect3DDevice9* pDev, HWND hWnd)
+{
+	COM_RELEASE(pDev);
+
+	DestroyWindow(hWnd);
+	UnregisterClassA("DXTMP", GetModuleHandleA(NULL));
+}
+
+bool HookedD3D = false;
 
 IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
 {
 	OnD3DCreate();
 
-	orig_Direct3DCreate9 = (D3DC9)GetProcAddress(OriginalD3D9, "Direct3DCreate9");
+	auto fDirect3DCreate9 = (Direct3DCreate9_t)GetProcAddress(RealD3D9Module, "Direct3DCreate9");
+	auto d3d = fDirect3DCreate9(SDKVersion);
 
-	if (LoadedFromGame)
-		return new f_iD3D9(orig_Direct3DCreate9(SDKVersion));
-	else
-		return orig_Direct3DCreate9(SDKVersion);
+	if (!HookedD3D)
+	{
+		auto vft = GetVirtualFunctionTableD3D9(d3d);
+
+		MH_CreateHook(vft.CreateDevice, (LPVOID)&CreateDevice_hook, (LPVOID*)&CreateDevice_real);
+		MH_EnableHook(MH_ALL_HOOKS);
+	}
+
+	if (ChainD3D9Module)
+	{
+		d3d->Release();
+
+		fDirect3DCreate9 = (Direct3DCreate9_t)GetProcAddress(ChainD3D9Module, "Direct3DCreate9");
+		d3d = fDirect3DCreate9(SDKVersion);
+	}
+
+	if (!HookedD3D)
+	{
+		HWND hWnd;
+		auto d3dpar = SetupHookDevice(hWnd);
+		IDirect3DDevice9* pDev;
+		CreateDevice_real(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpar, &pDev);
+
+		auto vftd = GetVirtualFunctionTableD3DDevice9(pDev);
+
+		DeleteHookDevice(pDev, hWnd);
+
+		MH_CreateHook(vftd.Reset, (LPVOID)&Reset_hook, (LPVOID*)&Reset_real);
+		MH_CreateHook(vftd.Present, (LPVOID)&Present_hook, (LPVOID*)&Present_real);
+		MH_CreateHook(vftd.Release, (LPVOID)&Release_hook, (LPVOID*)&Release_real);
+		MH_CreateHook(vftd.AddRef, (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
+		MH_EnableHook(MH_ALL_HOOKS);
+	}
+
+	HookedD3D = true;
+
+	return d3d;
 }
 
 IDirect3D9Ex *WINAPI Direct3DCreate9Ex(UINT SDKVersion)
 {
 	OnD3DCreate();
 
-	orig_Direct3DCreate9Ex = (D3DC9Ex)GetProcAddress(OriginalD3D9, "Direct3DCreate9Ex");
+	auto fDirect3DCreate9 = (Direct3DCreate9Ex_t)GetProcAddress(RealD3D9Module, "Direct3DCreate9Ex");
+	auto d3d = fDirect3DCreate9(SDKVersion);
 
-	if (LoadedFromGame)
-		return new f_iD3D9Ex(orig_Direct3DCreate9Ex(SDKVersion));
-	else
-		return orig_Direct3DCreate9Ex(SDKVersion);
+	auto vft = GetVirtualFunctionTableD3D9Ex(d3d);
+
+	MH_CreateHook(vft.CreateDevice, (LPVOID)&CreateDevice_hook, (LPVOID*)&CreateDevice_real);
+	MH_CreateHook(vft.CreateDeviceEx, (LPVOID)&CreateDeviceEx_hook, (LPVOID*)&CreateDeviceEx_real);
+	MH_EnableHook(MH_ALL_HOOKS);
+
+	if (ChainD3D9Module)
+	{
+		d3d->Release();
+
+		fDirect3DCreate9 = (Direct3DCreate9Ex_t)GetProcAddress(ChainD3D9Module, "Direct3DCreate9Ex");
+		d3d = fDirect3DCreate9(SDKVersion);
+	}
+
+	HWND hWnd;
+	auto d3dpar = SetupHookDevice(hWnd);
+	IDirect3DDevice9Ex* pDev;
+	CreateDeviceEx_real(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpar, nullptr, &pDev);
+
+	auto vftd = GetVirtualFunctionTableD3DDevice9Ex(pDev);
+
+	DeleteHookDevice(pDev, hWnd);
+
+	MH_CreateHook(vftd.Reset, (LPVOID)&Reset_hook, (LPVOID*)&Reset_real);
+	MH_CreateHook(vftd.Present, (LPVOID)&Present_hook, (LPVOID*)&Present_real);
+	MH_CreateHook(vftd.ResetEx, (LPVOID)&ResetEx_hook, (LPVOID*)&ResetEx_real);
+	MH_CreateHook(vftd.PresentEx, (LPVOID)&PresentEx_hook, (LPVOID*)&PresentEx_real);
+	MH_CreateHook(vftd.Release, (LPVOID)&Release_hook, (LPVOID*)&Release_real);
+	MH_CreateHook(vftd.AddRef, (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
+	MH_EnableHook(MH_ALL_HOOKS);
+
+	return d3d;
 }
 
 bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
@@ -396,10 +606,17 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	{
 		DllModule = hModule;
 
-		assert(MH_Initialize() == MH_OK);
+		// Add an extra reference count to the library so it persists through GW2's load-unload routine
+		// without which problems start arising with ReShade
+		{
+			TCHAR selfpath[MAX_PATH];
+			GetModuleFileName(DllModule, selfpath, MAX_PATH);
+			LoadLibrary(selfpath);
+		}
+
+		MH_Initialize();
 
 		MH_CreateHook(&GetModuleFileNameW, hook_GetModuleFileNameW, reinterpret_cast<LPVOID*>(&real_GetModuleFileNameW));
-
 		MH_EnableHook(MH_ALL_HOOKS);
 
 		Cfg.Load();
@@ -417,18 +634,11 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		break;
 	}
 	case DLL_PROCESS_DETACH:
-	{
-		if (OriginalD3D9)
-		{
-			FreeLibrary(OriginalD3D9);
-			OriginalD3D9 = nullptr;
-		}
-
-		MH_Uninitialize();
-
+		// We'll just leak a bunch of things and let the driver/OS take care of it, since we have no clean exit point
+		// and calling FreeLibrary in DllMain causes deadlocks
 		break;
 	}
-	}
+
 	return true;
 }
 
@@ -464,6 +674,8 @@ void DetermineHoveredMount()
 	if (LastMountHovered != CurrentMountHovered)
 		MountHoverTime = timeInMS();
 }
+
+void Shutdown();
 
 extern LRESULT ImGui_ImplDX9_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -727,19 +939,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return CallWindowProc(BaseWndProc, hWnd, msg, wParam, lParam);
 }
 
-/*************************
-Augmented Callbacks
-*************************/
-
-ULONG GameRefCount = 1;
-
 void PreCreateDevice(HWND hFocusWindow)
 {
 	GameWindow = hFocusWindow;
 
 	// Hook WndProc
-	BaseWndProc = (WNDPROC)GetWindowLongPtr(hFocusWindow, GWLP_WNDPROC);
-	SetWindowLongPtr(hFocusWindow, GWLP_WNDPROC, (LONG_PTR)&WndProc);
+	if (!BaseWndProc)
+	{
+		BaseWndProc = (WNDPROC)GetWindowLongPtr(hFocusWindow, GWLP_WNDPROC);
+		SetWindowLongPtr(hFocusWindow, GWLP_WNDPROC, (LONG_PTR)&WndProc);
+	}
 }
 
 void PostCreateDevice(IDirect3DDevice9* temp_device, D3DPRESENT_PARAMETERS *pPresentationParameters)
@@ -756,67 +965,16 @@ void PostCreateDevice(IDirect3DDevice9* temp_device, D3DPRESENT_PARAMETERS *pPre
 	ScreenHeight = pPresentationParameters->BackBufferHeight;
 	try
 	{
-		Quad = std::make_unique<UnitQuad>(RealDevice);
+		Quad = std::make_unique<UnitQuad>(temp_device);
 	}
 	catch (...)
 	{
 		Quad = nullptr;
 	}
 	ID3DXBuffer* errorBuffer = nullptr;
-	D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr, &MainEffect, &errorBuffer);
+	D3DXCreateEffectFromResource(temp_device, DllModule, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr, &MainEffect, &errorBuffer);
 	COM_RELEASE(errorBuffer);
-	LoadMountTextures();
-
-	// Initialize reference count for device object
-	GameRefCount = 1;
-}
-
-HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType,
-	HWND hFocusWindow, DWORD BehaviorFlags,
-	D3DPRESENT_PARAMETERS *pPresentationParameters,
-	IDirect3DDevice9 **ppReturnedDeviceInterface)
-{
-	PreCreateDevice(hFocusWindow);
-
-	// Create and initialize device
-	IDirect3DDevice9* temp_device = nullptr;
-	HRESULT hr = f_pD3D->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
-	RealDevice = temp_device;
-	*ppReturnedDeviceInterface = new f_IDirect3DDevice9(temp_device);
-
-	PostCreateDevice(temp_device, pPresentationParameters);
-
-	return hr;
-}
-
-HRESULT f_iD3D9Ex::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS * pPresentationParameters, D3DDISPLAYMODEEX * pFullscreenDisplayMode, IDirect3DDevice9Ex ** ppReturnedDeviceInterface)
-{
-	PreCreateDevice(hFocusWindow);
-
-	// Create and initialize device
-	IDirect3DDevice9Ex* temp_device = nullptr;
-	HRESULT hr = f_pD3DEx->CreateDeviceEx(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode, &temp_device);
-	RealDevice = temp_device;
-	*ppReturnedDeviceInterface = new f_IDirect3DDevice9Ex(temp_device);
-
-	PostCreateDevice(temp_device, pPresentationParameters);
-
-	return hr;
-}
-
-HRESULT f_iD3D9Ex::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS * pPresentationParameters, IDirect3DDevice9 ** ppReturnedDeviceInterface)
-{
-	PreCreateDevice(hFocusWindow);
-
-	// Create and initialize device
-	IDirect3DDevice9* temp_device = nullptr;
-	HRESULT hr = f_pD3DEx->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
-	RealDevice = temp_device;
-	*ppReturnedDeviceInterface = new f_IDirect3DDevice9(temp_device);
-
-	PostCreateDevice(temp_device, pPresentationParameters);
-
-	return hr;
+	LoadMountTextures(temp_device);
 }
 
 void PreReset()
@@ -827,57 +985,24 @@ void PreReset()
 	COM_RELEASE(MainEffect);
 }
 
-void PostReset(D3DPRESENT_PARAMETERS *pPresentationParameters)
+void PostReset(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS *pPresentationParameters)
 {
 	ScreenWidth = pPresentationParameters->BackBufferWidth;
 	ScreenHeight = pPresentationParameters->BackBufferHeight;
 
 	ImGui_ImplDX9_CreateDeviceObjects();
 	ID3DXBuffer* errorBuffer = nullptr;
-	D3DXCreateEffectFromResource(RealDevice, DllModule, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr, &MainEffect, &errorBuffer);
+	D3DXCreateEffectFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr, &MainEffect, &errorBuffer);
 	COM_RELEASE(errorBuffer);
-	LoadMountTextures();
+	LoadMountTextures(dev);
 	try
 	{
-		Quad = std::make_unique<UnitQuad>(RealDevice);
+		Quad = std::make_unique<UnitQuad>(dev);
 	}
 	catch (...)
 	{
 		Quad = nullptr;
 	}
-}
-
-HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters)
-{
-	PreReset();
-
-	HRESULT hr = f_pD3DDevice->Reset(pPresentationParameters);
-
-	PostReset(pPresentationParameters);
-
-	return hr;
-}
-
-HRESULT f_IDirect3DDevice9Ex::ResetEx(D3DPRESENT_PARAMETERS * pPresentationParameters, D3DDISPLAYMODEEX * pFullscreenDisplayMode)
-{
-	PreReset();
-
-	HRESULT hr = f_pD3DDeviceEx->ResetEx(pPresentationParameters, pFullscreenDisplayMode);
-
-	PostReset(pPresentationParameters);
-
-	return hr;
-}
-
-HRESULT f_IDirect3DDevice9Ex::Reset(D3DPRESENT_PARAMETERS * pPresentationParameters)
-{
-	PreReset();
-
-	HRESULT hr = f_pD3DDeviceEx->Reset(pPresentationParameters);
-
-	PostReset(pPresentationParameters);
-
-	return hr;
 }
 
 void Draw(IDirect3DDevice9* dev)
@@ -932,7 +1057,7 @@ void Draw(IDirect3DDevice9* dev)
 		vp.Height = (DWORD)ScreenHeight;
 		vp.MinZ = 0.0f;
 		vp.MaxZ = 1.0f;
-		RealDevice->SetViewport(&vp);
+		dev->SetViewport(&vp);
 
 		D3DXVECTOR4 screenSize((float)ScreenWidth, (float)ScreenHeight, 1.f / ScreenWidth, 1.f / ScreenHeight);
 
@@ -1069,50 +1194,4 @@ void Draw(IDirect3DDevice9* dev)
 	}
 
 	dev->EndScene();
-}
-
-HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRect, HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion)
-{
-	Draw(f_pD3DDevice);
-
-	return f_pD3DDevice->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
-}
-
-HRESULT f_IDirect3DDevice9Ex::PresentEx(CONST RECT * pSourceRect, CONST RECT * pDestRect, HWND hDestWindowOverride, CONST RGNDATA * pDirtyRegion, DWORD dwFlags)
-{
-	Draw(f_pD3DDeviceEx);
-
-	return f_pD3DDeviceEx->PresentEx(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
-}
-
-HRESULT f_IDirect3DDevice9Ex::Present(CONST RECT *pSourceRect, CONST RECT *pDestRect, HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion)
-{
-	Draw(f_pD3DDeviceEx);
-
-	return f_pD3DDeviceEx->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
-}
-
-void Shutdown()
-{
-	ImGui_ImplDX9_Shutdown();
-
-	Quad.reset();
-	COM_RELEASE(MainEffect);
-
-	UnloadMountTextures();
-}
-
-ULONG f_IDirect3DDevice9::AddRef()
-{
-	GameRefCount++;
-	return f_pD3DDevice->AddRef();
-}
-
-ULONG f_IDirect3DDevice9::Release()
-{
-	GameRefCount--;
-	if (GameRefCount == 0)
-		Shutdown();
-
-	return f_pD3DDevice->Release();
 }
