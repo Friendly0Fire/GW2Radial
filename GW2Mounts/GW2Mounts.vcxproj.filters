@@ -44,6 +44,9 @@
     <ClCompile Include="vftable.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="d3dhooks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">

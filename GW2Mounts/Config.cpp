@@ -52,7 +52,6 @@ void Config::Load()
 	// Load INI settings
 	_INI.SetUnicode();
 	_INI.LoadFile(_ConfigLocation);
-	_ShowGriffon = _stricmp(_INI.GetValue("General", "show_fifth_mount", "false"), "true") == 0;
 	_ResetCursorOnLockedKeybind = _stricmp(_INI.GetValue("General", "reset_cursor_on_locked_keybind", "true"), "true") == 0;
 	_LockCameraWhenOverlayed = _stricmp(_INI.GetValue("General", "lock_camera_when_overlayed", "true"), "true") == 0;
 
@@ -98,12 +97,6 @@ void Config::MountKeybind(uint i, const std::set<uint>& val)
 		setting_value += std::to_string(k) + ", ";
 
 	_INI.SetValue("Keybinds", ("mount_" + std::to_string(i)).c_str(), (setting_value.size() > 0 ? setting_value.substr(0, setting_value.size() - 2) : setting_value).c_str());
-	_INI.SaveFile(_ConfigLocation);
-}
-
-void Config::ShowGriffonSave()
-{
-	_INI.SetValue("General", "show_fifth_mount", _ShowGriffon ? "true" : "false");
 	_INI.SaveFile(_ConfigLocation);
 }
 

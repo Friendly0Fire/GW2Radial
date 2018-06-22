@@ -22,9 +22,6 @@ public:
 
 	const auto& SettingsKeybind() { return _SettingsKeybind; }
 
-	auto& ShowGriffon() { return _ShowGriffon; }
-	void ShowGriffonSave();
-
 	auto& ResetCursorOnLockedKeybind() { return _ResetCursorOnLockedKeybind; }
 	void ResetCursorOnLockedKeybindSave();
 
@@ -48,7 +45,6 @@ protected:
 	std::set<uint> _MountOverlayLockedKeybind;
 	std::set<uint> _MountKeybinds[5];
 	std::set<uint> _SettingsKeybind;
-	bool _ShowGriffon = false;
 	bool _ResetCursorOnLockedKeybind = true;
 	bool _LockCameraWhenOverlayed = true;
 };

@@ -12,110 +12,8 @@
 #include "minhook/include/MinHook.h"
 #include <Shlwapi.h>
 #include <d3d9.h>
-#include "vftable.h"
-
-typedef IDirect3D9* (WINAPI *Direct3DCreate9_t)(UINT SDKVersion);
-typedef IDirect3D9Ex* (WINAPI *Direct3DCreate9Ex_t)(UINT SDKVersion);
-
-void PreCreateDevice(HWND hFocusWindow);
-void PostCreateDevice(IDirect3DDevice9* temp_device, D3DPRESENT_PARAMETERS *pPresentationParameters);
-
-CreateDevice_t CreateDevice_real = nullptr;
-HRESULT WINAPI CreateDevice_hook(IDirect3D9* _this, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface)
-{
-	PreCreateDevice(hFocusWindow);
-
-	IDirect3DDevice9* temp_device = nullptr;
-	HRESULT hr = CreateDevice_real(_this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
-	if (hr != D3D_OK)
-		return hr;
-
-	*ppReturnedDeviceInterface = temp_device;
-
-	PostCreateDevice(temp_device, pPresentationParameters);
-
-	return hr;
-}
-
-CreateDeviceEx_t CreateDeviceEx_real = nullptr;
-HRESULT WINAPI CreateDeviceEx_hook(IDirect3D9Ex* _this, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* pFullscreenDisplayMode, IDirect3DDevice9** ppReturnedDeviceInterface)
-{
-	PreCreateDevice(hFocusWindow);
-
-	IDirect3DDevice9Ex* temp_device = nullptr;
-	HRESULT hr = CreateDeviceEx_real(_this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode, &temp_device);
-	if (hr != D3D_OK)
-		return hr;
-
-	*ppReturnedDeviceInterface = temp_device;
-
-	PostCreateDevice(temp_device, pPresentationParameters);
-
-	return hr;
-}
-
-void Draw(IDirect3DDevice9* dev);
-
-Present_t Present_real = nullptr;
-HRESULT WINAPI Present_hook(IDirect3DDevice9* _this, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
-{
-	Draw(_this);
-
-	return Present_real(_this, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
-}
-
-PresentEx_t PresentEx_real = nullptr;
-HRESULT WINAPI PresentEx_hook(IDirect3DDevice9Ex* _this, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags)
-{
-	Draw(_this);
-
-	return PresentEx_real(_this, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
-}
 
 void PreReset();
-void PostReset(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS *pPresentationParameters);
-
-Reset_t Reset_real = nullptr;
-HRESULT WINAPI Reset_hook(IDirect3DDevice9* _this, D3DPRESENT_PARAMETERS* pPresentationParameters)
-{
-	PreReset();
-
-	HRESULT hr = Reset_real(_this, pPresentationParameters);
-	if (hr != D3D_OK)
-		return hr;
-
-	PostReset(_this, pPresentationParameters);
-
-	return D3D_OK;
-}
-
-ResetEx_t ResetEx_real = nullptr;
-HRESULT WINAPI ResetEx_hook(IDirect3DDevice9Ex* _this, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
-{
-	PreReset();
-
-	HRESULT hr = ResetEx_real(_this, pPresentationParameters, pFullscreenDisplayMode);
-	if (hr != D3D_OK)
-		return hr;
-
-	PostReset(_this, pPresentationParameters);
-
-	return D3D_OK;
-}
-
-Release_t Release_real = nullptr;
-ULONG WINAPI Release_hook(IDirect3DDevice9* _this)
-{
-	ULONG refcount = Release_real(_this);
-
-	return refcount;
-}
-
-AddRef_t AddRef_real = nullptr;
-ULONG WINAPI AddRef_hook(IDirect3DDevice9* _this)
-{
-	return AddRef_real(_this);
-}
 
 const float BaseSpriteSize = 0.4f;
 const float CircleRadiusScreen = 256.f / 1664.f * BaseSpriteSize * 0.5f;
@@ -375,9 +273,6 @@ void SendQueuedInputs()
 WNDPROC BaseWndProc;
 HMODULE DllModule = nullptr;
 
-HMODULE RealD3D9Module = nullptr;
-HMODULE ChainD3D9Module = nullptr;
-
 // Rendering
 uint ScreenWidth, ScreenHeight;
 std::unique_ptr<UnitQuad> Quad;
@@ -441,161 +336,10 @@ DWORD WINAPI hook_GetModuleFileNameW(
 	return min(r, (DWORD)path.length());
 }
 
-void OnD3DCreate()
-{
-	if (!RealD3D9Module)
-	{
-		TCHAR path[MAX_PATH];
-
-		GetSystemDirectory(path, MAX_PATH);
-		_tcscat_s(path, TEXT("\\d3d9.dll"));
-
-		RealD3D9Module = LoadLibrary(path);
-	}
-
-	if(!ChainD3D9Module)
-	{
-		TCHAR path[MAX_PATH];
-
-		GetCurrentDirectory(MAX_PATH, path);
-		_tcscat_s(path, TEXT("\\d3d9_mchain.dll"));
-
-		if (!FileExists(path))
-		{
-			GetCurrentDirectory(MAX_PATH, path);
-			_tcscat_s(path, TEXT("\\bin64\\d3d9_mchain.dll"));
-		}
-
-		if (FileExists(path))
-			ChainD3D9Module = LoadLibrary(path);
-	}
-}
-
 void Shutdown()
 {
 	PreReset();
 	ImGui_ImplDX9_Shutdown();
-}
-
-D3DPRESENT_PARAMETERS SetupHookDevice(HWND &hWnd)
-{
-	WNDCLASSEXA wc = { 0 };
-	wc.cbSize = sizeof(wc);
-	wc.style = CS_CLASSDC;
-	wc.lpfnWndProc = DefWindowProc;
-	wc.hInstance = GetModuleHandleA(NULL);
-	wc.lpszClassName = "DXTMP";
-	RegisterClassExA(&wc);
-
-	hWnd = CreateWindowA("DXTMP", 0, WS_OVERLAPPEDWINDOW, 100, 100, 300, 300, GetDesktopWindow(), 0, wc.hInstance, 0);
-
-	D3DPRESENT_PARAMETERS d3dPar = { 0 };
-	d3dPar.Windowed = TRUE;
-	d3dPar.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	d3dPar.hDeviceWindow = hWnd;
-	d3dPar.BackBufferCount = 1;
-	d3dPar.BackBufferFormat = D3DFMT_X8R8G8B8;
-	d3dPar.BackBufferHeight = 300;
-	d3dPar.BackBufferHeight = 300;
-
-	return d3dPar;
-}
-
-void DeleteHookDevice(IDirect3DDevice9* pDev, HWND hWnd)
-{
-	COM_RELEASE(pDev);
-
-	DestroyWindow(hWnd);
-	UnregisterClassA("DXTMP", GetModuleHandleA(NULL));
-}
-
-bool HookedD3D = false;
-
-IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
-{
-	OnD3DCreate();
-
-	auto fDirect3DCreate9 = (Direct3DCreate9_t)GetProcAddress(RealD3D9Module, "Direct3DCreate9");
-	auto d3d = fDirect3DCreate9(SDKVersion);
-
-	if (!HookedD3D)
-	{
-		auto vft = GetVirtualFunctionTableD3D9(d3d);
-
-		MH_CreateHook(vft.CreateDevice, (LPVOID)&CreateDevice_hook, (LPVOID*)&CreateDevice_real);
-		MH_EnableHook(MH_ALL_HOOKS);
-	}
-
-	if (ChainD3D9Module)
-	{
-		d3d->Release();
-
-		fDirect3DCreate9 = (Direct3DCreate9_t)GetProcAddress(ChainD3D9Module, "Direct3DCreate9");
-		d3d = fDirect3DCreate9(SDKVersion);
-	}
-
-	if (!HookedD3D)
-	{
-		HWND hWnd;
-		auto d3dpar = SetupHookDevice(hWnd);
-		IDirect3DDevice9* pDev;
-		CreateDevice_real(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpar, &pDev);
-
-		auto vftd = GetVirtualFunctionTableD3DDevice9(pDev);
-
-		DeleteHookDevice(pDev, hWnd);
-
-		MH_CreateHook(vftd.Reset, (LPVOID)&Reset_hook, (LPVOID*)&Reset_real);
-		MH_CreateHook(vftd.Present, (LPVOID)&Present_hook, (LPVOID*)&Present_real);
-		MH_CreateHook(vftd.Release, (LPVOID)&Release_hook, (LPVOID*)&Release_real);
-		MH_CreateHook(vftd.AddRef, (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
-		MH_EnableHook(MH_ALL_HOOKS);
-	}
-
-	HookedD3D = true;
-
-	return d3d;
-}
-
-IDirect3D9Ex *WINAPI Direct3DCreate9Ex(UINT SDKVersion)
-{
-	OnD3DCreate();
-
-	auto fDirect3DCreate9 = (Direct3DCreate9Ex_t)GetProcAddress(RealD3D9Module, "Direct3DCreate9Ex");
-	auto d3d = fDirect3DCreate9(SDKVersion);
-
-	auto vft = GetVirtualFunctionTableD3D9Ex(d3d);
-
-	MH_CreateHook(vft.CreateDevice, (LPVOID)&CreateDevice_hook, (LPVOID*)&CreateDevice_real);
-	MH_CreateHook(vft.CreateDeviceEx, (LPVOID)&CreateDeviceEx_hook, (LPVOID*)&CreateDeviceEx_real);
-	MH_EnableHook(MH_ALL_HOOKS);
-
-	if (ChainD3D9Module)
-	{
-		d3d->Release();
-
-		fDirect3DCreate9 = (Direct3DCreate9Ex_t)GetProcAddress(ChainD3D9Module, "Direct3DCreate9Ex");
-		d3d = fDirect3DCreate9(SDKVersion);
-	}
-
-	HWND hWnd;
-	auto d3dpar = SetupHookDevice(hWnd);
-	IDirect3DDevice9Ex* pDev;
-	CreateDeviceEx_real(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpar, nullptr, &pDev);
-
-	auto vftd = GetVirtualFunctionTableD3DDevice9Ex(pDev);
-
-	DeleteHookDevice(pDev, hWnd);
-
-	MH_CreateHook(vftd.Reset, (LPVOID)&Reset_hook, (LPVOID*)&Reset_real);
-	MH_CreateHook(vftd.Present, (LPVOID)&Present_hook, (LPVOID*)&Present_real);
-	MH_CreateHook(vftd.ResetEx, (LPVOID)&ResetEx_hook, (LPVOID*)&ResetEx_real);
-	MH_CreateHook(vftd.PresentEx, (LPVOID)&PresentEx_hook, (LPVOID*)&PresentEx_real);
-	MH_CreateHook(vftd.Release, (LPVOID)&Release_hook, (LPVOID*)&Release_real);
-	MH_CreateHook(vftd.AddRef, (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
-	MH_EnableHook(MH_ALL_HOOKS);
-
-	return d3d;
 }
 
 bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
@@ -666,10 +410,8 @@ void DetermineHoveredMount()
 		else
 			CurrentMountHovered = CMH_NONE;
 	}
-	else if (Cfg.ShowGriffon())
-		CurrentMountHovered = CMH_GRIFFON;
 	else
-		CurrentMountHovered = CMH_NONE;
+		CurrentMountHovered = CMH_GRIFFON;
 
 	if (LastMountHovered != CurrentMountHovered)
 		MountHoverTime = timeInMS();
@@ -1023,8 +765,6 @@ void Draw(IDirect3DDevice9* dev)
 		ImGuiKeybindInput("Overlay Keybind", MainKeybind);
 		ImGuiKeybindInput("Overlay Keybind (Center Locked)", MainLockedKeybind);
 
-		if (Cfg.ShowGriffon() != ImGui::Checkbox("Show 5th mount", &Cfg.ShowGriffon()))
-			Cfg.ShowGriffonSave();
 		if (Cfg.ResetCursorOnLockedKeybind() != ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
 			Cfg.ResetCursorOnLockedKeybindSave();
 		if (Cfg.LockCameraWhenOverlayed() != ImGui::Checkbox("Lock camera when overlay is displayed", &Cfg.LockCameraWhenOverlayed()))
@@ -1034,7 +774,7 @@ void Draw(IDirect3DDevice9* dev)
 		ImGui::Text("Mount Keybinds");
 		ImGui::Text("(set to relevant game keybinds)");
 
-		for (uint i = 0; i < (Cfg.ShowGriffon() ? 5u : 4u); i++)
+		for (uint i = 0; i < 5u; i++)
 			ImGuiKeybindInput(GetMountName((CurrentMountHovered_t)i), MountKeybinds[i]);
 
 		ImGui::End();
@@ -1138,7 +878,6 @@ void Draw(IDirect3DDevice9* dev)
 		MainEffect->SetVector("g_vScreenSize", &screenSize);
 		MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime) / 1000.f * 6));
 
-		if (Cfg.ShowGriffon())
 		{
 			D3DXVECTOR4 griffonSpriteDimensions = baseSpriteDimensions;
 			griffonSpriteDimensions.z *= 512.f / 1664.f;
