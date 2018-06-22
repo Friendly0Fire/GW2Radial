@@ -175,44 +175,6 @@ void UnloadMountTextures()
 		COM_RELEASE(MountTextures[i]);
 }
 
-typedef DWORD(WINAPI *GetModuleFileNameW_t)(
-	_In_opt_ HMODULE hModule,
-	_Out_    LPTSTR  lpFilename,
-	_In_     DWORD   nSize
-	);
-GetModuleFileNameW_t real_GetModuleFileNameW = nullptr;
-
-DWORD WINAPI hook_GetModuleFileNameW(
-	_In_opt_ HMODULE hModule,
-	_Out_    LPTSTR  lpFilename,
-	_In_     DWORD   nSize
-)
-{
-	if(hModule == DllModule || hModule == nullptr)
-		return real_GetModuleFileNameW(hModule, lpFilename, nSize);
-
-	wchar_t cpath[MAX_PATH];
-	DWORD r = real_GetModuleFileNameW(hModule, cpath, MAX_PATH);
-	if (r == ERROR_INSUFFICIENT_BUFFER)
-		return r;
-
-	if (StrStrIW(cpath, L"bin64") == NULL)
-		return r;
-
-	const wchar_t* query = L"d3d9_mchain.dll";
-	const wchar_t* replacement = L"d3d9.dll";
-
-	std::wstring path = cpath;
-
-	size_t index = path.find(query, 0);
-	if (index != std::string::npos)
-		path.replace(index, wcslen(query), replacement);
-
-	wcscpy_s(lpFilename, nSize, path.c_str());
-
-	return min(r, (DWORD)path.length());
-}
-
 void Shutdown()
 {
 	PreReset();
@@ -236,9 +198,6 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		}
 
 		MH_Initialize();
-
-		MH_CreateHook(&GetModuleFileNameW, hook_GetModuleFileNameW, reinterpret_cast<LPVOID*>(&real_GetModuleFileNameW));
-		MH_EnableHook(MH_ALL_HOOKS);
 
 		Cfg.Load();
 

@@ -9,6 +9,8 @@
 
 #define COM_RELEASE(x) { if((x)) { (x)->Release(); (x) = nullptr; } }
 
+#define NULL_COALESCE(a, b) (a) ? (a) : (b)
+
 #include "resource.h"
 
 typedef unsigned char uchar;

@@ -20,40 +20,7 @@ void OnD3DCreate();
 
 HMODULE RealD3D9Module = nullptr;
 HMODULE ChainD3D9Module = nullptr;
-
-CreateDevice_t CreateDevice_real = nullptr;
-HRESULT WINAPI CreateDevice_hook(IDirect3D9* _this, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface)
-{
-	PreCreateDevice(hFocusWindow);
-
-	IDirect3DDevice9* temp_device = nullptr;
-	HRESULT hr = CreateDevice_real(_this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
-	if (hr != D3D_OK)
-		return hr;
-
-	*ppReturnedDeviceInterface = temp_device;
-
-	PostCreateDevice(temp_device, pPresentationParameters);
-
-	return hr;
-}
-
-CreateDeviceEx_t CreateDeviceEx_real = nullptr;
-HRESULT WINAPI CreateDeviceEx_hook(IDirect3D9Ex* _this, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* pFullscreenDisplayMode, IDirect3DDevice9** ppReturnedDeviceInterface)
-{
-	PreCreateDevice(hFocusWindow);
-
-	IDirect3DDevice9Ex* temp_device = nullptr;
-	HRESULT hr = CreateDeviceEx_real(_this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode, &temp_device);
-	if (hr != D3D_OK)
-		return hr;
-
-	*ppReturnedDeviceInterface = temp_device;
-
-	PostCreateDevice(temp_device, pPresentationParameters);
-
-	return hr;
-}
+D3DDevice9_vftable OriginalDeviceVFTable = { 0 };
 
 Present_t Present_real = nullptr;
 HRESULT WINAPI Present_hook(IDirect3DDevice9* _this, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
@@ -113,6 +80,58 @@ ULONG WINAPI AddRef_hook(IDirect3DDevice9* _this)
 	return AddRef_real(_this);
 }
 
+CreateDevice_t CreateDevice_real = nullptr;
+HRESULT WINAPI CreateDevice_hook(IDirect3D9* _this, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface)
+{
+	PreCreateDevice(hFocusWindow);
+
+	IDirect3DDevice9* temp_device = nullptr;
+	HRESULT hr = CreateDevice_real(_this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
+	if (hr != D3D_OK)
+		return hr;
+
+	*ppReturnedDeviceInterface = temp_device;
+
+	auto vftd = GetVirtualFunctionTableD3DDevice9(temp_device);
+
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.Reset, vftd.Reset), (LPVOID)&Reset_hook, (LPVOID*)&Reset_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.Present, vftd.Present), (LPVOID)&Present_hook, (LPVOID*)&Present_real);
+	//MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.Release, vftd.Release), (LPVOID)&Release_hook, (LPVOID*)&Release_real);
+	//MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.AddRef, vftd.AddRef), (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
+	MH_EnableHook(MH_ALL_HOOKS);
+
+	PostCreateDevice(temp_device, pPresentationParameters);
+
+	return hr;
+}
+
+CreateDeviceEx_t CreateDeviceEx_real = nullptr;
+HRESULT WINAPI CreateDeviceEx_hook(IDirect3D9Ex* _this, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* pFullscreenDisplayMode, IDirect3DDevice9** ppReturnedDeviceInterface)
+{
+	PreCreateDevice(hFocusWindow);
+
+	IDirect3DDevice9Ex* temp_device = nullptr;
+	HRESULT hr = CreateDeviceEx_real(_this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode, &temp_device);
+	if (hr != D3D_OK)
+		return hr;
+
+	*ppReturnedDeviceInterface = temp_device;
+
+	auto vftd = GetVirtualFunctionTableD3DDevice9Ex(temp_device);
+
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.Reset, vftd.Reset), (LPVOID)&Reset_hook, (LPVOID*)&Reset_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.Present, vftd.Present), (LPVOID)&Present_hook, (LPVOID*)&Present_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.ResetEx, vftd.ResetEx), (LPVOID)&ResetEx_hook, (LPVOID*)&ResetEx_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.PresentEx, vftd.PresentEx), (LPVOID)&PresentEx_hook, (LPVOID*)&PresentEx_real);
+	//MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.Release, vftd.Release), (LPVOID)&Release_hook, (LPVOID*)&Release_real);
+	//MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.AddRef, vftd.AddRef), (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
+	MH_EnableHook(MH_ALL_HOOKS);
+
+	PostCreateDevice(temp_device, pPresentationParameters);
+
+	return hr;
+}
+
 void OnD3DCreate()
 {
 	if (!RealD3D9Module)
@@ -136,6 +155,18 @@ void OnD3DCreate()
 		{
 			GetCurrentDirectory(MAX_PATH, path);
 			_tcscat_s(path, TEXT("\\bin64\\d3d9_mchain.dll"));
+		}
+
+		if (!FileExists(path))
+		{
+			GetCurrentDirectory(MAX_PATH, path);
+			_tcscat_s(path, TEXT("\\ReShade64.dll"));
+		}
+
+		if (!FileExists(path))
+		{
+			GetCurrentDirectory(MAX_PATH, path);
+			_tcscat_s(path, TEXT("\\bin64\\ReShade64.dll"));
 		}
 
 		if (FileExists(path))
@@ -175,6 +206,30 @@ void DeleteHookDevice(IDirect3DDevice9* pDev, HWND hWnd)
 	UnregisterClassA("DXTMP", GetModuleHandleA(NULL));
 }
 
+void LoadOriginalDevicePointers(IDirect3D9* d3d)
+{
+	HWND hWnd;
+	auto d3dpar = SetupHookDevice(hWnd);
+	IDirect3DDevice9* pDev;
+	CreateDevice_real(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpar, &pDev);
+
+	OriginalDeviceVFTable = GetVirtualFunctionTableD3DDevice9(pDev);
+
+	DeleteHookDevice(pDev, hWnd);
+}
+
+void LoadOriginalDevicePointers(IDirect3D9Ex* d3d)
+{
+	HWND hWnd;
+	auto d3dpar = SetupHookDevice(hWnd);
+	IDirect3DDevice9Ex* pDev;
+	CreateDeviceEx_real(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpar, nullptr, &pDev);
+
+	OriginalDeviceVFTable = GetVirtualFunctionTableD3DDevice9Ex(pDev);
+
+	DeleteHookDevice(pDev, hWnd);
+}
+
 bool HookedD3D = false;
 
 IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
@@ -194,28 +249,11 @@ IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
 
 	if (ChainD3D9Module)
 	{
+		LoadOriginalDevicePointers(d3d);
 		d3d->Release();
 
 		fDirect3DCreate9 = (Direct3DCreate9_t)GetProcAddress(ChainD3D9Module, "Direct3DCreate9");
 		d3d = fDirect3DCreate9(SDKVersion);
-	}
-
-	if (!HookedD3D)
-	{
-		HWND hWnd;
-		auto d3dpar = SetupHookDevice(hWnd);
-		IDirect3DDevice9* pDev;
-		CreateDevice_real(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpar, &pDev);
-
-		auto vftd = GetVirtualFunctionTableD3DDevice9(pDev);
-
-		DeleteHookDevice(pDev, hWnd);
-
-		MH_CreateHook(vftd.Reset, (LPVOID)&Reset_hook, (LPVOID*)&Reset_real);
-		MH_CreateHook(vftd.Present, (LPVOID)&Present_hook, (LPVOID*)&Present_real);
-		MH_CreateHook(vftd.Release, (LPVOID)&Release_hook, (LPVOID*)&Release_real);
-		MH_CreateHook(vftd.AddRef, (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
-		MH_EnableHook(MH_ALL_HOOKS);
 	}
 
 	HookedD3D = true;
@@ -230,11 +268,14 @@ IDirect3D9Ex *WINAPI Direct3DCreate9Ex(UINT SDKVersion)
 	auto fDirect3DCreate9 = (Direct3DCreate9Ex_t)GetProcAddress(RealD3D9Module, "Direct3DCreate9Ex");
 	auto d3d = fDirect3DCreate9(SDKVersion);
 
-	auto vft = GetVirtualFunctionTableD3D9Ex(d3d);
+	if (!HookedD3D)
+	{
+		auto vft = GetVirtualFunctionTableD3D9Ex(d3d);
 
-	MH_CreateHook(vft.CreateDevice, (LPVOID)&CreateDevice_hook, (LPVOID*)&CreateDevice_real);
-	MH_CreateHook(vft.CreateDeviceEx, (LPVOID)&CreateDeviceEx_hook, (LPVOID*)&CreateDeviceEx_real);
-	MH_EnableHook(MH_ALL_HOOKS);
+		MH_CreateHook(vft.CreateDevice, (LPVOID)&CreateDevice_hook, (LPVOID*)&CreateDevice_real);
+		MH_CreateHook(vft.CreateDeviceEx, (LPVOID)&CreateDeviceEx_hook, (LPVOID*)&CreateDeviceEx_real);
+		MH_EnableHook(MH_ALL_HOOKS);
+	}
 
 	if (ChainD3D9Module)
 	{
@@ -243,23 +284,6 @@ IDirect3D9Ex *WINAPI Direct3DCreate9Ex(UINT SDKVersion)
 		fDirect3DCreate9 = (Direct3DCreate9Ex_t)GetProcAddress(ChainD3D9Module, "Direct3DCreate9Ex");
 		d3d = fDirect3DCreate9(SDKVersion);
 	}
-
-	HWND hWnd;
-	auto d3dpar = SetupHookDevice(hWnd);
-	IDirect3DDevice9Ex* pDev;
-	CreateDeviceEx_real(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpar, nullptr, &pDev);
-
-	auto vftd = GetVirtualFunctionTableD3DDevice9Ex(pDev);
-
-	DeleteHookDevice(pDev, hWnd);
-
-	MH_CreateHook(vftd.Reset, (LPVOID)&Reset_hook, (LPVOID*)&Reset_real);
-	MH_CreateHook(vftd.Present, (LPVOID)&Present_hook, (LPVOID*)&Present_real);
-	MH_CreateHook(vftd.ResetEx, (LPVOID)&ResetEx_hook, (LPVOID*)&ResetEx_real);
-	MH_CreateHook(vftd.PresentEx, (LPVOID)&PresentEx_hook, (LPVOID*)&PresentEx_real);
-	MH_CreateHook(vftd.Release, (LPVOID)&Release_hook, (LPVOID*)&Release_real);
-	MH_CreateHook(vftd.AddRef, (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
-	MH_EnableHook(MH_ALL_HOOKS);
 
 	return d3d;
 }
