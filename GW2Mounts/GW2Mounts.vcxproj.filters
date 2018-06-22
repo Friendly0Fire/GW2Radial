@@ -47,6 +47,9 @@
     <ClCompile Include="d3dhooks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -89,6 +92,9 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="vftable.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inputs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

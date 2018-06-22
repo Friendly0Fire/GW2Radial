@@ -102,6 +102,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
   <ItemGroup>
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="d3dhooks.cpp" />
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="imgui\examples\directx9_example\imgui_impl_dx9.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
@@ -120,6 +121,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\d3d9.pdb"</Com
     <ClInclude Include="imgui\stb_rect_pack.h" />
     <ClInclude Include="imgui\stb_textedit.h" />
     <ClInclude Include="imgui\stb_truetype.h" />
+    <ClInclude Include="inputs.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="UnitQuad.h" />
