@@ -25,6 +25,10 @@ D3DDevice9_vftable GetVirtualFunctionTableD3DDevice9(IDirect3DDevice9 * obj)
 	vft.Reset = obj->lpVtbl->Reset;
 	vft.Release = obj->lpVtbl->Release;
 	vft.AddRef = obj->lpVtbl->AddRef;
+	vft.CreateVertexShader = obj->lpVtbl->CreateVertexShader;
+	vft.CreatePixelShader = obj->lpVtbl->CreatePixelShader;
+	vft.SetVertexShader = obj->lpVtbl->SetVertexShader;
+	vft.SetPixelShader = obj->lpVtbl->SetPixelShader;
 
 	return vft;
 }
@@ -38,6 +42,10 @@ D3DDevice9_vftable GetVirtualFunctionTableD3DDevice9Ex(IDirect3DDevice9Ex * obj)
 	vft.ResetEx = obj->lpVtbl->ResetEx;
 	vft.Release = obj->lpVtbl->Release;
 	vft.AddRef = obj->lpVtbl->AddRef;
+	vft.CreateVertexShader = obj->lpVtbl->CreateVertexShader;
+	vft.CreatePixelShader = obj->lpVtbl->CreatePixelShader;
+	vft.SetVertexShader = obj->lpVtbl->SetVertexShader;
+	vft.SetPixelShader = obj->lpVtbl->SetPixelShader;
 
 	return vft;
 }

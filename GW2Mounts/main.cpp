@@ -187,6 +187,9 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	{
 	case DLL_PROCESS_ATTACH:
 	{
+#ifdef _DEBUG
+		while (!IsDebuggerPresent());
+#endif
 		DllModule = hModule;
 
 		// Add an extra reference count to the library so it persists through GW2's load-unload routine
@@ -583,14 +586,18 @@ void PostReset(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS *pPresentationParame
 	}
 }
 
-void Draw(IDirect3DDevice9* dev)
+void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 {
 	// This is the closest we have to a reliable "update" function, so use it as one
 	SendQueuedInputs();
 
+	if (FrameDrawn)
+		return;
+
 	// We have to use Present rather than hooking EndScene because the game seems to do final UI compositing after EndScene
 	// This unfortunately means that we have to call Begin/EndScene before Present so we can render things, but thankfully for modern GPUs that doesn't cause bugs
-	dev->BeginScene();
+	if (SceneEnded)
+		dev->BeginScene();
 
 	ImGui_ImplDX9_NewFrame();
 
@@ -768,5 +775,6 @@ void Draw(IDirect3DDevice9* dev)
 		}
 	}
 
-	dev->EndScene();
+	if (SceneEnded)
+		dev->EndScene();
 }

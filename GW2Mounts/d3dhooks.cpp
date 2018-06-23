@@ -4,6 +4,12 @@
 #include "minhook/include/MinHook.h"
 #include "Utility.h"
 #include <tchar.h>
+#include "xxhash/xxhash.h"
+
+XXH64_hash_t PreUIVertexShaderHash = 0x1fe3c6cd77e6e9f0;
+XXH64_hash_t PreUIPixelShaderHash = 0xccc38027cdd6cd51;
+IDirect3DVertexShader9* PreUIVertexShader = nullptr;
+IDirect3DPixelShader9* PreUIPixelShader = nullptr;
 
 typedef IDirect3D9* (WINAPI *Direct3DCreate9_t)(UINT SDKVersion);
 typedef IDirect3D9Ex* (WINAPI *Direct3DCreate9Ex_t)(UINT SDKVersion);
@@ -11,7 +17,7 @@ typedef IDirect3D9Ex* (WINAPI *Direct3DCreate9Ex_t)(UINT SDKVersion);
 void PreCreateDevice(HWND hFocusWindow);
 void PostCreateDevice(IDirect3DDevice9* temp_device, D3DPRESENT_PARAMETERS *pPresentationParameters);
 
-void Draw(IDirect3DDevice9* dev);
+void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded);
 
 void PreReset();
 void PostReset(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS *pPresentationParameters);
@@ -22,10 +28,13 @@ HMODULE RealD3D9Module = nullptr;
 HMODULE ChainD3D9Module = nullptr;
 D3DDevice9_vftable OriginalDeviceVFTable = { 0 };
 
+bool FrameDrawn = false;
+
 Present_t Present_real = nullptr;
 HRESULT WINAPI Present_hook(IDirect3DDevice9* _this, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
 {
-	Draw(_this);
+	Draw(_this, FrameDrawn, true);
+	FrameDrawn = false;
 
 	return Present_real(_this, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }
@@ -33,7 +42,8 @@ HRESULT WINAPI Present_hook(IDirect3DDevice9* _this, CONST RECT* pSourceRect, CO
 PresentEx_t PresentEx_real = nullptr;
 HRESULT WINAPI PresentEx_hook(IDirect3DDevice9Ex* _this, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags)
 {
-	Draw(_this);
+	Draw(_this, FrameDrawn, true);
+	FrameDrawn = false;
 
 	return PresentEx_real(_this, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
 }
@@ -80,6 +90,66 @@ ULONG WINAPI AddRef_hook(IDirect3DDevice9* _this)
 	return AddRef_real(_this);
 }
 
+CreateVertexShader_t CreateVertexShader_real = nullptr;
+HRESULT CreateVertexShader_hook(IDirect3DDevice9* _this, const DWORD *pFunction, IDirect3DVertexShader9 **ppShader)
+{
+	HRESULT hr = CreateVertexShader_real(_this, pFunction, ppShader);
+
+	if (!PreUIVertexShader)
+	{
+		int l = GetShaderFuncLength(pFunction);
+		XXH64_hash_t hash = XXH64(pFunction, l, 0);
+		if (hash == PreUIVertexShaderHash)
+			PreUIVertexShader = *ppShader;
+	}
+
+	return hr;
+}
+
+SetVertexShader_t SetVertexShader_real = nullptr;
+HRESULT SetVertexShader_hook(IDirect3DDevice9* _this, IDirect3DVertexShader9 *pShader)
+{
+	HRESULT hr = SetVertexShader_real(_this, pShader);
+
+	if (!FrameDrawn && pShader == PreUIVertexShader)
+	{
+		Draw(_this, FrameDrawn, false);
+		FrameDrawn = true;
+	}
+
+	return hr;
+}
+
+CreatePixelShader_t CreatePixelShader_real = nullptr;
+HRESULT CreatePixelShader_hook(IDirect3DDevice9* _this, const DWORD *pFunction, IDirect3DPixelShader9 **ppShader)
+{
+	HRESULT hr = CreatePixelShader_real(_this, pFunction, ppShader);
+
+	if (!PreUIPixelShader)
+	{
+		int l = GetShaderFuncLength(pFunction);
+		XXH64_hash_t hash = XXH64(pFunction, l, 0);
+		if (hash == PreUIPixelShaderHash)
+			PreUIPixelShader = *ppShader;
+	}
+
+	return hr;
+}
+
+SetPixelShader_t SetPixelShader_real = nullptr;
+HRESULT SetPixelShader_hook(IDirect3DDevice9* _this, IDirect3DPixelShader9 *pShader)
+{
+	HRESULT hr = SetPixelShader_real(_this, pShader);
+
+	if (!FrameDrawn && pShader == PreUIPixelShader)
+	{
+		Draw(_this, FrameDrawn, false);
+		FrameDrawn = true;
+	}
+
+	return hr;
+}
+
 CreateDevice_t CreateDevice_real = nullptr;
 HRESULT WINAPI CreateDevice_hook(IDirect3D9* _this, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface)
 {
@@ -98,6 +168,10 @@ HRESULT WINAPI CreateDevice_hook(IDirect3D9* _this, UINT Adapter, D3DDEVTYPE Dev
 	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.Present, vftd.Present), (LPVOID)&Present_hook, (LPVOID*)&Present_real);
 	//MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.Release, vftd.Release), (LPVOID)&Release_hook, (LPVOID*)&Release_real);
 	//MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.AddRef, vftd.AddRef), (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.CreateVertexShader, vftd.CreateVertexShader), (LPVOID)&CreateVertexShader_hook, (LPVOID*)&CreateVertexShader_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.SetVertexShader, vftd.SetVertexShader), (LPVOID)&SetVertexShader_hook, (LPVOID*)&SetVertexShader_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.CreatePixelShader, vftd.CreatePixelShader), (LPVOID)&CreatePixelShader_hook, (LPVOID*)&CreatePixelShader_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.SetPixelShader, vftd.SetPixelShader), (LPVOID)&SetPixelShader_hook, (LPVOID*)&SetPixelShader_real);
 	MH_EnableHook(MH_ALL_HOOKS);
 
 	PostCreateDevice(temp_device, pPresentationParameters);
@@ -125,6 +199,10 @@ HRESULT WINAPI CreateDeviceEx_hook(IDirect3D9Ex* _this, UINT Adapter, D3DDEVTYPE
 	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.PresentEx, vftd.PresentEx), (LPVOID)&PresentEx_hook, (LPVOID*)&PresentEx_real);
 	//MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.Release, vftd.Release), (LPVOID)&Release_hook, (LPVOID*)&Release_real);
 	//MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.AddRef, vftd.AddRef), (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.CreateVertexShader, vftd.CreateVertexShader), (LPVOID)&CreateVertexShader_hook, (LPVOID*)&CreateVertexShader_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.SetVertexShader, vftd.SetVertexShader), (LPVOID)&SetVertexShader_hook, (LPVOID*)&SetVertexShader_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.CreatePixelShader, vftd.CreatePixelShader), (LPVOID)&CreatePixelShader_hook, (LPVOID*)&CreatePixelShader_real);
+	MH_CreateHook(NULL_COALESCE(OriginalDeviceVFTable.SetPixelShader, vftd.SetPixelShader), (LPVOID)&SetPixelShader_hook, (LPVOID*)&SetPixelShader_real);
 	MH_EnableHook(MH_ALL_HOOKS);
 
 	PostCreateDevice(temp_device, pPresentationParameters);

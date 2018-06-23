@@ -24,6 +24,10 @@ extern "C" {
 		LPVOID ResetEx;
 		LPVOID Release;
 		LPVOID AddRef;
+		LPVOID CreateVertexShader;
+		LPVOID SetVertexShader;
+		LPVOID CreatePixelShader;
+		LPVOID SetPixelShader;
 	} D3DDevice9_vftable;
 
 	D3DDevice9_vftable GetVirtualFunctionTableD3DDevice9(IDirect3DDevice9* obj);
@@ -35,6 +39,10 @@ extern "C" {
 	typedef HRESULT(WINAPI *ResetEx_t)(IDirect3DDevice9Ex* _this, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode);
 	typedef ULONG(WINAPI *Release_t)(IDirect3DDevice9* _this);
 	typedef ULONG(WINAPI *AddRef_t)(IDirect3DDevice9* _this);
+	typedef HRESULT(WINAPI *CreateVertexShader_t)(IDirect3DDevice9* _this, CONST DWORD* pFunction, IDirect3DVertexShader9** ppShader);
+	typedef HRESULT(WINAPI *SetVertexShader_t)(IDirect3DDevice9* _this, IDirect3DVertexShader9* pShader);
+	typedef HRESULT(WINAPI* CreatePixelShader_t)(IDirect3DDevice9* _this, CONST DWORD* pFunction, IDirect3DPixelShader9** ppShader);
+	typedef HRESULT(WINAPI *SetPixelShader_t)(IDirect3DDevice9* _this, IDirect3DPixelShader9* pShader);
 
 #ifdef __cplusplus
 }

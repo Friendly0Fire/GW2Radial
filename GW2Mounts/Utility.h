@@ -13,6 +13,8 @@ mstime timeInMS();
 
 bool FileExists(const TCHAR* path);
 
+int GetShaderFuncLength(const DWORD *pFunction);
+
 // Reverse iteration wrappers for use in range-based for-loops
 
 template <typename T>

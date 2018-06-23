@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <locale>
 #include <codecvt>
+#include <d3d9types.h>
 
 /// <summary>
 /// Converts a std::string into the equivalent std::wstring.
@@ -85,4 +86,16 @@ bool FileExists(const TCHAR* path)
 
 	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
 		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+bool ShaderIsEnd(DWORD token)
+{
+	return (token & D3DSI_OPCODE_MASK) == D3DSIO_END;
+}
+
+int GetShaderFuncLength(const DWORD *pFunction)
+{
+	int op = 0, l = 1;
+	while (!ShaderIsEnd(pFunction[op++]))  l++;
+	return l;
 }
