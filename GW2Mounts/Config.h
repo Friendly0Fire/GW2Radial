@@ -28,6 +28,9 @@ public:
 	auto& LockCameraWhenOverlayed() { return _LockCameraWhenOverlayed; }
 	void LockCameraWhenOverlayedSave();
 
+	auto& OverlayDelayMilliseconds() { return _OverlayDelayMilliseconds; }
+	void OverlayDelayMillisecondsSave();
+
 	const auto& ImGuiConfigLocation() { return _ImGuiConfigLocation; }
 
 protected:
@@ -43,9 +46,10 @@ protected:
 	// Config data
 	std::set<uint> _MountOverlayKeybind;
 	std::set<uint> _MountOverlayLockedKeybind;
-	std::set<uint> _MountKeybinds[5];
+	std::set<uint> _MountKeybinds[MountTypeCount];
 	std::set<uint> _SettingsKeybind;
 	bool _ResetCursorOnLockedKeybind = true;
 	bool _LockCameraWhenOverlayed = true;
+	int _OverlayDelayMilliseconds = 0;
 };
 

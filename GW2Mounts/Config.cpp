@@ -52,15 +52,16 @@ void Config::Load()
 	// Load INI settings
 	_INI.SetUnicode();
 	_INI.LoadFile(_ConfigLocation);
-	_ResetCursorOnLockedKeybind = _stricmp(_INI.GetValue("General", "reset_cursor_on_locked_keybind", "true"), "true") == 0;
-	_LockCameraWhenOverlayed = _stricmp(_INI.GetValue("General", "lock_camera_when_overlayed", "true"), "true") == 0;
+	_ResetCursorOnLockedKeybind = _INI.GetBoolValue("General", "reset_cursor_on_locked_keybind", true);
+	_LockCameraWhenOverlayed = _INI.GetBoolValue("General", "lock_camera_when_overlayed", true);
+	_OverlayDelayMilliseconds = _INI.GetLongValue("General", "overlay_delay_ms", 0);
 
 	const char* keys = _INI.GetValue("Keybinds", "mount_wheel", nullptr);
 	LoadKeybindString(keys, _MountOverlayKeybind);
 	const char* keys_locked = _INI.GetValue("Keybinds", "mount_wheel_locked", nullptr);
 	LoadKeybindString(keys_locked, _MountOverlayLockedKeybind);
 
-	for (uint i = 0; i < 5; i++)
+	for (uint i = 0; i < MountTypeCount; i++)
 	{
 		const char* keys_mount = _INI.GetValue("Keybinds", ("mount_" + std::to_string(i)).c_str(), nullptr);
 		LoadKeybindString(keys_mount, _MountKeybinds[i]);
@@ -102,12 +103,18 @@ void Config::MountKeybind(uint i, const std::set<uint>& val)
 
 void Config::ResetCursorOnLockedKeybindSave()
 {
-	_INI.SetValue("General", "reset_cursor_on_locked_keybind", _ResetCursorOnLockedKeybind ? "true" : "false");
+	_INI.SetBoolValue("General", "reset_cursor_on_locked_keybind", _ResetCursorOnLockedKeybind);
 	_INI.SaveFile(_ConfigLocation);
 }
 
 void Config::LockCameraWhenOverlayedSave()
 {
-	_INI.SetValue("General", "lock_camera_when_overlayed", _LockCameraWhenOverlayed ? "true" : "false");
+	_INI.SetBoolValue("General", "lock_camera_when_overlayed", _LockCameraWhenOverlayed);
+	_INI.SaveFile(_ConfigLocation);
+}
+
+void Config::OverlayDelayMillisecondsSave()
+{
+	_INI.SetLongValue("General", "overlay_delay_ms", _OverlayDelayMilliseconds);
 	_INI.SaveFile(_ConfigLocation);
 }

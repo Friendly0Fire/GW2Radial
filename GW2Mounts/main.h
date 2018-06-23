@@ -18,6 +18,19 @@ typedef unsigned int uint;
 typedef std::basic_string<TCHAR> tstring;
 typedef unsigned __int64 mstime;
 
+enum class MountType
+{
+	NONE = -1,
+	RAPTOR = 0,
+	SPRINGER = 1,
+	SKIMMER = 2,
+	JACKAL = 3,
+	GRIFFON = 4
+	//BEETLE = 4,
+	//GRIFFON = 5
+};
+const unsigned int MountTypeCount = 5;
+
 #ifndef HID_USAGE_PAGE_GENERIC
 #define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)
 #endif

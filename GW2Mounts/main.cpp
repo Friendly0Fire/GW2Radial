@@ -57,21 +57,12 @@ struct KeybindSettingsMenu
 };
 KeybindSettingsMenu MainKeybind;
 KeybindSettingsMenu MainLockedKeybind;
-KeybindSettingsMenu MountKeybinds[5];
+KeybindSettingsMenu MountKeybinds[MountTypeCount];
 
 D3DXVECTOR2 OverlayPosition;
 mstime OverlayTime, MountHoverTime;
 
-enum CurrentMountHovered_t
-{
-	CMH_NONE = -1,
-	CMH_RAPTOR = 0,
-	CMH_SPRINGER = 1,
-	CMH_SKIMMER = 2,
-	CMH_JACKAL = 3,
-	CMH_GRIFFON = 4
-};
-CurrentMountHovered_t CurrentMountHovered = CMH_NONE;
+MountType CurrentMountHovered = MountType::NONE;
 
 ImVec4 operator/(const ImVec4& v, float f)
 {
@@ -126,19 +117,19 @@ void ImGuiKeybindInput(const std::string& name, KeybindSettingsMenu& setting)
 	ImGui::PopItemWidth();
 }
 
-const char* GetMountName(CurrentMountHovered_t m)
+const char* GetMountName(MountType m)
 {
 	switch (m)
 	{
-	case CMH_RAPTOR:
+	case MountType::RAPTOR:
 		return "Raptor";
-	case CMH_SPRINGER:
+	case MountType::SPRINGER:
 		return "Springer";
-	case CMH_SKIMMER:
+	case MountType::SKIMMER:
 		return "Skimmer";
-	case CMH_JACKAL:
+	case MountType::JACKAL:
 		return "Jackal";
-	case CMH_GRIFFON:
+	case MountType::GRIFFON:
 		return "Griffon";
 	default:
 		return "[Unknown]";
@@ -155,14 +146,14 @@ uint ScreenWidth, ScreenHeight;
 std::unique_ptr<UnitQuad> Quad;
 ID3DXEffect* MainEffect = nullptr;
 IDirect3DTexture9* MountsTexture = nullptr;
-IDirect3DTexture9* MountTextures[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+IDirect3DTexture9* MountTextures[MountTypeCount + 1] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 IDirect3DTexture9* BgTexture = nullptr;
 
 void LoadMountTextures(IDirect3DDevice9* dev)
 {
 	D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_BG), &BgTexture);
 	D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_MOUNTS), &MountsTexture);
-	for (uint i = 0; i < 6; i++)
+	for (uint i = 0; i < MountTypeCount + 1; i++)
 		D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_MOUNT1 + i), &MountTextures[i]);
 }
 
@@ -171,7 +162,7 @@ void UnloadMountTextures()
 	COM_RELEASE(MountsTexture);
 	COM_RELEASE(BgTexture);
 
-	for (uint i = 0; i < 6; i++)
+	for (uint i = 0; i < MountTypeCount + 1; i++)
 		COM_RELEASE(MountTextures[i]);
 }
 
@@ -208,7 +199,7 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		MainKeybind.SetCallback = [](const std::set<uint>& val) { Cfg.MountOverlayKeybind(val); };
 		MainLockedKeybind.SetDisplayString(Cfg.MountOverlayLockedKeybind());
 		MainLockedKeybind.SetCallback = [](const std::set<uint>& val) { Cfg.MountOverlayLockedKeybind(val); };
-		for (uint i = 0; i < 5; i++)
+		for (uint i = 0; i < MountTypeCount; i++)
 		{
 			MountKeybinds[i].SetDisplayString(Cfg.MountKeybind(i));
 			MountKeybinds[i].SetCallback = [i](const std::set<uint>& val) { Cfg.MountKeybind(i, val); };
@@ -234,23 +225,23 @@ void DetermineHoveredMount()
 	MousePos.y = io.MousePos.y / (float)ScreenHeight;
 	MousePos -= OverlayPosition;
 
-	CurrentMountHovered_t LastMountHovered = CurrentMountHovered;
+	MountType LastMountHovered = CurrentMountHovered;
 
 	if (D3DXVec2LengthSq(&MousePos) > CircleRadiusScreen * CircleRadiusScreen)
 	{
 		if (MousePos.x < 0 && abs(MousePos.x) > abs(MousePos.y)) // Raptor, 0
-			CurrentMountHovered = CMH_RAPTOR;
+			CurrentMountHovered = MountType::RAPTOR;
 		else if (MousePos.x > 0 && abs(MousePos.x) > abs(MousePos.y)) // Jackal, 3
-			CurrentMountHovered = CMH_JACKAL;
+			CurrentMountHovered = MountType::JACKAL;
 		else if (MousePos.y < 0 && abs(MousePos.x) < abs(MousePos.y)) // Springer, 1
-			CurrentMountHovered = CMH_SPRINGER;
+			CurrentMountHovered = MountType::SPRINGER;
 		else if (MousePos.y > 0 && abs(MousePos.x) < abs(MousePos.y)) // Skimmer, 2
-			CurrentMountHovered = CMH_SKIMMER;
+			CurrentMountHovered = MountType::SKIMMER;
 		else
-			CurrentMountHovered = CMH_NONE;
+			CurrentMountHovered = MountType::NONE;
 	}
 	else
-		CurrentMountHovered = CMH_GRIFFON;
+		CurrentMountHovered = MountType::GRIFFON;
 
 	if (LastMountHovered != CurrentMountHovered)
 		MountHoverTime = timeInMS();
@@ -381,10 +372,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			else if (!DisplayMountOverlay && oldMountOverlay)
 			{
 				// Mount overlay is turned off, send the keybind
-				if (CurrentMountHovered != CMH_NONE)
+				if (CurrentMountHovered != MountType::NONE)
 					SendKeybind(Cfg.MountKeybind((uint)CurrentMountHovered));
 
-				CurrentMountHovered = CMH_NONE;
+				CurrentMountHovered = MountType::NONE;
 			}
 
 			{
@@ -406,7 +397,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				MainKeybind.CheckSetKeybind(fullKeybind, keyLifted);
 				MainLockedKeybind.CheckSetKeybind(fullKeybind, keyLifted);
 
-				for (uint i = 0; i < 5; i++)
+				for (uint i = 0; i < MountTypeCount; i++)
 					MountKeybinds[i].CheckSetKeybind(fullKeybind, keyLifted);
 			}
 		}
@@ -605,8 +596,8 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 	{
 		ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
 
-		ImGuiKeybindInput("Overlay Keybind", MainKeybind);
-		ImGuiKeybindInput("Overlay Keybind (Center Locked)", MainLockedKeybind);
+		if (ImGui::SliderInt("Pop-up Delay", &Cfg.OverlayDelayMilliseconds(), 0, 1000, "%d ms"))
+			Cfg.OverlayDelayMillisecondsSave();
 
 		if (Cfg.ResetCursorOnLockedKeybind() != ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
 			Cfg.ResetCursorOnLockedKeybindSave();
@@ -614,11 +605,16 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 			Cfg.LockCameraWhenOverlayedSave();
 
 		ImGui::Separator();
+
+		ImGuiKeybindInput("Overlay Keybind", MainKeybind);
+		ImGuiKeybindInput("Overlay Keybind (Center Locked)", MainLockedKeybind);
+
+		ImGui::Separator();
 		ImGui::Text("Mount Keybinds");
 		ImGui::Text("(set to relevant game keybinds)");
 
-		for (uint i = 0; i < 5u; i++)
-			ImGuiKeybindInput(GetMountName((CurrentMountHovered_t)i), MountKeybinds[i]);
+		for (uint i = 0; i < MountTypeCount; i++)
+			ImGuiKeybindInput(GetMountName((MountType)i), MountKeybinds[i]);
 
 		ImGui::End();
 	}
@@ -629,149 +625,152 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 	{
 		auto currentTime = timeInMS();
 
-		uint passes = 0;
-
-		Quad->Bind();
-
-		// Setup viewport
-		D3DVIEWPORT9 vp;
-		vp.X = vp.Y = 0;
-		vp.Width = (DWORD)ScreenWidth;
-		vp.Height = (DWORD)ScreenHeight;
-		vp.MinZ = 0.0f;
-		vp.MaxZ = 1.0f;
-		dev->SetViewport(&vp);
-
-		D3DXVECTOR4 screenSize((float)ScreenWidth, (float)ScreenHeight, 1.f / ScreenWidth, 1.f / ScreenHeight);
-
-		D3DXVECTOR4 baseSpriteDimensions;
-		baseSpriteDimensions.x = OverlayPosition.x;
-		baseSpriteDimensions.y = OverlayPosition.y;
-		baseSpriteDimensions.z = BaseSpriteSize * screenSize.y * screenSize.z;
-		baseSpriteDimensions.w = BaseSpriteSize;
-
-		D3DXVECTOR4 overlaySpriteDimensions = baseSpriteDimensions;
-		D3DXVECTOR4 direction;
-
-		if (CurrentMountHovered != CMH_NONE)
+		if (currentTime >= OverlayTime + Cfg.OverlayDelayMilliseconds())
 		{
-			if (CurrentMountHovered == CMH_RAPTOR)
+			uint passes = 0;
+
+			Quad->Bind();
+
+			// Setup viewport
+			D3DVIEWPORT9 vp;
+			vp.X = vp.Y = 0;
+			vp.Width = (DWORD)ScreenWidth;
+			vp.Height = (DWORD)ScreenHeight;
+			vp.MinZ = 0.0f;
+			vp.MaxZ = 1.0f;
+			dev->SetViewport(&vp);
+
+			D3DXVECTOR4 screenSize((float)ScreenWidth, (float)ScreenHeight, 1.f / ScreenWidth, 1.f / ScreenHeight);
+
+			D3DXVECTOR4 baseSpriteDimensions;
+			baseSpriteDimensions.x = OverlayPosition.x;
+			baseSpriteDimensions.y = OverlayPosition.y;
+			baseSpriteDimensions.z = BaseSpriteSize * screenSize.y * screenSize.z;
+			baseSpriteDimensions.w = BaseSpriteSize;
+
+			D3DXVECTOR4 overlaySpriteDimensions = baseSpriteDimensions;
+			D3DXVECTOR4 direction;
+
+			if (CurrentMountHovered != MountType::NONE)
 			{
-				overlaySpriteDimensions.x -= 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
-				overlaySpriteDimensions.z *= 0.5f;
-				overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
-				direction = D3DXVECTOR4(-1.f, 0, 0.f, 0.f);
+				if (CurrentMountHovered == MountType::RAPTOR)
+				{
+					overlaySpriteDimensions.x -= 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
+					overlaySpriteDimensions.z *= 0.5f;
+					overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
+					direction = D3DXVECTOR4(-1.f, 0, 0.f, 0.f);
+				}
+				else if (CurrentMountHovered == MountType::JACKAL)
+				{
+					overlaySpriteDimensions.x += 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
+					overlaySpriteDimensions.z *= 0.5f;
+					overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
+					direction = D3DXVECTOR4(1.f, 0, 0.f, 0.f);
+				}
+				else if (CurrentMountHovered == MountType::SPRINGER)
+				{
+					overlaySpriteDimensions.y -= 0.5f * BaseSpriteSize * 0.5f;
+					overlaySpriteDimensions.w *= 0.5f;
+					overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
+					direction = D3DXVECTOR4(0, -1.f, 0.f, 0.f);
+				}
+				else if (CurrentMountHovered == MountType::SKIMMER)
+				{
+					overlaySpriteDimensions.y += 0.5f * BaseSpriteSize * 0.5f;
+					overlaySpriteDimensions.w *= 0.5f;
+					overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
+					direction = D3DXVECTOR4(0, 1.f, 0.f, 0.f);
+				}
+				else if (CurrentMountHovered == MountType::GRIFFON)
+				{
+					overlaySpriteDimensions.z *= 512.f / 1664.f;
+					overlaySpriteDimensions.w *= 512.f / 1664.f;
+					direction = D3DXVECTOR4(0, 0.f, 0.f, 0.f);
+				}
+
+				direction.z = fmod(currentTime / 1000.f, 60000.f);
 			}
-			else if (CurrentMountHovered == CMH_JACKAL)
+
+			if (CurrentMountHovered != MountType::NONE)
 			{
-				overlaySpriteDimensions.x += 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
-				overlaySpriteDimensions.z *= 0.5f;
-				overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
-				direction = D3DXVECTOR4(1.f, 0, 0.f, 0.f);
-			}
-			else if (CurrentMountHovered == CMH_SPRINGER)
-			{
-				overlaySpriteDimensions.y -= 0.5f * BaseSpriteSize * 0.5f;
-				overlaySpriteDimensions.w *= 0.5f;
-				overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
-				direction = D3DXVECTOR4(0, -1.f, 0.f, 0.f);
-			}
-			else if (CurrentMountHovered == CMH_SKIMMER)
-			{
-				overlaySpriteDimensions.y += 0.5f * BaseSpriteSize * 0.5f;
-				overlaySpriteDimensions.w *= 0.5f;
-				overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
-				direction = D3DXVECTOR4(0, 1.f, 0.f, 0.f);
-			}
-			else if (CurrentMountHovered == CMH_GRIFFON)
-			{
-				overlaySpriteDimensions.z *= 512.f / 1664.f;
-				overlaySpriteDimensions.w *= 512.f / 1664.f;
-				direction = D3DXVECTOR4(0, 0.f, 0.f, 0.f);
+				D3DXVECTOR4 highlightSpriteDimensions = baseSpriteDimensions;
+				if (CurrentMountHovered == MountType::GRIFFON)
+				{
+					highlightSpriteDimensions.z *= 512.f / 1664.f;
+					highlightSpriteDimensions.w *= 512.f / 1664.f;
+				}
+				highlightSpriteDimensions.z *= 1.5f;
+				highlightSpriteDimensions.w *= 1.5f;
+
+				MainEffect->SetTechnique(CurrentMountHovered == MountType::GRIFFON ? "MountImageHighlightGriffon" : "MountImageHighlight");
+				MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
+				MainEffect->SetTexture("texMountImage", BgTexture);
+				MainEffect->SetVector("g_vSpriteDimensions", &highlightSpriteDimensions);
+				MainEffect->SetVector("g_vDirection", &direction);
+
+				MainEffect->Begin(&passes, 0);
+				MainEffect->BeginPass(0);
+				Quad->Draw();
+				MainEffect->EndPass();
+				MainEffect->End();
 			}
 
-			direction.z = fmod(currentTime / 1000.f, 60000.f);
-		}
-
-		if (CurrentMountHovered != CMH_NONE)
-		{
-			D3DXVECTOR4 highlightSpriteDimensions = baseSpriteDimensions;
-			if (CurrentMountHovered == CMH_GRIFFON)
-			{
-				highlightSpriteDimensions.z *= 512.f / 1664.f;
-				highlightSpriteDimensions.w *= 512.f / 1664.f;
-			}
-			highlightSpriteDimensions.z *= 1.5f;
-			highlightSpriteDimensions.w *= 1.5f;
-
-			MainEffect->SetTechnique(CurrentMountHovered == CMH_GRIFFON ? "MountImageHighlightGriffon" : "MountImageHighlight");
-			MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
-			MainEffect->SetTexture("texMountImage", BgTexture);
-			MainEffect->SetVector("g_vSpriteDimensions", &highlightSpriteDimensions);
-			MainEffect->SetVector("g_vDirection", &direction);
-
-			MainEffect->Begin(&passes, 0);
-			MainEffect->BeginPass(0);
-			Quad->Draw();
-			MainEffect->EndPass();
-			MainEffect->End();
-		}
-
-		MainEffect->SetTechnique("MountImage");
-		MainEffect->SetVector("g_vScreenSize", &screenSize);
-		MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime) / 1000.f * 6));
-
-		{
-			D3DXVECTOR4 griffonSpriteDimensions = baseSpriteDimensions;
-			griffonSpriteDimensions.z *= 512.f / 1664.f;
-			griffonSpriteDimensions.w *= 512.f / 1664.f;
-
-			MainEffect->SetVector("g_vSpriteDimensions", &griffonSpriteDimensions);
-			MainEffect->SetTexture("texMountImage", MountTextures[5]);
-
-			MainEffect->Begin(&passes, 0);
-			MainEffect->BeginPass(0);
-			Quad->Draw();
-			MainEffect->EndPass();
-			MainEffect->End();
-		}
-
-		MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
-		MainEffect->SetTexture("texMountImage", MountsTexture);
-
-		MainEffect->Begin(&passes, 0);
-		MainEffect->BeginPass(0);
-		Quad->Draw();
-		MainEffect->EndPass();
-		MainEffect->End();
-
-		if (CurrentMountHovered != CMH_NONE)
-		{
 			MainEffect->SetTechnique("MountImage");
-			MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
-			MainEffect->SetTexture("texMountImage", MountTextures[CurrentMountHovered]);
-			MainEffect->SetVector("g_vSpriteDimensions", &overlaySpriteDimensions);
+			MainEffect->SetVector("g_vScreenSize", &screenSize);
+			MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime) / 1000.f * 6));
+
+			{
+				D3DXVECTOR4 griffonSpriteDimensions = baseSpriteDimensions;
+				griffonSpriteDimensions.z *= 512.f / 1664.f;
+				griffonSpriteDimensions.w *= 512.f / 1664.f;
+
+				MainEffect->SetVector("g_vSpriteDimensions", &griffonSpriteDimensions);
+				MainEffect->SetTexture("texMountImage", MountTextures[5]);
+
+				MainEffect->Begin(&passes, 0);
+				MainEffect->BeginPass(0);
+				Quad->Draw();
+				MainEffect->EndPass();
+				MainEffect->End();
+			}
+
+			MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
+			MainEffect->SetTexture("texMountImage", MountsTexture);
 
 			MainEffect->Begin(&passes, 0);
 			MainEffect->BeginPass(0);
 			Quad->Draw();
 			MainEffect->EndPass();
 			MainEffect->End();
-		}
 
-		{
-			const auto& io = ImGui::GetIO();
+			if (CurrentMountHovered != MountType::NONE)
+			{
+				MainEffect->SetTechnique("MountImage");
+				MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
+				MainEffect->SetTexture("texMountImage", MountTextures[(uint)CurrentMountHovered]);
+				MainEffect->SetVector("g_vSpriteDimensions", &overlaySpriteDimensions);
 
-			MainEffect->SetTechnique("Cursor");
-			MainEffect->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
-			MainEffect->SetTexture("texMountImage", BgTexture);
-			MainEffect->SetVector("g_vSpriteDimensions", &D3DXVECTOR4(io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f));
+				MainEffect->Begin(&passes, 0);
+				MainEffect->BeginPass(0);
+				Quad->Draw();
+				MainEffect->EndPass();
+				MainEffect->End();
+			}
 
-			MainEffect->Begin(&passes, 0);
-			MainEffect->BeginPass(0);
-			Quad->Draw();
-			MainEffect->EndPass();
-			MainEffect->End();
+			{
+				const auto& io = ImGui::GetIO();
+
+				MainEffect->SetTechnique("Cursor");
+				MainEffect->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
+				MainEffect->SetTexture("texMountImage", BgTexture);
+				MainEffect->SetVector("g_vSpriteDimensions", &D3DXVECTOR4(io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f));
+
+				MainEffect->Begin(&passes, 0);
+				MainEffect->BeginPass(0);
+				Quad->Draw();
+				MainEffect->EndPass();
+				MainEffect->End();
+			}
 		}
 	}
 
