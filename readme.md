@@ -15,17 +15,30 @@ A plugin to show a convenient, customizable [radial menu overlay](https://giant.
 
 ## Credits
 - Cerulean Dream for providing me with the initial motivator and inspiration in making his AutoHotkey-based radial menu
+- Ghost for the new mount art found in v0.3+
 - Lavender for showing me where to get the mount concept art (especially the separate Skimmer image)
-- deltaconnected and Bhagawan for their amazing addons which helped frame this and direct the approach to take
+- deltaconnected and Bhagawan for their amazing addons which helped frame this and direct the approach to take, including the ReShade compatibility fixes
 - Shaun Lebron for his nice, straightforward [D3D9 wrapper](https://gist.github.com/shaunlebron/3854bf4eec5bec297907)
 - Dulfy and /u/Levi4than for the Griffon ingame art screenshot
 - /u/that_shaman for another really nice radial menu concept which requires far better Photoshop skills than I have to reproduce
 
 ## FAQ
 
-### Q: I want to load up ReShade/SweetFX/GW2Hooks/something else which also needs to be called ``d3d9.dll``, how do I load both?
+### Q: I want to thank you in some way, how do I do that?
+
+A: I do this for fun/because I wanted this to exist, but if you really want to, feel free to send me mail in game to my account ``FriendlyFire.6275`` and toss a few gold my way or just say hi!
+
+### Q: I want to load up ArcDPS/GW2Hook/something else which also needs to be called ``d3d9.dll``, how do I load both?
 
 A: You have two options: either the other thing you want to run supports *chainloading* this, in which case you should look up the documentation for that plugin (e.g. ArcDPS supports chainloading by renaming this plugin to ``d3d9_chainload.dll``), or you can make this plugin chainload something else by renaming that other plugin to ``d3d9_mchain.dll``.
+
+The most common use case would be combining ArcDPS, GW2Hook and this. For this instance, I heavily recommend setting things up as follows:
+- ArcDPS is named ``d3d9.dll``.
+- GW2Mounts is named ``d3d9_chainload.dll``.
+- GW2Hook is named ``ReShade64.dll``.
+This should allow all addons to load properly.
+
+Finally, note that combining addons is largely unsupported. I will attempt to keep ArcDPS and GW2Hook compatible with this, but that is the most I am able to do in a reasonable amount of time.
 
 ### Q: I'm having a crash on launch mentioning "Coherent DLL", what do?
 
@@ -36,10 +49,6 @@ A: There seems to be a lot of potential reasons for this particular crash. [BGDM
 A: It's a convenience feature for Action Camera users. When using Action Camera, the cursor is hidden and replaced with a targeting reticule fixed in the middle of the screen. Since that means the radial menu would appear all over the place, that keybind can be used to make it show up in the middle of the screen instead. As a bonus, it'll recenter the mouse to the middle of the radial menu so it's as easy as possible to select a mount *and* it'll show a temporary cursor so you know exactly where you're pointing.
 
 Unfortunately, I can't make this automatic (i.e. switching to that mode when Action Camera is enabled) without hooking game functions, which would then require this become closed source again to avoid cheaters using it. On top of that, I'd be far more likely to break the EULA, so I'm afraid it's off limits without an official API.
-
-### Q: Does this support the [REDACTED] mount?
-
-A: Yes, activate it in the settings! It'll appear in the middle of the radial menu such that merely pressing and immediately releasing the main keybind (without moving the mouse) will select it.
 
 ### Q: Can I use this code for my project?
 
