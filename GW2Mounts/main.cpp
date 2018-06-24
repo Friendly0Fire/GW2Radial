@@ -244,7 +244,7 @@ void DetermineHoveredMount()
 		CurrentMountHovered = MountType::GRIFFON;
 
 	if (LastMountHovered != CurrentMountHovered)
-		MountHoverTime = timeInMS();
+		MountHoverTime = max(OverlayTime + Cfg.OverlayDelayMilliseconds(), timeInMS());
 }
 
 void Shutdown();
@@ -596,7 +596,7 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 	{
 		ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
 
-		if (ImGui::SliderInt("Pop-up Delay", &Cfg.OverlayDelayMilliseconds(), 0, 1000, "%d ms"))
+		if (ImGui::SliderInt("Pop-up Delay", &Cfg.OverlayDelayMilliseconds(), 0, 1000, "%.0f ms"))
 			Cfg.OverlayDelayMillisecondsSave();
 
 		if (Cfg.ResetCursorOnLockedKeybind() != ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
@@ -717,7 +717,7 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 
 			MainEffect->SetTechnique("MountImage");
 			MainEffect->SetVector("g_vScreenSize", &screenSize);
-			MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime) / 1000.f * 6));
+			MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime - Cfg.OverlayDelayMilliseconds()) / 1000.f * 6));
 
 			{
 				D3DXVECTOR4 griffonSpriteDimensions = baseSpriteDimensions;
