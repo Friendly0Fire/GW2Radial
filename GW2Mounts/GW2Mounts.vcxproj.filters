@@ -53,6 +53,9 @@
     <ClCompile Include="xxhash\xxhash.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="imgui_ext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -101,6 +104,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="xxhash\xxhash.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_ext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
