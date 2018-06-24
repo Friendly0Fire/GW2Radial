@@ -111,7 +111,7 @@ HRESULT SetVertexShader_hook(IDirect3DDevice9* _this, IDirect3DVertexShader9 *pS
 {
 	HRESULT hr = SetVertexShader_real(_this, pShader);
 
-	if (!FrameDrawn && pShader == PreUIVertexShader)
+	if (pShader && !FrameDrawn && pShader == PreUIVertexShader)
 	{
 		Draw(_this, FrameDrawn, false);
 		FrameDrawn = true;
@@ -141,7 +141,7 @@ HRESULT SetPixelShader_hook(IDirect3DDevice9* _this, IDirect3DPixelShader9 *pSha
 {
 	HRESULT hr = SetPixelShader_real(_this, pShader);
 
-	if (!FrameDrawn && pShader == PreUIPixelShader)
+	if (pShader && !FrameDrawn && pShader == PreUIPixelShader)
 	{
 		Draw(_this, FrameDrawn, false);
 		FrameDrawn = true;
