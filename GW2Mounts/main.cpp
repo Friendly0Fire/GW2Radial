@@ -47,14 +47,14 @@ const char* GetMountName(MountType m)
 		return "Skimmer";
 	case MountType::JACKAL:
 		return "Jackal";
+	case MountType::BEETLE:
+		return "Beetle";
 	case MountType::GRIFFON:
 		return "Griffon";
 	default:
 		return "[Unknown]";
 	}
 }
-
-
 
 WNDPROC BaseWndProc;
 HMODULE DllModule = nullptr;
@@ -63,24 +63,21 @@ HMODULE DllModule = nullptr;
 uint ScreenWidth, ScreenHeight;
 std::unique_ptr<UnitQuad> Quad;
 ID3DXEffect* MainEffect = nullptr;
-IDirect3DTexture9* MountsTexture = nullptr;
-IDirect3DTexture9* MountTextures[MountTypeCount + 1] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+IDirect3DTexture9* MountTextures[MountTypeCount] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 IDirect3DTexture9* BgTexture = nullptr;
 
 void LoadMountTextures(IDirect3DDevice9* dev)
 {
 	D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_BG), &BgTexture);
-	D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_MOUNTS), &MountsTexture);
-	for (uint i = 0; i < MountTypeCount + 1; i++)
-		D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_MOUNT1 + i), &MountTextures[i]);
+	for (uint i = 0; i < MountTypeCount; i++)
+		D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_MOUNTS + i), &MountTextures[i]);
 }
 
 void UnloadMountTextures()
 {
-	COM_RELEASE(MountsTexture);
 	COM_RELEASE(BgTexture);
 
-	for (uint i = 0; i < MountTypeCount + 1; i++)
+	for (uint i = 0; i < MountTypeCount; i++)
 		COM_RELEASE(MountTextures[i]);
 }
 
@@ -661,14 +658,14 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 				MainEffect->End();
 			}
 
-			MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
+			/*MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
 			MainEffect->SetTexture("texMountImage", MountsTexture);
 
 			MainEffect->Begin(&passes, 0);
 			MainEffect->BeginPass(0);
 			Quad->Draw();
 			MainEffect->EndPass();
-			MainEffect->End();
+			MainEffect->End();*/
 
 			if (CurrentMountHovered != MountType::NONE)
 			{

@@ -25,9 +25,8 @@ enum class MountType
 	SPRINGER = 1,
 	SKIMMER = 2,
 	JACKAL = 3,
-	GRIFFON = 4
-	//BEETLE = 4,
-	//GRIFFON = 5
+	BEETLE = 4,
+	GRIFFON = 5
 };
 const unsigned int MountTypeCount = 5;
 
