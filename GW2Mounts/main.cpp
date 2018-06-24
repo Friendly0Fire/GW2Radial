@@ -270,7 +270,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			eventDown = true;
 		case WM_SYSKEYUP:
 		case WM_KEYUP:
-			if (msg == WM_SYSKEYDOWN || msg == WM_SYSKEYUP)
+			if ((msg == WM_SYSKEYDOWN || msg == WM_SYSKEYUP) && wParam != VK_F10)
 			{
 				if (((lParam >> 29) & 1) == 1)
 					eventKeys.push_back({ VK_MENU, true });
