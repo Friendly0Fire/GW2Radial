@@ -13,6 +13,8 @@
 #include <d3d9.h>
 #include "inputs.h"
 #include "imgui_ext.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 void PreReset();
 
@@ -76,7 +78,6 @@ void LoadMountTextures(IDirect3DDevice9* dev)
 void UnloadMountTextures()
 {
 	COM_RELEASE(BgTexture);
-
 	for (uint i = 0; i < MountTypeCount; i++)
 		COM_RELEASE(MountTextures[i]);
 }
@@ -131,6 +132,18 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	return true;
 }
 
+std::vector<MountType> GetActiveMounts()
+{
+	std::vector<MountType> ActiveMounts;
+	for (uint i = 0; i < MountTypeCount; i++)
+	{
+		if (!Cfg.MountKeybind(i).empty())
+			ActiveMounts.push_back((MountType)i);
+	}
+
+	return ActiveMounts;
+}
+
 void DetermineHoveredMount()
 {
 	const auto io = ImGui::GetIO();
@@ -142,21 +155,21 @@ void DetermineHoveredMount()
 
 	MountType LastMountHovered = CurrentMountHovered;
 
+	// Middle circle does not count as a hover event
 	if (D3DXVec2LengthSq(&MousePos) > CircleRadiusScreen * CircleRadiusScreen)
 	{
-		if (MousePos.x < 0 && abs(MousePos.x) > abs(MousePos.y)) // Raptor, 0
-			CurrentMountHovered = MountType::RAPTOR;
-		else if (MousePos.x > 0 && abs(MousePos.x) > abs(MousePos.y)) // Jackal, 3
-			CurrentMountHovered = MountType::JACKAL;
-		else if (MousePos.y < 0 && abs(MousePos.x) < abs(MousePos.y)) // Springer, 1
-			CurrentMountHovered = MountType::SPRINGER;
-		else if (MousePos.y > 0 && abs(MousePos.x) < abs(MousePos.y)) // Skimmer, 2
-			CurrentMountHovered = MountType::SKIMMER;
-		else
-			CurrentMountHovered = MountType::NONE;
+		float MouseAngle = atan2(MousePos.y, MousePos.x);
+		if (MouseAngle < 0)
+			MouseAngle += float(2 * M_PI);
+
+		std::vector<MountType> ActiveMounts = GetActiveMounts();
+		float MountAngle = float(2 * M_PI) / ActiveMounts.size();
+		int MountId = int(MouseAngle / MountAngle);
+
+		CurrentMountHovered = ActiveMounts[MountId];
 	}
 	else
-		CurrentMountHovered = MountType::GRIFFON;
+		CurrentMountHovered = MountType::NONE;
 
 	if (LastMountHovered != CurrentMountHovered)
 		MountHoverTime = max(OverlayTime + Cfg.OverlayDelayMilliseconds(), timeInMS());
@@ -547,13 +560,13 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 
 	if (DisplayMountOverlay && MainEffect && Quad)
 	{
+		Quad->Bind();
+
 		auto currentTime = timeInMS();
 
 		if (currentTime >= OverlayTime + Cfg.OverlayDelayMilliseconds())
 		{
 			uint passes = 0;
-
-			Quad->Bind();
 
 			// Setup viewport
 			D3DVIEWPORT9 vp;
@@ -572,114 +585,24 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 			baseSpriteDimensions.z = BaseSpriteSize * screenSize.y * screenSize.z;
 			baseSpriteDimensions.w = BaseSpriteSize;
 
-			D3DXVECTOR4 overlaySpriteDimensions = baseSpriteDimensions;
-			D3DXVECTOR4 direction;
-
-			if (CurrentMountHovered != MountType::NONE)
-			{
-				if (CurrentMountHovered == MountType::RAPTOR)
-				{
-					overlaySpriteDimensions.x -= 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
-					overlaySpriteDimensions.z *= 0.5f;
-					overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
-					direction = D3DXVECTOR4(-1.f, 0, 0.f, 0.f);
-				}
-				else if (CurrentMountHovered == MountType::JACKAL)
-				{
-					overlaySpriteDimensions.x += 0.5f * BaseSpriteSize * 0.5f * screenSize.y * screenSize.z;
-					overlaySpriteDimensions.z *= 0.5f;
-					overlaySpriteDimensions.w = BaseSpriteSize * 1024.f / 1664.f;
-					direction = D3DXVECTOR4(1.f, 0, 0.f, 0.f);
-				}
-				else if (CurrentMountHovered == MountType::SPRINGER)
-				{
-					overlaySpriteDimensions.y -= 0.5f * BaseSpriteSize * 0.5f;
-					overlaySpriteDimensions.w *= 0.5f;
-					overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
-					direction = D3DXVECTOR4(0, -1.f, 0.f, 0.f);
-				}
-				else if (CurrentMountHovered == MountType::SKIMMER)
-				{
-					overlaySpriteDimensions.y += 0.5f * BaseSpriteSize * 0.5f;
-					overlaySpriteDimensions.w *= 0.5f;
-					overlaySpriteDimensions.z = BaseSpriteSize * 1024.f / 1664.f * screenSize.y * screenSize.z;
-					direction = D3DXVECTOR4(0, 1.f, 0.f, 0.f);
-				}
-				else if (CurrentMountHovered == MountType::GRIFFON)
-				{
-					overlaySpriteDimensions.z *= 512.f / 1664.f;
-					overlaySpriteDimensions.w *= 512.f / 1664.f;
-					direction = D3DXVECTOR4(0, 0.f, 0.f, 0.f);
-				}
-
-				direction.z = fmod(currentTime / 1000.f, 60000.f);
-			}
-
-			if (CurrentMountHovered != MountType::NONE)
-			{
-				D3DXVECTOR4 highlightSpriteDimensions = baseSpriteDimensions;
-				if (CurrentMountHovered == MountType::GRIFFON)
-				{
-					highlightSpriteDimensions.z *= 512.f / 1664.f;
-					highlightSpriteDimensions.w *= 512.f / 1664.f;
-				}
-				highlightSpriteDimensions.z *= 1.5f;
-				highlightSpriteDimensions.w *= 1.5f;
-
-				MainEffect->SetTechnique(CurrentMountHovered == MountType::GRIFFON ? "MountImageHighlightGriffon" : "MountImageHighlight");
-				MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
-				MainEffect->SetTexture("texMountImage", BgTexture);
-				MainEffect->SetVector("g_vSpriteDimensions", &highlightSpriteDimensions);
-				MainEffect->SetVector("g_vDirection", &direction);
-
-				MainEffect->Begin(&passes, 0);
-				MainEffect->BeginPass(0);
-				Quad->Draw();
-				MainEffect->EndPass();
-				MainEffect->End();
-			}
-
 			MainEffect->SetTechnique("MountImage");
+			MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
 			MainEffect->SetVector("g_vScreenSize", &screenSize);
 			MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime - Cfg.OverlayDelayMilliseconds()) / 1000.f * 6));
-
-			{
-				D3DXVECTOR4 griffonSpriteDimensions = baseSpriteDimensions;
-				griffonSpriteDimensions.z *= 512.f / 1664.f;
-				griffonSpriteDimensions.w *= 512.f / 1664.f;
-
-				MainEffect->SetVector("g_vSpriteDimensions", &griffonSpriteDimensions);
-				MainEffect->SetTexture("texMountImage", MountTextures[5]);
-
-				MainEffect->Begin(&passes, 0);
-				MainEffect->BeginPass(0);
-				Quad->Draw();
-				MainEffect->EndPass();
-				MainEffect->End();
-			}
-
-			/*MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
-			MainEffect->SetTexture("texMountImage", MountsTexture);
-
 			MainEffect->Begin(&passes, 0);
 			MainEffect->BeginPass(0);
-			Quad->Draw();
-			MainEffect->EndPass();
-			MainEffect->End();*/
 
-			if (CurrentMountHovered != MountType::NONE)
+			for (auto it : GetActiveMounts())
 			{
-				MainEffect->SetTechnique("MountImage");
-				MainEffect->SetFloat("g_fTimer", sqrt(min(1.f, (currentTime - MountHoverTime) / 1000.f * 6)));
-				MainEffect->SetTexture("texMountImage", MountTextures[(uint)CurrentMountHovered]);
-				MainEffect->SetVector("g_vSpriteDimensions", &overlaySpriteDimensions);
+				MainEffect->SetInt("g_iMountID", (int)it);
+				MainEffect->SetTexture("texMountImage", MountTextures[(uint)it]);
+				MainEffect->CommitChanges();
 
-				MainEffect->Begin(&passes, 0);
-				MainEffect->BeginPass(0);
 				Quad->Draw();
-				MainEffect->EndPass();
-				MainEffect->End();
 			}
+
+			MainEffect->EndPass();
+			MainEffect->End();
 
 			{
 				const auto& io = ImGui::GetIO();

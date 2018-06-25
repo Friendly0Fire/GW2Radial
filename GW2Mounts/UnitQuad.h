@@ -19,7 +19,7 @@ struct UnitQuad
 	static const D3DVERTEXELEMENT9* def();
 
 	void Bind(uint stream = 0, uint offset = 0);
-	void Draw();
+	void Draw(uint triCount = 2, uint startVert = 0);
 
 private:
 	IDirect3DDevice9* _device = nullptr;

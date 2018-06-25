@@ -63,10 +63,10 @@ void UnitQuad::Bind(uint stream, uint offset)
 	_device->SetStreamSource(stream, _buffer, offset, stride());
 }
 
-void UnitQuad::Draw()
+void UnitQuad::Draw(uint triCount, uint startVert)
 {
 	if (!_device)
 		return;
 
-	_device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+	_device->DrawPrimitive(D3DPT_TRIANGLESTRIP, startVert, triCount);
 }

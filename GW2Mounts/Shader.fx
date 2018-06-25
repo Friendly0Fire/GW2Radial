@@ -90,44 +90,6 @@ technique MountImage
 	}
 }
 
-technique MountImageHighlight
-{
-	pass P0
-	{
-		ZEnable = false;
-		ZWriteEnable = false;
-		CullMode = None;
-		AlphaTestEnable = false;
-		AlphaBlendEnable = true;
-
-		SrcBlend = SrcAlpha;
-		DestBlend = InvSrcAlpha;
-		BlendOp = Add;
-
-		VertexShader = compile vs_3_0 MountImage_VS();
-		PixelShader = compile ps_3_0 MountImageHighlight_PS(false);
-	}
-}
-
-technique MountImageHighlightGriffon
-{
-	pass P0
-	{
-		ZEnable = false;
-		ZWriteEnable = false;
-		CullMode = None;
-		AlphaTestEnable = false;
-		AlphaBlendEnable = true;
-
-		SrcBlend = SrcAlpha;
-		DestBlend = InvSrcAlpha;
-		BlendOp = Add;
-
-		VertexShader = compile vs_3_0 MountImage_VS();
-		PixelShader = compile ps_3_0 MountImageHighlight_PS(true);
-	}
-}
-
 float4 Cursor_PS(VS_SCREEN In) : COLOR0
 {
 	float smoothrandom1 = sin(15 * In.UV.x + g_fTimer * 2.4f) + sin(18 * In.UV.y + g_fTimer * 3.1f);
