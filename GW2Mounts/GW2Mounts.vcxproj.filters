@@ -109,6 +109,9 @@
     <ClInclude Include="imgui_ext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="perlin.hlsl">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="main.def">

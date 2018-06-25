@@ -141,6 +141,9 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="perlin.hlsl">
+      <FileType>Document</FileType>
+    </ClInclude>
     <FxCompile Include="Shader.fx">
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">2.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">2.0</ShaderModel>

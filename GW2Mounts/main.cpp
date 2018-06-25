@@ -579,52 +579,68 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 
 			D3DXVECTOR4 screenSize((float)ScreenWidth, (float)ScreenHeight, 1.f / ScreenWidth, 1.f / ScreenHeight);
 
-			D3DXVECTOR4 baseSpriteDimensions;
-			baseSpriteDimensions.x = OverlayPosition.x;
-			baseSpriteDimensions.y = OverlayPosition.y;
-			baseSpriteDimensions.z = BaseSpriteSize * screenSize.y * screenSize.z;
-			baseSpriteDimensions.w = BaseSpriteSize;
-
-			MainEffect->SetTechnique("MountImage");
-			MainEffect->SetVector("g_vScreenSize", &screenSize);
-			MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime - Cfg.OverlayDelayMilliseconds()) / 1000.f * 6));
-			MainEffect->Begin(&passes, 0);
-			MainEffect->BeginPass(0);
-
 			auto ActiveMounts = GetActiveMounts();
-			int n = 0;
-			for (auto it : ActiveMounts)
+			if (!ActiveMounts.empty())
 			{
-				D3DXVECTOR4 spriteDimensions = baseSpriteDimensions;
-				const float distance = 0.67f;
+				D3DXVECTOR4 baseSpriteDimensions;
+				baseSpriteDimensions.x = OverlayPosition.x;
+				baseSpriteDimensions.y = OverlayPosition.y;
+				baseSpriteDimensions.z = BaseSpriteSize * screenSize.y * screenSize.z;
+				baseSpriteDimensions.w = BaseSpriteSize;
 
-				float mountAngle = ((float)n + 0.0f) / (float)ActiveMounts.size() * 2 * M_PI;
-				D3DXVECTOR2 mountLocation = D3DXVECTOR2(cos(mountAngle - M_PI / 2), sin(mountAngle - M_PI / 2));
-				float mountRadius = tan(M_PI / (float)ActiveMounts.size()) * 2 * distance;
-				spriteDimensions.z *= mountRadius / (2 * M_PI * distance);
-				spriteDimensions.w *= mountRadius / (2 * M_PI * distance);
-				spriteDimensions.x += mountLocation.x * spriteDimensions.z;
-				spriteDimensions.y += mountLocation.y * spriteDimensions.w;
-
-				int v[3] = { (int)it, n, (int)ActiveMounts.size() };
-				MainEffect->SetValue("g_iMountID", v, sizeof(v));
-				MainEffect->SetTexture("texMountImage", MountTextures[(uint)it]);
-				MainEffect->SetVector("g_vSpriteDimensions", &spriteDimensions);
-				MainEffect->CommitChanges();
-
+				MainEffect->SetTechnique("BgImage");
+				MainEffect->SetTexture("texBgImage", BgTexture);
+				MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
+				MainEffect->SetFloat("g_fFadeTimer", min(1.f, (currentTime - OverlayTime - Cfg.OverlayDelayMilliseconds()) / 1000.f * 6));
+				MainEffect->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
+				MainEffect->SetInt("g_iMountCount", (int)ActiveMounts.size());
+				MainEffect->Begin(&passes, 0);
+				MainEffect->BeginPass(0);
 				Quad->Draw();
-				n++;
-			}
+				MainEffect->EndPass();
+				MainEffect->End();
 
-			MainEffect->EndPass();
-			MainEffect->End();
+				MainEffect->SetTechnique("MountImage");
+				MainEffect->SetTexture("texBgImage", BgTexture);
+				MainEffect->SetVector("g_vScreenSize", &screenSize);
+				MainEffect->Begin(&passes, 0);
+				MainEffect->BeginPass(0);
+
+				// FIXME: Breaks for 1 or 2 mounts
+				int n = 0;
+				for (auto it : ActiveMounts)
+				{
+					D3DXVECTOR4 spriteDimensions = baseSpriteDimensions;
+
+					float mountRadius = (float)tan(M_PI / (double)ActiveMounts.size()) * 2.f;
+					spriteDimensions.z *= mountRadius / float(2 * M_PI);
+					spriteDimensions.w *= mountRadius / float(2 * M_PI);
+
+					float mountAngle = ((float)n + 0.0f) / (float)ActiveMounts.size() * 2 * (float)M_PI;
+					D3DXVECTOR2 mountLocation = D3DXVECTOR2(cos(mountAngle - (float)M_PI / 2), sin(mountAngle - (float)M_PI / 2));
+
+					spriteDimensions.x += mountLocation.x * spriteDimensions.z;
+					spriteDimensions.y += mountLocation.y * spriteDimensions.w;
+
+					int v[3] = { (int)it, n, (int)ActiveMounts.size() };
+					MainEffect->SetValue("g_iMountID", v, sizeof(v));
+					MainEffect->SetTexture("texMountImage", MountTextures[(uint)it]);
+					MainEffect->SetVector("g_vSpriteDimensions", &spriteDimensions);
+					MainEffect->CommitChanges();
+
+					Quad->Draw();
+					n++;
+				}
+
+				MainEffect->EndPass();
+				MainEffect->End();
+			}
 
 			{
 				const auto& io = ImGui::GetIO();
 
 				MainEffect->SetTechnique("Cursor");
-				MainEffect->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
-				MainEffect->SetTexture("texMountImage", BgTexture);
+				MainEffect->SetTexture("texBgImage", BgTexture);
 				MainEffect->SetVector("g_vSpriteDimensions", &D3DXVECTOR4(io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f));
 
 				MainEffect->Begin(&passes, 0);
