@@ -18,7 +18,7 @@
 
 void PreReset();
 
-const float BaseSpriteSize = 0.4f;
+const float BaseSpriteSize = 0.6f;
 const float CircleRadiusScreen = 256.f / 1664.f * BaseSpriteSize * 0.5f;
 
 Config Cfg;
@@ -606,21 +606,45 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 				MainEffect->Begin(&passes, 0);
 				MainEffect->BeginPass(0);
 
-				// FIXME: Breaks for 1 or 2 mounts
 				int n = 0;
 				for (auto it : ActiveMounts)
 				{
 					D3DXVECTOR4 spriteDimensions = baseSpriteDimensions;
 
-					float mountRadius = (float)tan(M_PI / (double)ActiveMounts.size()) * 2.f;
-					spriteDimensions.z *= mountRadius / float(2 * M_PI);
-					spriteDimensions.w *= mountRadius / float(2 * M_PI);
-
-					float mountAngle = ((float)n + 0.0f) / (float)ActiveMounts.size() * 2 * (float)M_PI;
-					D3DXVECTOR2 mountLocation = D3DXVECTOR2(cos(mountAngle - (float)M_PI / 2), sin(mountAngle - (float)M_PI / 2));
+					float mountAngle = (float)n / (float)ActiveMounts.size() * 2 * (float)M_PI;
+					if (ActiveMounts.size() == 1)
+						mountAngle = 0;
+					D3DXVECTOR2 mountLocation = D3DXVECTOR2(cos(mountAngle - (float)M_PI / 2), sin(mountAngle - (float)M_PI / 2)) * 0.25f;
 
 					spriteDimensions.x += mountLocation.x * spriteDimensions.z;
 					spriteDimensions.y += mountLocation.y * spriteDimensions.w;
+
+					float mountDiameter = (float)sin((2 * M_PI / (double)ActiveMounts.size()) / 2) * 2.f * 0.2f;
+					if (ActiveMounts.size() == 1)
+						mountDiameter = 2.f * 0.2f;
+
+					switch (ActiveMounts.size())
+					{
+					case 1:
+						spriteDimensions.z *= 0.8f;
+						spriteDimensions.w *= 0.8f;
+						break;
+					case 2:
+						spriteDimensions.z *= 0.85f;
+						spriteDimensions.w *= 0.85f;
+						break;
+					case 3:
+						spriteDimensions.z *= 0.9f;
+						spriteDimensions.w *= 0.9f;
+						break;
+					case 4:
+						spriteDimensions.z *= 0.95f;
+						spriteDimensions.w *= 0.95f;
+						break;
+					}
+
+					spriteDimensions.z *= mountDiameter;
+					spriteDimensions.w *= mountDiameter;
 
 					int v[3] = { (int)it, n, (int)ActiveMounts.size() };
 					MainEffect->SetValue("g_iMountID", v, sizeof(v));

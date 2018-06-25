@@ -75,7 +75,7 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 		coordsPolar.y += 2 * PI;
 		
 	float mountAngle = 2 * PI / g_iMountCount;
-	float localCoordAngle = fmod(coordsPolar.y, mountAngle) / mountAngle;
+	float localCoordAngle = fmod(coordsPolar.y + (g_iMountCount % 2 == 0 ? mountAngle / 2 : 0), mountAngle) / mountAngle;
 		
 	float2 smoothrandom = float2(snoise(3 * In.UV * cos(0.1f * g_fTimer) + g_fTimer * 0.37f), snoise(5 * In.UV * sin(0.13f * g_fTimer) + g_fTimer * 0.48f));
 
@@ -94,9 +94,11 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 	float min_thickness = 0.003f / (0.001f + coordsPolar.x);
 	float max_thickness = 0.005f / (0.001f + coordsPolar.x);
 	
-	// FIXME: Only works for odd number of mounts
-	border_mask *= lerp(2.f, 1.f, smoothstep(min_thickness, max_thickness, localCoordAngle));
-	border_mask *= lerp(1.f, 2.f, smoothstep(1 - max_thickness, 1 - min_thickness, localCoordAngle));
+	if(g_iMountCount > 1)
+	{
+		border_mask *= lerp(2.f, 1.f, smoothstep(min_thickness, max_thickness, localCoordAngle));
+		border_mask *= lerp(1.f, 2.f, smoothstep(1 - max_thickness, 1 - min_thickness, localCoordAngle));
+	}
 	border_mask *= lerp(2.f, 1.f, smoothstep(0.105f, 0.11f, coordsPolar.x));
 	border_mask *= lerp(1.5f, 1.f, smoothstep(0.105f, 0.4f, coordsPolar.x));
 
