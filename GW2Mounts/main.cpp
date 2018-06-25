@@ -596,10 +596,14 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 				baseSpriteDimensions.z = Cfg.OverlayScale() * 0.5f * screenSize.y * screenSize.z;
 				baseSpriteDimensions.w = Cfg.OverlayScale() * 0.5f;
 
+				float fadeTimer = min(1.f, (currentTime - (OverlayTime + Cfg.OverlayDelayMilliseconds())) / 1000.f * 6);
+				float hoverTimer = min(1.f, (currentTime - max(MountHoverTime, OverlayTime + Cfg.OverlayDelayMilliseconds())) / 1000.f * 6);
+
 				MainEffect->SetTechnique("BgImage");
 				MainEffect->SetTexture("texBgImage", BgTexture);
 				MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
-				MainEffect->SetFloat("g_fFadeTimer", min(1.f, (currentTime - OverlayTime - Cfg.OverlayDelayMilliseconds()) / 1000.f * 6));
+				MainEffect->SetFloat("g_fFadeTimer", fadeTimer);
+				MainEffect->SetFloat("g_fHoverTimer", hoverTimer);
 				MainEffect->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
 				MainEffect->SetFloat("g_fDeadZoneScale", Cfg.OverlayDeadZoneScale());
 				MainEffect->SetInt("g_iMountCount", (int)ActiveMounts.size());
@@ -632,6 +636,10 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 					float mountDiameter = (float)sin((2 * M_PI / (double)ActiveMounts.size()) / 2) * 2.f * 0.2f;
 					if (ActiveMounts.size() == 1)
 						mountDiameter = 2.f * 0.2f;
+					if (it == CurrentMountHovered)
+						mountDiameter *= lerp(1.f, 1.1f, smoothstep(hoverTimer));
+					else
+						mountDiameter *= 0.9f;
 
 					switch (ActiveMounts.size())
 					{
@@ -661,6 +669,7 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 					MainEffect->SetBool("g_bMountHovered", CurrentMountHovered == it);
 					MainEffect->SetTexture("texMountImage", MountTextures[(uint)it]);
 					MainEffect->SetVector("g_vSpriteDimensions", &spriteDimensions);
+					MainEffect->SetValue("g_vColor", MountColors[(uint)it].data(), sizeof(D3DXVECTOR4));
 					MainEffect->CommitChanges();
 
 					Quad->Draw();

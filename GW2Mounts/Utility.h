@@ -28,3 +28,18 @@ auto end(reversion_wrapper<T> w) { return std::rend(w.iterable); }
 
 template <typename T>
 reversion_wrapper<T> reverse(T&& iterable) { return { iterable }; }
+
+inline float lerp(float a, float b, float s)
+{
+	if (s < 0)
+		return a;
+	else if (s > 1)
+		return b;
+	else
+		return (1 - s) * a + s * b;
+}
+
+inline float smoothstep(float x)
+{
+	return 3 * x * x - 2 * x * x * x;
+}

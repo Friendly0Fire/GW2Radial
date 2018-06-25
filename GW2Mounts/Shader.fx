@@ -42,11 +42,13 @@ sampler_state
 float4 g_vSpriteDimensions, g_vScreenSize;
 float g_fFadeTimer;
 float g_fTimer;
+float g_fHoverTimer;
 int3 g_iMountID;
 int g_iMountCount;
 float g_fDeadZoneScale;
 bool g_bMountHovered;
 int g_iMountHovered;
+float4 g_vColor;
 
 float2 makeSmoothRandom(float2 uv, float4 scales, float4 timeScales)
 {
@@ -85,7 +87,7 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 
 	float4 color = tex2D(texBgImageSampler, In.UV + smoothrandom * 0.003f);
 	color.rgb *= lerp(0.9f, 1.3f, saturate((4 + smoothrandom.x + smoothrandom.y) / 8));
-	if(localMountId != g_iMountHovered) color.rgb *= 0.5f;
+	color.rgb *= lerp(0.5f, 1.f, localMountId == g_iMountHovered ? g_fHoverTimer : 0.f);
 	float luma = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
 
 	float edge_mask = 1.f;
@@ -94,7 +96,7 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 	edge_mask *= lerp(1.f, 0.f, smoothstep(0.5f, 1.f, coordsPolar.x * (1 - luma * 0.2f)));
 	
 	float border_mask = 1.f;
-	if(localMountId != g_iMountHovered)
+	if(localMountId != g_iMountHovered || g_fHoverTimer < 1)
 	{
 		float min_thickness = 0.003f / (0.001f + coordsPolar.x);
 		float max_thickness = 0.005f / (0.001f + coordsPolar.x);
@@ -104,9 +106,13 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 			border_mask *= lerp(2.f, 1.f, smoothstep(min_thickness, max_thickness, localCoordAngle));
 			border_mask *= lerp(1.f, 2.f, smoothstep(1 - max_thickness, 1 - min_thickness, localCoordAngle));
 		}
-		border_mask *= lerp(2.f, 1.f, smoothstep(g_fDeadZoneScale, g_fDeadZoneScale + 0.05f, coordsPolar.x));
-		border_mask *= lerp(1.5f, 1.f, smoothstep(g_fDeadZoneScale, min(0.5f, g_fDeadZoneScale * 4), coordsPolar.x));
 	}
+
+	if(localMountId == g_iMountHovered && g_fHoverTimer < 1)
+		border_mask = lerp(border_mask, 1.f, g_fHoverTimer);
+		
+	border_mask *= lerp(2.f, 1.f, smoothstep(g_fDeadZoneScale, g_fDeadZoneScale + 0.05f, coordsPolar.x));
+	border_mask *= lerp(1.5f, 1.f, smoothstep(g_fDeadZoneScale, min(0.5f, g_fDeadZoneScale * 4), coordsPolar.x));
 
 	return color * saturate(edge_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * g_fFadeTimer;
 }
@@ -133,37 +139,29 @@ technique BgImage
 float4 MountImage_PS(VS_SCREEN In) : COLOR0
 {
 	float mask = 1.f - tex2D(texMountImageSampler, In.UV).r;
+	float shadow = 1.f - tex2D(texMountImageSampler, In.UV + 0.01f).r;
+	
+	float luma = dot(g_vColor.rgb, float3(0.2126, 0.7152, 0.0722));
 
-	float4 color = float4(g_iMountID.x == 0 || g_iMountID.x == 3 || g_iMountID.x == 5, g_iMountID.x == 1 || g_iMountID.x == 3 || g_iMountID.x == 4, g_iMountID.x == 2 || g_iMountID.x == 4 || g_iMountID.x == 5, 1);
-	if(!g_bMountHovered)
-		color.rgb *= 0.25f;
+	float3 faded_color = lerp(g_vColor.rgb, luma, 0.33f);
 
-	return color * mask * g_fFadeTimer;
-}
-
-/*float4 g_vDirection;
-
-float4 MountImageHighlight_PS(VS_SCREEN In, uniform bool griffon) : COLOR0
-{
-	float4 baseImage = 0;
-	float2 border = (In.UV * 2 - 1);
-
-	float d1 = abs(dot(border, g_vDirection.xy));
-	float d2 = abs(dot(border, g_vDirection.yx));
-
-	if (griffon || ((dot(border, g_vDirection.xy)) > 0 && d1 > d2))
+	float3 color = faded_color;
+	float3 glow = 0;
+	if(g_bMountHovered)
 	{
-		float smoothrandom1 = sin(14 * In.UV.x + g_vDirection.z * 1.3f) + sin(17 * In.UV.y + g_vDirection.z * 2.3f);
-		float smoothrandom2 = sin(17 * In.UV.x + g_vDirection.z * 1.7f) + sin(14 * In.UV.y + g_vDirection.z * 3.1f);
+		color = lerp(faded_color, g_vColor.rgb, g_fHoverTimer);
 
-		baseImage = tex2D(texMountImageSampler, In.UV + float2(smoothrandom1, smoothrandom2) * 0.003f);
-		float radius = length(border);
-		baseImage *= (1.f - smoothstep(0.6f, 1.f, radius)) * smoothstep(0.0f, 0.2f, radius);
-		if (!griffon) baseImage *= 1 - 0.5f * saturate(abs(d1 - d2));
-		baseImage *= lerp(0.8f, 1.1f, saturate((4 + smoothrandom1 + smoothrandom2) / 8));
+		float glow_mask = 0;
+		glow_mask += 1.f - tex2D(texMountImageSampler, In.UV + float2(0.01f, 0.01f)).r;
+		glow_mask += 1.f - tex2D(texMountImageSampler, In.UV + float2(-0.01f, 0.01f)).r;
+		glow_mask += 1.f - tex2D(texMountImageSampler, In.UV + float2(0.01f, -0.01f)).r;
+		glow_mask += 1.f - tex2D(texMountImageSampler, In.UV + float2(-0.01f, -0.01f)).r;
+
+		glow = g_vColor.rgb * (glow_mask / 4) * g_fHoverTimer * 0.5f * (0.5f + 0.5f * snoise(In.UV * 3.18f + 0.15f * float2(cos(g_fTimer * 3), sin(g_fTimer * 2))));
 	}
-	return baseImage * g_fTimer;
-}*/
+
+	return float4(color * mask + glow, g_vColor.a * max(mask, shadow)) * g_fFadeTimer;
+}
 
 technique MountImage
 {

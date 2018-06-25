@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <array>
 
 #define COM_RELEASE(x) { if((x)) { (x)->Release(); (x) = nullptr; } }
 
@@ -31,6 +32,15 @@ enum class MountType : uint
 	GRIFFON = 5
 };
 const unsigned int MountTypeCount = 6;
+
+const std::array<float, 4> MountColors[MountTypeCount] = {
+	{ 213 / 255.f, 100 / 255.f, 89 / 255.f, 1 },
+	{ 212 / 255.f, 198 / 255.f, 94 / 255.f, 1 },
+	{ 108 / 255.f, 128 / 255.f, 213 / 255.f, 1 },
+	{ 120 / 255.f, 183 / 255.f, 197 / 255.f, 1 },
+	{ 0, 0, 0, 1 },
+	{ 136 / 255.f, 123 / 255.f, 195 / 255.f, 1 }
+};
 
 #ifndef HID_USAGE_PAGE_GENERIC
 #define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)
