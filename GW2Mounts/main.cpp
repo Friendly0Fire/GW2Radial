@@ -18,8 +18,7 @@
 
 void PreReset();
 
-const float BaseSpriteSize = 0.6f;
-const float CircleRadiusScreen = 256.f / 1664.f * BaseSpriteSize * 0.5f;
+const float CircleRadiusBase = 256.f / 1664.f * 0.25f;
 
 Config Cfg;
 HWND GameWindow = 0;
@@ -153,18 +152,21 @@ void DetermineHoveredMount()
 	MousePos.y = io.MousePos.y / (float)ScreenHeight;
 	MousePos -= OverlayPosition;
 
+	MousePos.y *= (float)ScreenHeight / (float)ScreenWidth;
+
 	MountType LastMountHovered = CurrentMountHovered;
 
+	std::vector<MountType> ActiveMounts = GetActiveMounts();
+
 	// Middle circle does not count as a hover event
-	if (D3DXVec2LengthSq(&MousePos) > CircleRadiusScreen * CircleRadiusScreen)
+	if (!ActiveMounts.empty() && D3DXVec2LengthSq(&MousePos) > SQUARE(Cfg.OverlayScale() * 0.135f * Cfg.OverlayDeadZoneScale()))
 	{
-		float MouseAngle = atan2(MousePos.y, MousePos.x);
+		float MouseAngle = atan2(-MousePos.y, -MousePos.x) - 0.5f * M_PI;
 		if (MouseAngle < 0)
 			MouseAngle += float(2 * M_PI);
 
-		std::vector<MountType> ActiveMounts = GetActiveMounts();
 		float MountAngle = float(2 * M_PI) / ActiveMounts.size();
-		int MountId = int(MouseAngle / MountAngle);
+		int MountId = int((MouseAngle - MountAngle / 2) / MountAngle + 1) % ActiveMounts.size();
 
 		CurrentMountHovered = ActiveMounts[MountId];
 	}
@@ -536,6 +538,12 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 		if (ImGui::SliderInt("Pop-up Delay", &Cfg.OverlayDelayMilliseconds(), 0, 1000, "%.0f ms"))
 			Cfg.OverlayDelayMillisecondsSave();
 
+		if (ImGui::SliderFloat("Overlay Scale", &Cfg.OverlayScale(), 0.f, 4.f))
+			Cfg.OverlayScaleSave();
+
+		if (ImGui::SliderFloat("Overlay Dead Zone Scale", &Cfg.OverlayDeadZoneScale(), 0.f, 0.25f))
+			Cfg.OverlayDeadZoneScaleSave();
+
 		if (Cfg.ResetCursorOnLockedKeybind() != ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
 			Cfg.ResetCursorOnLockedKeybindSave();
 		if (Cfg.LockCameraWhenOverlayed() != ImGui::Checkbox("Lock camera when overlay is displayed", &Cfg.LockCameraWhenOverlayed()))
@@ -585,15 +593,17 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 				D3DXVECTOR4 baseSpriteDimensions;
 				baseSpriteDimensions.x = OverlayPosition.x;
 				baseSpriteDimensions.y = OverlayPosition.y;
-				baseSpriteDimensions.z = BaseSpriteSize * screenSize.y * screenSize.z;
-				baseSpriteDimensions.w = BaseSpriteSize;
+				baseSpriteDimensions.z = Cfg.OverlayScale() * 0.5f * screenSize.y * screenSize.z;
+				baseSpriteDimensions.w = Cfg.OverlayScale() * 0.5f;
 
 				MainEffect->SetTechnique("BgImage");
 				MainEffect->SetTexture("texBgImage", BgTexture);
 				MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
 				MainEffect->SetFloat("g_fFadeTimer", min(1.f, (currentTime - OverlayTime - Cfg.OverlayDelayMilliseconds()) / 1000.f * 6));
 				MainEffect->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
+				MainEffect->SetFloat("g_fDeadZoneScale", Cfg.OverlayDeadZoneScale());
 				MainEffect->SetInt("g_iMountCount", (int)ActiveMounts.size());
+				MainEffect->SetInt("g_iMountHovered", (int) (std::find(ActiveMounts.begin(), ActiveMounts.end(), CurrentMountHovered) - ActiveMounts.begin()));
 				MainEffect->Begin(&passes, 0);
 				MainEffect->BeginPass(0);
 				Quad->Draw();
@@ -648,6 +658,7 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 
 					int v[3] = { (int)it, n, (int)ActiveMounts.size() };
 					MainEffect->SetValue("g_iMountID", v, sizeof(v));
+					MainEffect->SetBool("g_bMountHovered", CurrentMountHovered == it);
 					MainEffect->SetTexture("texMountImage", MountTextures[(uint)it]);
 					MainEffect->SetVector("g_vSpriteDimensions", &spriteDimensions);
 					MainEffect->CommitChanges();

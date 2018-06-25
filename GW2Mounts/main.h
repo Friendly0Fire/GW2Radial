@@ -11,6 +11,8 @@
 
 #define NULL_COALESCE(a, b) ((a) != nullptr ? (a) : (b))
 
+#define SQUARE(x) ((x) * (x))
+
 #include "resource.h"
 
 typedef unsigned char uchar;

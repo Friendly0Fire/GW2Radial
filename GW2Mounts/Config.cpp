@@ -55,6 +55,8 @@ void Config::Load()
 	_ResetCursorOnLockedKeybind = _INI.GetBoolValue("General", "reset_cursor_on_locked_keybind", true);
 	_LockCameraWhenOverlayed = _INI.GetBoolValue("General", "lock_camera_when_overlayed", true);
 	_OverlayDelayMilliseconds = _INI.GetLongValue("General", "overlay_delay_ms", 0);
+	_OverlayScale = (float)_INI.GetDoubleValue("General", "overlay_scale", 1.);
+	_OverlayDeadZoneScale = (float)_INI.GetDoubleValue("General", "overlay_dead_zone_scale", 1.);
 
 	const char* keys = _INI.GetValue("Keybinds", "mount_wheel", nullptr);
 	LoadKeybindString(keys, _MountOverlayKeybind);
@@ -116,5 +118,18 @@ void Config::LockCameraWhenOverlayedSave()
 void Config::OverlayDelayMillisecondsSave()
 {
 	_INI.SetLongValue("General", "overlay_delay_ms", _OverlayDelayMilliseconds);
+	_INI.SaveFile(_ConfigLocation);
+}
+
+void Config::OverlayScaleSave()
+{
+	_INI.SetDoubleValue("General", "overlay_scale", _OverlayScale);
+	_INI.SaveFile(_ConfigLocation);
+}
+
+
+void Config::OverlayDeadZoneScaleSave()
+{
+	_INI.SetDoubleValue("General", "overlay_dead_zone_scale", _OverlayDeadZoneScale);
 	_INI.SaveFile(_ConfigLocation);
 }

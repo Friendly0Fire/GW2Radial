@@ -31,6 +31,12 @@ public:
 	auto& OverlayDelayMilliseconds() { return _OverlayDelayMilliseconds; }
 	void OverlayDelayMillisecondsSave();
 
+	auto& OverlayScale() { return _OverlayScale; }
+	void OverlayScaleSave();
+
+	auto& OverlayDeadZoneScale() { return _OverlayDeadZoneScale; }
+	void OverlayDeadZoneScaleSave();
+
 	const auto& ImGuiConfigLocation() { return _ImGuiConfigLocation; }
 
 protected:
@@ -51,5 +57,7 @@ protected:
 	bool _ResetCursorOnLockedKeybind = true;
 	bool _LockCameraWhenOverlayed = true;
 	int _OverlayDelayMilliseconds = 0;
+	float _OverlayScale = 1.f;
+	float _OverlayDeadZoneScale = 0.2f;
 };
 

@@ -44,6 +44,9 @@ float g_fFadeTimer;
 float g_fTimer;
 int3 g_iMountID;
 int g_iMountCount;
+float g_fDeadZoneScale;
+bool g_bMountHovered;
+int g_iMountHovered;
 
 float2 makeSmoothRandom(float2 uv, float4 scales, float4 timeScales)
 {
@@ -68,39 +71,42 @@ VS_SCREEN Default_VS(in float2 UV : TEXCOORD0)
 
 float4 BgImage_PS(VS_SCREEN In) : COLOR0
 {
-
-	float2 coords = 2 * (In.UV - 0.5f);
+	float2 coords = 3 * (In.UV - 0.5f);
+	coords *= -1;
 	float2 coordsPolar = float2(length(coords), atan2(coords.y, coords.x) - 0.5f * PI);
 	if(coordsPolar.y < 0)
 		coordsPolar.y += 2 * PI;
 		
 	float mountAngle = 2 * PI / g_iMountCount;
-	float localCoordAngle = fmod(coordsPolar.y + (g_iMountCount % 2 == 0 ? mountAngle / 2 : 0), mountAngle) / mountAngle;
+	float localCoordAngle = fmod(coordsPolar.y + mountAngle / 2, mountAngle) / mountAngle;
+	int localMountId = (floor((coordsPolar.y - mountAngle / 2) / mountAngle) + 1) % g_iMountCount;
 		
 	float2 smoothrandom = float2(snoise(3 * In.UV * cos(0.1f * g_fTimer) + g_fTimer * 0.37f), snoise(5 * In.UV * sin(0.13f * g_fTimer) + g_fTimer * 0.48f));
 
 	float4 color = tex2D(texBgImageSampler, In.UV + smoothrandom * 0.003f);
 	color.rgb *= lerp(0.9f, 1.3f, saturate((4 + smoothrandom.x + smoothrandom.y) / 8));
-	color.rgb *= 0.5f;
+	if(localMountId != g_iMountHovered) color.rgb *= 0.5f;
 	float luma = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
 
 	float edge_mask = 1.f;
 	
-	edge_mask *= lerp(0.f, 1.f, smoothstep(0.095f, 0.1f, coordsPolar.x * (1 - luma * 0.2f)));
+	edge_mask *= lerp(0.f, 1.f, smoothstep(g_fDeadZoneScale - 0.025f, g_fDeadZoneScale + 0.025f, coordsPolar.x * (1 - luma * 0.2f)));
 	edge_mask *= lerp(1.f, 0.f, smoothstep(0.5f, 1.f, coordsPolar.x * (1 - luma * 0.2f)));
-
+	
 	float border_mask = 1.f;
-	
-	float min_thickness = 0.003f / (0.001f + coordsPolar.x);
-	float max_thickness = 0.005f / (0.001f + coordsPolar.x);
-	
-	if(g_iMountCount > 1)
+	if(localMountId != g_iMountHovered)
 	{
-		border_mask *= lerp(2.f, 1.f, smoothstep(min_thickness, max_thickness, localCoordAngle));
-		border_mask *= lerp(1.f, 2.f, smoothstep(1 - max_thickness, 1 - min_thickness, localCoordAngle));
+		float min_thickness = 0.003f / (0.001f + coordsPolar.x);
+		float max_thickness = 0.005f / (0.001f + coordsPolar.x);
+	
+		if(g_iMountCount > 1)
+		{
+			border_mask *= lerp(2.f, 1.f, smoothstep(min_thickness, max_thickness, localCoordAngle));
+			border_mask *= lerp(1.f, 2.f, smoothstep(1 - max_thickness, 1 - min_thickness, localCoordAngle));
+		}
+		border_mask *= lerp(2.f, 1.f, smoothstep(g_fDeadZoneScale, g_fDeadZoneScale + 0.05f, coordsPolar.x));
+		border_mask *= lerp(1.5f, 1.f, smoothstep(g_fDeadZoneScale, min(0.5f, g_fDeadZoneScale * 4), coordsPolar.x));
 	}
-	border_mask *= lerp(2.f, 1.f, smoothstep(0.105f, 0.11f, coordsPolar.x));
-	border_mask *= lerp(1.5f, 1.f, smoothstep(0.105f, 0.4f, coordsPolar.x));
 
 	return color * saturate(edge_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * g_fFadeTimer;
 }
@@ -129,6 +135,8 @@ float4 MountImage_PS(VS_SCREEN In) : COLOR0
 	float mask = 1.f - tex2D(texMountImageSampler, In.UV).r;
 
 	float4 color = float4(g_iMountID.x == 0 || g_iMountID.x == 3 || g_iMountID.x == 5, g_iMountID.x == 1 || g_iMountID.x == 3 || g_iMountID.x == 4, g_iMountID.x == 2 || g_iMountID.x == 4 || g_iMountID.x == 5, 1);
+	if(!g_bMountHovered)
+		color.rgb *= 0.25f;
 
 	return color * mask * g_fFadeTimer;
 }
