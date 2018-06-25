@@ -586,19 +586,34 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 			baseSpriteDimensions.w = BaseSpriteSize;
 
 			MainEffect->SetTechnique("MountImage");
-			MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
 			MainEffect->SetVector("g_vScreenSize", &screenSize);
 			MainEffect->SetFloat("g_fTimer", min(1.f, (currentTime - OverlayTime - Cfg.OverlayDelayMilliseconds()) / 1000.f * 6));
 			MainEffect->Begin(&passes, 0);
 			MainEffect->BeginPass(0);
 
-			for (auto it : GetActiveMounts())
+			auto ActiveMounts = GetActiveMounts();
+			int n = 0;
+			for (auto it : ActiveMounts)
 			{
-				MainEffect->SetInt("g_iMountID", (int)it);
+				D3DXVECTOR4 spriteDimensions = baseSpriteDimensions;
+				const float distance = 0.67f;
+
+				float mountAngle = ((float)n + 0.0f) / (float)ActiveMounts.size() * 2 * M_PI;
+				D3DXVECTOR2 mountLocation = D3DXVECTOR2(cos(mountAngle - M_PI / 2), sin(mountAngle - M_PI / 2));
+				float mountRadius = tan(M_PI / (float)ActiveMounts.size()) * 2 * distance;
+				spriteDimensions.z *= mountRadius / (2 * M_PI * distance);
+				spriteDimensions.w *= mountRadius / (2 * M_PI * distance);
+				spriteDimensions.x += mountLocation.x * spriteDimensions.z;
+				spriteDimensions.y += mountLocation.y * spriteDimensions.w;
+
+				int v[3] = { (int)it, n, (int)ActiveMounts.size() };
+				MainEffect->SetValue("g_iMountID", v, sizeof(v));
 				MainEffect->SetTexture("texMountImage", MountTextures[(uint)it]);
+				MainEffect->SetVector("g_vSpriteDimensions", &spriteDimensions);
 				MainEffect->CommitChanges();
 
 				Quad->Draw();
+				n++;
 			}
 
 			MainEffect->EndPass();

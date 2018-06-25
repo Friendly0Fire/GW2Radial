@@ -18,7 +18,7 @@ sampler2D texMountImageSampler =
 sampler_state
 {
     texture = <texMountImage>;
-    MipFilter = NONE;
+    MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
     AddressU = CLAMP;
@@ -27,6 +27,7 @@ sampler_state
 
 float4 g_vSpriteDimensions, g_vScreenSize;
 float g_fTimer;
+int3 g_iMountID;
 
 VS_SCREEN MountImage_VS(in float2 UV : TEXCOORD0)
 {
@@ -43,8 +44,11 @@ VS_SCREEN MountImage_VS(in float2 UV : TEXCOORD0)
 
 float4 MountImage_PS(VS_SCREEN In) : COLOR0
 {
-	float4 baseImage = tex2D(texMountImageSampler, In.UV);
-	return baseImage * g_fTimer;
+	float mask = 1.f - tex2D(texMountImageSampler, In.UV).r;
+
+	float4 color = float4(g_iMountID.x == 0 || g_iMountID.x == 3 || g_iMountID.x == 5, g_iMountID.x == 1 || g_iMountID.x == 3 || g_iMountID.x == 4, g_iMountID.x == 2 || g_iMountID.x == 4 || g_iMountID.x == 5, 1);
+
+	return color * mask * g_fTimer;
 }
 
 float4 g_vDirection;
@@ -81,7 +85,7 @@ technique MountImage
 		AlphaTestEnable = false;
 		AlphaBlendEnable = true;
 
-		SrcBlend = SrcAlpha;
+		SrcBlend = One;
 		DestBlend = InvSrcAlpha;
 		BlendOp = Add;
 
