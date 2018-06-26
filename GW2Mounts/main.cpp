@@ -1,7 +1,8 @@
 #include "main.h"
 #include <tchar.h>
 #include <imgui.h>
-#include <examples\directx9_example\imgui_impl_dx9.h>
+#include <examples\imgui_impl_dx9.h>
+#include <examples\imgui_impl_win32.h>
 #include <sstream>
 #include "UnitQuad.h"
 #include <d3dx9.h>
@@ -34,6 +35,7 @@ ImGuiKeybind MountKeybinds[MountTypeCount];
 D3DXVECTOR2 OverlayPosition;
 mstime OverlayTime, MountHoverTime;
 
+MountType PreviousMountUsed = MountType::NONE;
 MountType CurrentMountHovered = MountType::NONE;
 
 const char* GetMountName(MountType m)
@@ -85,6 +87,7 @@ void Shutdown()
 {
 	PreReset();
 	ImGui_ImplDX9_Shutdown();
+	ImGui_ImplWin32_Shutdown();
 }
 
 bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
@@ -107,6 +110,7 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		}
 
 		MH_Initialize();
+		ImGui::CreateContext();
 
 		Cfg.Load();
 
@@ -123,6 +127,7 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		break;
 	}
 	case DLL_PROCESS_DETACH:
+		ImGui::DestroyContext();
 		// We'll just leak a bunch of things and let the driver/OS take care of it, since we have no clean exit point
 		// and calling FreeLibrary in DllMain causes deadlocks
 		break;
@@ -143,6 +148,17 @@ std::vector<MountType> GetActiveMounts()
 	return ActiveMounts;
 }
 
+std::vector<MountType> GetAllMounts()
+{
+	std::vector<MountType> AllMounts;
+	for (uint i = 0; i < MountTypeCount; i++)
+	{
+		AllMounts.push_back((MountType)i);
+	}
+
+	return AllMounts;
+}
+
 void DetermineHoveredMount()
 {
 	const auto io = ImGui::GetIO();
@@ -161,7 +177,7 @@ void DetermineHoveredMount()
 	// Middle circle does not count as a hover event
 	if (!ActiveMounts.empty() && D3DXVec2LengthSq(&MousePos) > SQUARE(Cfg.OverlayScale() * 0.135f * Cfg.OverlayDeadZoneScale()))
 	{
-		float MouseAngle = atan2(-MousePos.y, -MousePos.x) - 0.5f * M_PI;
+		float MouseAngle = atan2(-MousePos.y, -MousePos.x) - 0.5f * (float)M_PI;
 		if (MouseAngle < 0)
 			MouseAngle += float(2 * M_PI);
 
@@ -179,7 +195,7 @@ void DetermineHoveredMount()
 
 void Shutdown();
 
-extern LRESULT ImGui_ImplDX9_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+extern IMGUI_IMPL_API LRESULT  ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (msg == WM_KILLFOCUS)
@@ -309,10 +325,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 				else if (!DisplayMountOverlay && oldMountOverlay)
 				{
+					// No mount was selected, check for special behavior
+					if (CurrentMountHovered == MountType::NONE)
+					{
+						switch (Cfg.OverlayDeadZoneBehavior())
+						{
+						case 0:
+							break;
+						case 1:
+							CurrentMountHovered = PreviousMountUsed;
+							break;
+						case 2:
+							CurrentMountHovered = Cfg.FavoriteMount();
+							break;
+						}
+					}
+
 					// Mount overlay is turned off, send the keybind
 					if (CurrentMountHovered != MountType::NONE)
 						SendKeybind(Cfg.MountKeybind((uint)CurrentMountHovered));
 
+					PreviousMountUsed = CurrentMountHovered;
 					CurrentMountHovered = MountType::NONE;
 				}
 
@@ -359,7 +392,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 #endif
 
-		ImGui_ImplDX9_WndProcHandler(hWnd, msg, wParam, lParam);
+		ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
 
 		// Prevent game from receiving the settings menu keybind
 		if (!eventKeys.empty() && isMenuKeybind)
@@ -469,7 +502,8 @@ void PostCreateDevice(IDirect3DDevice9* temp_device, D3DPRESENT_PARAMETERS *pPre
 	imio.IniFilename = Cfg.ImGuiConfigLocation();
 
 	// Setup ImGui binding
-	ImGui_ImplDX9_Init(GameWindow, temp_device);
+	ImGui_ImplDX9_Init(temp_device);
+	ImGui_ImplWin32_Init(GameWindow);
 
 	// Initialize graphics
 	ScreenWidth = pPresentationParameters->BackBufferWidth;
@@ -516,6 +550,7 @@ void PostReset(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS *pPresentationParame
 	}
 }
 
+std::vector<const char*> FavoriteMountNames(MountTypeCount);
 void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 {
 	// This is the closest we have to a reliable "update" function, so use it as one
@@ -530,12 +565,13 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 		dev->BeginScene();
 
 	ImGui_ImplDX9_NewFrame();
+	ImGui_ImplWin32_NewFrame();
 
 	if (DisplayOptionsWindow)
 	{
 		ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
 
-		if (ImGui::SliderInt("Pop-up Delay", &Cfg.OverlayDelayMilliseconds(), 0, 1000, "%.0f ms"))
+		if (ImGui::SliderInt("Pop-up Delay", &Cfg.OverlayDelayMilliseconds(), 0, 1000, "%d ms"))
 			Cfg.OverlayDelayMillisecondsSave();
 
 		if (ImGui::SliderFloat("Overlay Scale", &Cfg.OverlayScale(), 0.f, 4.f))
@@ -543,6 +579,26 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 
 		if (ImGui::SliderFloat("Overlay Dead Zone Scale", &Cfg.OverlayDeadZoneScale(), 0.f, 0.25f))
 			Cfg.OverlayDeadZoneScaleSave();
+
+		ImGui::Text("Overlay Dead Zone Behavior:");
+		int oldBehavior = Cfg.OverlayDeadZoneBehavior();
+		ImGui::RadioButton("Nothing", &Cfg.OverlayDeadZoneBehavior(), 0);
+		ImGui::RadioButton("Last Mount", &Cfg.OverlayDeadZoneBehavior(), 1);
+		ImGui::RadioButton("Favorite Mount", &Cfg.OverlayDeadZoneBehavior(), 2);
+		if (oldBehavior != Cfg.OverlayDeadZoneBehavior())
+			Cfg.OverlayDeadZoneBehaviorSave();
+
+		if (Cfg.OverlayDeadZoneBehavior() == 2)
+		{
+			if (FavoriteMountNames[0] == nullptr)
+			{
+				auto mounts = GetAllMounts();
+				for (uint i = 0; i < mounts.size(); i++)
+					FavoriteMountNames[i] = GetMountName(mounts[i]);
+			}
+
+			ImGui::Combo("Favorite Mount", (int*)&Cfg.FavoriteMount(), FavoriteMountNames.data(), (int)FavoriteMountNames.size());
+		}
 
 		if (Cfg.ResetCursorOnLockedKeybind() != ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
 			Cfg.ResetCursorOnLockedKeybindSave();

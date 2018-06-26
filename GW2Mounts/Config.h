@@ -37,6 +37,12 @@ public:
 	auto& OverlayDeadZoneScale() { return _OverlayDeadZoneScale; }
 	void OverlayDeadZoneScaleSave();
 
+	auto& OverlayDeadZoneBehavior() { return _OverlayDeadZoneBehavior; }
+	void OverlayDeadZoneBehaviorSave();
+
+	auto& FavoriteMount() { return _FavoriteMount; }
+	void FavoriteMountSave();
+
 	const auto& ImGuiConfigLocation() { return _ImGuiConfigLocation; }
 
 protected:
@@ -59,5 +65,7 @@ protected:
 	int _OverlayDelayMilliseconds = 0;
 	float _OverlayScale = 1.f;
 	float _OverlayDeadZoneScale = 0.2f;
+	int _OverlayDeadZoneBehavior = 0;
+	MountType _FavoriteMount = MountType::RAPTOR;
 };
 

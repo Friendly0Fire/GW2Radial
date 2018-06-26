@@ -57,6 +57,8 @@ void Config::Load()
 	_OverlayDelayMilliseconds = _INI.GetLongValue("General", "overlay_delay_ms", 0);
 	_OverlayScale = (float)_INI.GetDoubleValue("General", "overlay_scale", 1.);
 	_OverlayDeadZoneScale = (float)_INI.GetDoubleValue("General", "overlay_dead_zone_scale", 1.);
+	_OverlayDeadZoneBehavior = _INI.GetLongValue("General", "overlay_dead_zone_behavior", 0);
+	_FavoriteMount = (MountType)_INI.GetLongValue("General", "favorite_mount", (int)MountType::RAPTOR);
 
 	const char* keys = _INI.GetValue("Keybinds", "mount_wheel", nullptr);
 	LoadKeybindString(keys, _MountOverlayKeybind);
@@ -127,9 +129,20 @@ void Config::OverlayScaleSave()
 	_INI.SaveFile(_ConfigLocation);
 }
 
-
 void Config::OverlayDeadZoneScaleSave()
 {
 	_INI.SetDoubleValue("General", "overlay_dead_zone_scale", _OverlayDeadZoneScale);
+	_INI.SaveFile(_ConfigLocation);
+}
+
+void Config::OverlayDeadZoneBehaviorSave()
+{
+	_INI.SetLongValue("General", "overlay_dead_zone_behavior", _OverlayDeadZoneBehavior);
+	_INI.SaveFile(_ConfigLocation);
+}
+
+void Config::FavoriteMountSave()
+{
+	_INI.SetLongValue("General", "favorite_mount", (int)_FavoriteMount);
 	_INI.SaveFile(_ConfigLocation);
 }
