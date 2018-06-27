@@ -627,6 +627,7 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 		}
 
 		ImGui::Render();
+		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
 		if (DisplayMountOverlay && MainEffect && Quad)
 		{
