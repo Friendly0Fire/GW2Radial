@@ -691,12 +691,12 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 						float mountAngle = (float)n / (float)ActiveMounts.size() * 2 * (float)M_PI;
 						if (ActiveMounts.size() == 1)
 							mountAngle = 0;
-						D3DXVECTOR2 mountLocation = D3DXVECTOR2(cos(mountAngle - (float)M_PI / 2), sin(mountAngle - (float)M_PI / 2)) * 0.25f;
+						D3DXVECTOR2 mountLocation = D3DXVECTOR2(cos(mountAngle - (float)M_PI / 2), sin(mountAngle - (float)M_PI / 2)) * 0.25f * 0.66f;
 
 						spriteDimensions.x += mountLocation.x * spriteDimensions.z;
 						spriteDimensions.y += mountLocation.y * spriteDimensions.w;
 
-						float mountDiameter = (float)sin((2 * M_PI / (double)ActiveMounts.size()) / 2) * 2.f * 0.2f;
+						float mountDiameter = (float)sin((2 * M_PI / (double)ActiveMounts.size()) / 2) * 2.f * 0.2f * 0.66f;
 						if (ActiveMounts.size() == 1)
 							mountDiameter = 2.f * 0.2f;
 						if (it == CurrentMountHovered)
