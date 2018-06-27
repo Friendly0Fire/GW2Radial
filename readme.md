@@ -1,6 +1,6 @@
 # GW2 Mounts
 
-A plugin to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/SnoopyEarlyBlacknorwegianelkhound.mp4) to select a mount on the fly for *Guild Wars 2: Path of Fire*.
+A plugin to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/MealyFluffyGermanspitz.mp4) to select a mount on the fly for *Guild Wars 2: Path of Fire*.
 
 ## Installation
 - Download the archive ``gw2_mounts.zip`` found in the [latest release](https://github.com/Friendly0Fire/GW2Addons/releases/latest) (link is at the very bottom).
