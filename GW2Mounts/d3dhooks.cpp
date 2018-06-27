@@ -106,14 +106,17 @@ HRESULT CreateVertexShader_hook(IDirect3DDevice9* _this, const DWORD *pFunction,
 	return hr;
 }
 
+bool InShaderHook = false;
 SetVertexShader_t SetVertexShader_real = nullptr;
 HRESULT SetVertexShader_hook(IDirect3DDevice9* _this, IDirect3DVertexShader9 *pShader)
 {
 	HRESULT hr = SetVertexShader_real(_this, pShader);
 
-	if (pShader && !FrameDrawn && pShader == PreUIVertexShader)
+	if (!InShaderHook && pShader && !FrameDrawn && pShader == PreUIVertexShader)
 	{
+		InShaderHook = true;
 		Draw(_this, FrameDrawn, false);
+		InShaderHook = false;
 		FrameDrawn = true;
 	}
 
@@ -141,9 +144,11 @@ HRESULT SetPixelShader_hook(IDirect3DDevice9* _this, IDirect3DPixelShader9 *pSha
 {
 	HRESULT hr = SetPixelShader_real(_this, pShader);
 
-	if (pShader && !FrameDrawn && pShader == PreUIPixelShader)
+	if (!InShaderHook && pShader && !FrameDrawn && pShader == PreUIPixelShader)
 	{
+		InShaderHook = true;
 		Draw(_this, FrameDrawn, false);
+		InShaderHook = false;
 		FrameDrawn = true;
 	}
 
