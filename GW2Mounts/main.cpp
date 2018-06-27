@@ -763,9 +763,7 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 	}
 
 	ImGui_ImplDX9_NewFrame();
-	auto mousePos = ImGui::GetIO().MousePos;
-	ImGui_ImplWin32_NewFrame(); // This attempts to get the mouse position in an incompatible way, so just save and restore it
-	ImGui::GetIO().MousePos = mousePos;
+	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 	FirstFrame = false;
 }

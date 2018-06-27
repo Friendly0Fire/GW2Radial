@@ -1,6 +1,6 @@
 [submodule "GW2Mounts/imgui"]
 	path = GW2Mounts/imgui
-	url = https://github.com/ocornut/imgui.git
+	url = https://github.com/Friendly0Fire/imgui.git
 [submodule "GW2Mounts/simpleini"]
 	path = GW2Mounts/simpleini
 	url = https://github.com/brofield/simpleini.git
