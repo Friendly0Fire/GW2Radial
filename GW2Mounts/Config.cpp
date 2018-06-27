@@ -52,13 +52,13 @@ void Config::Load()
 	// Load INI settings
 	_INI.SetUnicode();
 	_INI.LoadFile(_ConfigLocation);
-	_ResetCursorOnLockedKeybind = _INI.GetBoolValue("General", "reset_cursor_on_locked_keybind", true);
-	_LockCameraWhenOverlayed = _INI.GetBoolValue("General", "lock_camera_when_overlayed", true);
-	_OverlayDelayMilliseconds = _INI.GetLongValue("General", "overlay_delay_ms", 0);
-	_OverlayScale = (float)_INI.GetDoubleValue("General", "overlay_scale", 1.);
-	_OverlayDeadZoneScale = (float)_INI.GetDoubleValue("General", "overlay_dead_zone_scale", 1.);
-	_OverlayDeadZoneBehavior = _INI.GetLongValue("General", "overlay_dead_zone_behavior", 0);
-	_FavoriteMount = (MountType)_INI.GetLongValue("General", "favorite_mount", (int)MountType::RAPTOR);
+	_ResetCursorOnLockedKeybind = _INI.GetBoolValue("General", "reset_cursor_on_locked_keybind", _ResetCursorOnLockedKeybind);
+	_LockCameraWhenOverlayed = _INI.GetBoolValue("General", "lock_camera_when_overlayed", _LockCameraWhenOverlayed);
+	_OverlayDelayMilliseconds = _INI.GetLongValue("General", "overlay_delay_ms", _OverlayDelayMilliseconds);
+	_OverlayScale = (float)_INI.GetDoubleValue("General", "overlay_scale", _OverlayScale);
+	_OverlayDeadZoneScale = (float)_INI.GetDoubleValue("General", "overlay_dead_zone_scale", _OverlayDeadZoneScale);
+	_OverlayDeadZoneBehavior = _INI.GetLongValue("General", "overlay_dead_zone_behavior", _OverlayDeadZoneBehavior);
+	_FavoriteMount = (MountType)_INI.GetLongValue("General", "favorite_mount", (int)_FavoriteMount);
 
 	const char* keys = _INI.GetValue("Keybinds", "mount_wheel", nullptr);
 	LoadKeybindString(keys, _MountOverlayKeybind);
