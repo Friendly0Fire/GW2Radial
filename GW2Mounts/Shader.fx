@@ -49,6 +49,7 @@ float g_fDeadZoneScale;
 bool g_bMountHovered;
 int g_iMountHovered;
 float4 g_vColor;
+bool g_bCenterGlow;
 
 float2 makeSmoothRandom(float2 uv, float4 scales, float4 timeScales)
 {
@@ -90,10 +91,8 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 	color.rgb *= lerp(0.5f, 1.f, localMountId == g_iMountHovered ? g_fHoverTimer : 0.f);
 	float luma = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
 
-	float edge_mask = 1.f;
-	
-	edge_mask *= lerp(0.f, 1.f, smoothstep(g_fDeadZoneScale - 0.025f, g_fDeadZoneScale + 0.025f, coordsPolar.x * (1 - luma * 0.2f)));
-	edge_mask *= lerp(1.f, 0.f, smoothstep(0.5f, 1.f, coordsPolar.x * (1 - luma * 0.2f)));
+	float edge_mask = lerp(1.f, 0.f, smoothstep(0.5f, 1.f, coordsPolar.x * (1 - luma * 0.2f)));
+	float center_mask = lerp(0.f, 1.f, smoothstep(g_fDeadZoneScale - 0.025f, g_fDeadZoneScale + 0.025f, coordsPolar.x * (1 - luma * 0.2f)));
 	
 	float border_mask = 1.f;
 	if(localMountId != g_iMountHovered || g_fHoverTimer < 1)
@@ -110,11 +109,21 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 
 	if(localMountId == g_iMountHovered && g_fHoverTimer < 1)
 		border_mask = lerp(border_mask, 1.f, g_fHoverTimer);
+
+	if(g_bCenterGlow)
+	{
+		if(localMountId == g_iMountHovered)
+		{
+			//color.rgb *= lerp(0.5f, 1.f, center_mask);
+			border_mask *= 1 - g_fHoverTimer;
+		}
+		center_mask = lerp(center_mask, 1.f, g_fHoverTimer);
+	}
 		
 	border_mask *= lerp(2.f, 1.f, smoothstep(g_fDeadZoneScale, g_fDeadZoneScale + 0.05f, coordsPolar.x));
 	border_mask *= lerp(1.5f, 1.f, smoothstep(g_fDeadZoneScale, min(0.5f, g_fDeadZoneScale * 4), coordsPolar.x));
 
-	return color * saturate(edge_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * g_fFadeTimer;
+	return color * saturate(edge_mask * center_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * g_fFadeTimer;
 }
 
 technique BgImage

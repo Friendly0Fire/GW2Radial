@@ -159,6 +159,22 @@ std::vector<MountType> GetAllMounts()
 	return AllMounts;
 }
 
+MountType ModifyMountNoneBehavior(MountType in)
+{
+	if (in != MountType::NONE)
+		return in;
+
+	switch (Cfg.OverlayDeadZoneBehavior())
+	{
+	case 1:
+		return PreviousMountUsed;
+	case 2:
+		return Cfg.FavoriteMount();
+	default:
+		return MountType::NONE;
+	}
+}
+
 void DetermineHoveredMount()
 {
 	const auto io = ImGui::GetIO();
@@ -189,7 +205,10 @@ void DetermineHoveredMount()
 	else
 		CurrentMountHovered = MountType::NONE;
 
-	if (LastMountHovered != CurrentMountHovered)
+	auto modifiedMountHovered = ModifyMountNoneBehavior(CurrentMountHovered);
+	auto modifiedLastMountHovered = ModifyMountNoneBehavior(LastMountHovered);
+
+	if (LastMountHovered != CurrentMountHovered && modifiedLastMountHovered != modifiedMountHovered)
 		MountHoverTime = max(OverlayTime + Cfg.OverlayDelayMilliseconds(), timeInMS());
 }
 
@@ -320,26 +339,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					}
 
 					OverlayTime = timeInMS();
+					MountHoverTime = OverlayTime + Cfg.OverlayDelayMilliseconds();
 
 					DetermineHoveredMount();
 				}
 				else if (!DisplayMountOverlay && oldMountOverlay)
 				{
-					// No mount was selected, check for special behavior
-					if (CurrentMountHovered == MountType::NONE)
-					{
-						switch (Cfg.OverlayDeadZoneBehavior())
-						{
-						case 0:
-							break;
-						case 1:
-							CurrentMountHovered = PreviousMountUsed;
-							break;
-						case 2:
-							CurrentMountHovered = Cfg.FavoriteMount();
-							break;
-						}
-					}
+					// Check for special behavior if no mount is hovered
+					CurrentMountHovered = ModifyMountNoneBehavior(CurrentMountHovered);
 
 					// Mount overlay is turned off, send the keybind
 					if (CurrentMountHovered != MountType::NONE)
@@ -662,6 +669,8 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 					float fadeTimer = min(1.f, (currentTime - (OverlayTime + Cfg.OverlayDelayMilliseconds())) / 1000.f * 6);
 					float hoverTimer = min(1.f, (currentTime - max(MountHoverTime, OverlayTime + Cfg.OverlayDelayMilliseconds())) / 1000.f * 6);
 
+					auto mountHovered = ModifyMountNoneBehavior(CurrentMountHovered);
+
 					MainEffect->SetTechnique("BgImage");
 					MainEffect->SetTexture("texBgImage", BgTexture);
 					MainEffect->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
@@ -670,7 +679,8 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 					MainEffect->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
 					MainEffect->SetFloat("g_fDeadZoneScale", Cfg.OverlayDeadZoneScale());
 					MainEffect->SetInt("g_iMountCount", (int)ActiveMounts.size());
-					MainEffect->SetInt("g_iMountHovered", (int)(std::find(ActiveMounts.begin(), ActiveMounts.end(), CurrentMountHovered) - ActiveMounts.begin()));
+					MainEffect->SetInt("g_iMountHovered", (int)(std::find(ActiveMounts.begin(), ActiveMounts.end(), mountHovered) - ActiveMounts.begin()));
+					MainEffect->SetBool("g_bCenterGlow", mountHovered != CurrentMountHovered);
 					MainEffect->Begin(&passes, 0);
 					MainEffect->BeginPass(0);
 					Quad->Draw();
@@ -699,7 +709,7 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 						float mountDiameter = (float)sin((2 * M_PI / (double)ActiveMounts.size()) / 2) * 2.f * 0.2f * 0.66f;
 						if (ActiveMounts.size() == 1)
 							mountDiameter = 2.f * 0.2f;
-						if (it == CurrentMountHovered)
+						if (it == mountHovered)
 							mountDiameter *= lerp(1.f, 1.1f, smoothstep(hoverTimer));
 						else
 							mountDiameter *= 0.9f;
@@ -729,7 +739,7 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 
 						int v[3] = { (int)it, n, (int)ActiveMounts.size() };
 						MainEffect->SetValue("g_iMountID", v, sizeof(v));
-						MainEffect->SetBool("g_bMountHovered", CurrentMountHovered == it);
+						MainEffect->SetBool("g_bMountHovered", mountHovered == it);
 						MainEffect->SetTexture("texMountImage", MountTextures[(uint)it]);
 						MainEffect->SetVector("g_vSpriteDimensions", &spriteDimensions);
 						MainEffect->SetValue("g_vColor", MountColors[(uint)it].data(), sizeof(D3DXVECTOR4));
