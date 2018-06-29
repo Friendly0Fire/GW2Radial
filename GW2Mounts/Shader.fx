@@ -76,13 +76,11 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 {
 	float2 coords = 3 * (In.UV - 0.5f);
 	coords *= -1;
-	float2 coordsPolar = float2(length(coords), atan2(coords.y, coords.x) - 0.5f * PI);
-	if(coordsPolar.y < 0)
-		coordsPolar.y += 2 * PI;
+	float2 coordsPolar = float2(length(coords), fmod(atan2(coords.y, coords.x) + 1.5f * PI, 2 * PI));
 		
 	float mountAngle = 2 * PI / g_iMountCount;
-	float localCoordAngle = fmod(coordsPolar.y + mountAngle / 2, mountAngle) / mountAngle;
-	int localMountId = (floor((coordsPolar.y - mountAngle / 2) / mountAngle) + 1) % g_iMountCount;
+	float localCoordAngle = fmod(coordsPolar.y / mountAngle + 0.5f, 1.f);
+	int localMountId = (int)(round(coordsPolar.y / mountAngle)) % g_iMountCount;
 		
 	float2 smoothrandom = float2(snoise(3 * In.UV * cos(0.1f * g_fTimer) + g_fTimer * 0.37f), snoise(5 * In.UV * sin(0.13f * g_fTimer) + g_fTimer * 0.48f));
 
@@ -113,10 +111,7 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 	if(g_bCenterGlow)
 	{
 		if(localMountId == g_iMountHovered)
-		{
-			//color.rgb *= lerp(0.5f, 1.f, center_mask);
 			border_mask *= 1 - g_fHoverTimer;
-		}
 		center_mask = lerp(center_mask, 1.f, g_fHoverTimer);
 	}
 		
