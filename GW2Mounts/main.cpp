@@ -610,7 +610,8 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 						FavoriteMountNames[i] = GetMountName(mounts[i]);
 				}
 
-				ImGui::Combo("Favorite Mount", (int*)&Cfg.FavoriteMount(), FavoriteMountNames.data(), (int)FavoriteMountNames.size());
+				if (ImGui::Combo("Favorite Mount", (int*)&Cfg.FavoriteMount(), FavoriteMountNames.data(), (int)FavoriteMountNames.size()))
+					Cfg.FavoriteMountSave();
 			}
 
 			if (Cfg.ResetCursorOnLockedKeybind() != ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
