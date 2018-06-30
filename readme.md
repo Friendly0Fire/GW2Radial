@@ -37,6 +37,8 @@ The most common use case would be combining ArcDPS, GW2Hook and this. For this i
 - GW2Mounts is named ``d3d9_chainload.dll``.
 - GW2Hook is named ``ReShade64.dll``.
 
+*N.B. If your Windows options hide file extensions (which is the default, you can confirm by looking at whether the game's file name is "Gw2-64.exe" or just "Gw2-64") leave out the ".dll" part of the file names (i.e. use "d3d9", "d3d9_chainload" and "ReShade64" respectively).
+
 This should allow all addons to load properly. Note that there is special code present within GW2Mounts to load GW2Hook properly, but this could break unexpectedly if GW2Hook changes.
 
 Finally, note that combining addons is largely unsupported. I will attempt to keep ArcDPS and GW2Hook compatible with this, but that is the most I am able to do in a reasonable amount of time.
