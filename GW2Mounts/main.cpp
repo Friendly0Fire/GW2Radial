@@ -250,6 +250,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					else
 						eventKeys.push_back({ VK_MENU, false });
 				}
+				else
+					eventKeys.push_back({ VK_MENU, false });
 
 				eventKeys.push_back({ (uint)wParam, eventDown });
 				break;

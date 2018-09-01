@@ -74,50 +74,67 @@ VS_SCREEN Default_VS(in float2 UV : TEXCOORD0)
 
 float4 BgImage_PS(VS_SCREEN In) : COLOR0
 {
-	float2 coords = 3 * (In.UV - 0.5f);
-	coords *= -1;
-	float2 coordsPolar = float2(length(coords), fmod(atan2(coords.y, coords.x) + 1.5f * PI, 2 * PI));
-		
-	float mountAngle = 2 * PI / g_iMountCount;
-	float localCoordAngle = fmod(coordsPolar.y / mountAngle + 0.5f, 1.f);
-	int localMountId = (int)(round(coordsPolar.y / mountAngle)) % g_iMountCount;
-		
+	// Multiply by -3 rather than 2 to mirror and scale down
+	float2 coords = -3 * (In.UV - 0.5f);
+	// Compute polar coordinates with theta \in [0, 2pi)
+	float2 coordsPolar = float2(length(coords), atan2(coords.y, coords.x) + PI);
+	// Compensate for different theta = 0 direction
+	coordsPolar.y += 0.5f * PI;
+	
+	// Angular span covered by a single mount (e.g. if 4 mounts are shown, the span is 90 degrees)
+	float singleMountAngle = 2.f * PI / float(g_iMountCount);
+	int localMountId = (int)(round(coordsPolar.y / singleMountAngle)) % g_iMountCount;
+    bool isLocalMountHovered = localMountId == g_iMountHovered;
+	// Percentage along the mount's angular span: 0 is one edge, 1 is the other
+	// Must also compensate since the spans are centered, but we want to start at one edge
+    float localCoordPercentage = fmod(coordsPolar.y + 0.5f * singleMountAngle, singleMountAngle) / singleMountAngle;
+	
+	// Generate a pseudorandom background
 	float2 smoothrandom = float2(snoise(3 * In.UV * cos(0.1f * g_fTimer) + g_fTimer * 0.37f), snoise(5 * In.UV * sin(0.13f * g_fTimer) + g_fTimer * 0.48f));
-
 	float4 color = tex2D(texBgImageSampler, In.UV + smoothrandom * 0.003f);
 	color.rgb *= lerp(0.9f, 1.3f, saturate((4 + smoothrandom.x + smoothrandom.y) / 8));
-	color.rgb *= lerp(0.5f, 1.f, localMountId == g_iMountHovered ? g_fHoverTimer : 0.f);
+    color.rgb *= lerp(0.5f, 1.f, isLocalMountHovered ? g_fHoverTimer : 0.f);
+	// Compute luma value for desaturation effects
 	float luma = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
 
+	// Fade out the background at the periphery of the circle
 	float edge_mask = lerp(1.f, 0.f, smoothstep(0.5f, 1.f, coordsPolar.x * (1 - luma * 0.2f)));
+	// Fade out the background in the dead zone at the center of the circle
 	float center_mask = lerp(0.f, 1.f, smoothstep(g_fDeadZoneScale - 0.025f, g_fDeadZoneScale + 0.025f, coordsPolar.x * (1 - luma * 0.2f)));
 	
+	// Increase brightness on hovered and edge regions of the circle
 	float border_mask = 1.f;
-	if(localMountId != g_iMountHovered || g_fHoverTimer < 1)
+
+	// Calculate edge regions (localCoordPercentage is near 0 or 1), but only for non-hovered mount spans
+    if (!isLocalMountHovered || g_fHoverTimer < 1)
 	{
 		float min_thickness = 0.003f / (0.001f + coordsPolar.x);
 		float max_thickness = 0.005f / (0.001f + coordsPolar.x);
 	
 		if(g_iMountCount > 1)
 		{
-			border_mask *= lerp(2.f, 1.f, smoothstep(min_thickness, max_thickness, localCoordAngle));
-			border_mask *= lerp(1.f, 2.f, smoothstep(1 - max_thickness, 1 - min_thickness, localCoordAngle));
-		}
+            border_mask *= lerp(2.f, 1.f, smoothstep(min_thickness, max_thickness, localCoordPercentage));
+            border_mask *= lerp(1.f, 2.f, smoothstep(1 - max_thickness, 1 - min_thickness, localCoordPercentage));
+        }
 	}
 
-	if(localMountId == g_iMountHovered && g_fHoverTimer < 1)
+	// Reduce brightening when starting to hover to fade in gracefully
+    if (isLocalMountHovered && g_fHoverTimer < 1)
 		border_mask = lerp(border_mask, 1.f, g_fHoverTimer);
 
-	if(g_bCenterGlow)
+	// Also brighten when the dead zone is hovered and has an action assigned to it
+	if (g_bCenterGlow)
 	{
-		if(localMountId == g_iMountHovered)
+        if (isLocalMountHovered)
 			border_mask *= 1 - g_fHoverTimer;
 		center_mask = lerp(center_mask, 1.f, g_fHoverTimer);
 	}
-		
+	
+	// Add some flair to the inner region of the circle
 	border_mask *= lerp(2.f, 1.f, smoothstep(g_fDeadZoneScale, g_fDeadZoneScale + 0.05f, coordsPolar.x));
 	border_mask *= lerp(1.5f, 1.f, smoothstep(g_fDeadZoneScale, min(0.5f, g_fDeadZoneScale * 4), coordsPolar.x));
 
+	// Combine all masks, ensuring that the edge and center masks never increase brightness when combined and that the border mask never darkens the circle
 	return color * saturate(edge_mask * center_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * g_fFadeTimer;
 }
 
