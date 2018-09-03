@@ -250,8 +250,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					else
 						eventKeys.push_back({ VK_MENU, false });
 				}
-				else
-					eventKeys.push_back({ VK_MENU, false });
 
 				eventKeys.push_back({ (uint)wParam, eventDown });
 				break;
@@ -494,6 +492,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 	}
 
+	// Convert hook messages back into their original messages
+	msg = ConvertHookedMessage(msg);
+
 	// Whatever's left should be sent to the game
 	return CallWindowProc(BaseWndProc, hWnd, msg, wParam, lParam);
 }
@@ -507,6 +508,7 @@ void PreCreateDevice(HWND hFocusWindow)
 	{
 		BaseWndProc = (WNDPROC)GetWindowLongPtr(hFocusWindow, GWLP_WNDPROC);
 		SetWindowLongPtr(hFocusWindow, GWLP_WNDPROC, (LONG_PTR)&WndProc);
+		InitializeHookedMessages();
 	}
 }
 

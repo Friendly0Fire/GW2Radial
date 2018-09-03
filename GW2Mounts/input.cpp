@@ -5,6 +5,57 @@
 
 std::set<uint> DownKeys;
 
+uint id_H_LBUTTONDOWN;
+uint id_H_LBUTTONUP;
+uint id_H_RBUTTONDOWN;
+uint id_H_RBUTTONUP;
+uint id_H_MBUTTONDOWN;
+uint id_H_MBUTTONUP;
+uint id_H_SYSKEYDOWN;
+uint id_H_SYSKEYUP;
+uint id_H_KEYDOWN;
+uint id_H_KEYUP;
+
+void InitializeHookedMessages()
+{
+	id_H_LBUTTONDOWN = RegisterWindowMessage(TEXT("H_LBUTTONDOWN"));
+	id_H_LBUTTONUP   = RegisterWindowMessage(TEXT("H_LBUTTONUP"));
+	id_H_RBUTTONDOWN = RegisterWindowMessage(TEXT("H_RBUTTONDOWN"));
+	id_H_RBUTTONUP   = RegisterWindowMessage(TEXT("H_RBUTTONUP"));
+	id_H_MBUTTONDOWN = RegisterWindowMessage(TEXT("H_MBUTTONDOWN"));
+	id_H_MBUTTONUP   = RegisterWindowMessage(TEXT("H_MBUTTONUP"));
+	id_H_SYSKEYDOWN  = RegisterWindowMessage(TEXT("H_SYSKEYDOWN"));
+	id_H_SYSKEYUP    = RegisterWindowMessage(TEXT("H_SYSKEYUP"));
+	id_H_KEYDOWN     = RegisterWindowMessage(TEXT("H_KEYDOWN"));
+	id_H_KEYUP       = RegisterWindowMessage(TEXT("H_KEYUP"));
+}
+
+uint ConvertHookedMessage(uint msg)
+{
+	if (msg == id_H_LBUTTONDOWN)
+		return WM_LBUTTONDOWN;
+	if (msg == id_H_LBUTTONUP)
+		return WM_LBUTTONUP;
+	if (msg == id_H_RBUTTONDOWN)
+		return WM_RBUTTONDOWN;
+	if (msg == id_H_RBUTTONUP)
+		return WM_RBUTTONUP;
+	if (msg == id_H_MBUTTONDOWN)
+		return WM_MBUTTONDOWN;
+	if (msg == id_H_MBUTTONUP)
+		return WM_MBUTTONUP;
+	if (msg == id_H_SYSKEYDOWN)
+		return WM_SYSKEYDOWN;
+	if (msg == id_H_SYSKEYUP)
+		return WM_SYSKEYUP;
+	if (msg == id_H_KEYDOWN)
+		return WM_KEYDOWN;
+	if (msg == id_H_KEYUP)
+		return WM_KEYUP;
+
+	return msg;
+}
+
 struct DelayedInput
 {
 	uint msg;
@@ -48,23 +99,37 @@ DelayedInput TransformVKey(uint vk, bool down, mstime t)
 	switch (vk)
 	{
 	case VK_LBUTTON:
-		i.msg = down ? WM_LBUTTONDOWN : WM_LBUTTONUP;
+		i.msg = down ? id_H_LBUTTONDOWN : id_H_LBUTTONUP;
 		break;
 	case VK_MBUTTON:
-		i.msg = down ? WM_MBUTTONDOWN : WM_MBUTTONUP;
+		i.msg = down ? id_H_MBUTTONDOWN : id_H_MBUTTONUP;
 		break;
 	case VK_RBUTTON:
-		i.msg = down ? WM_RBUTTONDOWN : WM_RBUTTONUP;
+		i.msg = down ? id_H_RBUTTONDOWN : id_H_RBUTTONUP;
 		break;
-	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // arrow keys
-	case VK_PRIOR: case VK_NEXT: // page up and page down
+	case VK_MENU:
+	case VK_F10:
+		i.msg = down ? id_H_SYSKEYDOWN : id_H_SYSKEYUP;
+
+		// Set the correct transition state: 1 for KEYUP and 0 for KEYDOWN
+		if (!down)
+			i.lParam |= 1 << 31;
+
+		break;
+	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // Arrow keys
+	case VK_PRIOR: case VK_NEXT: // Page up and page down
 	case VK_END: case VK_HOME:
 	case VK_INSERT: case VK_DELETE:
-	case VK_DIVIDE: // numpad slash
+	case VK_DIVIDE: // Numpad slash
 	case VK_NUMLOCK:
-		i.lParam |= 1 << 24; // set extended bit
+		i.lParam |= 1 << 24; // Set extended bit
 	default:
-		i.msg = down ? WM_KEYDOWN : WM_KEYUP;
+		i.msg = down ? id_H_KEYDOWN : id_H_KEYUP;
+
+		// Set the correct transition state: 1 for KEYUP and 0 for KEYDOWN
+		if(!down)
+			i.lParam |= 1 << 31;
+
 		break;
 	}
 
