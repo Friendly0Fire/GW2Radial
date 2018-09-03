@@ -45,7 +45,12 @@ public:
 
 	const auto& ImGuiConfigLocation() { return _ImGuiConfigLocation; }
 
+	const std::string& LastSaveError() const { return _LastSaveError; }
+	bool LastSaveErrorChanged() { bool b = _LastSaveErrorChanged; _LastSaveErrorChanged = false; return b; }
+
 protected:
+	void Save();
+
 	const TCHAR* ConfigName = TEXT("config.ini");
 	const TCHAR* ImGuiConfigName = TEXT("imgui_config.ini");
 
@@ -67,5 +72,7 @@ protected:
 	float _OverlayDeadZoneScale = 0.2f;
 	int _OverlayDeadZoneBehavior = 0;
 	MountType _FavoriteMount = MountType::RAPTOR;
+	std::string _LastSaveError;
+	bool _LastSaveErrorChanged = false;
 };
 

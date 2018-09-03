@@ -80,7 +80,7 @@ void Config::MountOverlayKeybind(const std::set<uint>& val)
 		setting_value += std::to_string(k) + ", ";
 
 	_INI.SetValue("Keybinds", "mount_wheel", (setting_value.size() > 0 ? setting_value.substr(0, setting_value.size() - 2) : setting_value).c_str());
-	_INI.SaveFile(_ConfigLocation);
+	Save();
 }
 
 void Config::MountOverlayLockedKeybind(const std::set<uint>& val)
@@ -91,7 +91,7 @@ void Config::MountOverlayLockedKeybind(const std::set<uint>& val)
 		setting_value += std::to_string(k) + ", ";
 
 	_INI.SetValue("Keybinds", "mount_wheel_locked", (setting_value.size() > 0 ? setting_value.substr(0, setting_value.size() - 2) : setting_value).c_str());
-	_INI.SaveFile(_ConfigLocation);
+	Save();
 }
 
 void Config::MountKeybind(uint i, const std::set<uint>& val)
@@ -102,47 +102,75 @@ void Config::MountKeybind(uint i, const std::set<uint>& val)
 		setting_value += std::to_string(k) + ", ";
 
 	_INI.SetValue("Keybinds", ("mount_" + std::to_string(i)).c_str(), (setting_value.size() > 0 ? setting_value.substr(0, setting_value.size() - 2) : setting_value).c_str());
-	_INI.SaveFile(_ConfigLocation);
+	Save();
 }
 
 void Config::ResetCursorOnLockedKeybindSave()
 {
 	_INI.SetBoolValue("General", "reset_cursor_on_locked_keybind", _ResetCursorOnLockedKeybind);
-	_INI.SaveFile(_ConfigLocation);
+	Save();
 }
 
 void Config::LockCameraWhenOverlayedSave()
 {
 	_INI.SetBoolValue("General", "lock_camera_when_overlayed", _LockCameraWhenOverlayed);
-	_INI.SaveFile(_ConfigLocation);
+	Save();
 }
 
 void Config::OverlayDelayMillisecondsSave()
 {
 	_INI.SetLongValue("General", "overlay_delay_ms", _OverlayDelayMilliseconds);
-	_INI.SaveFile(_ConfigLocation);
+	Save();
 }
 
 void Config::OverlayScaleSave()
 {
 	_INI.SetDoubleValue("General", "overlay_scale", _OverlayScale);
-	_INI.SaveFile(_ConfigLocation);
+	Save();
 }
 
 void Config::OverlayDeadZoneScaleSave()
 {
 	_INI.SetDoubleValue("General", "overlay_dead_zone_scale", _OverlayDeadZoneScale);
-	_INI.SaveFile(_ConfigLocation);
+	Save();
 }
 
 void Config::OverlayDeadZoneBehaviorSave()
 {
 	_INI.SetLongValue("General", "overlay_dead_zone_behavior", _OverlayDeadZoneBehavior);
-	_INI.SaveFile(_ConfigLocation);
+	Save();
 }
 
 void Config::FavoriteMountSave()
 {
 	_INI.SetLongValue("General", "favorite_mount", (int)_FavoriteMount);
-	_INI.SaveFile(_ConfigLocation);
+	Save();
+}
+
+void Config::Save()
+{
+	auto r = _INI.SaveFile(_ConfigLocation);
+
+	if (r < 0)
+	{
+		switch (r)
+		{
+		case SI_FAIL:
+			_LastSaveError = "Unknown error";
+			break;
+		case SI_NOMEM:
+			_LastSaveError = "Out of memory";
+			break;
+		case SI_FILE:
+			char buf[1024];
+			if (strerror_s(buf, errno) == 0)
+				_LastSaveError = buf;
+			else
+				_LastSaveError = "Unknown error";
+		}
+	}
+	else
+		_LastSaveError.clear();
+
+	_LastSaveErrorChanged = true;
 }

@@ -618,9 +618,9 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 					Cfg.FavoriteMountSave();
 			}
 
-			if (Cfg.ResetCursorOnLockedKeybind() != ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
+			if (ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
 				Cfg.ResetCursorOnLockedKeybindSave();
-			if (Cfg.LockCameraWhenOverlayed() != ImGui::Checkbox("Lock camera when overlay is displayed", &Cfg.LockCameraWhenOverlayed()))
+			if (ImGui::Checkbox("Lock camera when overlay is displayed", &Cfg.LockCameraWhenOverlayed()))
 				Cfg.LockCameraWhenOverlayedSave();
 
 			ImGui::Separator();
@@ -636,6 +636,18 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 				ImGuiKeybindInput(GetMountName((MountType)i), MountKeybinds[i]);
 
 			ImGui::End();
+
+			if (!Cfg.LastSaveError().empty() && !ImGui::IsPopupOpen("Configuration Update Error") && Cfg.LastSaveErrorChanged())
+				ImGui::OpenPopup("Configuration Update Error");
+
+			if (ImGui::BeginPopup("Configuration Update Error"))
+			{
+				ImGui::Text("Could not save addon configuration. Reason given was:");
+				ImGui::TextWrapped(Cfg.LastSaveError().c_str());
+				if (ImGui::Button("OK"))
+					ImGui::CloseCurrentPopup();
+				ImGui::EndPopup();
+			}
 		}
 
 		ImGui::Render();
