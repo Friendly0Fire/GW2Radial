@@ -83,7 +83,7 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 	
 	// Angular span covered by a single mount (e.g. if 4 mounts are shown, the span is 90 degrees)
 	float singleMountAngle = 2.f * PI / float(g_iMountCount);
-	int localMountId = (int)(round(coordsPolar.y / singleMountAngle)) % g_iMountCount;
+	int localMountId = (int)(round(coordsPolar.y / singleMountAngle) + 0.5f) % g_iMountCount;
     bool isLocalMountHovered = localMountId == g_iMountHovered;
 	// Percentage along the mount's angular span: 0 is one edge, 1 is the other
 	// Must also compensate since the spans are centered, but we want to start at one edge
