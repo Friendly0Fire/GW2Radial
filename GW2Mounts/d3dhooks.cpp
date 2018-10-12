@@ -160,6 +160,20 @@ HRESULT WINAPI CreateDevice_hook(IDirect3D9* _this, UINT Adapter, D3DDEVTYPE Dev
 {
 	PreCreateDevice(hFocusWindow);
 
+//#define TEST_AMD
+#ifdef TEST_AMD
+	for(UINT i = 0; i < _this->GetAdapterCount(); i++)
+	{
+		D3DADAPTER_IDENTIFIER9 id;
+		_this->GetAdapterIdentifier(i, 0, &id);
+		if(strstr(id.Description, "AMD"))
+		{
+			Adapter = i;
+			break;
+		}
+	}
+#endif
+
 	IDirect3DDevice9* temp_device = nullptr;
 	HRESULT hr = CreateDevice_real(_this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &temp_device);
 	if (hr != D3D_OK)

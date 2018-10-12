@@ -15,6 +15,9 @@
     <Filter Include="simpleini">
       <UniqueIdentifier>{ab29f84d-7d8d-4801-90ac-68afdfed33e1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="xxHash">
+      <UniqueIdentifier>{ab14615f-806d-4036-a018-1c5e2c2d467a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui_demo.cpp">
@@ -47,9 +50,6 @@
     <ClCompile Include="input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="xxhash\xxhash.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="imgui_ext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -58,6 +58,9 @@
     </ClCompile>
     <ClCompile Include="imgui\examples\imgui_impl_win32.cpp">
       <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="xxhash\xxhash.c">
+      <Filter>xxHash</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -103,9 +106,6 @@
     <ClInclude Include="inputs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="xxhash\xxhash.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="imgui_ext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -117,6 +117,9 @@
     </ClInclude>
     <ClInclude Include="imgui\examples\imgui_impl_win32.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="xxhash\xxhash.h">
+      <Filter>xxHash</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
