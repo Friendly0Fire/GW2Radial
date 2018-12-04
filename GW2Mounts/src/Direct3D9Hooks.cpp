@@ -1,0 +1,390 @@
+#include <Direct3D9Hooks.h>
+#include <MinHook.h>
+#include <Utility.h>
+#include <tchar.h>
+
+namespace GW2Addons
+{
+	std::unique_ptr<Direct3D9Hooks> Direct3D9Hooks::i_ = nullptr;
+
+#define D3DTRAMPOLINE(m) (LPVOID)&TrampolineHookWrapper<Direct3D9Hooks, decltype(&Direct3D9Hooks::m), &Direct3D9Hooks::m>
+
+	Direct3D9Hooks::Direct3D9Hooks()
+	{
+	}
+
+	HRESULT Direct3D9Hooks::Present_hook(IDirect3DDevice9 *sThis, const RECT *pSourceRect, const RECT *pDestRect,
+                                                HWND hDestWindowOverride, const RGNDATA *pDirtyRegion)
+{
+	drawOverCallback_(sThis, false, true);
+	isFrameDrawn_ = false;
+
+	return Present_real(sThis, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+}
+
+HRESULT Direct3D9Hooks::PresentEx_hook(IDirect3DDevice9Ex *sThis, const RECT *pSourceRect,
+                                                  const RECT *pDestRect, HWND hDestWindowOverride,
+                                                  const RGNDATA *pDirtyRegion, DWORD dwFlags)
+{
+	drawOverCallback_(sThis, false, true);
+	isFrameDrawn_ = false;
+
+	return PresentEx_real(sThis, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+}
+
+HRESULT Direct3D9Hooks::Reset_hook(IDirect3DDevice9 *sThis, D3DPRESENT_PARAMETERS *pPresentationParameters)
+{
+	preResetCallback_(sThis);
+
+	HRESULT hr = Reset_real(sThis, pPresentationParameters);
+	if (hr != D3D_OK)
+		return hr;
+
+	postResetCallback_(sThis, pPresentationParameters);
+
+	return D3D_OK;
+}
+
+HRESULT Direct3D9Hooks::ResetEx_hook(IDirect3DDevice9Ex *sThis,
+                                                D3DPRESENT_PARAMETERS *pPresentationParameters,
+                                                D3DDISPLAYMODEEX *pFullscreenDisplayMode)
+{
+	preResetCallback_(sThis);
+
+	HRESULT hr = ResetEx_real(sThis, pPresentationParameters, pFullscreenDisplayMode);
+	if (hr != D3D_OK)
+		return hr;
+
+	postResetCallback_(sThis, pPresentationParameters);
+
+	return D3D_OK;
+}
+
+ULONG Direct3D9Hooks::Release_hook(IDirect3DDevice9 *sThis)
+{
+	ULONG refcount = Release_real(sThis);
+
+	return refcount;
+}
+
+ULONG Direct3D9Hooks::AddRef_hook(IDirect3DDevice9 *sThis) { return AddRef_real(sThis); }
+
+HRESULT Direct3D9Hooks::CreateVertexShader_hook(IDirect3DDevice9 *sThis, const DWORD *pFunction,
+                                                           IDirect3DVertexShader9 **ppShader)
+{
+	HRESULT hr = CreateVertexShader_real(sThis, pFunction, ppShader);
+
+	if (!preUiVertexShader_)
+	{
+		int l = GetShaderFuncLength(pFunction);
+		XXH64_hash_t hash = XXH64(pFunction, l, 0);
+		if (hash == preUiVertexShaderHash_)
+			preUiVertexShader_ = *ppShader;
+	}
+
+	return hr;
+}
+
+HRESULT Direct3D9Hooks::SetVertexShader_hook(IDirect3DDevice9 *sThis, IDirect3DVertexShader9 *pShader)
+{
+	HRESULT hr = SetVertexShader_real(sThis, pShader);
+
+	if (!isInShaderHook_ && pShader && !isFrameDrawn_ && pShader == preUiVertexShader_)
+	{
+		isInShaderHook_ = true;
+		drawUnderCallback_(sThis, isFrameDrawn_, false);
+		isInShaderHook_ = false;
+		isFrameDrawn_ = true;
+	}
+
+	return hr;
+}
+
+HRESULT Direct3D9Hooks::CreatePixelShader_hook(IDirect3DDevice9 *sThis, const DWORD *pFunction,
+                                                          IDirect3DPixelShader9 **ppShader)
+{
+	HRESULT hr = CreatePixelShader_real(sThis, pFunction, ppShader);
+
+	if (!preUiPixelShader_)
+	{
+		int l = GetShaderFuncLength(pFunction);
+		XXH64_hash_t hash = XXH64(pFunction, l, 0);
+		if (hash == preUiPixelShaderHash_)
+			preUiPixelShader_ = *ppShader;
+	}
+
+	return hr;
+}
+
+HRESULT Direct3D9Hooks::SetPixelShader_hook(IDirect3DDevice9 *sThis, IDirect3DPixelShader9 *pShader)
+{
+	HRESULT hr = SetPixelShader_real(sThis, pShader);
+
+	if (!isInShaderHook_ && pShader && !isFrameDrawn_ && pShader == preUiPixelShader_)
+	{
+		isInShaderHook_ = true;
+		drawUnderCallback_(sThis, isFrameDrawn_, false);
+		isInShaderHook_ = false;
+		isFrameDrawn_ = true;
+	}
+
+	return hr;
+}
+
+HRESULT Direct3D9Hooks::CreateDevice_hook(IDirect3D9 *sThis, UINT Adapter, D3DDEVTYPE DeviceType,
+                                                     HWND hFocusWindow, DWORD BehaviorFlags,
+                                                     D3DPRESENT_PARAMETERS *pPresentationParameters,
+                                                     IDirect3DDevice9 **ppReturnedDeviceInterface)
+{
+	preCreateDeviceCallback_(hFocusWindow);
+
+	//#define TEST_AMD
+	#ifdef TEST_AMD
+		for(UINT i = 0; i < sThis->GetAdapterCount(); i++)
+		{
+			D3DADAPTER_IDENTIFIER9 id;
+			sThis->GetAdapterIdentifier(i, 0, &id);
+			if(strstr(id.Description, "AMD"))
+			{
+				Adapter = i;
+				break;
+			}
+		}
+	#endif
+
+	IDirect3DDevice9 *temp_device = nullptr;
+	HRESULT hr = CreateDevice_real(sThis, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters,
+	                               &temp_device);
+	if (hr != D3D_OK)
+		return hr;
+
+	*ppReturnedDeviceInterface = temp_device;
+
+	auto vftd = GetVirtualFunctionTableD3DDevice9(temp_device);
+
+	MH_CreateHook(NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.Reset, vftd.Reset), D3DTRAMPOLINE(Reset_hook), (LPVOID*)&Reset_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.Present, vftd.Present), D3DTRAMPOLINE(Present_hook), (LPVOID*)&Present_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.CreateVertexShader, vftd.CreateVertexShader),
+		D3DTRAMPOLINE(CreateVertexShader_hook), (LPVOID*)&CreateVertexShader_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.SetVertexShader, vftd.SetVertexShader), D3DTRAMPOLINE(SetVertexShader_hook),
+		(LPVOID*)&SetVertexShader_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.CreatePixelShader, vftd.CreatePixelShader), D3DTRAMPOLINE(CreatePixelShader_hook),
+		(LPVOID*)&CreatePixelShader_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.SetPixelShader, vftd.SetPixelShader), D3DTRAMPOLINE(SetPixelShader_hook),
+		(LPVOID*)&SetPixelShader_real);
+	MH_EnableHook(MH_ALL_HOOKS);
+
+	postCreateDeviceCallback_(temp_device, pPresentationParameters);
+
+	return hr;
+}
+
+HRESULT Direct3D9Hooks::CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D3DDEVTYPE DeviceType,
+                                                       HWND hFocusWindow, DWORD BehaviorFlags,
+                                                       D3DPRESENT_PARAMETERS *pPresentationParameters,
+                                                       D3DDISPLAYMODEEX *pFullscreenDisplayMode,
+                                                       IDirect3DDevice9 **ppReturnedDeviceInterface)
+{
+	preCreateDeviceCallback_(hFocusWindow);
+
+	IDirect3DDevice9Ex *temp_device = nullptr;
+	HRESULT hr = CreateDeviceEx_real(sThis, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters,
+	                                 pFullscreenDisplayMode, &temp_device);
+	if (hr != D3D_OK)
+		return hr;
+
+	*ppReturnedDeviceInterface = temp_device;
+
+	auto vftd = GetVirtualFunctionTableD3DDevice9Ex(temp_device);
+
+	MH_CreateHook(NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.Reset, vftd.Reset), D3DTRAMPOLINE(Reset_hook), (LPVOID*)&Reset_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.Present, vftd.Present), D3DTRAMPOLINE(Present_hook), (LPVOID*)&Present_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.ResetEx, vftd.ResetEx), D3DTRAMPOLINE(ResetEx_hook), (LPVOID*)&ResetEx_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.PresentEx, vftd.PresentEx), D3DTRAMPOLINE(PresentEx_hook),
+		(LPVOID*)&PresentEx_real);
+	//MH_CreateHook(NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.Release, vftd.Release), (LPVOID)&Release_hook, (LPVOID*)&Release_real);
+	//MH_CreateHook(NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.AddRef, vftd.AddRef), (LPVOID)&AddRef_hook, (LPVOID*)&AddRef_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.CreateVertexShader, vftd.CreateVertexShader),
+		D3DTRAMPOLINE(CreateVertexShader_hook), (LPVOID*)&CreateVertexShader_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.SetVertexShader, vftd.SetVertexShader), D3DTRAMPOLINE(SetVertexShader_hook),
+		(LPVOID*)&SetVertexShader_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.CreatePixelShader, vftd.CreatePixelShader), D3DTRAMPOLINE(CreatePixelShader_hook),
+		(LPVOID*)&CreatePixelShader_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.SetPixelShader, vftd.SetPixelShader), D3DTRAMPOLINE(SetPixelShader_hook),
+		(LPVOID*)&SetPixelShader_real);
+	MH_EnableHook(MH_ALL_HOOKS);
+
+	postCreateDeviceCallback_(temp_device, pPresentationParameters);
+
+	return hr;
+}
+
+void Direct3D9Hooks::OnD3DCreate()
+{
+	if (!realD3D9Module_)
+	{
+		TCHAR path[MAX_PATH];
+
+		GetSystemDirectory(path, MAX_PATH);
+		_tcscat_s(path, TEXT("\\d3d9.dll"));
+
+		realD3D9Module_ = LoadLibrary(path);
+	}
+
+	if (!chainD3D9Module_)
+	{
+		TCHAR path[MAX_PATH];
+
+		GetCurrentDirectory(MAX_PATH, path);
+		_tcscat_s(path, TEXT("\\d3d9_mchain.dll"));
+
+		if (!FileExists(path))
+		{
+			GetCurrentDirectory(MAX_PATH, path);
+			_tcscat_s(path, TEXT("\\bin64\\d3d9_mchain.dll"));
+		}
+
+		if (!FileExists(path))
+		{
+			GetCurrentDirectory(MAX_PATH, path);
+			_tcscat_s(path, TEXT("\\ReShade64.dll"));
+		}
+
+		if (!FileExists(path))
+		{
+			GetCurrentDirectory(MAX_PATH, path);
+			_tcscat_s(path, TEXT("\\bin64\\ReShade64.dll"));
+		}
+
+		if (FileExists(path))
+			chainD3D9Module_ = LoadLibrary(path);
+	}
+}
+
+D3DPRESENT_PARAMETERS Direct3D9Hooks::SetupHookDevice(HWND &hWnd)
+{
+	WNDCLASSEXA wc = { };
+	wc.cbSize = sizeof(wc);
+	wc.style = CS_CLASSDC;
+	wc.lpfnWndProc = DefWindowProc;
+	wc.hInstance = GetModuleHandleA(nullptr);
+	wc.lpszClassName = "DXTMP";
+	RegisterClassExA(&wc);
+
+	hWnd = CreateWindowA("DXTMP", 0, WS_OVERLAPPEDWINDOW, 100, 100, 300, 300, GetDesktopWindow(), 0, wc.hInstance, 0);
+
+	D3DPRESENT_PARAMETERS d3dPar = { };
+	d3dPar.Windowed = TRUE;
+	d3dPar.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	d3dPar.hDeviceWindow = hWnd;
+	d3dPar.BackBufferCount = 1;
+	d3dPar.BackBufferFormat = D3DFMT_X8R8G8B8;
+	d3dPar.BackBufferHeight = 300;
+	d3dPar.BackBufferHeight = 300;
+
+	return d3dPar;
+}
+
+void Direct3D9Hooks::DeleteHookDevice(IDirect3DDevice9 *pDev, HWND hWnd)
+{
+	COM_RELEASE(pDev);
+
+	DestroyWindow(hWnd);
+	UnregisterClassA("DXTMP", GetModuleHandleA(NULL));
+}
+
+void Direct3D9Hooks::LoadOriginalDevicePointers(IDirect3D9 *d3d)
+{
+	HWND hWnd;
+	auto d3dpar = SetupHookDevice(hWnd);
+	IDirect3DDevice9 *pDev;
+	CreateDevice_real(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpar,
+	                  &pDev);
+
+	direct3DDevice9VirtualFunctionTable_ = GetVirtualFunctionTableD3DDevice9(pDev);
+
+	DeleteHookDevice(pDev, hWnd);
+}
+
+void Direct3D9Hooks::LoadOriginalDevicePointers(IDirect3D9Ex *d3d)
+{
+	HWND hWnd;
+	auto d3dpar = SetupHookDevice(hWnd);
+	IDirect3DDevice9Ex *pDev;
+	CreateDeviceEx_real(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpar,
+	                    nullptr, &pDev);
+
+	direct3DDevice9VirtualFunctionTable_ = GetVirtualFunctionTableD3DDevice9Ex(pDev);
+
+	DeleteHookDevice(pDev, hWnd);
+}
+
+IDirect3D9* Direct3D9Hooks::Direct3DCreate9(UINT SDKVersion)
+{
+	OnD3DCreate();
+
+	auto fDirect3DCreate9 = reinterpret_cast<Direct3DCreate9_t>(GetProcAddress(realD3D9Module_, "Direct3DCreate9"));
+	auto d3d = fDirect3DCreate9(SDKVersion);
+
+	if (!isDirect3DHooked_)
+	{
+		auto vft = GetVirtualFunctionTableD3D9(d3d);
+
+		MH_CreateHook(vft.CreateDevice, D3DTRAMPOLINE(CreateDevice_hook), (LPVOID*)&CreateDevice_real);
+		MH_EnableHook(MH_ALL_HOOKS);
+	}
+
+	if (chainD3D9Module_)
+	{
+		LoadOriginalDevicePointers(d3d);
+		d3d->Release();
+
+		fDirect3DCreate9 = reinterpret_cast<Direct3DCreate9_t>(GetProcAddress(chainD3D9Module_, "Direct3DCreate9"));
+		d3d = fDirect3DCreate9(SDKVersion);
+	}
+
+	isDirect3DHooked_ = true;
+
+	return d3d;
+}
+
+IDirect3D9Ex* Direct3D9Hooks::Direct3DCreate9Ex(UINT SDKVersion)
+{
+	OnD3DCreate();
+
+	auto fDirect3DCreate9 = reinterpret_cast<Direct3DCreate9Ex_t>(GetProcAddress(realD3D9Module_, "Direct3DCreate9Ex"));
+	auto d3d = fDirect3DCreate9(SDKVersion);
+
+	if (!isDirect3DHooked_)
+	{
+		auto vft = GetVirtualFunctionTableD3D9Ex(d3d);
+
+		MH_CreateHook(vft.CreateDevice, D3DTRAMPOLINE(CreateDevice_hook), (LPVOID*)&CreateDevice_real);
+		MH_CreateHook(vft.CreateDeviceEx, D3DTRAMPOLINE(CreateDeviceEx_hook), (LPVOID*)&CreateDeviceEx_real);
+		MH_EnableHook(MH_ALL_HOOKS);
+	}
+
+	if (chainD3D9Module_)
+	{
+		d3d->Release();
+
+		fDirect3DCreate9 = reinterpret_cast<Direct3DCreate9Ex_t>(GetProcAddress(chainD3D9Module_, "Direct3DCreate9Ex"));
+		d3d = fDirect3DCreate9(SDKVersion);
+	}
+
+	return d3d;
+}
+}
+

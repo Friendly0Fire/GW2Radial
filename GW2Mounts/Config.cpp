@@ -16,42 +16,8 @@ Config::~Config()
 {
 }
 
-void LoadKeybindString(const char* keys, std::set<uint>& out)
-{
-	if (strnlen_s(keys, 256) > 0)
-	{
-		std::stringstream ss(keys);
-		std::vector<std::string> result;
-
-		while (ss.good())
-		{
-			std::string substr;
-			std::getline(ss, substr, ',');
-			int val = std::stoi(substr);
-			out.insert((uint)val);
-		}
-	}
-}
-
 void Config::Load()
 {
-	// Create folders
-	TCHAR exeFullPath[MAX_PATH];
-	GetModuleFileName(0, exeFullPath, MAX_PATH);
-	tstring exeFolder;
-	SplitFilename(exeFullPath, &exeFolder, nullptr);
-	_ConfigFolder = exeFolder + TEXT("\\addons\\mounts\\");
-	_tcscpy_s(_ConfigLocation, (_ConfigFolder + ConfigName).c_str());
-#if _UNICODE
-	strcpy_s(_ImGuiConfigLocation, ws2s(_ConfigFolder + ImGuiConfigName).c_str());
-#else
-	strcpy_s(_ImGuiConfigLocation, (_ConfigFolder + ImGuiConfigName).c_str());
-#endif
-	SHCreateDirectoryEx(nullptr, _ConfigFolder.c_str(), nullptr);
-
-	// Load INI settings
-	_INI.SetUnicode();
-	_INI.LoadFile(_ConfigLocation);
 	_ResetCursorOnLockedKeybind = _INI.GetBoolValue("General", "reset_cursor_on_locked_keybind", _ResetCursorOnLockedKeybind);
 	_LockCameraWhenOverlayed = _INI.GetBoolValue("General", "lock_camera_when_overlayed", _LockCameraWhenOverlayed);
 	_OverlayDelayMilliseconds = _INI.GetLongValue("General", "overlay_delay_ms", _OverlayDelayMilliseconds);
@@ -145,32 +111,4 @@ void Config::FavoriteMountSave()
 {
 	_INI.SetLongValue("General", "favorite_mount", (int)_FavoriteMount);
 	Save();
-}
-
-void Config::Save()
-{
-	auto r = _INI.SaveFile(_ConfigLocation);
-
-	if (r < 0)
-	{
-		switch (r)
-		{
-		case SI_FAIL:
-			_LastSaveError = "Unknown error";
-			break;
-		case SI_NOMEM:
-			_LastSaveError = "Out of memory";
-			break;
-		case SI_FILE:
-			char buf[1024];
-			if (strerror_s(buf, errno) == 0)
-				_LastSaveError = buf;
-			else
-				_LastSaveError = "Unknown error";
-		}
-	}
-	else
-		_LastSaveError.clear();
-
-	_LastSaveErrorChanged = true;
 }

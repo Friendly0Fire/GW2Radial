@@ -1,15 +1,12 @@
-#include "Utility.h"
-#include <iomanip>
+#include <Utility.h>
 #include <locale>
 #include <codecvt>
 #include <d3d9types.h>
 
-/// <summary>
-/// Converts a std::string into the equivalent std::wstring.
-/// </summary>
-/// <param name="str">The std::string.</param>
-/// <returns>The converted std::wstring.</returns>
-std::wstring s2ws(const std::string& str)
+namespace GW2Addons
+{
+
+std::wstring StringToWideString(const std::string& str)
 {
 	typedef std::codecvt_utf8<wchar_t> convert_typeX;
 	std::wstring_convert<convert_typeX, wchar_t> converterX;
@@ -17,12 +14,7 @@ std::wstring s2ws(const std::string& str)
 	return converterX.from_bytes(str);
 }
 
-/// <summary>
-/// Converts a std::wstring into the equivalent std::string. Possible loss of character information.
-/// </summary>
-/// <param name="wstr">The std::wstring.</param>
-/// <returns>The converted std::string.</returns>
-std::string ws2s(const std::wstring& wstr)
+std::string WideStringToString(const std::wstring& wstr)
 {
 	typedef std::codecvt_utf8<wchar_t> convert_typeX;
 	std::wstring_convert<convert_typeX, wchar_t> converterX;
@@ -55,37 +47,39 @@ std::string GetKeyName(unsigned int virtualKey)
 	case VK_NUMLOCK:
 		scanCode |= 0x100; // set extended bit
 		break;
+	default:
+		break;
 	}
 
 	char keyName[50];
 	if (GetKeyNameTextA(scanCode << 16, keyName, sizeof(keyName)) != 0)
 		return keyName;
-	else
-		return "[Error]";
+	
+	return "[Error]";
 }
 
 void SplitFilename(const tstring& str, tstring* folder, tstring* file)
 {
-	size_t found = str.find_last_of(TEXT("/\\"));
+	const auto found = str.find_last_of(TEXT("/\\"));
 	if (folder) *folder = str.substr(0, found);
 	if (file) *file = str.substr(found + 1);
 }
 
-mstime timeInMS()
+mstime TimeInMilliseconds()
 {
 	mstime iCount;
-	QueryPerformanceCounter((LARGE_INTEGER*)&iCount);
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&iCount));
 	mstime iFreq;
-	QueryPerformanceFrequency((LARGE_INTEGER*)&iFreq);
+	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&iFreq));
 	return 1000 * iCount / iFreq;
 }
 
 bool FileExists(const TCHAR* path)
 {
-	DWORD dwAttrib = GetFileAttributes(path);
+	const auto dwAttrib = GetFileAttributes(path);
 
-	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
-		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+	return dwAttrib != INVALID_FILE_ATTRIBUTES &&
+		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 bool ShaderIsEnd(DWORD token)
@@ -98,4 +92,6 @@ int GetShaderFuncLength(const DWORD *pFunction)
 	int op = 0, l = 1;
 	while (!ShaderIsEnd(pFunction[op++]))  l++;
 	return l;
+}
+
 }

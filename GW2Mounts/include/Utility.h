@@ -1,22 +1,26 @@
 #pragma once
-#include "main.h"
+#include <Main.h>
 
-std::wstring s2ws(const std::string & str);
+namespace GW2Addons
+{
 
-std::string ws2s(const std::wstring & wstr);
+std::wstring StringToWideString(const std::string & str);
+std::string WideStringToString(const std::wstring & wstr);
 
 std::string GetKeyName(unsigned int virtualKey);
 
 void SplitFilename(const tstring & str, tstring * folder, tstring * file);
 
-mstime timeInMS();
+mstime TimeInMilliseconds();
 
 bool FileExists(const TCHAR* path);
 
 int GetShaderFuncLength(const DWORD *pFunction);
 
 // Reverse iteration wrappers for use in range-based for-loops
+// ReSharper disable CppInconsistentNaming
 
+// ReSharper disable once CppImplicitDefaultConstructorNotAvailable
 template <typename T>
 struct reversion_wrapper { T& iterable; };
 
@@ -29,7 +33,9 @@ auto end(reversion_wrapper<T> w) { return std::rend(w.iterable); }
 template <typename T>
 reversion_wrapper<T> reverse(T&& iterable) { return { iterable }; }
 
-inline float lerp(float a, float b, float s)
+// ReSharper restore CppInconsistentNaming
+
+inline float Lerp(float a, float b, float s)
 {
 	if (s < 0)
 		return a;
@@ -39,7 +45,8 @@ inline float lerp(float a, float b, float s)
 		return (1 - s) * a + s * b;
 }
 
-inline float smoothstep(float x)
+inline float SmoothStep(float x)
 {
 	return 3 * x * x - 2 * x * x * x;
+}
 }

@@ -14,8 +14,6 @@
 #include <d3d9.h>
 #include "inputs.h"
 #include "imgui_ext.h"
-#define _USE_MATH_DEFINES
-#include <math.h>
 
 void PreReset();
 
@@ -30,34 +28,12 @@ bool DisplayOptionsWindow = false;
 
 ImGuiKeybind MainKeybind;
 ImGuiKeybind MainLockedKeybind;
-ImGuiKeybind MountKeybinds[MountTypeCount];
 
 D3DXVECTOR2 OverlayPosition;
 mstime OverlayTime, MountHoverTime;
 
 MountType PreviousMountUsed = MountType::NONE;
 MountType CurrentMountHovered = MountType::NONE;
-
-const char* GetMountName(MountType m)
-{
-	switch (m)
-	{
-	case MountType::RAPTOR:
-		return "Raptor";
-	case MountType::SPRINGER:
-		return "Springer";
-	case MountType::SKIMMER:
-		return "Skimmer";
-	case MountType::JACKAL:
-		return "Jackal";
-	case MountType::BEETLE:
-		return "Beetle";
-	case MountType::GRIFFON:
-		return "Griffon";
-	default:
-		return "[Unknown]";
-	}
-}
 
 WNDPROC BaseWndProc;
 HMODULE DllModule = nullptr;
@@ -66,21 +42,16 @@ HMODULE DllModule = nullptr;
 uint ScreenWidth, ScreenHeight;
 std::unique_ptr<UnitQuad> Quad;
 ID3DXEffect* MainEffect = nullptr;
-IDirect3DTexture9* MountTextures[MountTypeCount] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 IDirect3DTexture9* BgTexture = nullptr;
 
 void LoadMountTextures(IDirect3DDevice9* dev)
 {
 	D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_BG), &BgTexture);
-	for (uint i = 0; i < MountTypeCount; i++)
-		D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_MOUNTS + i), &MountTextures[i]);
 }
 
 void UnloadMountTextures()
 {
 	COM_RELEASE(BgTexture);
-	for (uint i = 0; i < MountTypeCount; i++)
-		COM_RELEASE(MountTextures[i]);
 }
 
 void Shutdown()
@@ -209,7 +180,7 @@ void DetermineHoveredMount()
 	auto modifiedLastMountHovered = ModifyMountNoneBehavior(LastMountHovered);
 
 	if (LastMountHovered != CurrentMountHovered && modifiedLastMountHovered != modifiedMountHovered)
-		MountHoverTime = max(OverlayTime + Cfg.OverlayDelayMilliseconds(), timeInMS());
+		MountHoverTime = max(OverlayTime + Cfg.OverlayDelayMilliseconds(), TimeInMilliseconds());
 }
 
 void Shutdown();
@@ -319,7 +290,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						// Attempt to move the cursor to the middle of the screen
 						if (Cfg.ResetCursorOnLockedKeybind())
 						{
-							RECT rect = { 0 };
+							RECT rect = { };
 							if (GetWindowRect(GameWindow, &rect))
 							{
 								if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
@@ -338,7 +309,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
 					}
 
-					OverlayTime = timeInMS();
+					OverlayTime = TimeInMilliseconds();
 					MountHoverTime = OverlayTime + Cfg.OverlayDelayMilliseconds();
 
 					DetermineHoveredMount();
@@ -657,7 +628,7 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 		{
 			Quad->Bind();
 
-			auto currentTime = timeInMS();
+			auto currentTime = TimeInMilliseconds();
 
 			if (currentTime >= OverlayTime + Cfg.OverlayDelayMilliseconds())
 			{
@@ -727,7 +698,7 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 						if (ActiveMounts.size() == 1)
 							mountDiameter = 2.f * 0.2f;
 						if (it == mountHovered)
-							mountDiameter *= lerp(1.f, 1.1f, smoothstep(hoverTimer));
+							mountDiameter *= Lerp(1.f, 1.1f, SmoothStep(hoverTimer));
 						else
 							mountDiameter *= 0.9f;
 
@@ -775,7 +746,8 @@ void Draw(IDirect3DDevice9* dev, bool FrameDrawn, bool SceneEnded)
 
 					MainEffect->SetTechnique("Cursor");
 					MainEffect->SetTexture("texBgImage", BgTexture);
-					MainEffect->SetVector("g_vSpriteDimensions", &D3DXVECTOR4(io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f));
+					D3DXVECTOR4 spriteDimensions(io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f);
+					MainEffect->SetVector("g_vSpriteDimensions", &spriteDimensions);
 
 					MainEffect->Begin(&passes, 0);
 					MainEffect->BeginPass(0);

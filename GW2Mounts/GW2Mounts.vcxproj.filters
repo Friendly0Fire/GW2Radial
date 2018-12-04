@@ -18,6 +18,12 @@
     <Filter Include="xxHash">
       <UniqueIdentifier>{ab14615f-806d-4036-a018-1c5e2c2d467a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="NewFilter1">
+      <UniqueIdentifier>{cad8217e-51ec-44e9-9e81-95b3f68e501c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{8ca3937f-5abb-4da6-a977-a0b326981260}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui_demo.cpp">
@@ -32,25 +38,10 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UnitQuad.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utility.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vftable.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="d3dhooks.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui_ext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="imgui\examples\imgui_impl_dx9.cpp">
@@ -61,6 +52,30 @@
     </ClCompile>
     <ClCompile Include="xxhash\xxhash.c">
       <Filter>xxHash</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGuiExtensions.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WheelElement.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Keybind.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ConfigurationFile.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UnitQuad.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Direct3D9Hooks.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Direct3DVirtualFunctionTable.c">
+      <Filter>NewFilter1</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -85,31 +100,10 @@
     <ClInclude Include="simpleini\SimpleIni.h">
       <Filter>simpleini</Filter>
     </ClInclude>
-    <ClInclude Include="main.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UnitQuad.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Config.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utility.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vftable.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="inputs.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui_ext.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="perlin.hlsl">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="imgui\examples\imgui_impl_dx9.h">
@@ -121,6 +115,42 @@
     <ClInclude Include="xxhash\xxhash.h">
       <Filter>xxHash</Filter>
     </ClInclude>
+    <ClInclude Include="include\Main.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ImGuiExtensions.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\WheelElement.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Mount.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Keybind.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ConfigurationFile.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Direct3D9Hooks.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ConfigurationOption.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UnitQuad.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Utility.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Direct3DVirtualFunctionTable.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="main.def">
@@ -129,18 +159,18 @@
     <None Include="rt_rcdat.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Shader.cso">
-      <Filter>Resource Files</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shader.fx">
-      <Filter>Source Files</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\perlin.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\Shader.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

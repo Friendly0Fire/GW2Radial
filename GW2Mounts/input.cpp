@@ -152,7 +152,7 @@ void SendKeybind(const std::set<uint>& vkeys)
 			return a < b;
 	});
 
-	mstime currentTime = timeInMS() + 10;
+	mstime currentTime = TimeInMilliseconds() + 10;
 
 	for (const auto& vk : vkeys_sorted)
 	{
@@ -182,7 +182,7 @@ void SendQueuedInputs()
 	if (QueuedInputs.empty())
 		return;
 
-	mstime currentTime = timeInMS();
+	mstime currentTime = TimeInMilliseconds();
 
 	auto& qi = QueuedInputs.front();
 
