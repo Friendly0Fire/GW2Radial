@@ -7,7 +7,6 @@
 #include <memory>
 
 #include <resource.h>
-#include <ConfigurationFile.h>
 
 #define COM_RELEASE(x) { if((x)) { (x)->Release(); (x) = nullptr; } }
 #define NULL_COALESCE(a, b) ((a) != nullptr ? (a) : (b))
@@ -24,9 +23,3 @@ typedef unsigned __int64 mstime;
 #ifndef HID_USAGE_GENERIC_MOUSE
 #define HID_USAGE_GENERIC_MOUSE        ((USHORT) 0x02)
 #endif
-
-namespace GW2Addons
-{
-extern HWND GameWindow;
-extern HMODULE DllModule;
-}

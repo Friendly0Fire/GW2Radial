@@ -15,52 +15,6 @@
 #include "inputs.h"
 #include "imgui_ext.h"
 
-void PreReset();
-
-const float CircleRadiusBase = 256.f / 1664.f * 0.25f;
-
-Config Cfg;
-HWND GameWindow = 0;
-
-// Active state
-bool DisplayMountOverlay = false;
-bool DisplayOptionsWindow = false;
-
-ImGuiKeybind MainKeybind;
-ImGuiKeybind MainLockedKeybind;
-
-D3DXVECTOR2 OverlayPosition;
-mstime OverlayTime, MountHoverTime;
-
-MountType PreviousMountUsed = MountType::NONE;
-MountType CurrentMountHovered = MountType::NONE;
-
-WNDPROC BaseWndProc;
-HMODULE DllModule = nullptr;
-
-// Rendering
-uint ScreenWidth, ScreenHeight;
-std::unique_ptr<UnitQuad> Quad;
-ID3DXEffect* MainEffect = nullptr;
-IDirect3DTexture9* BgTexture = nullptr;
-
-void LoadMountTextures(IDirect3DDevice9* dev)
-{
-	D3DXCreateTextureFromResource(dev, DllModule, MAKEINTRESOURCE(IDR_BG), &BgTexture);
-}
-
-void UnloadMountTextures()
-{
-	COM_RELEASE(BgTexture);
-}
-
-void Shutdown()
-{
-	PreReset();
-	ImGui_ImplDX9_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-}
-
 bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 {
 	switch (fdwReason)

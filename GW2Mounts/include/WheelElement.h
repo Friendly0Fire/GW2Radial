@@ -20,9 +20,9 @@ public:
 protected:
 
 	uint elementId_;
-	std::set<uint> keys_;
 	Keybind keybind_;
 	IDirect3DTexture9* appearance_ { };
+	mstime currentHoverTime_ = 0;
 };
 
 }

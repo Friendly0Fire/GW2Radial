@@ -41,9 +41,6 @@
     <ClCompile Include="Config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="imgui\examples\imgui_impl_dx9.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
@@ -77,6 +74,15 @@
     <ClCompile Include="src\Direct3DVirtualFunctionTable.c">
       <Filter>NewFilter1</Filter>
     </ClCompile>
+    <ClCompile Include="src\Input.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Wheel.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -101,9 +107,6 @@
       <Filter>simpleini</Filter>
     </ClInclude>
     <ClInclude Include="Config.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inputs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="imgui\examples\imgui_impl_dx9.h">
@@ -151,12 +154,27 @@
     <ClInclude Include="include\Resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Input.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Singleton.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Wheel.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SettingsMenu.h">
+      <Filter>NewFilter1</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="main.def">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="rt_rcdat.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Main.def">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

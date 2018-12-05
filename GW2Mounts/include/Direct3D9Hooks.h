@@ -5,28 +5,22 @@
 #include <d3d9.h>
 #include <Direct3DVirtualFunctionTable.h>
 #include <functional>
+#include <Singleton.h>
 
 namespace GW2Addons
 {
 
-class Direct3D9Hooks
+class Direct3D9Hooks : public Singleton<Direct3D9Hooks>
 {
 public:
 	using DrawCallback = std::function<void(IDirect3DDevice9*, bool, bool)>;
-	using PreResetCallback = std::function<void(IDirect3DDevice9*)>;
+	using PreResetCallback = std::function<void()>;
 	using PostResetCallback = std::function<void(IDirect3DDevice9*, D3DPRESENT_PARAMETERS*)>;
 	using PreCreateDeviceCallback = std::function<void(HWND)>;
 	using PostCreateDeviceCallback = std::function<void(IDirect3DDevice9*, D3DPRESENT_PARAMETERS*)>;
 
 	typedef IDirect3D9* (WINAPI *Direct3DCreate9_t)(UINT sdkVersion);
 	typedef IDirect3D9Ex* (WINAPI *Direct3DCreate9Ex_t)(UINT sdkVersion);
-
-	static Direct3D9Hooks* i()
-	{
-		if(!i_)
-			i_ = std::make_unique<Direct3D9Hooks>();
-		return i_.get();
-	}
 
 	void OnD3DCreate();
 
@@ -65,7 +59,6 @@ public:
 
 protected:
 	Direct3D9Hooks();
-	static std::unique_ptr<Direct3D9Hooks> i_;
 
 	template<typename Method, Method m, class ...Params>
 	static auto TrampolineHookWrapper(Params... params) ->

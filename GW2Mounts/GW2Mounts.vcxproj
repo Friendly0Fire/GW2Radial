@@ -111,18 +111,20 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="imgui\examples\imgui_impl_dx9.cpp" />
     <ClCompile Include="imgui\examples\imgui_impl_win32.cpp" />
-    <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="src\ConfigurationFile.cpp" />
+    <ClCompile Include="src\Core.cpp" />
     <ClCompile Include="src\Direct3D9Hooks.cpp" />
     <ClCompile Include="src\Direct3DVirtualFunctionTable.c" />
     <ClCompile Include="src\ImGuiExtensions.cpp" />
+    <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Keybind.cpp" />
     <ClCompile Include="src\UnitQuad.cpp" />
     <ClCompile Include="src\Utility.cpp" />
+    <ClCompile Include="src\Wheel.cpp" />
     <ClCompile Include="src\WheelElement.cpp" />
     <ClCompile Include="xxhash\xxhash.c" />
   </ItemGroup>
@@ -138,22 +140,26 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClInclude Include="imgui\stb_truetype.h" />
     <ClInclude Include="include\ConfigurationFile.h" />
     <ClInclude Include="include\ConfigurationOption.h" />
+    <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\Direct3D9Hooks.h" />
     <ClInclude Include="include\Direct3DVirtualFunctionTable.h" />
     <ClInclude Include="include\ImGuiExtensions.h" />
+    <ClInclude Include="include\Input.h" />
     <ClInclude Include="include\Keybind.h" />
     <ClInclude Include="include\Main.h" />
     <ClInclude Include="include\Mount.h" />
     <ClInclude Include="include\Resource.h" />
+    <ClInclude Include="include\SettingsMenu.h" />
+    <ClInclude Include="include\Singleton.h" />
     <ClInclude Include="include\UnitQuad.h" />
     <ClInclude Include="include\Utility.h" />
+    <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
-    <ClInclude Include="inputs.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />
     <ClInclude Include="xxhash\xxhash.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="main.def" />
+    <None Include="Main.def" />
     <None Include="rt_rcdat.bin" />
   </ItemGroup>
   <ItemGroup>

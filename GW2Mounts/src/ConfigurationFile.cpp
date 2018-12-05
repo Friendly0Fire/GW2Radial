@@ -6,12 +6,10 @@
 
 namespace GW2Addons
 {
+DEFINE_SINGLETON(ConfigurationFile);
 	
 const TCHAR* g_configName = TEXT("config.ini");
 const TCHAR* g_imguiConfigName = TEXT("imgui_config.ini");
-
-std::unique_ptr<ConfigurationFile> ConfigurationFile::i_ = nullptr;
-
 
 ConfigurationFile::ConfigurationFile()
 {

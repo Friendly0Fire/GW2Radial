@@ -1,19 +1,14 @@
 #pragma once
 #include <Main.h>
 #include <simpleini/SimpleIni.h>
+#include <Singleton.h>
 
 namespace GW2Addons
 {
 
-class ConfigurationFile
+class ConfigurationFile : public Singleton<ConfigurationFile>
 {
 public:
-	static ConfigurationFile* i()
-	{
-		if(!i_)
-			i_ = std::make_unique<ConfigurationFile>();
-		return i_.get();
-	}
 
 	void Reload();
 	void Save();
@@ -22,8 +17,6 @@ public:
 
 protected:
 	ConfigurationFile();
-
-	static std::unique_ptr<ConfigurationFile> i_;
 
 	CSimpleIniA ini_;
 	tstring folder_;

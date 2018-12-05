@@ -5,7 +5,7 @@
 
 namespace GW2Addons
 {
-	std::unique_ptr<Direct3D9Hooks> Direct3D9Hooks::i_ = nullptr;
+	DEFINE_SINGLETON(Direct3D9Hooks);
 
 #define D3DTRAMPOLINE(m) (LPVOID)&TrampolineHookWrapper<Direct3D9Hooks, decltype(&Direct3D9Hooks::m), &Direct3D9Hooks::m>
 
@@ -34,7 +34,7 @@ HRESULT Direct3D9Hooks::PresentEx_hook(IDirect3DDevice9Ex *sThis, const RECT *pS
 
 HRESULT Direct3D9Hooks::Reset_hook(IDirect3DDevice9 *sThis, D3DPRESENT_PARAMETERS *pPresentationParameters)
 {
-	preResetCallback_(sThis);
+	preResetCallback_();
 
 	HRESULT hr = Reset_real(sThis, pPresentationParameters);
 	if (hr != D3D_OK)
@@ -49,7 +49,7 @@ HRESULT Direct3D9Hooks::ResetEx_hook(IDirect3DDevice9Ex *sThis,
                                                 D3DPRESENT_PARAMETERS *pPresentationParameters,
                                                 D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 {
-	preResetCallback_(sThis);
+	preResetCallback_();
 
 	HRESULT hr = ResetEx_real(sThis, pPresentationParameters, pFullscreenDisplayMode);
 	if (hr != D3D_OK)
