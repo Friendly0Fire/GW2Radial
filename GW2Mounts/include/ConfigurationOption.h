@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Main.h>
+#include <ConfigurationFile.h>
 
 namespace GW2Addons
 {

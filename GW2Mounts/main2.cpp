@@ -15,53 +15,9 @@
 #include "inputs.h"
 #include "imgui_ext.h"
 
-bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
-{
-	switch (fdwReason)
-	{
-	case DLL_PROCESS_ATTACH:
-	{
-#ifdef _DEBUG
-		while (!IsDebuggerPresent());
-#endif
-		DllModule = hModule;
 
-		// Add an extra reference count to the library so it persists through GW2's load-unload routine
-		// without which problems start arising with ReShade
-		{
-			TCHAR selfpath[MAX_PATH];
-			GetModuleFileName(DllModule, selfpath, MAX_PATH);
-			LoadLibrary(selfpath);
-		}
 
-		MH_Initialize();
-		ImGui::CreateContext();
-
-		Cfg.Load();
-
-		MainKeybind.UpdateDisplayString(Cfg.MountOverlayKeybind());
-		MainKeybind.SetCallback = [](const std::set<uint>& val) { Cfg.MountOverlayKeybind(val); };
-		MainLockedKeybind.UpdateDisplayString(Cfg.MountOverlayLockedKeybind());
-		MainLockedKeybind.SetCallback = [](const std::set<uint>& val) { Cfg.MountOverlayLockedKeybind(val); };
-		for (uint i = 0; i < MountTypeCount; i++)
-		{
-			MountKeybinds[i].UpdateDisplayString(Cfg.MountKeybind(i));
-			MountKeybinds[i].SetCallback = [i](const std::set<uint>& val) { Cfg.MountKeybind(i, val); };
-		}
-
-		break;
-	}
-	case DLL_PROCESS_DETACH:
-		ImGui::DestroyContext();
-		// We'll just leak a bunch of things and let the driver/OS take care of it, since we have no clean exit point
-		// and calling FreeLibrary in DllMain causes deadlocks
-		break;
-	}
-
-	return true;
-}
-
-std::vector<MountType> GetActiveMounts()
+/*std::vector<MountType> GetActiveMounts()
 {
 	std::vector<MountType> ActiveMounts;
 	for (uint i = 0; i < MountTypeCount; i++)
@@ -82,62 +38,7 @@ std::vector<MountType> GetAllMounts()
 	}
 
 	return AllMounts;
-}
-
-MountType ModifyMountNoneBehavior(MountType in)
-{
-	if (in != MountType::NONE)
-		return in;
-
-	switch (Cfg.OverlayDeadZoneBehavior())
-	{
-	case 1:
-		return PreviousMountUsed;
-	case 2:
-		return Cfg.FavoriteMount();
-	default:
-		return MountType::NONE;
-	}
-}
-
-void DetermineHoveredMount()
-{
-	const auto io = ImGui::GetIO();
-
-	D3DXVECTOR2 MousePos;
-	MousePos.x = io.MousePos.x / (float)ScreenWidth;
-	MousePos.y = io.MousePos.y / (float)ScreenHeight;
-	MousePos -= OverlayPosition;
-
-	MousePos.y *= (float)ScreenHeight / (float)ScreenWidth;
-
-	MountType LastMountHovered = CurrentMountHovered;
-
-	std::vector<MountType> ActiveMounts = GetActiveMounts();
-
-	// Middle circle does not count as a hover event
-	if (!ActiveMounts.empty() && D3DXVec2LengthSq(&MousePos) > SQUARE(Cfg.OverlayScale() * 0.135f * Cfg.OverlayDeadZoneScale()))
-	{
-		float MouseAngle = atan2(-MousePos.y, -MousePos.x) - 0.5f * (float)M_PI;
-		if (MouseAngle < 0)
-			MouseAngle += float(2 * M_PI);
-
-		float MountAngle = float(2 * M_PI) / ActiveMounts.size();
-		int MountId = int((MouseAngle - MountAngle / 2) / MountAngle + 1) % ActiveMounts.size();
-
-		CurrentMountHovered = ActiveMounts[MountId];
-	}
-	else
-		CurrentMountHovered = MountType::NONE;
-
-	auto modifiedMountHovered = ModifyMountNoneBehavior(CurrentMountHovered);
-	auto modifiedLastMountHovered = ModifyMountNoneBehavior(LastMountHovered);
-
-	if (LastMountHovered != CurrentMountHovered && modifiedLastMountHovered != modifiedMountHovered)
-		MountHoverTime = max(OverlayTime + Cfg.OverlayDelayMilliseconds(), TimeInMilliseconds());
-}
-
-void Shutdown();
+}*/
 
 extern IMGUI_IMPL_API LRESULT  ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)

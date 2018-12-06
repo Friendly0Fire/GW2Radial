@@ -9,12 +9,13 @@ namespace GW2Addons
 
 #define D3DTRAMPOLINE(m) (LPVOID)&TrampolineHookWrapper<Direct3D9Hooks, decltype(&Direct3D9Hooks::m), &Direct3D9Hooks::m>
 
-	Direct3D9Hooks::Direct3D9Hooks()
-	{
-	}
+Direct3D9Hooks::Direct3D9Hooks()
+{
+	MH_Initialize();
+}
 
-	HRESULT Direct3D9Hooks::Present_hook(IDirect3DDevice9 *sThis, const RECT *pSourceRect, const RECT *pDestRect,
-                                                HWND hDestWindowOverride, const RGNDATA *pDirtyRegion)
+HRESULT Direct3D9Hooks::Present_hook(IDirect3DDevice9 *sThis, const RECT *pSourceRect, const RECT *pDestRect,
+                                            HWND hDestWindowOverride, const RGNDATA *pDirtyRegion)
 {
 	drawOverCallback_(sThis, false, true);
 	isFrameDrawn_ = false;

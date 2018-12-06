@@ -12,6 +12,8 @@ class UnitQuad;
 class Core : public Singleton<Core>
 {
 public:
+	static void Init(HMODULE dll);
+	static void Shutdown();
 
 	~Core();
 
@@ -24,6 +26,7 @@ public:
 	ID3DXEffect* mainEffect() const { return mainEffect_; }
 
 protected:
+	void InternalInit();
 	HWND gameWindow_ = nullptr;
 	HMODULE dllModule_ = nullptr;
 	WNDPROC baseWndProc_ = nullptr;

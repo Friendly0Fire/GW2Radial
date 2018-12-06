@@ -23,3 +23,7 @@ typedef unsigned __int64 mstime;
 #ifndef HID_USAGE_GENERIC_MOUSE
 #define HID_USAGE_GENERIC_MOUSE        ((USHORT) 0x02)
 #endif
+
+#ifndef M_PI
+#define M_PI 3.14159265359
+#endif
