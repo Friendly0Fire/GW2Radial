@@ -3,14 +3,15 @@
 #include <Main.h>
 #include <Singleton.h>
 #include <set>
+#include <list>
 
 namespace GW2Addons
 {
 
-class InputHook : public Singleton<InputHook>
+class Input : public Singleton<Input>
 {
 public:
-	InputHook();
+	Input();
 
 	uint id_H_LBUTTONDOWN() const { return id_H_LBUTTONDOWN_; }
 	uint id_H_LBUTTONUP() const { return id_H_LBUTTONUP_; }
@@ -22,6 +23,10 @@ public:
 	uint id_H_SYSKEYUP() const { return id_H_SYSKEYUP_; }
 	uint id_H_KEYDOWN() const { return id_H_KEYDOWN_; }
 	uint id_H_KEYUP() const { return id_H_KEYUP_; }
+
+	// Returns true to consume message
+	bool OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam);
+	void OnFocusLost();
 
 protected:
 	struct DelayedInput

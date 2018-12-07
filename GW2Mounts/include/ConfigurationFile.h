@@ -12,6 +12,9 @@ public:
 
 	void Reload();
 	void Save();
+	
+	const char* imguiLocation() const { return imguiLocation_; }
+	const TCHAR* location() const { return location_; }
 
 	CSimpleIniA& ini() { return ini_; }
 

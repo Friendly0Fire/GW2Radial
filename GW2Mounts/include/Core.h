@@ -15,6 +15,8 @@ public:
 	static void Init(HMODULE dll);
 	static void Shutdown();
 
+	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 	~Core();
 
 	HWND gameWindow() const { return gameWindow_; }
@@ -27,6 +29,16 @@ public:
 
 protected:
 	void InternalInit();
+	void OnFocusLost();
+
+	void PreCreateDevice(HWND hFocusWindow);
+	void PostCreateDevice(IDirect3DDevice9 *temp_device, D3DPRESENT_PARAMETERS *pPresentationParameters);
+
+	void PreReset();
+	void PostReset(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS *pPresentationParameters);
+
+	void DrawOver(IDirect3DDevice9* dev, bool frameDrawn, bool sceneEnded);
+
 	HWND gameWindow_ = nullptr;
 	HMODULE dllModule_ = nullptr;
 	WNDPROC baseWndProc_ = nullptr;
