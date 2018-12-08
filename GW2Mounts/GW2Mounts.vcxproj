@@ -45,13 +45,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
   </PropertyGroup>
@@ -64,6 +64,7 @@
       <PreprocessorDefinitions>D3D_DEBUG_INFO;_DEBUG;GW2Mounts_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -91,6 +92,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
       <PreprocessorDefinitions>NDEBUG;GW2Mounts_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +112,6 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Config.cpp" />
     <ClCompile Include="imgui\examples\imgui_impl_dx9.cpp" />
     <ClCompile Include="imgui\examples\imgui_impl_win32.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
@@ -133,7 +134,6 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClCompile Include="xxhash\xxhash.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Config.h" />
     <ClInclude Include="imgui\examples\imgui_impl_dx9.h" />
     <ClInclude Include="imgui\examples\imgui_impl_win32.h" />
     <ClInclude Include="imgui\imconfig.h" />

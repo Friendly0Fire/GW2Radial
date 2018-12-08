@@ -24,6 +24,8 @@ public:
 	const std::string& nickname() const { return nickname_; }
 	void nickname(const std::string& n) { nickname_ = n; }
 
+	bool isSet() const { return !keys_.empty(); }
+
 	bool isBeingModified() const { return isBeingModified_; }
 	void isBeingModified(bool ibm) { isBeingModified_ = ibm; }
 

@@ -32,7 +32,6 @@ const std::array<float, 4> MountColors[MountTypeCount] = {
 class Mount : public WheelElement
 {
 public:
-	const char* name() const override { return GetMountNameFromType(static_cast<MountType>(elementId_)); }
 	Mount(MountType m, IDirect3DDevice9* dev);
 
 	static void AddAllMounts(class Wheel* w, IDirect3DDevice9* dev);

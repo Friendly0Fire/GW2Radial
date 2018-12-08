@@ -2,18 +2,24 @@
 #include <Wheel.h>
 #include <Core.h>
 #include <Utility.h>
-#include <Unitquad.h>
+#include <UnitQuad.h>
+#include <ImGuiExtensions.h>
+#include <imgui.h>
+#include <utility>
 
 namespace GW2Addons
 {
 
-Wheel::Wheel(uint resourceId, std::string nickname, std::string displayName, IDirect3DDevice9 * dev)
-	: keybind_("Show on mouse", nickname), centralKeybind_("Show in center", nickname + "_cl"),
+Wheel::Wheel(uint resourceId, const std::string &nickname, const std::string &displayName, IDirect3DDevice9 * dev)
+	: nickname_(nickname), displayName_(std::move(displayName)),
+	  keybind_("Show on mouse", nickname), centralKeybind_("Show in center", nickname + "_cl"),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "Wheel" + nickname),
-	  centerFavoriteOption_("Center favorite", "center_favorite", "Wheel" + nickname),
-	  scaleOption_("Scale factor", "scale", "Wheel" + nickname),
-	  centerScaleOption_("Center scale factor", "center_scale", "Wheel" + nickname),
-	  displayDelayOption_("Show delay (ms)", "delay", "Wheel" + nickname)
+	  centerFavoriteOption_("Favorite choice", "center_favorite", "Wheel" + nickname),
+	  scaleOption_("Scale", "scale", "Wheel" + nickname),
+	  centerScaleOption_("Center scale", "center_scale", "Wheel" + nickname),
+	  displayDelayOption_("Pop-up delay", "delay", "Wheel" + nickname),
+	  resetCursorOnLockedKeybindOption_("Reset cursor to center with Center Locked keybind", "reset_cursor_cl", "Wheel" + nickname),
+	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "Wheel" + nickname)
 {
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(resourceId), &appearance_);
 }
@@ -55,7 +61,42 @@ void Wheel::UpdateHover()
 	const auto modifiedLastMountHovered = ModifyCenterHoveredElement(lastHovered);
 
 	if (currentHovered_ && lastHovered != currentHovered_ && modifiedLastMountHovered != modifiedMountHovered)
-		currentHovered_->currentHoverTime(max(currentTriggerTime_ + displayDelayOption_.value(), TimeInMilliseconds()));
+		currentHovered_->currentHoverTime(std::max(currentTriggerTime_ + displayDelayOption_.value(), TimeInMilliseconds()));
+}
+
+void Wheel::DrawMenu()
+{
+	ImGui::PushID((nickname_ + "Elements").c_str());
+	ImGui::BeginGroup();
+	ImGui::Separator();
+	ImGui::Text(displayName_.c_str());
+	ImGui::Spacing();
+	
+	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
+	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.f, 4.f);
+	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.f, 0.25f);
+
+	ImGui::Text((centerBehaviorOption_.displayName() + ":").c_str());
+	bool (*rb)(const char*, int*, int) = ImGui::RadioButton;
+	ImGuiConfigurationWrapper(&rb, "Nothing", centerBehaviorOption_, CenterBehavior::NOTHING);
+	ImGuiConfigurationWrapper(&rb, "Previous", centerBehaviorOption_, CenterBehavior::PREVIOUS);
+	ImGuiConfigurationWrapper(&rb, "Favorite", centerBehaviorOption_, CenterBehavior::FAVORITE);
+
+	if (centerBehaviorOption_.value() == CenterBehavior::FAVORITE)
+	{
+		std::vector<std::string> potentialNames(wheelElements_.size());
+			for (uint i = 0; i < wheelElements_.size(); i++)
+				potentialNames[i] = wheelElements_[i]->displayName();
+
+		bool (*cmb)(const char*, int*, const char* const[], int, int) = ImGui::Combo;
+		ImGuiConfigurationWrapper(&cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()));
+	}
+	
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
+
+	ImGui::EndGroup();
+	ImGui::PopID();
 }
 
 void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
@@ -84,8 +125,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 
 			D3DXVECTOR4 screenSize(float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight);
 
-			auto ActiveMounts = GetActiveMounts();
-			if (!ActiveMounts.empty())
+			auto activeElements = GetActiveElements();
+			if (!activeElements.empty())
 			{
 				D3DXVECTOR4 baseSpriteDimensions;
 				baseSpriteDimensions.x = currentPosition_.x;
@@ -93,21 +134,20 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				baseSpriteDimensions.z = scaleOption_.value() * 0.5f * screenSize.y * screenSize.z;
 				baseSpriteDimensions.w = scaleOption_.value() * 0.5f;
 
-				const float fadeTimer = min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / 1000.f * 6);
-				const float hoverTimer = min(1.f, (currentTime - max(MountHoverTime, currentTriggerTime_ + displayDelayOption_.value())) / 1000.f * 6);
-
-				auto mountHovered = ModifyCenterHoveredElement(currentHovered_);
+				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / 1000.f * 6);
+				
+				const auto elementHovered = ModifyCenterHoveredElement(currentHovered_);
 
 				fx->SetTechnique("BgImage");
 				fx->SetTexture("texBgImage", appearance_);
 				fx->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
 				fx->SetFloat("g_fFadeTimer", fadeTimer);
-				fx->SetFloat("g_fHoverTimer", hoverTimer);
+				//fx->SetFloat("g_fHoverTimer", hoverTimer);
 				fx->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
 				fx->SetFloat("g_fDeadZoneScale", centerScaleOption_.value());
-				fx->SetInt("g_iMountCount", int(ActiveMounts.size()));
-				fx->SetInt("g_iMountHovered", int(std::find(ActiveMounts.begin(), ActiveMounts.end(), mountHovered) - ActiveMounts.begin()));
-				fx->SetBool("g_bCenterGlow", mountHovered != currentHovered_);
+				fx->SetInt("g_iMountCount", int(activeElements.size()));
+				fx->SetInt("g_iMountHovered", int(std::find(activeElements.begin(), activeElements.end(), elementHovered) - activeElements.begin()));
+				fx->SetBool("g_bCenterGlow", elementHovered != currentHovered_);
 				fx->Begin(&passes, 0);
 				fx->BeginPass(0);
 				quad->Draw();
@@ -121,58 +161,9 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				fx->BeginPass(0);
 
 				int n = 0;
-				for (auto it : ActiveMounts)
+				for (auto it : activeElements)
 				{
-					D3DXVECTOR4 spriteDimensions = baseSpriteDimensions;
-
-					float mountAngle = (float)n / (float)ActiveMounts.size() * 2 * (float)M_PI;
-					if (ActiveMounts.size() == 1)
-						mountAngle = 0;
-					D3DXVECTOR2 mountLocation = D3DXVECTOR2(cos(mountAngle - (float)M_PI / 2), sin(mountAngle - (float)M_PI / 2)) * 0.25f * 0.66f;
-
-					spriteDimensions.x += mountLocation.x * spriteDimensions.z;
-					spriteDimensions.y += mountLocation.y * spriteDimensions.w;
-
-					float mountDiameter = (float)sin((2 * M_PI / (double)ActiveMounts.size()) / 2) * 2.f * 0.2f * 0.66f;
-					if (ActiveMounts.size() == 1)
-						mountDiameter = 2.f * 0.2f;
-					if (it == mountHovered)
-						mountDiameter *= Lerp(1.f, 1.1f, SmoothStep(hoverTimer));
-					else
-						mountDiameter *= 0.9f;
-
-					switch (ActiveMounts.size())
-					{
-					case 1:
-						spriteDimensions.z *= 0.8f;
-						spriteDimensions.w *= 0.8f;
-						break;
-					case 2:
-						spriteDimensions.z *= 0.85f;
-						spriteDimensions.w *= 0.85f;
-						break;
-					case 3:
-						spriteDimensions.z *= 0.9f;
-						spriteDimensions.w *= 0.9f;
-						break;
-					case 4:
-						spriteDimensions.z *= 0.95f;
-						spriteDimensions.w *= 0.95f;
-						break;
-					}
-
-					spriteDimensions.z *= mountDiameter;
-					spriteDimensions.w *= mountDiameter;
-
-					int v[3] = { (int)it, n, (int)ActiveMounts.size() };
-					fx->SetValue("g_iMountID", v, sizeof(v));
-					fx->SetBool("g_bMountHovered", mountHovered == it);
-					fx->SetTexture("texMountImage", MountTextures[(uint)it]);
-					fx->SetVector("g_vSpriteDimensions", &spriteDimensions);
-					fx->SetValue("g_vColor", MountColors[(uint)it].data(), sizeof(D3DXVECTOR4));
-					fx->CommitChanges();
-
-					quad->Draw();
+					it->Draw(n, baseSpriteDimensions, activeElements.size(), currentTime, elementHovered, this);
 					n++;
 				}
 
@@ -221,6 +212,16 @@ WheelElement * Wheel::ModifyCenterHoveredElement(WheelElement * elem)
 	default:
 		return nullptr;
 	}
+}
+
+std::vector<WheelElement*> Wheel::GetActiveElements()
+{
+	std::vector<WheelElement*> elems;
+	for(auto& we : wheelElements_)
+		if(we->isActive())
+			elems.push_back(we.get());
+
+	return elems;
 }
 
 }

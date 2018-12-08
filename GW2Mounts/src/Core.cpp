@@ -1,8 +1,8 @@
 #include <Core.h>
 #include <Direct3D9Hooks.h>
-#include <imgui/imgui.h>
-#include <imgui/examples/imgui_impl_dx9.h>
-#include <imgui/examples/imgui_impl_win32.h>
+#include <imgui.h>
+#include <examples/imgui_impl_dx9.h>
+#include <examples/imgui_impl_win32.h>
 #include <Input.h>
 #include <ConfigurationFile.h>
 #include <UnitQuad.h>
@@ -51,16 +51,6 @@ void Core::InternalInit()
 	
 	Direct3D9Hooks::i()->drawOverCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); });
 	//Direct3D9Hooks::i()->drawUnderCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); });
-
-	MainKeybind.UpdateDisplayString(Cfg.MountOverlayKeybind());
-	MainKeybind.SetCallback = [](const std::set<uint>& val) { Cfg.MountOverlayKeybind(val); };
-	MainLockedKeybind.UpdateDisplayString(Cfg.MountOverlayLockedKeybind());
-	MainLockedKeybind.SetCallback = [](const std::set<uint>& val) { Cfg.MountOverlayLockedKeybind(val); };
-	for (uint i = 0; i < MountTypeCount; i++)
-	{
-		MountKeybinds[i].UpdateDisplayString(Cfg.MountKeybind(i));
-		MountKeybinds[i].SetCallback = [i](const std::set<uint>& val) { Cfg.MountKeybind(i, val); };
-	}
 }
 
 void Core::OnFocusLost()
@@ -97,7 +87,7 @@ void Core::PreCreateDevice(HWND hFocusWindow)
 	}
 }
 
-void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pPresentationParameters)
+void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters)
 {
 	// Init ImGui
 	ImGui::CreateContext();
@@ -108,14 +98,14 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pPr
 	ImGui_ImplDX9_Init(device);
 	ImGui_ImplWin32_Init(gameWindow_);
 
-	OnDeviceSet(device, pPresentationParameters);
+	OnDeviceSet(device, presentationParameters);
 }
 
-void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pPresentationParameters)
+void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters)
 {
 	// Initialize graphics
-	screenWidth_ = pPresentationParameters->BackBufferWidth;
-	screenHeight_ = pPresentationParameters->BackBufferHeight;
+	screenWidth_ = presentationParameters->BackBufferWidth;
+	screenHeight_ = presentationParameters->BackBufferHeight;
 	try { quad_ = std::make_unique<UnitQuad>(device); }
 	catch (...) { quad_ = nullptr; }
 	firstFrame_ = true;
@@ -142,14 +132,14 @@ void Core::PreReset()
 	OnDeviceUnset();
 }
 
-void Core::PostReset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS *pPresentationParameters)
+void Core::PostReset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS *presentationParameters)
 {
 	ImGui_ImplDX9_CreateDeviceObjects();
 
-	OnDeviceSet(device, pPresentationParameters);
+	OnDeviceSet(device, presentationParameters);
 }
 
-void Core::DrawOver(IDirect3DDevice9* dev, bool frameDrawn, bool sceneEnded)
+void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 {
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i()->OnUpdate();
@@ -163,14 +153,14 @@ void Core::DrawOver(IDirect3DDevice9* dev, bool frameDrawn, bool sceneEnded)
 		// We have to use Present rather than hooking EndScene because the game seems to do final UI compositing after EndScene
 		// This unfortunately means that we have to call Begin/EndScene before Present so we can render things, but thankfully for modern GPUs that doesn't cause bugs
 		if (sceneEnded)
-			dev->BeginScene();
+			device->BeginScene();
 		
 		SettingsMenu::i()->Draw();
 
-		wheelMounts_->Draw(dev, mainEffect_, quad_.get());
+		wheelMounts_->Draw(device, mainEffect_, quad_.get());
 
 		if (sceneEnded)
-			dev->EndScene();
+			device->EndScene();
 	}
 
 	ImGui_ImplDX9_NewFrame();

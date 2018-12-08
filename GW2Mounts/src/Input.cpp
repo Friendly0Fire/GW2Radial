@@ -1,12 +1,12 @@
 #include <Input.h>
-#include <imgui/imgui.h>
+#include <imgui.h>
 #include <Utility.h>
+#include <Core.h>
 
 namespace GW2Addons
 {
 
 DEFINE_SINGLETON(Input);
-
 
 Input::Input()
 {
@@ -454,7 +454,7 @@ void Input::SendQueuedInputs()
 	if (currentTime < qi.t)
 		return;
 
-	PostMessage(GameWindow, qi.msg, qi.wParam, qi.lParam);
+	PostMessage(Core::i()->gameWindow(), qi.msg, qi.wParam, qi.lParam);
 
 	QueuedInputs.pop_front();
 }

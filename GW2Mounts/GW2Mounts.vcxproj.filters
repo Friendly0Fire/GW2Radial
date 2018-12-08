@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
@@ -18,11 +14,11 @@
     <Filter Include="xxHash">
       <UniqueIdentifier>{ab14615f-806d-4036-a018-1c5e2c2d467a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="NewFilter1">
-      <UniqueIdentifier>{cad8217e-51ec-44e9-9e81-95b3f68e501c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{8ca3937f-5abb-4da6-a977-a0b326981260}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{cad8217e-51ec-44e9-9e81-95b3f68e501c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -35,9 +31,6 @@
     <ClCompile Include="imgui\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="Config.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="imgui\examples\imgui_impl_dx9.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
@@ -48,46 +41,46 @@
       <Filter>xxHash</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGuiExtensions.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\WheelElement.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Keybind.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ConfigurationFile.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\UnitQuad.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Direct3D9Hooks.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Direct3DVirtualFunctionTable.c">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Input.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Wheel.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Core.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Main.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\SettingsMenu.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Mount.cpp">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -112,9 +105,6 @@
     <ClInclude Include="simpleini\SimpleIni.h">
       <Filter>simpleini</Filter>
     </ClInclude>
-    <ClInclude Include="Config.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="imgui\examples\imgui_impl_dx9.h">
       <Filter>imgui</Filter>
     </ClInclude>
@@ -125,55 +115,55 @@
       <Filter>xxHash</Filter>
     </ClInclude>
     <ClInclude Include="include\Main.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\ImGuiExtensions.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\WheelElement.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Mount.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Keybind.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\ConfigurationFile.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Direct3D9Hooks.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\ConfigurationOption.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\UnitQuad.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Utility.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Direct3DVirtualFunctionTable.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Input.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Singleton.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Wheel.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Core.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\SettingsMenu.h">
-      <Filter>NewFilter1</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -190,11 +180,11 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\perlin.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="shaders\Shader.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="shaders\perlin.hlsl" />
   </ItemGroup>
 </Project>

@@ -3,11 +3,13 @@
 #include <Main.h>
 #include <WheelElement.h>
 #include <ConfigurationOption.h>
+#include <SettingsMenu.h>
+#include <d3dx9.h>
 
 namespace GW2Addons
 {
 
-class Wheel
+class Wheel : public SettingsMenu::Implementer
 {
 public:
 	enum class CenterBehavior : int
@@ -17,7 +19,7 @@ public:
 		NOTHING
 	};
 
-	Wheel(uint resourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
+	Wheel(uint resourceId, const std::string &nickname, const std::string &displayName, IDirect3DDevice9* dev);
 	virtual ~Wheel();
 
 	void UpdateHover();
@@ -27,8 +29,11 @@ public:
 
 protected:
 	WheelElement* ModifyCenterHoveredElement(WheelElement* elem);
+	std::vector<WheelElement*> GetActiveElements();
 
 	const float CircleRadiusBase = 256.f / 1664.f * 0.25f;
+
+	std::string nickname_, displayName_;
 
 	std::vector<std::unique_ptr<WheelElement>> wheelElements_;
 	bool isVisible_ = false;
@@ -41,6 +46,9 @@ protected:
 	ConfigurationOption<float> centerScaleOption_;
 	
 	ConfigurationOption<int> displayDelayOption_;
+	
+	ConfigurationOption<bool> resetCursorOnLockedKeybindOption_;
+	ConfigurationOption<bool> lockCameraWhenOverlayedOption_;
 
 	D3DXVECTOR2 currentPosition_;
 	mstime currentTriggerTime_ = 0;
@@ -49,6 +57,10 @@ protected:
 	WheelElement* previousHovered_ = nullptr;
 	
 	IDirect3DTexture9* appearance_ = nullptr;
+
+	void DrawMenu() override;
+
+	friend class WheelElement;
 };
 
 }

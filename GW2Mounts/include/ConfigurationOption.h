@@ -11,7 +11,7 @@ class ConfigurationOption
 {
 public:
 	ConfigurationOption(std::string displayName, std::string nickname, std::string category, T defaultValue = T())
-		: displayName_(displayName), nickname_(nickname), category_(category), value_(defaultValue)
+		: displayName_(std::move(displayName)), nickname_(std::move(nickname)), category_(std::move(category)), value_(defaultValue)
 	{
 		LoadValue();
 	}
@@ -21,8 +21,9 @@ public:
 
 	const std::string & category() const { return category_; }
 	void category(const std::string &category) { category_ = category; }
-
+	
 	const T & value() const { return value_; }
+	T & value() { return value_; }
 	void value(const T &value) { value_ = value; SaveValue(); }
 
 	void Reload()
@@ -32,10 +33,14 @@ public:
 
 protected:
 
+	// ReSharper disable once CppMemberFunctionMayBeStatic
+	// ReSharper disable once CppMemberFunctionMayBeConst
 	void LoadValue()
 	{
 		throw std::invalid_argument("Unsupported value type");
 	}
+
+	// ReSharper disable once CppMemberFunctionMayBeStatic
 	void SaveValue() const
 	{
 		throw std::invalid_argument("Unsupported value type");

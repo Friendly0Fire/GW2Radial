@@ -8,40 +8,7 @@ namespace GW2Addons
 		{
 			ImGui::Begin("Mounts Options Menu", &DisplayOptionsWindow);
 
-			if (ImGui::SliderInt("Pop-up Delay", &Cfg.OverlayDelayMilliseconds(), 0, 1000, "%d ms"))
-				Cfg.OverlayDelayMillisecondsSave();
-
-			if (ImGui::SliderFloat("Overlay Scale", &Cfg.OverlayScale(), 0.f, 4.f))
-				Cfg.OverlayScaleSave();
-
-			if (ImGui::SliderFloat("Overlay Dead Zone Scale", &Cfg.OverlayDeadZoneScale(), 0.f, 0.25f))
-				Cfg.OverlayDeadZoneScaleSave();
-
-			ImGui::Text("Overlay Dead Zone Behavior:");
-			int oldBehavior = Cfg.OverlayDeadZoneBehavior();
-			ImGui::RadioButton("Nothing", &Cfg.OverlayDeadZoneBehavior(), 0);
-			ImGui::RadioButton("Last Mount", &Cfg.OverlayDeadZoneBehavior(), 1);
-			ImGui::RadioButton("Favorite Mount", &Cfg.OverlayDeadZoneBehavior(), 2);
-			if (oldBehavior != Cfg.OverlayDeadZoneBehavior())
-				Cfg.OverlayDeadZoneBehaviorSave();
-
-			if (Cfg.OverlayDeadZoneBehavior() == 2)
-			{
-				if (FavoriteMountNames[0] == nullptr)
-				{
-					auto mounts = GetAllMounts();
-					for (uint i = 0; i < mounts.size(); i++)
-						FavoriteMountNames[i] = GetMountName(mounts[i]);
-				}
-
-				if (ImGui::Combo("Favorite Mount", (int*)&Cfg.FavoriteMount(), FavoriteMountNames.data(), (int)FavoriteMountNames.size()))
-					Cfg.FavoriteMountSave();
-			}
-
-			if (ImGui::Checkbox("Reset cursor to center with Center Locked keybind", &Cfg.ResetCursorOnLockedKeybind()))
-				Cfg.ResetCursorOnLockedKeybindSave();
-			if (ImGui::Checkbox("Lock camera when overlay is displayed", &Cfg.LockCameraWhenOverlayed()))
-				Cfg.LockCameraWhenOverlayedSave();
+			
 
 			ImGui::Separator();
 
