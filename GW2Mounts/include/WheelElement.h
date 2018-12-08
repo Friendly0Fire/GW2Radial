@@ -12,7 +12,7 @@ namespace GW2Addons
 class WheelElement
 {
 public:
-	WheelElement(uint id, uint resourceBaseId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
+	WheelElement(uint id, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
 	virtual ~WheelElement();
 
 	virtual const char* name() const = 0;

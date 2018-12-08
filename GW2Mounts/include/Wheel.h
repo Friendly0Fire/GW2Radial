@@ -21,6 +21,9 @@ public:
 	virtual ~Wheel();
 
 	void UpdateHover();
+	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); }
+	void Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, class UnitQuad* quad);
+	void OnFocusLost();
 
 protected:
 	WheelElement* ModifyCenterHoveredElement(WheelElement* elem);

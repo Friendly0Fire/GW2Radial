@@ -80,10 +80,13 @@
     <ClCompile Include="src\Core.cpp">
       <Filter>NewFilter1</Filter>
     </ClCompile>
-    <ClCompile Include="main2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Main.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SettingsMenu.cpp">
+      <Filter>NewFilter1</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Mount.cpp">
       <Filter>NewFilter1</Filter>
     </ClCompile>
   </ItemGroup>

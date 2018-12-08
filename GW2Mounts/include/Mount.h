@@ -8,12 +8,15 @@ namespace GW2Addons
 enum class MountType : uint
 {
 	NONE = (uint)-1,
-	RAPTOR = 0,
-	SPRINGER = 1,
-	SKIMMER = 2,
-	JACKAL = 3,
-	BEETLE = 4,
-	GRIFFON = 5
+	RAPTOR = IDR_MOUNT1,
+	SPRINGER = IDR_MOUNT2,
+	SKIMMER = IDR_MOUNT3,
+	JACKAL = IDR_MOUNT4,
+	BEETLE = IDR_MOUNT5,
+	GRIFFON = IDR_MOUNT6,
+
+	FIRST = RAPTOR,
+	LAST = GRIFFON
 };
 const unsigned int MountTypeCount = 6;
 
@@ -30,6 +33,9 @@ class Mount : public WheelElement
 {
 public:
 	const char* name() const override { return GetMountNameFromType(static_cast<MountType>(elementId_)); }
+	Mount(MountType m, IDirect3DDevice9* dev);
+
+	static void AddAllMounts(class Wheel* w, IDirect3DDevice9* dev);
 
 protected:
 	static const char* GetMountNameFromType(MountType m)

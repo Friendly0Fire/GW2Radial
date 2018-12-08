@@ -77,6 +77,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     </PostBuildEvent>
     <FxCompile>
       <ObjectFileOutput>$(ProjectDir)int\%(Filename).cso</ObjectFileOutput>
+      <ShaderModel>3.0</ShaderModel>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -105,13 +106,13 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     </PostBuildEvent>
     <FxCompile>
       <ObjectFileOutput>$(ProjectDir)int\%(Filename).cso</ObjectFileOutput>
+      <ShaderModel>3.0</ShaderModel>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="imgui\examples\imgui_impl_dx9.cpp" />
     <ClCompile Include="imgui\examples\imgui_impl_win32.cpp" />
-    <ClCompile Include="main2.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
@@ -123,6 +124,8 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Keybind.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Mount.cpp" />
+    <ClCompile Include="src\SettingsMenu.cpp" />
     <ClCompile Include="src\UnitQuad.cpp" />
     <ClCompile Include="src\Utility.cpp" />
     <ClCompile Include="src\Wheel.cpp" />
@@ -172,8 +175,25 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\perlin.hlsl" />
-    <FxCompile Include="shaders\Shader.fx" />
+    <Text Include="shaders\perlin.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Library</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
+      <FileType>Document</FileType>
+    </Text>
+    <FxCompile Include="shaders\Shader.fx">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">2.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">2.0</ShaderModel>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

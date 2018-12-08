@@ -31,6 +31,9 @@ protected:
 	void InternalInit();
 	void OnFocusLost();
 
+	void OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pPresentationParameters);
+	void OnDeviceUnset();
+
 	void PreCreateDevice(HWND hFocusWindow);
 	void PostCreateDevice(IDirect3DDevice9 *temp_device, D3DPRESENT_PARAMETERS *pPresentationParameters);
 
@@ -44,8 +47,11 @@ protected:
 	WNDPROC baseWndProc_ = nullptr;
 
 	uint screenWidth_ = 0, screenHeight_ = 0;
+	bool firstFrame_ = true;
 
 	std::unique_ptr<UnitQuad> quad_;
 	ID3DXEffect* mainEffect_ = nullptr;
+
+	std::unique_ptr<class Wheel> wheelMounts_, wheelNovelties_;
 };
 }

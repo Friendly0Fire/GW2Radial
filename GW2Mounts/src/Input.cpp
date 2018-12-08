@@ -301,6 +301,11 @@ void Input::OnFocusLost()
 	DownKeys.clear();
 }
 
+void Input::OnUpdate()
+{
+	SendQueuedInputs();
+}
+
 uint Input::ConvertHookedMessage(uint msg) const
 {
 	if (msg == id_H_LBUTTONDOWN_)
