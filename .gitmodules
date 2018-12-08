@@ -6,7 +6,7 @@
 	url = https://github.com/brofield/simpleini.git
 [submodule "GW2Mounts/minhook"]
 	path = GW2Mounts/minhook
-	url = https://github.com/TsudaKageyu/minhook.git
+	url = https://github.com/Friendly0Fire/minhook.git
 [submodule "GW2Mounts/xxhash"]
 	path = GW2Mounts/xxhash
 	url = https://github.com/Cyan4973/xxHash.git
