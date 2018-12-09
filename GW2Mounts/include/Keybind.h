@@ -11,7 +11,6 @@ class Keybind
 {
 public:
 	Keybind(std::string displayName, std::string nickname, const std::set<uint>& keys);
-	Keybind(std::string displayName, std::string nickname, const char* keys);
 	Keybind(std::string displayName, std::string nickname);
 
 	const std::set<uint>& keys() const { return keys_; }

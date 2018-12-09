@@ -14,6 +14,9 @@ public:
 	void Reload();
 	void Save();
 	
+	const std::string& lastSaveError() const { return lastSaveError_; }
+	bool lastSaveErrorChanged() const { return lastSaveErrorChanged_; }
+
 	const char* imguiLocation() const { return imguiLocation_; }
 	const TCHAR* location() const { return location_; }
 

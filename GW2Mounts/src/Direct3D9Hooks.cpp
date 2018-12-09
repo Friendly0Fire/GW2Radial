@@ -16,7 +16,7 @@ struct Trampoline<Ret(Direct3D9Hooks::*)(Args...)>
 	using Function = Ret(Direct3D9Hooks::*)(Args...);
 
 	template<Function f>
-	static HRESULT Eval(Args&& ...args)
+	static auto Eval(Args&& ...args)
 	{
 		return std::invoke(f, Direct3D9Hooks::i(), args...);
 	}

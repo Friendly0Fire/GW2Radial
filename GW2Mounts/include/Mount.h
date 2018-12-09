@@ -7,7 +7,7 @@ namespace GW2Addons
 
 enum class MountType : uint
 {
-	NONE = (uint)-1,
+	NONE = 0xFFFFFFFF,
 	RAPTOR = IDR_MOUNT1,
 	SPRINGER = IDR_MOUNT2,
 	SKIMMER = IDR_MOUNT3,
@@ -19,15 +19,6 @@ enum class MountType : uint
 	LAST = GRIFFON
 };
 const unsigned int MountTypeCount = 6;
-
-const std::array<float, 4> MountColors[MountTypeCount] = {
-	{ 213 / 255.f, 100 / 255.f, 89 / 255.f, 1 },
-	{ 212 / 255.f, 198 / 255.f, 94 / 255.f, 1 },
-	{ 108 / 255.f, 128 / 255.f, 213 / 255.f, 1 },
-	{ 120 / 255.f, 183 / 255.f, 197 / 255.f, 1 },
-	{ 199 / 255.f, 131 / 255.f, 68 / 255.f, 1 },
-	{ 136 / 255.f, 123 / 255.f, 195 / 255.f, 1 }
-};
 
 class Mount : public WheelElement
 {
@@ -57,6 +48,8 @@ protected:
 			return "[Unknown]";
 		}
 	}
+
+	std::array<float, 4> color() override;
 };
 
 }

@@ -1,6 +1,7 @@
 #include <Keybind.h>
 #include <Utility.h>
 #include <sstream>
+#include <ConfigurationFile.h>
 
 namespace GW2Addons
 {
@@ -10,10 +11,6 @@ Keybind::Keybind(std::string displayName, std::string nickname, const std::set<u
 {
 	this->keys(keys);
 }
-
-Keybind::Keybind(std::string displayName, std::string nickname, const char * keys) :
-	Keybind(displayName, nickname, LoadKeybindFromString(keys))
-{ }
 
 Keybind::Keybind(std::string displayName, std::string nickname) :
 	displayName_(std::move(displayName)), nickname_(std::move(nickname))

@@ -31,6 +31,11 @@ public:
 		LoadValue();
 	}
 
+	void ForceSave()
+	{
+		SaveValue();
+	}
+
 protected:
 
 	// ReSharper disable once CppMemberFunctionMayBeStatic

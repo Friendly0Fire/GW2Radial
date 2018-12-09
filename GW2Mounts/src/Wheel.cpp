@@ -73,8 +73,8 @@ void Wheel::DrawMenu()
 	ImGui::Spacing();
 	
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
-	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.f, 4.f);
-	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.f, 0.25f);
+	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.f, 4.f, "%.2f", 1.f);
+	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.f, 0.25f, "%.2f", 1.f);
 
 	ImGui::Text((centerBehaviorOption_.displayName() + ":").c_str());
 	bool (*rb)(const char*, int*, int) = ImGui::RadioButton;
@@ -89,7 +89,7 @@ void Wheel::DrawMenu()
 				potentialNames[i] = wheelElements_[i]->displayName();
 
 		bool (*cmb)(const char*, int*, const char* const[], int, int) = ImGui::Combo;
-		ImGuiConfigurationWrapper(&cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()));
+		ImGuiConfigurationWrapper(&cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
 	}
 	
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);

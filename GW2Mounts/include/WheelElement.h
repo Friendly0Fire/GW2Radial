@@ -28,7 +28,7 @@ public:
 	bool isActive() const { return keybind_.isSet(); }
 
 protected:
-	virtual const std::array<float, 4> color() = 0;
+	virtual std::array<float, 4> color() = 0;
 
 	std::string nickname_, displayName_;
 	uint elementId_;
