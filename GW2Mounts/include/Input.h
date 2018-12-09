@@ -4,13 +4,29 @@
 #include <Singleton.h>
 #include <set>
 #include <list>
+#include <functional>
+#include <algorithm>
 
 namespace GW2Addons
 {
 
+enum class InputResponse : uint
+{
+	PASS_TO_GAME = 0,
+	PREVENT_MOUSE = 1,
+	PREVENT_ALL = 2
+};
+
+inline InputResponse operator|(InputResponse a, InputResponse b)
+{
+	return InputResponse(std::max(uint(a), uint(b)));
+}
+
 class Input : public Singleton<Input>
 {
 public:
+	using MouseMoveCallback = std::function<void()>;
+	using InputChangeCallback = std::function<InputResponse(bool changed, const std::set<uint>& keys)>;
 	Input();
 
 	uint id_H_LBUTTONDOWN() const { return id_H_LBUTTONDOWN_; }
@@ -28,6 +44,9 @@ public:
 	bool OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam);
 	void OnFocusLost();
 	void OnUpdate();
+	
+	void AddMouseMoveCallback(const MouseMoveCallback &cb) { mouseMoveCallbacks_.push_back(cb); }
+	void AddInputChangeCallback(const InputChangeCallback &cb) { inputChangeCallbacks_.push_back(cb); }
 
 protected:
 	struct DelayedInput
@@ -59,6 +78,9 @@ protected:
 
 	std::set<uint> DownKeys;
 	std::list<DelayedInput> QueuedInputs;
+	
+	std::list<MouseMoveCallback> mouseMoveCallbacks_;
+	std::list<InputChangeCallback> inputChangeCallbacks_;
 };
 
 }

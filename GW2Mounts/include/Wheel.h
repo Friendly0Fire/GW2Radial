@@ -5,6 +5,7 @@
 #include <ConfigurationOption.h>
 #include <SettingsMenu.h>
 #include <d3dx9.h>
+#include <Input.h>
 
 namespace GW2Addons
 {
@@ -30,6 +31,8 @@ public:
 protected:
 	WheelElement* ModifyCenterHoveredElement(WheelElement* elem);
 	std::vector<WheelElement*> GetActiveElements();
+	void OnMouseMove();
+	InputResponse OnInputChange(bool changed, const std::set<uint>& keys);
 
 	const float CircleRadiusBase = 256.f / 1664.f * 0.25f;
 

@@ -6,6 +6,7 @@
 #include <ImGuiExtensions.h>
 #include <imgui.h>
 #include <utility>
+#include <Input.h>
 
 namespace GW2Addons
 {
@@ -22,6 +23,9 @@ Wheel::Wheel(uint resourceId, const std::string &nickname, const std::string &di
 	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "Wheel" + nickname)
 {
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(resourceId), &appearance_);
+	
+	Input::i()->AddMouseMoveCallback([this]() { OnMouseMove(); });
+	Input::i()->AddInputChangeCallback([this](bool changed, const std::set<uint>& keys) { return OnInputChange(changed, keys); });
 }
 
 Wheel::~Wheel()
@@ -222,6 +226,98 @@ std::vector<WheelElement*> Wheel::GetActiveElements()
 			elems.push_back(we.get());
 
 	return elems;
+}
+
+void Wheel::OnMouseMove()
+{
+	if(isVisible_)
+		UpdateHover();
+}
+
+InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys)
+{
+	bool oldMountOverlay = DisplayMountOverlay;
+
+	bool mountOverlay = !Cfg.MountOverlayKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayKeybind().begin(), Cfg.MountOverlayKeybind().end());
+	bool mountOverlayLocked = !Cfg.MountOverlayLockedKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayLockedKeybind().begin(), Cfg.MountOverlayLockedKeybind().end());
+
+	DisplayMountOverlay = mountOverlayLocked || mountOverlay;
+
+	if (DisplayMountOverlay && !oldMountOverlay)
+	{
+		// Mount overlay is turned on
+
+		if (mountOverlayLocked)
+		{
+			OverlayPosition.x = OverlayPosition.y = 0.5f;
+
+			// Attempt to move the cursor to the middle of the screen
+			if (Cfg.ResetCursorOnLockedKeybind())
+			{
+				RECT rect = { };
+				if (GetWindowRect(GameWindow, &rect))
+				{
+					if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
+					{
+						auto& io = ImGui::GetIO();
+						io.MousePos.x = ScreenWidth * 0.5f;
+						io.MousePos.y = ScreenHeight * 0.5f;
+					}
+				}
+			}
+		}
+		else
+		{
+			const auto& io = ImGui::GetIO();
+			OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
+			OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
+		}
+
+		OverlayTime = TimeInMilliseconds();
+		MountHoverTime = OverlayTime + Cfg.OverlayDelayMilliseconds();
+
+		DetermineHoveredMount();
+	}
+	else if (!DisplayMountOverlay && oldMountOverlay)
+	{
+		// Check for special behavior if no mount is hovered
+		CurrentMountHovered = ModifyMountNoneBehavior(CurrentMountHovered);
+
+		// Mount overlay is turned off, send the keybind
+		if (CurrentMountHovered != MountType::NONE)
+			SendKeybind(Cfg.MountKeybind((uint)CurrentMountHovered));
+
+		PreviousMountUsed = CurrentMountHovered;
+		CurrentMountHovered = MountType::NONE;
+	}
+
+	{
+		// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
+		bool keyLifted = false;
+		auto fullKeybind = DownKeys;
+		for (const auto& ek : eventKeys)
+		{
+			if (!ek.down)
+			{
+				fullKeybind.insert(ek.vk);
+				keyLifted = true;
+			}
+		}
+
+		// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
+		fullKeybind.erase(VK_LBUTTON);
+
+		MainKeybind.UpdateKeybind(fullKeybind, keyLifted);
+		MainLockedKeybind.UpdateKeybind(fullKeybind, keyLifted);
+
+		for (uint i = 0; i < MountTypeCount; i++)
+			MountKeybinds[i].UpdateKeybind(fullKeybind, keyLifted);
+	}
+
+	if (DisplayMountOverlay && Cfg.LockCameraWhenOverlayed())
+		return InputResponse::PREVENT_MOUSE;
+	
+	return InputResponse::PASS_TO_GAME;
 }
 
 }

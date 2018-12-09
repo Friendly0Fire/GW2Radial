@@ -3,11 +3,11 @@
 #include <Main.h>
 #include <Singleton.h>
 #include <d3dx9.h>
+#include <Wheel.h>
+#include <UnitQuad.h>
 
 namespace GW2Addons
 {
-
-class UnitQuad;
 
 class Core : public Singleton<Core>
 {
@@ -52,6 +52,6 @@ protected:
 	std::unique_ptr<UnitQuad> quad_;
 	ID3DXEffect* mainEffect_ = nullptr;
 
-	std::unique_ptr<class Wheel> wheelMounts_, wheelNovelties_;
+	std::unique_ptr<Wheel> wheelMounts_, wheelNovelties_;
 };
 }

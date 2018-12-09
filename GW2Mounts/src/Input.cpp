@@ -2,6 +2,10 @@
 #include <imgui.h>
 #include <Utility.h>
 #include <Core.h>
+#include <algorithm>
+#include <SettingsMenu.h>
+
+IMGUI_IMPL_API LRESULT  ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace GW2Addons
 {
@@ -76,109 +80,24 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 		}
 	}
 
+	if(msg == WM_MOUSEMOVE)
+		for(auto& cb : mouseMoveCallbacks_)
+			cb();
+
+	bool downKeysChanged = false;
+
 	// Apply key events now
 	for (const auto& k : eventKeys)
 		if (k.down)
-			DownKeys.insert(k.vk);
+			downKeysChanged = downKeysChanged || DownKeys.insert(k.vk).second;
 		else
-			DownKeys.erase(k.vk);
+			downKeysChanged = downKeysChanged || DownKeys.erase(k.vk) > 0;
 
-	// Detect hovered section of the radial menu, if visible
-	if (DisplayMountOverlay && msg == WM_MOUSEMOVE)
-		DetermineHoveredMount();
 
-	bool isMenuKeybind = false;
-
+	InputResponse response = InputResponse::PASS_TO_GAME;
 	// Only run these for key down/key up (incl. mouse buttons) events
-	if (!eventKeys.empty())
-	{
-		// Very exclusive test: *only* consider the menu keybind to be activated if they're the *only* keys currently down
-		// This minimizes the likelihood of the menu randomly popping up when it shouldn't
-		isMenuKeybind = DownKeys == Cfg.SettingsKeybind();
-
-		if (isMenuKeybind)
-			DisplayOptionsWindow = true;
-		else
-		{
-			bool oldMountOverlay = DisplayMountOverlay;
-
-			bool mountOverlay = !Cfg.MountOverlayKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayKeybind().begin(), Cfg.MountOverlayKeybind().end());
-			bool mountOverlayLocked = !Cfg.MountOverlayLockedKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayLockedKeybind().begin(), Cfg.MountOverlayLockedKeybind().end());
-
-			DisplayMountOverlay = mountOverlayLocked || mountOverlay;
-
-			if (DisplayMountOverlay && !oldMountOverlay)
-			{
-				// Mount overlay is turned on
-
-				if (mountOverlayLocked)
-				{
-					OverlayPosition.x = OverlayPosition.y = 0.5f;
-
-					// Attempt to move the cursor to the middle of the screen
-					if (Cfg.ResetCursorOnLockedKeybind())
-					{
-						RECT rect = { };
-						if (GetWindowRect(GameWindow, &rect))
-						{
-							if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
-							{
-								auto& io = ImGui::GetIO();
-								io.MousePos.x = ScreenWidth * 0.5f;
-								io.MousePos.y = ScreenHeight * 0.5f;
-							}
-						}
-					}
-				}
-				else
-				{
-					const auto& io = ImGui::GetIO();
-					OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
-					OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
-				}
-
-				OverlayTime = TimeInMilliseconds();
-				MountHoverTime = OverlayTime + Cfg.OverlayDelayMilliseconds();
-
-				DetermineHoveredMount();
-			}
-			else if (!DisplayMountOverlay && oldMountOverlay)
-			{
-				// Check for special behavior if no mount is hovered
-				CurrentMountHovered = ModifyMountNoneBehavior(CurrentMountHovered);
-
-				// Mount overlay is turned off, send the keybind
-				if (CurrentMountHovered != MountType::NONE)
-					SendKeybind(Cfg.MountKeybind((uint)CurrentMountHovered));
-
-				PreviousMountUsed = CurrentMountHovered;
-				CurrentMountHovered = MountType::NONE;
-			}
-
-			{
-				// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
-				bool keyLifted = false;
-				auto fullKeybind = DownKeys;
-				for (const auto& ek : eventKeys)
-				{
-					if (!ek.down)
-					{
-						fullKeybind.insert(ek.vk);
-						keyLifted = true;
-					}
-				}
-
-				// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
-				fullKeybind.erase(VK_LBUTTON);
-
-				MainKeybind.UpdateKeybind(fullKeybind, keyLifted);
-				MainLockedKeybind.UpdateKeybind(fullKeybind, keyLifted);
-
-				for (uint i = 0; i < MountTypeCount; i++)
-					MountKeybinds[i].UpdateKeybind(fullKeybind, keyLifted);
-			}
-		}
-	}
+	for(auto& cb : inputChangeCallbacks_)
+		response = response | cb(downKeysChanged, DownKeys);
 
 #if 0
 	if (input_key_down || input_key_up)
@@ -198,20 +117,18 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 	}
 #endif
 
-	ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
+	ImGui_ImplWin32_WndProcHandler(Core::i()->gameWindow(), msg, wParam, lParam);
 	if (msg == WM_MOUSEMOVE)
 	{
 		auto& io = ImGui::GetIO();
-		io.MousePos.x = (signed short)(lParam);
-		io.MousePos.y = (signed short)(lParam >> 16);
+		io.MousePos.x = static_cast<signed short>(lParam);
+		io.MousePos.y = static_cast<signed short>(lParam >> 16);
 	}
 
-	// Prevent game from receiving the settings menu keybind
-	if (!eventKeys.empty() && isMenuKeybind)
+	if(response == InputResponse::PREVENT_ALL)
 		return true;
 
-	// Prevent game cursor/camera from moving when the overlay is displayed
-	if (DisplayMountOverlay && Cfg.LockCameraWhenOverlayed())
+	if(response == InputResponse::PREVENT_MOUSE)
 	{
 		switch (msg)
 		{

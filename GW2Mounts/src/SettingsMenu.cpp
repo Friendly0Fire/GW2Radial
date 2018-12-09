@@ -5,6 +5,11 @@
 
 namespace GW2Addons
 {
+	SettingsMenu::SettingsMenu()
+		: showKeybind_("Show settings", "show_settings", { VK_SHIFT, VK_MENU, 'M' })
+	{
+		Input::i()->AddInputChangeCallback([this](bool changed, const std::set<uint>& keys) { return OnInputChange(changed, keys); });
+	}
 	void SettingsMenu::Draw()
 	{
 		if (isVisible_)
@@ -32,5 +37,11 @@ namespace GW2Addons
 
 		ImGui::Render();
 		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+	}
+
+	InputResponse SettingsMenu::OnInputChange(bool changed, const std::set<uint>& keys)
+	{
+		const bool isMenuKeybind = keys == showKeybind_.keys();
+		return isMenuKeybind ? InputResponse::PREVENT_ALL : InputResponse::PASS_TO_GAME;
 	}
 }
