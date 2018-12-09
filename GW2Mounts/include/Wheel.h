@@ -32,7 +32,7 @@ protected:
 	WheelElement* ModifyCenterHoveredElement(WheelElement* elem);
 	std::vector<WheelElement*> GetActiveElements();
 	void OnMouseMove();
-	InputResponse OnInputChange(bool changed, const std::set<uint>& keys);
+	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);
 
 	const float CircleRadiusBase = 256.f / 1664.f * 0.25f;
 
@@ -58,6 +58,7 @@ protected:
 
 	WheelElement* currentHovered_ = nullptr;
 	WheelElement* previousHovered_ = nullptr;
+	WheelElement* previousUsed_ = nullptr;
 	
 	IDirect3DTexture9* appearance_ = nullptr;
 

@@ -27,7 +27,7 @@ public:
 	const Keybind& showKeybind() const { return showKeybind_; }
 
 protected:
-	InputResponse OnInputChange(bool changed, const std::set<uint>& keys);
+	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);
 
 	std::list<Implementer*> implementers_;
 

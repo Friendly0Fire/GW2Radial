@@ -17,6 +17,12 @@ enum class InputResponse : uint
 	PREVENT_ALL = 2
 };
 
+struct EventKey
+{
+	uint vk : 31;
+	bool down : 1;
+};
+
 inline InputResponse operator|(InputResponse a, InputResponse b)
 {
 	return InputResponse(std::max(uint(a), uint(b)));
@@ -26,7 +32,7 @@ class Input : public Singleton<Input>
 {
 public:
 	using MouseMoveCallback = std::function<void()>;
-	using InputChangeCallback = std::function<InputResponse(bool changed, const std::set<uint>& keys)>;
+	using InputChangeCallback = std::function<InputResponse(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys)>;
 	Input();
 
 	uint id_H_LBUTTONDOWN() const { return id_H_LBUTTONDOWN_; }
@@ -47,6 +53,7 @@ public:
 	
 	void AddMouseMoveCallback(const MouseMoveCallback &cb) { mouseMoveCallbacks_.push_back(cb); }
 	void AddInputChangeCallback(const InputChangeCallback &cb) { inputChangeCallbacks_.push_back(cb); }
+	void SendKeybind(const std::set<uint> &vkeys);
 
 protected:
 	struct DelayedInput
@@ -60,7 +67,6 @@ protected:
 
 	uint ConvertHookedMessage(uint msg) const;
 	DelayedInput TransformVKey(uint vk, bool down, mstime t);
-	void SendKeybind(const std::set<uint> &vkeys);
 	void SendQueuedInputs();
 
 	// ReSharper disable CppInconsistentNaming

@@ -21,6 +21,9 @@ Keybind::Keybind(std::string displayName, std::string nickname) :
 
 void Keybind::keys(const std::set<uint>& keys)
 {
+	if(!isBeingModified_)
+		return;
+
 	keys_ = keys;
 
 	ApplyKeys();

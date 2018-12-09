@@ -8,7 +8,7 @@
 namespace GW2Addons
 {
 
-class WheelElement : public SettingsMenu::Implementer
+class WheelElement
 {
 public:
 	WheelElement(uint id, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
@@ -23,8 +23,9 @@ public:
 
 	mstime currentHoverTime() const { return currentHoverTime_; }
 	void currentHoverTime(mstime cht) { currentHoverTime_ = cht; }
-
+	
 	const Keybind& keybind() const { return keybind_; }
+	Keybind& keybind() { return keybind_; }
 	bool isActive() const { return keybind_.isSet(); }
 
 protected:
@@ -35,9 +36,6 @@ protected:
 	Keybind keybind_;
 	IDirect3DTexture9* appearance_ = nullptr;
 	mstime currentHoverTime_ = 0;
-
-	// Inherited via Implementer
-	virtual void DrawMenu() override;
 };
 
 }

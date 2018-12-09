@@ -28,11 +28,6 @@ Input::Input()
 
 bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 {
-	struct EventKey
-	{
-		uint vk : 31;
-		bool down : 1;
-	};
 
 	std::list<EventKey> eventKeys;
 
@@ -97,7 +92,7 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 	InputResponse response = InputResponse::PASS_TO_GAME;
 	// Only run these for key down/key up (incl. mouse buttons) events
 	for(auto& cb : inputChangeCallbacks_)
-		response = response | cb(downKeysChanged, DownKeys);
+		response = response | cb(downKeysChanged, DownKeys, eventKeys);
 
 #if 0
 	if (input_key_down || input_key_up)

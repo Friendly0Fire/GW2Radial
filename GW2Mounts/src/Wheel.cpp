@@ -25,7 +25,7 @@ Wheel::Wheel(uint resourceId, const std::string &nickname, const std::string &di
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(resourceId), &appearance_);
 	
 	Input::i()->AddMouseMoveCallback([this]() { OnMouseMove(); });
-	Input::i()->AddInputChangeCallback([this](bool changed, const std::set<uint>& keys) { return OnInputChange(changed, keys); });
+	Input::i()->AddInputChangeCallback([this](bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, keys, changedKeys); });
 }
 
 Wheel::~Wheel()
@@ -75,6 +75,17 @@ void Wheel::DrawMenu()
 	ImGui::Separator();
 	ImGui::Text(displayName_.c_str());
 	ImGui::Spacing();
+	
+	ImGui::Separator();
+	ImGui::Text("Set the following to your in-game keybinds:");
+
+	for(auto& we : wheelElements_)
+		ImGuiKeybindInput(we->keybind());
+	
+	ImGui::Separator();
+	
+	ImGuiKeybindInput(keybind_);
+	ImGuiKeybindInput(centralKeybind_);
 	
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.f, 4.f, "%.2f", 1.f);
@@ -146,7 +157,6 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				fx->SetTexture("texBgImage", appearance_);
 				fx->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
 				fx->SetFloat("g_fFadeTimer", fadeTimer);
-				//fx->SetFloat("g_fHoverTimer", hoverTimer);
 				fx->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
 				fx->SetFloat("g_fDeadZoneScale", centerScaleOption_.value());
 				fx->SetInt("g_iMountCount", int(activeElements.size()));
@@ -234,34 +244,34 @@ void Wheel::OnMouseMove()
 		UpdateHover();
 }
 
-InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys)
+InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys)
 {
-	bool oldMountOverlay = DisplayMountOverlay;
+	const bool previousVisibility = isVisible_;
 
-	bool mountOverlay = !Cfg.MountOverlayKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayKeybind().begin(), Cfg.MountOverlayKeybind().end());
-	bool mountOverlayLocked = !Cfg.MountOverlayLockedKeybind().empty() && std::includes(DownKeys.begin(), DownKeys.end(), Cfg.MountOverlayLockedKeybind().begin(), Cfg.MountOverlayLockedKeybind().end());
+	const bool mountOverlay = keybind_.isSet() && std::includes(keys.begin(), keys.end(), keybind_.keys().begin(), keybind_.keys().end());
+	const bool mountOverlayLocked = centralKeybind_.isSet() && std::includes(keys.begin(), keys.end(), centralKeybind_.keys().begin(), centralKeybind_.keys().end());
 
-	DisplayMountOverlay = mountOverlayLocked || mountOverlay;
+	isVisible_ = mountOverlayLocked || mountOverlay;
 
-	if (DisplayMountOverlay && !oldMountOverlay)
+	if (isVisible_ && !previousVisibility)
 	{
 		// Mount overlay is turned on
 
 		if (mountOverlayLocked)
 		{
-			OverlayPosition.x = OverlayPosition.y = 0.5f;
+			currentPosition_.x = currentPosition_.y = 0.5f;
 
 			// Attempt to move the cursor to the middle of the screen
-			if (Cfg.ResetCursorOnLockedKeybind())
+			if (resetCursorOnLockedKeybindOption_.value())
 			{
 				RECT rect = { };
-				if (GetWindowRect(GameWindow, &rect))
+				if (GetWindowRect(Core::i()->gameWindow(), &rect))
 				{
 					if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
 					{
 						auto& io = ImGui::GetIO();
-						io.MousePos.x = ScreenWidth * 0.5f;
-						io.MousePos.y = ScreenHeight * 0.5f;
+						io.MousePos.x = Core::i()->screenWidth() * 0.5f;
+						io.MousePos.y = Core::i()->screenHeight() * 0.5f;
 					}
 				}
 			}
@@ -269,33 +279,34 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys)
 		else
 		{
 			const auto& io = ImGui::GetIO();
-			OverlayPosition.x = io.MousePos.x / (float)ScreenWidth;
-			OverlayPosition.y = io.MousePos.y / (float)ScreenHeight;
+			currentPosition_.x = io.MousePos.x / float(Core::i()->screenWidth());
+			currentPosition_.y = io.MousePos.y / float(Core::i()->screenHeight());
 		}
 
-		OverlayTime = TimeInMilliseconds();
-		MountHoverTime = OverlayTime + Cfg.OverlayDelayMilliseconds();
+		currentTriggerTime_ = TimeInMilliseconds();
 
-		DetermineHoveredMount();
+		UpdateHover();
+		if(currentHovered_)
+			currentHovered_->currentHoverTime(currentTriggerTime_ + displayDelayOption_.value());
 	}
-	else if (!DisplayMountOverlay && oldMountOverlay)
+	else if (!isVisible_ && previousVisibility)
 	{
 		// Check for special behavior if no mount is hovered
-		CurrentMountHovered = ModifyMountNoneBehavior(CurrentMountHovered);
+		currentHovered_ = ModifyCenterHoveredElement(currentHovered_);
 
 		// Mount overlay is turned off, send the keybind
-		if (CurrentMountHovered != MountType::NONE)
-			SendKeybind(Cfg.MountKeybind((uint)CurrentMountHovered));
+		if (currentHovered_)
+			Input::i()->SendKeybind(currentHovered_->keybind().keys());
 
-		PreviousMountUsed = CurrentMountHovered;
-		CurrentMountHovered = MountType::NONE;
+		previousUsed_ = currentHovered_;
+		currentHovered_ = nullptr;
 	}
 
 	{
 		// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
 		bool keyLifted = false;
-		auto fullKeybind = DownKeys;
-		for (const auto& ek : eventKeys)
+		auto fullKeybind = keys;
+		for (const auto& ek : changedKeys)
 		{
 			if (!ek.down)
 			{
@@ -307,14 +318,24 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys)
 		// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
 		fullKeybind.erase(VK_LBUTTON);
 
-		MainKeybind.UpdateKeybind(fullKeybind, keyLifted);
-		MainLockedKeybind.UpdateKeybind(fullKeybind, keyLifted);
+		keybind_.keys(fullKeybind);
+		centralKeybind_.keys(fullKeybind);
 
-		for (uint i = 0; i < MountTypeCount; i++)
-			MountKeybinds[i].UpdateKeybind(fullKeybind, keyLifted);
+		if(keyLifted)
+		{
+			keybind_.isBeingModified(false);	
+			centralKeybind_.isBeingModified(false);	
+		}
+
+		for (auto& we : wheelElements_)
+		{
+			we->keybind().keys(fullKeybind);	
+			if(keyLifted)
+				we->keybind().isBeingModified(false);	
+		}
 	}
 
-	if (DisplayMountOverlay && Cfg.LockCameraWhenOverlayed())
+	if (isVisible_ && lockCameraWhenOverlayedOption_.value())
 		return InputResponse::PREVENT_MOUSE;
 	
 	return InputResponse::PASS_TO_GAME;
