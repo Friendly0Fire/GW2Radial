@@ -2,14 +2,14 @@
 #include <Core.h>
 #include <Direct3D9Hooks.h>
 
-IDirect3D9* Direct3DCreate9(UINT SDKVersion)
+IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 {
 	return GW2Addons::Direct3D9Hooks::i()->Direct3DCreate9(SDKVersion);
 }
 
-IDirect3D9* Direct3DCreate9Ex(UINT SDKVersion)
+HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** d3d9ex)
 {
-	return GW2Addons::Direct3D9Hooks::i()->Direct3DCreate9Ex(SDKVersion);
+	return GW2Addons::Direct3D9Hooks::i()->Direct3DCreate9Ex(SDKVersion, d3d9ex);
 }
 
 bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)

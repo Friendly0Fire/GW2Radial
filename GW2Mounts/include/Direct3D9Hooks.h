@@ -21,7 +21,7 @@ public:
 	using PostCreateDeviceCallback = std::function<void(IDirect3DDevice9*, D3DPRESENT_PARAMETERS*)>;
 
 	typedef IDirect3D9* (WINAPI *Direct3DCreate9_t)(UINT sdkVersion);
-	typedef IDirect3D9Ex* (WINAPI *Direct3DCreate9Ex_t)(UINT sdkVersion);
+	typedef HRESULT (WINAPI *Direct3DCreate9Ex_t)(UINT sdkVersion, IDirect3D9Ex** output);
 	
 	Direct3D9Hooks();
 
@@ -34,7 +34,7 @@ public:
 	void LoadOriginalDevicePointers(IDirect3D9Ex *d3d);
 
 	IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion);
-	IDirect3D9Ex* WINAPI Direct3DCreate9Ex(UINT SDKVersion);
+	HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** output);
 
 	const DrawCallback & drawUnderCallback() const { return drawUnderCallback_; }
 	void drawUnderCallback(const DrawCallback &drawUnderCallback) { drawUnderCallback_ = drawUnderCallback; }

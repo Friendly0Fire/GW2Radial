@@ -42,7 +42,7 @@ protected:
 	bool isVisible_ = false;
 	Keybind keybind_, centralKeybind_;
 
-	ConfigurationOption<CenterBehavior> centerBehaviorOption_;
+	ConfigurationOption<CenterBehavior, int> centerBehaviorOption_;
 	ConfigurationOption<int> centerFavoriteOption_;
 	
 	ConfigurationOption<float> scaleOption_;
@@ -66,5 +66,8 @@ protected:
 
 	friend class WheelElement;
 };
+
+template<>
+inline int& ConfigurationOption<Wheel::CenterBehavior, int>::fallbackValue() { return reinterpret_cast<int&>(value_); }
 
 }

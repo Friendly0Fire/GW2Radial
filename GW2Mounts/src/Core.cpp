@@ -12,6 +12,7 @@
 
 namespace GW2Addons
 {
+DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {

@@ -376,12 +376,14 @@ IDirect3D9* Direct3D9Hooks::Direct3DCreate9(UINT SDKVersion)
 	return d3d;
 }
 
-IDirect3D9Ex* Direct3D9Hooks::Direct3DCreate9Ex(UINT SDKVersion)
+HRESULT Direct3D9Hooks::Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** output)
 {
 	OnD3DCreate();
 
 	auto fDirect3DCreate9 = reinterpret_cast<Direct3DCreate9Ex_t>(GetProcAddress(realD3D9Module_, "Direct3DCreate9Ex"));
-	auto d3d = fDirect3DCreate9(SDKVersion);
+	IDirect3D9Ex* d3d = nullptr;
+	if(HRESULT hr = fDirect3DCreate9(SDKVersion, &d3d); FAILED(hr))
+		return hr;
 
 	if (!isDirect3DHooked_)
 	{
@@ -397,10 +399,13 @@ IDirect3D9Ex* Direct3D9Hooks::Direct3DCreate9Ex(UINT SDKVersion)
 		d3d->Release();
 
 		fDirect3DCreate9 = reinterpret_cast<Direct3DCreate9Ex_t>(GetProcAddress(chainD3D9Module_, "Direct3DCreate9Ex"));
-		d3d = fDirect3DCreate9(SDKVersion);
+		if(HRESULT hr = fDirect3DCreate9(SDKVersion, &d3d); FAILED(hr))
+			return hr;
 	}
 
-	return d3d;
+	*output = d3d;
+
+	return D3D_OK;
 }
 }
 

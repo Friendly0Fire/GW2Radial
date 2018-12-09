@@ -92,19 +92,19 @@ void Wheel::DrawMenu()
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.f, 0.25f, "%.2f", 1.f);
 
 	ImGui::Text((centerBehaviorOption_.displayName() + ":").c_str());
-	bool (*rb)(const char*, int*, int) = ImGui::RadioButton;
-	ImGuiConfigurationWrapper(&rb, "Nothing", centerBehaviorOption_, CenterBehavior::NOTHING);
-	ImGuiConfigurationWrapper(&rb, "Previous", centerBehaviorOption_, CenterBehavior::PREVIOUS);
-	ImGuiConfigurationWrapper(&rb, "Favorite", centerBehaviorOption_, CenterBehavior::FAVORITE);
+	bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
+	ImGuiConfigurationWrapper(rb, "Nothing", centerBehaviorOption_, int(CenterBehavior::NOTHING));
+	ImGuiConfigurationWrapper(rb, "Previous", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
+	ImGuiConfigurationWrapper(rb, "Favorite", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
 
 	if (centerBehaviorOption_.value() == CenterBehavior::FAVORITE)
 	{
-		std::vector<std::string> potentialNames(wheelElements_.size());
+		std::vector<const char*> potentialNames(wheelElements_.size());
 			for (uint i = 0; i < wheelElements_.size(); i++)
-				potentialNames[i] = wheelElements_[i]->displayName();
+				potentialNames[i] = wheelElements_[i]->displayName().c_str();
 
-		bool (*cmb)(const char*, int*, const char* const[], int, int) = ImGui::Combo;
-		ImGuiConfigurationWrapper(&cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
+		bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
+		ImGuiConfigurationWrapper(cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
 	}
 	
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);

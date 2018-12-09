@@ -6,7 +6,7 @@
 namespace GW2Addons
 {
 
-template<typename T>
+template<typename T, typename FallbackT = T>
 class ConfigurationOption
 {
 public:
@@ -25,6 +25,10 @@ public:
 	const T & value() const { return value_; }
 	T & value() { return value_; }
 	void value(const T &value) { value_ = value; SaveValue(); }
+	
+	const FallbackT& fallbackValue() const { return static_cast<FallbackT&>(value_); }
+	FallbackT& fallbackValue() { return static_cast<FallbackT&>(value_); }
+	void fallbackValue(const FallbackT &value) { value_ = T(value); SaveValue(); }
 
 	void Reload()
 	{
