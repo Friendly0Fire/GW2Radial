@@ -6,6 +6,7 @@
 #include <Direct3DVirtualFunctionTable.h>
 #include <functional>
 #include <Singleton.h>
+#include <type_traits>
 
 namespace GW2Addons
 {
@@ -21,6 +22,8 @@ public:
 
 	typedef IDirect3D9* (WINAPI *Direct3DCreate9_t)(UINT sdkVersion);
 	typedef IDirect3D9Ex* (WINAPI *Direct3DCreate9Ex_t)(UINT sdkVersion);
+	
+	Direct3D9Hooks();
 
 	void OnD3DCreate();
 
@@ -56,17 +59,8 @@ public:
 	{
 		postCreateDeviceCallback_ = postCreateDeviceCallback;
 	}
-
+	
 protected:
-	Direct3D9Hooks();
-
-	template<typename Method, Method m, class ...Params>
-	static auto TrampolineHookWrapper(Params... params) ->
-	        decltype((i_.*m)(params...))
-	{
-	    return (i_.get().*m)(params...);
-	}
-
 	Present_t Present_real = nullptr;
 	HRESULT WINAPI Present_hook(IDirect3DDevice9 *sThis, CONST RECT *pSourceRect, CONST RECT *pDestRect,
 	                            HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion);
@@ -89,16 +83,16 @@ protected:
 	ULONG WINAPI AddRef_hook(IDirect3DDevice9 *sThis);
 
 	CreateVertexShader_t CreateVertexShader_real = nullptr;
-	HRESULT CreateVertexShader_hook(IDirect3DDevice9 *sThis, const DWORD *pFunction, IDirect3DVertexShader9 **ppShader);
+	HRESULT WINAPI CreateVertexShader_hook(IDirect3DDevice9 *sThis, const DWORD *pFunction, IDirect3DVertexShader9 **ppShader);
 
 	SetVertexShader_t SetVertexShader_real = nullptr;
-	HRESULT SetVertexShader_hook(IDirect3DDevice9 *sThis, IDirect3DVertexShader9 *pShader);
+	HRESULT WINAPI SetVertexShader_hook(IDirect3DDevice9 *sThis, IDirect3DVertexShader9 *pShader);
 
 	CreatePixelShader_t CreatePixelShader_real = nullptr;
-	HRESULT CreatePixelShader_hook(IDirect3DDevice9 *sThis, const DWORD *pFunction, IDirect3DPixelShader9 **ppShader);
+	HRESULT WINAPI CreatePixelShader_hook(IDirect3DDevice9 *sThis, const DWORD *pFunction, IDirect3DPixelShader9 **ppShader);
 
 	SetPixelShader_t SetPixelShader_real = nullptr;
-	HRESULT SetPixelShader_hook(IDirect3DDevice9 *sThis, IDirect3DPixelShader9 *pShader);
+	HRESULT WINAPI SetPixelShader_hook(IDirect3DDevice9 *sThis, IDirect3DPixelShader9 *pShader);
 
 	CreateDevice_t CreateDevice_real = nullptr;
 	HRESULT WINAPI CreateDevice_hook(IDirect3D9 *sThis, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow,
@@ -110,8 +104,7 @@ protected:
 	                                   DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters,
 	                                   D3DDISPLAYMODEEX *pFullscreenDisplayMode,
 	                                   IDirect3DDevice9 **ppReturnedDeviceInterface);
-
-
+	
 	const XXH64_hash_t preUiVertexShaderHash_ = 0x1fe3c6cd77e6e9f0;
 	const XXH64_hash_t preUiPixelShaderHash_ = 0xccc38027cdd6cd51;
 	IDirect3DVertexShader9* preUiVertexShader_ = nullptr;

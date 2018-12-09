@@ -11,8 +11,9 @@ struct ScreenVertex
 	D3DXVECTOR2 uv;
 };
 
-struct UnitQuad
+class UnitQuad
 {
+public:
 	explicit UnitQuad(IDirect3DDevice9* device);
 	UnitQuad(const UnitQuad& uq) = delete;
 	UnitQuad& operator=(UnitQuad uq) = delete;

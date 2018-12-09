@@ -11,12 +11,11 @@ public:
 	static T* i()
 	{
 		if(!i_)
-			i_ = std::make_unique<T>();
+			i_ = std::unique_ptr<T>(new T());
 		return i_.get();
 	}
 
 protected:
-	Singleton() = default;
 	static std::unique_ptr<T> i_;
 };
 

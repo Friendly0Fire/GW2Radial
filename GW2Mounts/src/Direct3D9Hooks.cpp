@@ -5,9 +5,24 @@
 
 namespace GW2Addons
 {
-	DEFINE_SINGLETON(Direct3D9Hooks);
+DEFINE_SINGLETON(Direct3D9Hooks);
 
-#define D3DTRAMPOLINE(m) (LPVOID)&TrampolineHookWrapper<Direct3D9Hooks, decltype(&Direct3D9Hooks::m), &Direct3D9Hooks::m>
+template<typename Function>
+struct Trampoline;
+
+template<typename Ret, typename ...Args>
+struct Trampoline<Ret(Direct3D9Hooks::*)(Args...)>
+{
+	using Function = Ret(Direct3D9Hooks::*)(Args...);
+
+	template<Function f>
+	static HRESULT Eval(Args&& ...args)
+	{
+		return std::invoke(f, Direct3D9Hooks::i(), args...);
+	}
+};
+
+#define D3DTRAMPOLINE(m) LPVOID(&Trampoline<decltype(&Direct3D9Hooks::m)>::Eval<&Direct3D9Hooks::m>)
 
 Direct3D9Hooks::Direct3D9Hooks()
 {

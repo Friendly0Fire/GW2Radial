@@ -9,6 +9,7 @@ namespace GW2Addons
 class ConfigurationFile : public Singleton<ConfigurationFile>
 {
 public:
+	ConfigurationFile();
 
 	void Reload();
 	void Save();
@@ -19,7 +20,6 @@ public:
 	CSimpleIniA& ini() { return ini_; }
 
 protected:
-	ConfigurationFile();
 
 	CSimpleIniA ini_;
 	tstring folder_;

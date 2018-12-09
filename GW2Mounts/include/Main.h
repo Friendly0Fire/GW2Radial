@@ -35,7 +35,7 @@
 #define NOSCROLL // - SB_* and scrolling routines
 #define NOSERVICE // - All Service Controller routines, SERVICE_ equates, etc.
 #define NOSOUND // - Sound driver routines
-#define NOTEXTMETRIC // - typedef TEXTMETRIC and associated routines
+//#define NOTEXTMETRIC // - typedef TEXTMETRIC and associated routines
 //#define NOWH // - SetWindowsHook and WH_*
 //#define NOWINOFFSETS // - GWL_*, GCL_*, associated routines
 #define NOCOMM // - COMM driver routines
