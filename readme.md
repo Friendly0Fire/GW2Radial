@@ -1,4 +1,4 @@
-# GW2 Mounts
+# GW2 Addons
 
 An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) plugin to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/MealyFluffyGermanspitz.mp4) to select a mount on the fly for *Guild Wars 2: Path of Fire*.
 
