@@ -42,9 +42,6 @@ void SettingsMenu::Draw()
 		}
 
 	}
-
-	ImGui::Render();
-	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 }
 
 InputResponse SettingsMenu::OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys)

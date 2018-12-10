@@ -10,6 +10,7 @@
 #include <Mount.h>
 #include <SettingsMenu.h>
 #include <Utility.h>
+#include "../imgui/imgui_internal.h"
 
 namespace GW2Addons
 {
@@ -27,6 +28,11 @@ void Core::Shutdown()
 
 	// We'll just leak a bunch of things and let the driver/OS take care of it, since we have no clean exit point
 	// and calling FreeLibrary in DllMain causes deadlocks
+}
+
+Core::Core()
+	: firstMessageShown_("", "first_message_shown_v1", "Core", false)
+{
 }
 
 Core::~Core()
@@ -184,6 +190,27 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 			device->BeginScene();
 		
 		SettingsMenu::i()->Draw();
+
+		if(!firstMessageShown_.value() && ImGui::Begin("Welcome to GW2Addons!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+		{
+			const auto size = ImVec2(screenWidth_ * 0.35f, screenHeight_ * 0.17f);
+			const auto pos = ImVec2(0.5f * screenWidth_ - size.x / 2, 0.45f * screenHeight_ - size.y / 2);
+			ImGui::SetWindowPos(pos);
+			ImGui::SetWindowSize(size);
+			ImGui::TextWrapped("Welcome to GW2Addons! This small addon provides a collection of features, chief among them the radial menu for mounts and novelties. "
+			"To begin, use the shortcut Shift+Alt+M to open the settings menu and take a moment to bind your keys. If you ever need further assistance, please visit "
+			"this project's website at https://github.com/Friendly0Fire/GW2Addons !");
+			
+			ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.4f);
+			ImGui::SetCursorPosY(ImGui::GetWindowSize().y - ImGui::GetFontSize() * 2.5f);
+			if (ImGui::Button("OK", ImVec2(ImGui::GetWindowSize().x * 0.2f, ImGui::GetFontSize() * 1.5f)))
+				firstMessageShown_.value(true);
+
+			ImGui::End();
+		}
+
+		ImGui::Render();
+		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
 		wheelMounts_->Draw(device, mainEffect_, quad_.get());
 

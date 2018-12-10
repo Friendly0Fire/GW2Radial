@@ -17,6 +17,7 @@ public:
 
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+	Core();
 	~Core();
 
 	HWND gameWindow() const { return gameWindow_; }
@@ -58,5 +59,7 @@ protected:
 	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr;
 
 	std::unique_ptr<Wheel> wheelMounts_, wheelNovelties_;
+
+	ConfigurationOption<bool> firstMessageShown_;
 };
 }
