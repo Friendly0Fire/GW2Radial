@@ -33,6 +33,8 @@ auto end(reversion_wrapper<T> w) { return std::rend(w.iterable); }
 template <typename T>
 reversion_wrapper<T> reverse(T&& iterable) { return { iterable }; }
 
+bool LoadFontResource(UINT resId, void*& dataPtr, size_t& dataSize);
+
 // ReSharper restore CppInconsistentNaming
 
 inline float Lerp(float a, float b, float s)
@@ -49,4 +51,5 @@ inline float SmoothStep(float x)
 {
 	return 3 * x * x - 2 * x * x * x;
 }
+
 }

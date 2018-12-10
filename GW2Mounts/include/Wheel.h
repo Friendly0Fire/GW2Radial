@@ -20,7 +20,7 @@ public:
 		FAVORITE = 2
 	};
 
-	Wheel(uint resourceId, const std::string &nickname, const std::string &displayName, IDirect3DDevice9* dev);
+	Wheel(uint resourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
 	virtual ~Wheel();
 
 	void UpdateHover();

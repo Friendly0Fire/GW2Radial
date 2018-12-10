@@ -7,20 +7,21 @@
 #include <imgui.h>
 #include <utility>
 #include <Input.h>
+#include "../imgui/imgui_internal.h"
 
 namespace GW2Addons
 {
 
-Wheel::Wheel(uint resourceId, const std::string &nickname, const std::string &displayName, IDirect3DDevice9 * dev)
-	: nickname_(nickname), displayName_(std::move(displayName)),
-	  keybind_(nickname, "Show on mouse"), centralKeybind_(nickname + "_cl", "Show in center"),
-	  centerBehaviorOption_("Center behavior", "center_behavior", "Wheel" + nickname),
-	  centerFavoriteOption_("Favorite choice", "center_favorite", "Wheel" + nickname),
-	  scaleOption_("Scale", "scale", "Wheel" + nickname),
-	  centerScaleOption_("Center scale", "center_scale", "Wheel" + nickname),
-	  displayDelayOption_("Pop-up delay", "delay", "Wheel" + nickname),
-	  resetCursorOnLockedKeybindOption_("Reset cursor to center with Center Locked keybind", "reset_cursor_cl", "Wheel" + nickname),
-	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "Wheel" + nickname)
+Wheel::Wheel(uint resourceId, std::string nickname, std::string displayName, IDirect3DDevice9 * dev)
+	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
+	  keybind_(nickname_, "Show on mouse"), centralKeybind_(nickname_ + "_cl", "Show in center"),
+	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
+	  centerFavoriteOption_("Favorite choice", "center_favorite", "wheel_" + nickname_),
+	  scaleOption_("Scale", "scale", "wheel_" + nickname_),
+	  centerScaleOption_("Center scale", "center_scale", "wheel_" + nickname_),
+	  displayDelayOption_("Pop-up delay", "delay", "wheel_" + nickname_),
+	  resetCursorOnLockedKeybindOption_("Reset cursor to center with Center Locked keybind", "reset_cursor_cl", "wheel_" + nickname_),
+	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_)
 {
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(resourceId), &appearance_);
 
@@ -85,39 +86,56 @@ void Wheel::DrawMenu()
 {
 	ImGui::PushID((nickname_ + "Elements").c_str());
 	ImGui::BeginGroup();
-	ImGui::Separator();
-	ImGui::Text(displayName_.c_str());
-	ImGui::Spacing();
-	
-	ImGui::Separator();
-	ImGui::Text("Set the following to your in-game keybinds:");
+	ImGuiTitle(displayName_.c_str());
+
+	ImGui::TextUnformatted("Set the following to your in-game keybinds:");
 
 	for(auto& we : wheelElements_)
 		ImGuiKeybindInput(we->keybind());
 	
 	ImGui::Separator();
+	ImGuiSpacing();
 	
 	ImGuiKeybindInput(keybind_);
 	ImGuiKeybindInput(centralKeybind_);
+
+	ImGui::PushItemWidth(0.66f * ImGui::GetWindowContentRegionWidth());
 	
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.f, 4.f, "%.2f", 1.f);
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.f, 0.25f, "%.2f", 1.f);
 
+	ImGui::PopItemWidth();
+	
 	ImGui::Text((centerBehaviorOption_.displayName() + ":").c_str());
+	ImGui::SameLine();
+	ImGui::PushItemWidth(0.25f * ImGui::GetWindowContentRegionWidth());
+
 	bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
 	ImGuiConfigurationWrapper(rb, "Nothing", centerBehaviorOption_, int(CenterBehavior::NOTHING));
+	ImGui::SameLine();
 	ImGuiConfigurationWrapper(rb, "Previous", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
+	ImGui::SameLine();
 	ImGuiConfigurationWrapper(rb, "Favorite", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
+	
+	ImGui::PopItemWidth();
 
 	if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
 	{
+		ImGuiIndent();
+		
+		const auto textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
+		const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
+		ImGui::PushItemWidth(itemSize);
+
 		std::vector<const char*> potentialNames(wheelElements_.size());
 			for (uint i = 0; i < wheelElements_.size(); i++)
 				potentialNames[i] = wheelElements_[i]->displayName().c_str();
 
 		bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
 		ImGuiConfigurationWrapper(cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
+		ImGui::PopItemWidth();
+		ImGuiUnindent();
 	}
 	
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);

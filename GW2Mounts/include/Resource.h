@@ -1,6 +1,8 @@
 //{{NO_DEPENDENCIES}}
 #define IDR_SHADER		104
+
 #define IDR_BG			200
+
 #define IDR_MOUNTS		201
 #define IDR_MOUNT1		201
 #define IDR_MOUNT2		202
@@ -11,3 +13,8 @@
 #define IDR_MOUNT7		207
 #define IDR_MOUNT8		208
 #define IDR_MOUNT9		209
+
+
+#define IDR_FONT		300
+#define IDR_FONT_BLACK	301
+#define IDR_FONT_ITALIC	302

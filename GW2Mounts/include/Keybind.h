@@ -10,7 +10,7 @@ namespace GW2Addons
 class Keybind
 {
 public:
-	Keybind(std::string nickname, std::string displayName, const std::set<uint>& keys);
+	Keybind(std::string nickname, std::string displayName, const std::set<uint>& keys, bool saveToConfig);
 	Keybind(std::string nickname, std::string displayName);
 
 	const std::set<uint>& keys() const { return keys_; }
@@ -39,6 +39,7 @@ protected:
 	std::array<char, 256> keysDisplayString_ { };
 	bool isBeingModified_ = true;
 	std::set<uint> keys_;
+	bool saveToConfig_ = true;
 };
 
 }

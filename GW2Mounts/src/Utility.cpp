@@ -2,6 +2,8 @@
 #include <locale>
 #include <codecvt>
 #include <d3d9types.h>
+#include <Core.h>
+#include <winuser.h>
 
 namespace GW2Addons
 {
@@ -92,6 +94,24 @@ int GetShaderFuncLength(const DWORD *pFunction)
 	int op = 0, l = 1;
 	while (!ShaderIsEnd(pFunction[op++]))  l++;
 	return l;
+}
+
+bool LoadFontResource(UINT resId, void*& dataPtr, size_t& dataSize)
+{
+	auto res = FindResource(Core::i()->dllModule(), MAKEINTRESOURCE(resId), RT_RCDATA);
+	if(res)
+	{
+		auto handle = LoadResource(Core::i()->dllModule(), res);
+		if(handle)
+		{
+			dataSize = SizeofResource(Core::i()->dllModule(), res);
+			dataPtr = LockResource(handle);
+
+			return true;
+		}
+	}
+
+	return false;
 }
 
 }

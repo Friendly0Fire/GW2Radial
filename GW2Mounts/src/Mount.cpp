@@ -5,7 +5,7 @@ namespace GW2Addons
 {
 
 Mount::Mount(MountType m, IDirect3DDevice9* dev)
-	: WheelElement(uint(m), std::string("mount") + GetMountNameFromType(m), GetMountNameFromType(m), dev)
+	: WheelElement(uint(m), std::string("mount_") + GetMountNicknameFromType(m), GetMountNameFromType(m), dev)
 { }
 
 void Mount::AddAllMounts(Wheel* w, IDirect3DDevice9* dev)

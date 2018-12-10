@@ -8,7 +8,7 @@ namespace GW2Addons
 DEFINE_SINGLETON(SettingsMenu);
 
 SettingsMenu::SettingsMenu()
-	: showKeybind_("Show settings", "show_settings", { VK_SHIFT, VK_MENU, 'M' })
+	: showKeybind_("show_settings", "Show settings", { VK_SHIFT, VK_MENU, 'M' }, false)
 {
 	inputChangeCallback_ = [this](bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, keys, changedKeys); };
 	Input::i()->AddInputChangeCallback(&inputChangeCallback_);
@@ -19,9 +19,13 @@ void SettingsMenu::Draw()
 	{
 		if(!ImGui::Begin("GW2Addons Options Menu", &isVisible_))
 			return;
+
+		ImGui::PushItemWidth(-1);
 	
 		for(const auto& i : implementers_)
 			i->DrawMenu();
+		
+		ImGui::PopItemWidth();
 
 		ImGui::End();
 
@@ -36,6 +40,7 @@ void SettingsMenu::Draw()
 				ImGui::CloseCurrentPopup();
 			ImGui::EndPopup();
 		}
+
 	}
 
 	ImGui::Render();

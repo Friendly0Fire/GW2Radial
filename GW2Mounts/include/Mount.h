@@ -41,11 +41,31 @@ protected:
 		case MountType::JACKAL:
 			return "Jackal";
 		case MountType::BEETLE:
-			return "Beetle";
+			return "Roller Beetle";
 		case MountType::GRIFFON:
 			return "Griffon";
 		default:
 			return "[Unknown]";
+		}
+	}
+	static const char* GetMountNicknameFromType(MountType m)
+	{
+		switch (m)
+		{
+		case MountType::RAPTOR:
+			return "raptor";
+		case MountType::SPRINGER:
+			return "springer";
+		case MountType::SKIMMER:
+			return "skimmer";
+		case MountType::JACKAL:
+			return "jackal";
+		case MountType::BEETLE:
+			return "beetle";
+		case MountType::GRIFFON:
+			return "griffon";
+		default:
+			return "unknown";
 		}
 	}
 

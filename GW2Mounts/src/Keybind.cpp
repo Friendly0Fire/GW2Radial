@@ -6,8 +6,8 @@
 namespace GW2Addons
 {
 
-Keybind::Keybind(std::string nickname, std::string displayName, const std::set<uint>& keys) :
-	nickname_(std::move(nickname)), displayName_(std::move(displayName))
+Keybind::Keybind(std::string nickname, std::string displayName, const std::set<uint>& keys, bool saveToConfig) :
+	nickname_(std::move(nickname)), displayName_(std::move(displayName)), saveToConfig_(saveToConfig)
 {
 	this->keys(keys);
 	isBeingModified_ = false;
@@ -16,7 +16,7 @@ Keybind::Keybind(std::string nickname, std::string displayName, const std::set<u
 Keybind::Keybind(std::string nickname, std::string displayName) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName))
 {
-	const auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds", nickname.c_str());
+	const auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds", nickname_.c_str());
 	if(keys) this->keys(keys);
 	isBeingModified_ = false;
 }
@@ -55,14 +55,20 @@ void Keybind::keys(const char * keys)
 void Keybind::ApplyKeys()
 {
 	UpdateDisplayString();
+	
+	if(saveToConfig_)
+	{
+		std::string settingValue;
+		for (const auto& k : keys_)
+			settingValue += std::to_string(k) + ", ";
 
-	std::string settingValue;
-	for (const auto& k : keys_)
-		settingValue += std::to_string(k) + ", ";
+		if(!keys_.empty())
+			settingValue = settingValue.substr(0, settingValue.size() - 2);
 
-	auto cfg = ConfigurationFile::i();
-	cfg->ini().SetValue("Keybinds", nickname_.c_str(), settingValue.c_str());
-	cfg->Save();
+		auto cfg = ConfigurationFile::i();
+		cfg->ini().SetValue("keybinds", nickname_.c_str(), settingValue.c_str());
+		cfg->Save();
+	}
 }
 
 void Keybind::UpdateDisplayString()

@@ -1,4 +1,5 @@
 #include <ImGuiExtensions.h>
+#include <Core.h>
 
 ImVec4 operator/(const ImVec4& v, const float f)
 {
@@ -11,7 +12,7 @@ void ImGuiKeybindInput(GW2Addons::Keybind& setting)
 
 	const auto windowWidth = ImGui::GetWindowWidth();
 
-	ImGui::PushItemWidth(windowWidth * 0.3f);
+	ImGui::PushItemWidth(windowWidth * 0.4f);
 
 	int popcount = 1;
 	if (setting.isBeingModified())
@@ -51,4 +52,13 @@ void ImGuiKeybindInput(GW2Addons::Keybind& setting)
 	ImGui::Text(setting.displayName().c_str());
 
 	ImGui::PopItemWidth();
+}
+
+void ImGuiTitle(const char * text)
+{
+	ImGui::PushFont(GW2Addons::Core::i()->fontBlack());
+	ImGui::TextUnformatted(text);
+	ImGui::Separator();
+	ImGuiSpacing();
+	ImGui::PopFont();
 }

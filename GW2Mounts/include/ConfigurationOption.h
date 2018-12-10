@@ -25,7 +25,7 @@ public:
 	
 	const T & value() const { return value_; }
 	T & value() { return value_; }
-	void value(const T &value) { value_ = value; SaveValue(); }
+	void value(const T &value) { value_ = value; ForceSave(); }
 
 	void Reload()
 	{
@@ -35,6 +35,7 @@ public:
 	void ForceSave() const
 	{
 		SaveValue();
+		ConfigurationFile::i()->Save();
 	}
 
 protected:

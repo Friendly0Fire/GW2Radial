@@ -20,3 +20,20 @@ void ImGuiConfigurationWrapper(F fct, GW2Addons::ConfigurationOption<T>& value, 
 	if(fct(value.displayName().c_str(), &value.value(), std::forward<Args>(args)...))
 		value.ForceSave();
 }
+
+inline void ImGuiIndent()
+{
+	ImGui::Indent(ImGui::GetStyle().FramePadding.x * 2 + ImGui::GetFontSize());
+}
+
+inline void ImGuiUnindent()
+{
+	ImGui::Unindent(ImGui::GetStyle().FramePadding.x * 2 + ImGui::GetFontSize());
+}
+
+inline void ImGuiSpacing()
+{
+	ImGui::Dummy(ImVec2(1, 5));
+}
+
+void ImGuiTitle(const char* text);

@@ -9,6 +9,7 @@
 #include <Wheel.h>
 #include <Mount.h>
 #include <SettingsMenu.h>
+#include <Utility.h>
 
 namespace GW2Addons
 {
@@ -106,6 +107,20 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 	// Init ImGui
 	auto &imio = ImGui::GetIO();
 	imio.IniFilename = ConfigurationFile::i()->imguiLocation();
+	auto fontCfg = ImFontConfig();
+	fontCfg.FontDataOwnedByAtlas = false;
+
+	void *fontPtr, *fontBlackPtr, *fontItalicPtr;
+	size_t fontSize, fontBlackSize, fontItalicSize;
+	if(LoadFontResource(IDR_FONT, fontPtr, fontSize))
+		font_ = imio.Fonts->AddFontFromMemoryTTF(fontPtr, fontSize, 25.f, &fontCfg);
+	if(LoadFontResource(IDR_FONT_BLACK, fontBlackPtr, fontBlackSize))
+		fontBlack_ = imio.Fonts->AddFontFromMemoryTTF(fontBlackPtr, fontBlackSize, 35.f, &fontCfg);
+	if(LoadFontResource(IDR_FONT_ITALIC, fontItalicPtr, fontItalicSize))
+		fontItalic_ = imio.Fonts->AddFontFromMemoryTTF(fontItalicPtr, fontItalicSize, 25.f, &fontCfg);
+
+	if(font_)
+		imio.FontDefault = font_;
 
 	// Setup ImGui binding
 	ImGui_ImplDX9_Init(device);
@@ -128,7 +143,7 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	                             &mainEffect_, &errorBuffer);
 	COM_RELEASE(errorBuffer);
 
-	wheelMounts_ = std::make_unique<Wheel>(IDR_BG, "mountsWheel", "Mounts", device);
+	wheelMounts_ = std::make_unique<Wheel>(IDR_BG, "mounts", "Mounts", device);
 	Mount::AddAllMounts(wheelMounts_.get(), device);
 }
 
