@@ -77,7 +77,7 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 
 	if(msg == WM_MOUSEMOVE)
 		for(auto& cb : mouseMoveCallbacks_)
-			cb();
+			(*cb)();
 
 	bool downKeysChanged = false;
 
@@ -92,7 +92,7 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 	InputResponse response = InputResponse::PASS_TO_GAME;
 	// Only run these for key down/key up (incl. mouse buttons) events
 	for(auto& cb : inputChangeCallbacks_)
-		response = response | cb(downKeysChanged, DownKeys, eventKeys);
+		response = response | (*cb)(downKeysChanged, DownKeys, eventKeys);
 
 #if 0
 	if (input_key_down || input_key_up)

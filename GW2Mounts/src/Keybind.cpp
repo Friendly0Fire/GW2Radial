@@ -6,17 +6,19 @@
 namespace GW2Addons
 {
 
-Keybind::Keybind(std::string displayName, std::string nickname, const std::set<uint>& keys) :
-	displayName_(std::move(displayName)), nickname_(std::move(nickname))
+Keybind::Keybind(std::string nickname, std::string displayName, const std::set<uint>& keys) :
+	nickname_(std::move(nickname)), displayName_(std::move(displayName))
 {
 	this->keys(keys);
+	isBeingModified_ = false;
 }
 
-Keybind::Keybind(std::string displayName, std::string nickname) :
-	displayName_(std::move(displayName)), nickname_(std::move(nickname))
+Keybind::Keybind(std::string nickname, std::string displayName) :
+	nickname_(std::move(nickname)), displayName_(std::move(displayName))
 {
 	const auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds", nickname.c_str());
 	if(keys) this->keys(keys);
+	isBeingModified_ = false;
 }
 
 void Keybind::keys(const std::set<uint>& keys)

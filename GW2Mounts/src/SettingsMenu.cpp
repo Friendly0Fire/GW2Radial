@@ -10,13 +10,14 @@ DEFINE_SINGLETON(SettingsMenu);
 SettingsMenu::SettingsMenu()
 	: showKeybind_("Show settings", "show_settings", { VK_SHIFT, VK_MENU, 'M' })
 {
-	Input::i()->AddInputChangeCallback([this](bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, keys, changedKeys); });
+	inputChangeCallback_ = [this](bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, keys, changedKeys); };
+	Input::i()->AddInputChangeCallback(&inputChangeCallback_);
 }
 void SettingsMenu::Draw()
 {
 	if (isVisible_)
 	{
-		if(!ImGui::Begin("Mounts Options Menu", &isVisible_))
+		if(!ImGui::Begin("GW2Addons Options Menu", &isVisible_))
 			return;
 	
 		for(const auto& i : implementers_)
@@ -44,6 +45,9 @@ void SettingsMenu::Draw()
 InputResponse SettingsMenu::OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys)
 {
 	const bool isMenuKeybind = keys == showKeybind_.keys();
+	if(isMenuKeybind)
+		isVisible_ = true;
+
 	return isMenuKeybind ? InputResponse::PREVENT_ALL : InputResponse::PASS_TO_GAME;
 }
 

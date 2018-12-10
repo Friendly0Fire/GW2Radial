@@ -22,16 +22,27 @@ void Core::Init(HMODULE dll)
 
 void Core::Shutdown()
 {
-	ImGui::DestroyContext();
+	i_.reset();
+
 	// We'll just leak a bunch of things and let the driver/OS take care of it, since we have no clean exit point
 	// and calling FreeLibrary in DllMain causes deadlocks
 }
 
 Core::~Core()
 {
-	Direct3D9Hooks::i()->preResetCallback()();
-	ImGui_ImplDX9_Shutdown();
-	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
+	if(auto i = Direct3D9Hooks::iNoInit(); i != nullptr)
+	{
+		i->preCreateDeviceCallback(nullptr);
+		i->postCreateDeviceCallback(nullptr);
+		
+		i->preResetCallback(nullptr);
+		i->postResetCallback(nullptr);
+		
+		i->drawOverCallback(nullptr);
+		i->drawUnderCallback(nullptr);
+	}
 }
 
 void Core::InternalInit()
@@ -51,7 +62,9 @@ void Core::InternalInit()
 	Direct3D9Hooks::i()->postResetCallback([this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); });
 	
 	Direct3D9Hooks::i()->drawOverCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); });
-	//Direct3D9Hooks::i()->drawUnderCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); });
+	Direct3D9Hooks::i()->drawUnderCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); });
+	
+	ImGui::CreateContext();
 }
 
 void Core::OnFocusLost()
@@ -91,7 +104,6 @@ void Core::PreCreateDevice(HWND hFocusWindow)
 void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters)
 {
 	// Init ImGui
-	ImGui::CreateContext();
 	auto &imio = ImGui::GetIO();
 	imio.IniFilename = ConfigurationFile::i()->imguiLocation();
 

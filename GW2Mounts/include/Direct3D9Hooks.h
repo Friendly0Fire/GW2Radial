@@ -6,7 +6,6 @@
 #include <Direct3DVirtualFunctionTable.h>
 #include <functional>
 #include <Singleton.h>
-#include <type_traits>
 
 namespace GW2Addons
 {

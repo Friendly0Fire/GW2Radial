@@ -13,7 +13,7 @@ namespace GW2Addons
 
 Wheel::Wheel(uint resourceId, const std::string &nickname, const std::string &displayName, IDirect3DDevice9 * dev)
 	: nickname_(nickname), displayName_(std::move(displayName)),
-	  keybind_("Show on mouse", nickname), centralKeybind_("Show in center", nickname + "_cl"),
+	  keybind_(nickname, "Show on mouse"), centralKeybind_(nickname + "_cl", "Show in center"),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "Wheel" + nickname),
 	  centerFavoriteOption_("Favorite choice", "center_favorite", "Wheel" + nickname),
 	  scaleOption_("Scale", "scale", "Wheel" + nickname),
@@ -23,14 +23,27 @@ Wheel::Wheel(uint resourceId, const std::string &nickname, const std::string &di
 	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "Wheel" + nickname)
 {
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(resourceId), &appearance_);
-	
-	Input::i()->AddMouseMoveCallback([this]() { OnMouseMove(); });
-	Input::i()->AddInputChangeCallback([this](bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, keys, changedKeys); });
+
+	mouseMoveCallback_ = [this]() { OnMouseMove(); };
+	Input::i()->AddMouseMoveCallback(&mouseMoveCallback_);
+	inputChangeCallback_ = [this](bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, keys, changedKeys); };
+	Input::i()->AddInputChangeCallback(&inputChangeCallback_);
+
+	SettingsMenu::i()->AddImplementer(this);
 }
 
 Wheel::~Wheel()
 {
 	COM_RELEASE(appearance_);
+
+	if(auto i = Input::iNoInit(); i)
+	{
+		i->RemoveMouseMoveCallback(&mouseMoveCallback_);
+		i->RemoveInputChangeCallback(&inputChangeCallback_);
+	}
+	
+	if(auto i = SettingsMenu::iNoInit(); i)
+		i->RemoveImplementer(this);
 }
 
 void Wheel::UpdateHover()
@@ -97,7 +110,7 @@ void Wheel::DrawMenu()
 	ImGuiConfigurationWrapper(rb, "Previous", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
 	ImGuiConfigurationWrapper(rb, "Favorite", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
 
-	if (centerBehaviorOption_.value() == CenterBehavior::FAVORITE)
+	if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
 	{
 		std::vector<const char*> potentialNames(wheelElements_.size());
 			for (uint i = 0; i < wheelElements_.size(); i++)
@@ -215,7 +228,7 @@ WheelElement * Wheel::ModifyCenterHoveredElement(WheelElement * elem)
 	if (elem)
 		return elem;
 
-	switch (centerBehaviorOption_.value())
+	switch (CenterBehavior(centerBehaviorOption_.value()))
 	{
 	case CenterBehavior::PREVIOUS:
 		return previousHovered_;

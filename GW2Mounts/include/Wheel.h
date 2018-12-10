@@ -15,9 +15,9 @@ class Wheel : public SettingsMenu::Implementer
 public:
 	enum class CenterBehavior : int
 	{
-		PREVIOUS,
-		FAVORITE,
-		NOTHING
+		NOTHING = 0,
+		PREVIOUS = 1,
+		FAVORITE = 2
 	};
 
 	Wheel(uint resourceId, const std::string &nickname, const std::string &displayName, IDirect3DDevice9* dev);
@@ -42,7 +42,7 @@ protected:
 	bool isVisible_ = false;
 	Keybind keybind_, centralKeybind_;
 
-	ConfigurationOption<CenterBehavior, int> centerBehaviorOption_;
+	ConfigurationOption<int> centerBehaviorOption_;
 	ConfigurationOption<int> centerFavoriteOption_;
 	
 	ConfigurationOption<float> scaleOption_;
@@ -61,13 +61,13 @@ protected:
 	WheelElement* previousUsed_ = nullptr;
 	
 	IDirect3DTexture9* appearance_ = nullptr;
+	
+	Input::MouseMoveCallback mouseMoveCallback_;
+	Input::InputChangeCallback inputChangeCallback_;
 
 	void DrawMenu() override;
 
 	friend class WheelElement;
 };
-
-template<>
-inline int& ConfigurationOption<Wheel::CenterBehavior, int>::fallbackValue() { return reinterpret_cast<int&>(value_); }
 
 }

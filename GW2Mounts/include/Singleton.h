@@ -15,6 +15,18 @@ public:
 		return i_.get();
 	}
 
+	static T* iNoInit()
+	{
+		if(!i_)
+			return nullptr;
+		return i_.get();
+	}
+
+	virtual ~Singleton()
+	{
+		i_.release();
+	}
+
 protected:
 	static std::unique_ptr<T> i_;
 };

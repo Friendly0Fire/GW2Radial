@@ -15,9 +15,7 @@ public:
 	class Implementer
 	{
 	public:
-		Implementer() = default;
 		virtual void DrawMenu() = 0;
-		virtual ~Implementer() = default;
 	};
 
 	SettingsMenu();
@@ -25,6 +23,9 @@ public:
 	void Draw();
 
 	const Keybind& showKeybind() const { return showKeybind_; }
+	
+	void AddImplementer(Implementer* impl) { implementers_.push_back(impl); }
+	void RemoveImplementer(Implementer* impl) { implementers_.remove(impl); }
 
 protected:
 	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);
@@ -33,6 +34,8 @@ protected:
 
 	bool isVisible_ = false;
 	Keybind showKeybind_;
+	
+	Input::InputChangeCallback inputChangeCallback_;
 };
 
 }

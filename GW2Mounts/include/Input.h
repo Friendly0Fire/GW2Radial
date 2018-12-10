@@ -51,8 +51,10 @@ public:
 	void OnFocusLost();
 	void OnUpdate();
 	
-	void AddMouseMoveCallback(const MouseMoveCallback &cb) { mouseMoveCallbacks_.push_back(cb); }
-	void AddInputChangeCallback(const InputChangeCallback &cb) { inputChangeCallbacks_.push_back(cb); }
+	void AddMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.push_back(cb); }
+	void AddInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.push_back(cb); }
+	void RemoveMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.remove(cb); }
+	void RemoveInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.remove(cb); }
 	void SendKeybind(const std::set<uint> &vkeys);
 
 protected:
@@ -85,8 +87,8 @@ protected:
 	std::set<uint> DownKeys;
 	std::list<DelayedInput> QueuedInputs;
 	
-	std::list<MouseMoveCallback> mouseMoveCallbacks_;
-	std::list<InputChangeCallback> inputChangeCallbacks_;
+	std::list<MouseMoveCallback*> mouseMoveCallbacks_;
+	std::list<InputChangeCallback*> inputChangeCallbacks_;
 };
 
 }
