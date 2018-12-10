@@ -5,6 +5,7 @@
 
 namespace GW2Addons
 {
+std::unordered_map<Keybind*, std::set<uint>> Keybind::keyMaps_;
 
 Keybind::Keybind(std::string nickname, std::string displayName, const std::set<uint>& keys, bool saveToConfig) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName)), saveToConfig_(saveToConfig)
@@ -19,6 +20,11 @@ Keybind::Keybind(std::string nickname, std::string displayName) :
 	const auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds", nickname_.c_str());
 	if(keys) this->keys(keys);
 	isBeingModified_ = false;
+}
+
+Keybind::~Keybind()
+{
+	keyMaps_.erase(this);
 }
 
 void Keybind::keys(const std::set<uint>& keys)
@@ -55,6 +61,8 @@ void Keybind::keys(const char * keys)
 void Keybind::ApplyKeys()
 {
 	UpdateDisplayString();
+
+	CheckForConflict();
 	
 	if(saveToConfig_)
 	{
@@ -68,6 +76,27 @@ void Keybind::ApplyKeys()
 		auto cfg = ConfigurationFile::i();
 		cfg->ini().SetValue("keybinds", nickname_.c_str(), settingValue.c_str());
 		cfg->Save();
+	}
+}
+
+void Keybind::CheckForConflict()
+{
+	if(keys_.empty())
+	{
+		isConflicted_ = false;
+		return;
+	}
+
+	keyMaps_[this] = keys_;
+	
+	isConflicted_ = false;
+	for(auto& elem : keyMaps_)
+	{
+		if(elem.first != this && elem.second == keys_)
+		{
+			isConflicted_ = true;
+			elem.first->isConflicted_ = true;
+		}
 	}
 }
 

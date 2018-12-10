@@ -49,7 +49,14 @@ void ImGuiKeybindInput(GW2Addons::Keybind& setting)
 
 	ImGui::PushItemWidth(windowWidth * 0.5f);
 
-	ImGui::Text(setting.displayName().c_str());
+	if(setting.isConflicted())
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, 0xFF0000FF);
+		ImGui::Text((setting.displayName() + "[!]").c_str());
+		ImGui::PopStyleColor();
+	}
+	else
+		ImGui::Text(setting.displayName().c_str());
 
 	ImGui::PopItemWidth();
 }
