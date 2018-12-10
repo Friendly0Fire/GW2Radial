@@ -1,12 +1,12 @@
-[submodule "GW2Mounts/imgui"]
-	path = GW2Mounts/imgui
+[submodule "GW2Addons/imgui"]
+	path = GW2Addons/imgui
 	url = https://github.com/Friendly0Fire/imgui.git
-[submodule "GW2Mounts/simpleini"]
-	path = GW2Mounts/simpleini
+[submodule "GW2Addons/simpleini"]
+	path = GW2Addons/simpleini
 	url = https://github.com/brofield/simpleini.git
-[submodule "GW2Mounts/minhook"]
-	path = GW2Mounts/minhook
+[submodule "GW2Addons/minhook"]
+	path = GW2Addons/minhook
 	url = https://github.com/Friendly0Fire/minhook.git
-[submodule "GW2Mounts/xxhash"]
-	path = GW2Mounts/xxhash
+[submodule "GW2Addons/xxhash"]
+	path = GW2Addons/xxhash
 	url = https://github.com/Cyan4973/xxHash.git
