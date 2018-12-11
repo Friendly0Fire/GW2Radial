@@ -60,17 +60,19 @@ void Wheel::UpdateHover()
 
 	WheelElement* lastHovered = nullptr;
 
+	auto activeElements = GetActiveElements();
+
 	// Middle circle does not count as a hover event
-	if (!wheelElements_.empty() && D3DXVec2LengthSq(&mousePos) > SQUARE(scaleOption_.value() * 0.135f * centerScaleOption_.value()))
+	if (!activeElements.empty() && D3DXVec2LengthSq(&mousePos) > SQUARE(scaleOption_.value() * 0.135f * centerScaleOption_.value()))
 	{
 		float mouseAngle = atan2(-mousePos.y, -mousePos.x) - 0.5f * float(M_PI);
 		if (mouseAngle < 0)
 			mouseAngle += float(2 * M_PI);
 
-		const float elementAngle = float(2 * M_PI) / wheelElements_.size();
-		const int elementId = int((mouseAngle - elementAngle / 2) / elementAngle + 1) % wheelElements_.size();
+		const float elementAngle = float(2 * M_PI) / activeElements.size();
+		const int elementId = int((mouseAngle - elementAngle / 2) / elementAngle + 1) % activeElements.size();
 
-		currentHovered_ = wheelElements_[elementId].get();
+		currentHovered_ = activeElements[elementId];
 	}
 	else
 		currentHovered_ = nullptr;
