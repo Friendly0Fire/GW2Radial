@@ -39,6 +39,9 @@ void Keybind::keys(const std::set<uint>& keys)
 
 void Keybind::keys(const char * keys)
 {
+	if(!isBeingModified_)
+		return;
+
 	keys_.clear();
 
 	if (strnlen_s(keys, 256) > 0)

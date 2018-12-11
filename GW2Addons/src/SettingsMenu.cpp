@@ -18,7 +18,10 @@ void SettingsMenu::Draw()
 	if (isVisible_)
 	{
 		if(!ImGui::Begin("GW2Addons Options Menu", &isVisible_))
+		{
+			ImGui::End();
 			return;
+		}
 
 		ImGui::PushItemWidth(-1);
 	

@@ -191,22 +191,25 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		
 		SettingsMenu::i()->Draw();
 
-		if(!firstMessageShown_.value() && ImGui::Begin("Welcome to GW2Addons!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+		if(!firstMessageShown_.value())
 		{
-			const auto size = ImVec2(screenWidth_ * 0.35f, screenHeight_ * 0.17f);
-			const auto pos = ImVec2(0.5f * screenWidth_ - size.x / 2, 0.45f * screenHeight_ - size.y / 2);
-			ImGui::SetWindowPos(pos);
-			ImGui::SetWindowSize(size);
-			ImGui::TextWrapped("Welcome to GW2Addons! This small addon provides a collection of features, chief among them the radial menu for mounts and novelties. "
-			"To begin, use the shortcut Shift+Alt+M to open the settings menu and take a moment to bind your keys. If you ever need further assistance, please visit "
-			"this project's website at https://github.com/Friendly0Fire/GW2Addons !");
-			
-			ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.4f);
-			ImGui::SetCursorPosY(ImGui::GetWindowSize().y - ImGui::GetFontSize() * 2.5f);
-			if (ImGui::Button("OK", ImVec2(ImGui::GetWindowSize().x * 0.2f, ImGui::GetFontSize() * 1.5f)))
-				firstMessageShown_.value(true);
-
+			if(ImGui::Begin("Welcome to GW2Addons!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+			{
+				const auto size = ImVec2(screenWidth_ * 0.35f, screenHeight_ * 0.17f);
+				const auto pos = ImVec2(0.5f * screenWidth_ - size.x / 2, 0.45f * screenHeight_ - size.y / 2);
+				ImGui::SetWindowPos(pos);
+				ImGui::SetWindowSize(size);
+				ImGui::TextWrapped("Welcome to GW2Addons! This small addon provides a collection of features, chief among them the radial menu for mounts and novelties. "
+				"To begin, use the shortcut Shift+Alt+M to open the settings menu and take a moment to bind your keys. If you ever need further assistance, please visit "
+				"this project's website at https://github.com/Friendly0Fire/GW2Addons !");
+				
+				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.4f);
+				ImGui::SetCursorPosY(ImGui::GetWindowSize().y - ImGui::GetFontSize() * 2.5f);
+				if (ImGui::Button("OK", ImVec2(ImGui::GetWindowSize().x * 0.2f, ImGui::GetFontSize() * 1.5f)))
+					firstMessageShown_.value(true);
+			}
 			ImGui::End();
+			
 		}
 
 		ImGui::Render();

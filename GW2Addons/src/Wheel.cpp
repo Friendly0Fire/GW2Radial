@@ -333,6 +333,12 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 		currentHovered_ = nullptr;
 	}
 
+	bool isAnyElementBeingModified = false;
+	{
+		for (auto& we : wheelElements_)
+			isAnyElementBeingModified = isAnyElementBeingModified || we->keybind().isBeingModified();
+	}
+
 	{
 		// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
 		bool keyLifted = false;
@@ -365,6 +371,9 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 				we->keybind().isBeingModified(false);	
 		}
 	}
+
+	if(isAnyElementBeingModified)
+		return InputResponse::PREVENT_ALL;
 
 	if (isVisible_ && lockCameraWhenOverlayedOption_.value())
 		return InputResponse::PREVENT_MOUSE;
