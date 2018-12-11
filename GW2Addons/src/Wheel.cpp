@@ -58,7 +58,7 @@ void Wheel::UpdateHover()
 
 	mousePos.y *= static_cast<float>(Core::i()->screenHeight()) / static_cast<float>(Core::i()->screenWidth());
 
-	WheelElement* lastHovered = nullptr;
+	WheelElement* lastHovered = currentHovered_;
 
 	auto activeElements = GetActiveElements();
 
@@ -77,10 +77,10 @@ void Wheel::UpdateHover()
 	else
 		currentHovered_ = nullptr;
 
-	const auto modifiedMountHovered = ModifyCenterHoveredElement(currentHovered_);
-	const auto modifiedLastMountHovered = ModifyCenterHoveredElement(lastHovered);
+	const auto modifiedElementHovered = ModifyCenterHoveredElement(currentHovered_);
+	const auto modifiedLastElementHovered = ModifyCenterHoveredElement(lastHovered);
 
-	if (currentHovered_ && lastHovered != currentHovered_ && modifiedLastMountHovered != modifiedMountHovered)
+	if (currentHovered_ && lastHovered != currentHovered_ && modifiedLastElementHovered != modifiedElementHovered)
 		currentHovered_->currentHoverTime(std::max(currentTriggerTime_ + displayDelayOption_.value(), TimeInMilliseconds()));
 }
 
