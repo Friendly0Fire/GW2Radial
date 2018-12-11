@@ -17,11 +17,11 @@ Wheel::Wheel(uint resourceId, std::string nickname, std::string displayName, IDi
 	  keybind_(nickname_, "Show on mouse"), centralKeybind_(nickname_ + "_cl", "Show in center"),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
 	  centerFavoriteOption_("Favorite choice", "center_favorite", "wheel_" + nickname_),
-	  scaleOption_("Scale", "scale", "wheel_" + nickname_),
-	  centerScaleOption_("Center scale", "center_scale", "wheel_" + nickname_),
+	  scaleOption_("Scale", "scale", "wheel_" + nickname_, 1.f),
+	  centerScaleOption_("Center scale", "center_scale", "wheel_" + nickname_, 0.2f),
 	  displayDelayOption_("Pop-up delay", "delay", "wheel_" + nickname_),
-	  resetCursorOnLockedKeybindOption_("Reset cursor to center with Center Locked keybind", "reset_cursor_cl", "wheel_" + nickname_),
-	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_)
+	  resetCursorOnLockedKeybindOption_("Reset cursor to center with Center Locked keybind", "reset_cursor_cl", "wheel_" + nickname_, true),
+	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_, true)
 {
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(resourceId), &appearance_);
 
@@ -102,8 +102,8 @@ void Wheel::DrawMenu()
 	ImGui::PushItemWidth(0.66f * ImGui::GetWindowContentRegionWidth());
 	
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
-	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.f, 4.f, "%.2f", 1.f);
-	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.f, 0.25f, "%.2f", 1.f);
+	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.25f, 4.f, "%.2f", 1.f);
+	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.05f, 0.25f, "%.2f", 1.f);
 
 	ImGui::PopItemWidth();
 	
