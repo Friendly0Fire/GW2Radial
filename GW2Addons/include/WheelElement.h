@@ -23,6 +23,11 @@ public:
 
 	mstime currentHoverTime() const { return currentHoverTime_; }
 	void currentHoverTime(mstime cht) { currentHoverTime_ = cht; }
+
+	mstime currentExitTime() const { return currentExitTime_; }
+	void currentExitTime(mstime cht) { currentExitTime_ = cht; }
+
+	float hoverFadeIn(const mstime& currentTime, const Wheel* parent) const;
 	
 	const Keybind& keybind() const { return keybind_; }
 	Keybind& keybind() { return keybind_; }
@@ -36,6 +41,7 @@ protected:
 	Keybind keybind_;
 	IDirect3DTexture9* appearance_ = nullptr;
 	mstime currentHoverTime_ = 0;
+	mstime currentExitTime_ = 0;
 };
 
 }

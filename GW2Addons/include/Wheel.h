@@ -34,8 +34,6 @@ protected:
 	void OnMouseMove();
 	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);
 
-	const float CircleRadiusBase = 256.f / 1664.f * 0.25f;
-
 	std::string nickname_, displayName_;
 
 	std::vector<std::unique_ptr<WheelElement>> wheelElements_;

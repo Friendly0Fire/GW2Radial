@@ -23,7 +23,7 @@ void WheelElement::Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElemen
 	auto fx = Core::i()->mainEffect();
 	auto& quad = Core::i()->quad();
 
-	const float hoverTimer = std::min(1.f, (currentTime - std::max(currentHoverTime_, parent->currentTriggerTime_ + parent->displayDelayOption_.value())) / 1000.f * 6);
+	const float hoverTimer = hoverFadeIn(currentTime, parent);
 
 	float mountAngle = float(n) / float(activeElementsCount) * 2 * float(M_PI);
 	if (activeElementsCount == 1)
@@ -36,10 +36,8 @@ void WheelElement::Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElemen
 	float mountDiameter = float(sin((2 * M_PI / double(activeElementsCount)) / 2)) * 2.f * 0.2f * 0.66f;
 	if (activeElementsCount == 1)
 		mountDiameter = 2.f * 0.2f;
-	if (this == elementHovered)
-		mountDiameter *= Lerp(1.f, 1.1f, SmoothStep(hoverTimer));
 	else
-		mountDiameter *= 0.9f;
+		mountDiameter *= Lerp(1.f, 1.1f, SmoothStep(hoverTimer));
 
 	switch (activeElementsCount)
 	{
@@ -65,17 +63,22 @@ void WheelElement::Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElemen
 
 	spriteDimensions.z *= mountDiameter;
 	spriteDimensions.w *= mountDiameter;
-
-	int v[3] = { int(elementId_), n, int(activeElementsCount) };
-	fx->SetFloat("g_fHoverTimer", hoverTimer);
-	fx->SetValue("g_iMountID", v, sizeof(v));
-	fx->SetBool("g_bMountHovered", elementHovered == this);
-	fx->SetTexture("texMountImage", appearance_);
+	
+	fx->SetTexture("texElementImage", appearance_);
 	fx->SetVector("g_vSpriteDimensions", &spriteDimensions);
-	fx->SetValue("g_vColor", color().data(), sizeof(D3DXVECTOR4));
+	fx->SetInt("g_iElementID", elementId());
+	fx->SetValue("g_vElementColor", color().data(), sizeof(D3DXVECTOR4));
 	fx->CommitChanges();
 
 	quad->Draw();
+}
+
+float WheelElement::hoverFadeIn(const mstime& currentTime, const Wheel* parent) const
+{
+	const auto hoverIn = std::min(1.f, (currentTime - std::max(currentHoverTime_, parent->currentTriggerTime_ + parent->displayDelayOption_.value())) / 1000.f * 6);
+	const auto hoverOut = 1.f - std::min(1.f, (currentTime - std::max(currentExitTime_, parent->currentTriggerTime_ + parent->displayDelayOption_.value())) / 1000.f * 6);
+
+	return parent->currentHovered_ == this ? hoverIn : std::min(hoverIn, hoverOut);
 }
 
 }

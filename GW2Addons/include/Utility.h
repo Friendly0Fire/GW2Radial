@@ -1,5 +1,6 @@
 #pragma once
 #include <Main.h>
+#include <inttypes.h>
 
 namespace GW2Addons
 {
@@ -50,6 +51,16 @@ inline float Lerp(float a, float b, float s)
 inline float SmoothStep(float x)
 {
 	return 3 * x * x - 2 * x * x * x;
+}
+
+inline void FormattedOutputDebugString(const char* fmt, ...)
+{
+	char buffer[4096];
+	va_list args;
+	va_start(args, fmt);
+	vsprintf_s(buffer, fmt, args);
+	OutputDebugStringA(buffer);
+	va_end(args);
 }
 
 }

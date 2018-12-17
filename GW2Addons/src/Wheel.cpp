@@ -81,7 +81,11 @@ void Wheel::UpdateHover()
 	const auto modifiedLastElementHovered = ModifyCenterHoveredElement(lastHovered);
 
 	if (currentHovered_ && lastHovered != currentHovered_ && modifiedLastElementHovered != modifiedElementHovered)
-		currentHovered_->currentHoverTime(std::max(currentTriggerTime_ + displayDelayOption_.value(), TimeInMilliseconds()));
+	{
+		const auto time = TimeInMilliseconds();
+		if(lastHovered) lastHovered->currentExitTime(time);
+		currentHovered_->currentHoverTime(time);	
+	}
 }
 
 void Wheel::DrawMenu()
@@ -149,14 +153,14 @@ void Wheel::DrawMenu()
 
 void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 {
-	if (isVisible_ && fx && quad)
+	if (isVisible_)
 	{
 		const int screenWidth = Core::i()->screenWidth();
 		const int screenHeight = Core::i()->screenHeight();
 
 		quad->Bind();
 
-		auto currentTime = TimeInMilliseconds();
+		const auto currentTime = TimeInMilliseconds();
 
 		if (currentTime >= currentTriggerTime_ + displayDelayOption_.value())
 		{
@@ -186,15 +190,19 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				
 				const auto elementHovered = ModifyCenterHoveredElement(currentHovered_);
 
+				std::vector<float> hoveredFadeIns;
+				// TODO: Center not handled yet
+				std::transform(activeElements.begin(), activeElements.end(), std::back_inserter(hoveredFadeIns),
+					[&](const WheelElement* elem) { return elem->hoverFadeIn(currentTime, this); });
+
 				fx->SetTechnique("BgImage");
 				fx->SetTexture("texBgImage", appearance_);
 				fx->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
-				fx->SetFloat("g_fFadeTimer", fadeTimer);
-				fx->SetFloat("g_fTimer", fmod(currentTime / 1010.f, 55000.f));
-				fx->SetFloat("g_fDeadZoneScale", centerScaleOption_.value());
-				fx->SetInt("g_iMountCount", int(activeElements.size()));
-				fx->SetInt("g_iMountHovered", int(std::find(activeElements.begin(), activeElements.end(), elementHovered) - activeElements.begin()));
-				fx->SetBool("g_bCenterGlow", elementHovered != currentHovered_);
+				fx->SetFloat("g_fWheelFadeIn", fadeTimer);
+				fx->SetFloat("g_fAnimationTimer", fmod(currentTime / 1010.f, 55000.f));
+				fx->SetFloat("g_fCenterScale", centerScaleOption_.value());
+				fx->SetInt("g_iElementCount", int(activeElements.size()));
+				fx->SetFloatArray("g_fHoverFadeIns", hoveredFadeIns.data(), hoveredFadeIns.size());
 				fx->Begin(&passes, 0);
 				fx->BeginPass(0);
 				quad->Draw();
@@ -319,8 +327,6 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 		currentTriggerTime_ = TimeInMilliseconds();
 
 		UpdateHover();
-		if(currentHovered_)
-			currentHovered_->currentHoverTime(currentTriggerTime_ + displayDelayOption_.value());
 	}
 	else if (!isVisible_ && previousVisibility)
 	{
