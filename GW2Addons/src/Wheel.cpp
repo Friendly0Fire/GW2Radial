@@ -52,18 +52,18 @@ void Wheel::UpdateHover()
 	const auto io = ImGui::GetIO();
 
 	D3DXVECTOR2 mousePos;
-	mousePos.x = io.MousePos.x / static_cast<float>(Core::i()->screenWidth());
-	mousePos.y = io.MousePos.y / static_cast<float>(Core::i()->screenHeight());
+	mousePos.x = io.MousePos.x / float(Core::i()->screenWidth());
+	mousePos.y = io.MousePos.y / float(Core::i()->screenHeight());
 	mousePos -= currentPosition_;
 
-	mousePos.y *= static_cast<float>(Core::i()->screenHeight()) / static_cast<float>(Core::i()->screenWidth());
+	mousePos.y *= float(Core::i()->screenHeight()) / float(Core::i()->screenWidth());
 
 	WheelElement* lastHovered = currentHovered_;
 
 	auto activeElements = GetActiveElements();
 
 	// Middle circle does not count as a hover event
-	if (!activeElements.empty() && D3DXVec2LengthSq(&mousePos) > SQUARE(scaleOption_.value() * 0.135f * centerScaleOption_.value()))
+	if (!activeElements.empty() && D3DXVec2LengthSq(&mousePos) > SQUARE(scaleOption_.value() * 0.125f * 0.8f * centerScaleOption_.value()))
 	{
 		float mouseAngle = atan2(-mousePos.y, -mousePos.x) - 0.5f * float(M_PI);
 		if (mouseAngle < 0)

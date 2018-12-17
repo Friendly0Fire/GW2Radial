@@ -25,19 +25,19 @@ void WheelElement::Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElemen
 
 	const float hoverTimer = hoverFadeIn(currentTime, parent);
 
-	float mountAngle = float(n) / float(activeElementsCount) * 2 * float(M_PI);
+	float elementAngle = float(n) / float(activeElementsCount) * 2 * float(M_PI);
 	if (activeElementsCount == 1)
-		mountAngle = 0;
-	const D3DXVECTOR2 mountLocation = D3DXVECTOR2(cos(mountAngle - float(M_PI) / 2), sin(mountAngle - float(M_PI) / 2)) * 0.25f * 0.66f;
+		elementAngle = 0;
+	const D3DXVECTOR2 elementLocation = D3DXVECTOR2(cos(elementAngle - float(M_PI) / 2), sin(elementAngle - float(M_PI) / 2)) * 0.2f;
 
-	spriteDimensions.x += mountLocation.x * spriteDimensions.z;
-	spriteDimensions.y += mountLocation.y * spriteDimensions.w;
+	spriteDimensions.x += elementLocation.x * spriteDimensions.z;
+	spriteDimensions.y += elementLocation.y * spriteDimensions.w;
 
-	float mountDiameter = float(sin((2 * M_PI / double(activeElementsCount)) / 2)) * 2.f * 0.2f * 0.66f;
+	float elementDiameter = float(sin((2 * M_PI / double(activeElementsCount)) / 2)) * 2.f * 0.2f * 0.66f;
 	if (activeElementsCount == 1)
-		mountDiameter = 2.f * 0.2f;
+		elementDiameter = 2.f * 0.2f;
 	else
-		mountDiameter *= Lerp(1.f, 1.1f, SmoothStep(hoverTimer));
+		elementDiameter *= Lerp(1.f, 1.1f, SmoothStep(hoverTimer));
 
 	switch (activeElementsCount)
 	{
@@ -61,8 +61,8 @@ void WheelElement::Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElemen
 		break;
 	}
 
-	spriteDimensions.z *= mountDiameter;
-	spriteDimensions.w *= mountDiameter;
+	spriteDimensions.z *= elementDiameter;
+	spriteDimensions.w *= elementDiameter;
 	
 	fx->SetTexture("texElementImage", appearance_);
 	fx->SetVector("g_vSpriteDimensions", &spriteDimensions);
