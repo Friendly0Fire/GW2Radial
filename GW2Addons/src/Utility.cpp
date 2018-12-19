@@ -1,6 +1,5 @@
+#include <Main.h>
 #include <Utility.h>
-#include <locale>
-#include <codecvt>
 #include <d3d9types.h>
 #include <Core.h>
 #include <winuser.h>
@@ -8,39 +7,41 @@
 namespace GW2Addons
 {
 
-std::wstring StringToWideString(const std::string& str)
+std::string utf8_encode(const std::wstring &wstr)
 {
-	typedef std::codecvt_utf8<wchar_t> convert_typeX;
-	std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-	return converterX.from_bytes(str);
+    if( wstr.empty() ) return std::string();
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+    std::string strTo( size_needed, 0 );
+    WideCharToMultiByte                  (CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+    return strTo;
 }
 
-std::string WideStringToString(const std::wstring& wstr)
+std::wstring utf8_decode(const std::string &str)
 {
-	typedef std::codecvt_utf8<wchar_t> convert_typeX;
-	std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-	return converterX.to_bytes(wstr);
+    if( str.empty() ) return std::wstring();
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+    std::wstring wstrTo( size_needed, 0 );
+    MultiByteToWideChar                  (CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
+    return wstrTo;
 }
 
-std::string GetKeyName(unsigned int virtualKey)
+std::wstring GetKeyName(unsigned int virtualKey)
 {
-	unsigned int scanCode = MapVirtualKey(virtualKey, MAPVK_VK_TO_VSC);
+	unsigned int scanCode = MapVirtualKeyW(virtualKey, MAPVK_VK_TO_VSC);
 
 	// because MapVirtualKey strips the extended bit for some keys
 	switch (virtualKey)
 	{
 	case VK_LBUTTON:
-		return "M1";
+		return L"M1";
 	case VK_RBUTTON:
-		return "M2";
+		return L"M2";
 	case VK_MBUTTON:
-		return "M3";
+		return L"M3";
 	case VK_XBUTTON1:
-		return "M4";
+		return L"M4";
 	case VK_XBUTTON2:
-		return "M5";
+		return L"M5";
 	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // arrow keys
 	case VK_PRIOR: case VK_NEXT: // page up and page down
 	case VK_END: case VK_HOME:
@@ -53,11 +54,11 @@ std::string GetKeyName(unsigned int virtualKey)
 		break;
 	}
 
-	char keyName[50];
-	if (GetKeyNameTextA(scanCode << 16, keyName, sizeof(keyName)) != 0)
+	wchar_t keyName[50];
+	if (GetKeyNameTextW(scanCode << 16, keyName, sizeof(keyName)) != 0)
 		return keyName;
 	
-	return "[Error]";
+	return L"[Error]";
 }
 
 void SplitFilename(const tstring& str, tstring* folder, tstring* file)

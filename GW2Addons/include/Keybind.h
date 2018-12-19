@@ -37,7 +37,7 @@ public:
 protected:
 	void UpdateDisplayString();
 	void ApplyKeys();
-	void CheckForConflict();
+	void CheckForConflict(bool recurse = true);
 
 	std::string displayName_, nickname_;
 	std::array<char, 256> keysDisplayString_ { };

@@ -26,7 +26,7 @@ void ConfigurationFile::Reload()
 	folder_ = exeFolder + TEXT("\\addons\\gw2addons\\");
 	_tcscpy_s(location_, (folder_ + g_configName).c_str());
 #if _UNICODE
-	strcpy_s(imguiLocation_, WideStringToString(folder_ + g_imguiConfigName).c_str());
+	strcpy_s(imguiLocation_, utf8_encode(folder_ + g_imguiConfigName).c_str());
 #else
 	strcpy_s(_ImGuiConfigLocation, (_ConfigFolder + ImGuiConfigName).c_str());
 #endif

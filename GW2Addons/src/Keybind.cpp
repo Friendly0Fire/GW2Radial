@@ -2,6 +2,7 @@
 #include <Utility.h>
 #include <sstream>
 #include <ConfigurationFile.h>
+#include <numeric>
 
 namespace GW2Addons
 {
@@ -82,34 +83,31 @@ void Keybind::ApplyKeys()
 	}
 }
 
-void Keybind::CheckForConflict()
+void Keybind::CheckForConflict(bool recurse)
 {
-	if(keys_.empty())
-	{
-		isConflicted_ = false;
-		return;
-	}
-
 	keyMaps_[this] = keys_;
 	
 	isConflicted_ = false;
 	for(auto& elem : keyMaps_)
 	{
 		if(elem.first != this && elem.second == keys_)
-		{
 			isConflicted_ = true;
-			elem.first->isConflicted_ = true;
-		}
+		
+		if(recurse) elem.first->CheckForConflict(false);
 	}
 }
 
 void Keybind::UpdateDisplayString()
 {
-	std::string keybind;
-	for (const auto& k : keys_)
-		keybind += GetKeyName(k) + std::string(" + ");
+	if(keys_.empty())
+	{
+		keysDisplayString_[0] = '\0';
+		return;
+	}
 
-	strcpy_s(keysDisplayString_.data(), keysDisplayString_.size(), (keybind.empty() ? keybind : keybind.substr(0, keybind.size() - 3)).c_str());
+	std::wstring keybind = std::accumulate(std::next(keys_.begin()), keys_.end(), GetKeyName(*keys_.begin()), [](std::wstring a, uint b) { return std::move(a) + L" + " + GetKeyName(b); });
+
+	strcpy_s(keysDisplayString_.data(), keysDisplayString_.size(), utf8_encode(keybind).c_str());
 }
 
 }

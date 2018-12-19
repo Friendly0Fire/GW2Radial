@@ -5,10 +5,12 @@
 namespace GW2Addons
 {
 
-std::wstring StringToWideString(const std::string & str);
-std::string WideStringToString(const std::wstring & wstr);
+// Convert a wide Unicode string to an UTF8 string
+std::string utf8_encode(const std::wstring &wstr);
+// Convert an UTF8 string to a wide Unicode String
+std::wstring utf8_decode(const std::string &str);
 
-std::string GetKeyName(unsigned int virtualKey);
+std::wstring GetKeyName(unsigned int virtualKey);
 
 void SplitFilename(const tstring & str, tstring * folder, tstring * file);
 
