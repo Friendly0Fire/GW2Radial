@@ -90,7 +90,7 @@ void Keybind::CheckForConflict(bool recurse)
 	isConflicted_ = false;
 	for(auto& elem : keyMaps_)
 	{
-		if(elem.first != this && elem.second == keys_)
+		if(elem.first != this && !keys_.empty() && elem.second == keys_)
 			isConflicted_ = true;
 		
 		if(recurse) elem.first->CheckForConflict(false);

@@ -11,12 +11,17 @@ namespace GW2Addons
 class WheelElement
 {
 public:
-	WheelElement(uint id, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
+	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName, IDirect3DDevice9* dev);
 	virtual ~WheelElement();
+
+	int DrawPriority(int extremumIndicator);
 
 	void Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
 
 	uint elementId() const { return elementId_; }
+	
+	int sortingPriority() const { return sortingPriorityOption_.value(); }
+	void sortingPriority(int value) { return sortingPriorityOption_.value(value); }
 	
 	const std::string& nickname() const { return nickname_; }
 	const std::string& displayName() const { return displayName_; }
@@ -35,6 +40,9 @@ public:
 
 protected:
 	virtual std::array<float, 4> color() = 0;
+	
+	ConfigurationOption<bool> isShownOption_;
+	ConfigurationOption<int> sortingPriorityOption_;
 
 	std::string nickname_, displayName_;
 	uint elementId_;

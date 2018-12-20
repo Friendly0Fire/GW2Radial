@@ -28,7 +28,6 @@ Input::Input()
 
 bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 {
-
 	std::list<EventKey> eventKeys;
 
 	// Generate our EventKey list for the current message
@@ -84,15 +83,16 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 	// Apply key events now
 	for (const auto& k : eventKeys)
 		if (k.down)
-			downKeysChanged = downKeysChanged || DownKeys.insert(k.vk).second;
+			downKeysChanged |= DownKeys.insert(k.vk).second;
 		else
-			downKeysChanged = downKeysChanged || DownKeys.erase(k.vk) > 0;
+			downKeysChanged |= DownKeys.erase(k.vk) > 0;
 
 
 	InputResponse response = InputResponse::PASS_TO_GAME;
 	// Only run these for key down/key up (incl. mouse buttons) events
-	for(auto& cb : inputChangeCallbacks_)
-		response = response | (*cb)(downKeysChanged, DownKeys, eventKeys);
+	if(!eventKeys.empty())
+		for(auto& cb : inputChangeCallbacks_)
+			response |= (*cb)(downKeysChanged, DownKeys, eventKeys);
 
 #if 0
 	if (input_key_down || input_key_up)

@@ -80,17 +80,12 @@ void Core::OnFocusLost()
 	Input::i()->OnFocusLost();
 }
 
-extern IMGUI_IMPL_API LRESULT  ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (msg == WM_KILLFOCUS)
 		i()->OnFocusLost();
-	else
-	{
-		const auto consume = Input::i()->OnInput(msg, wParam, lParam);
-		if(consume)
-			return 0;
-	}
+	else if(Input::i()->OnInput(msg, wParam, lParam))
+		return 0;
 
 	// Whatever's left should be sent to the game
 	return CallWindowProc(i()->baseWndProc_, hWnd, msg, wParam, lParam);
@@ -103,8 +98,8 @@ void Core::PreCreateDevice(HWND hFocusWindow)
 	// Hook WndProc
 	if (!baseWndProc_)
 	{
-		baseWndProc_ = (WNDPROC)GetWindowLongPtr(hFocusWindow, GWLP_WNDPROC);
-		SetWindowLongPtr(hFocusWindow, GWLP_WNDPROC, (LONG_PTR)&WndProc);
+		baseWndProc_ = WNDPROC(GetWindowLongPtr(hFocusWindow, GWLP_WNDPROC));
+		SetWindowLongPtr(hFocusWindow, GWLP_WNDPROC, LONG_PTR(&WndProc));
 	}
 }
 

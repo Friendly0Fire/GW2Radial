@@ -28,6 +28,11 @@ inline InputResponse operator|(InputResponse a, InputResponse b)
 	return InputResponse(std::max(uint(a), uint(b)));
 }
 
+inline InputResponse operator|=(InputResponse& a, InputResponse b)
+{
+	return (a = a | b);
+}
+
 class Input : public Singleton<Input>
 {
 public:

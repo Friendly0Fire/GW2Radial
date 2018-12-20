@@ -7,8 +7,12 @@
 namespace GW2Addons
 {
 
-WheelElement::WheelElement(uint id, std::string nickname, std::string displayName, IDirect3DDevice9* dev)
-	: nickname_(nickname), displayName_(displayName), elementId_(id), keybind_(nickname, displayName)
+WheelElement::WheelElement(uint id, const std::string &nickname, const std::string &category,
+							const std::string &displayName, IDirect3DDevice9* dev)
+	: nickname_(nickname), displayName_(displayName), elementId_(id),
+	  isShownOption_(displayName + " Hidden", nickname + "_hidden", category, true),
+	  sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, int(id)),
+	  keybind_(nickname, displayName)
 {
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(elementId_), &appearance_);
 }
@@ -16,6 +20,46 @@ WheelElement::WheelElement(uint id, std::string nickname, std::string displayNam
 WheelElement::~WheelElement()
 {
 	COM_RELEASE(appearance_);
+}
+
+int WheelElement::DrawPriority(int extremumIndicator)
+{
+	ImVec4 col;
+	col.x = color()[0];
+	col.y = color()[1];
+	col.z = color()[2];
+	col.w = color()[3];
+	ImGui::PushStyleColor(ImGuiCol_Text, col);
+
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, ("##Displayed" + nickname_).c_str(), isShownOption_);
+	ImGui::SameLine();
+	if(!isShownOption_.value() || !isActive())
+		ImGui::PushFont(Core::i()->fontItalic());
+	auto displayName = displayName_;
+	if(!isActive())
+		displayName += " [No keybind]";
+	ImGui::Text(displayName.c_str());
+	
+	int rv = 0;
+	if(extremumIndicator != 1)
+	{
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(ImGui::GetWindowContentRegionWidth() - 2 * ImGui::GetFrameHeightWithSpacing());
+		if(ImGui::ArrowButton(("##PriorityValueUp" + nickname_).c_str(), ImGuiDir_Up))
+			rv = 1;
+	}
+	if(extremumIndicator != -1)
+	{
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(ImGui::GetWindowContentRegionWidth() - ImGui::GetFrameHeightWithSpacing());
+		if(ImGui::ArrowButton(("##PriorityValueDown" + nickname_).c_str(), ImGuiDir_Down))
+			rv = -1;
+	}
+	if(!isShownOption_.value() || !isActive())
+		ImGui::PopFont();
+	ImGui::PopStyleColor();
+
+	return rv;
 }
 
 void WheelElement::Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const Wheel* parent)

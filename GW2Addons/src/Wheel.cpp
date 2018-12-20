@@ -8,6 +8,7 @@
 #include <utility>
 #include <Input.h>
 #include "../imgui/imgui_internal.h"
+#include <algorithm>
 
 namespace GW2Addons
 {
@@ -146,6 +147,28 @@ void Wheel::DrawMenu()
 	
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
+
+	ImGui::Separator();
+	ImGuiSpacing();
+	ImGui::Text("Visibility and order (clockwise from the top):");
+
+	for(auto it = wheelElements_.begin(); it != wheelElements_.end(); ++it)
+	{
+		const auto extremum = it == wheelElements_.begin() ? 1 : it == std::prev(wheelElements_.end()) ? -1 : 0;
+		auto& e = *it;
+		if(const auto dir = e->DrawPriority(extremum); dir != 0)
+		{
+			if(dir == 1 && e == wheelElements_.front() ||
+				dir == -1 && e == wheelElements_.back())
+				continue;
+
+			auto& eOther = dir == 1 ? *std::prev(it) : *std::next(it);
+			e.swap(eOther);
+			const auto tempPriority = eOther->sortingPriority();
+			eOther->sortingPriority(e->sortingPriority());
+			e->sortingPriority(tempPriority);
+		}
+	}
 
 	ImGui::EndGroup();
 	ImGui::PopID();
@@ -340,48 +363,52 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 		previousUsed_ = currentHovered_;
 		currentHovered_ = nullptr;
 	}
-
-	bool isAnyElementBeingModified = false;
+	
 	{
-		for (auto& we : wheelElements_)
-			isAnyElementBeingModified = isAnyElementBeingModified || we->keybind().isBeingModified();
-	}
+		const auto isAnyElementBeingModified = std::any_of(wheelElements_.begin(), wheelElements_.end(),
+			[](const auto& we) { return we->keybind().isBeingModified(); });
 
-	{
-		// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
-		bool keyLifted = false;
-		auto fullKeybind = keys;
-		for (const auto& ek : changedKeys)
 		{
-			if (!ek.down)
+			// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
+			bool keyLifted = false;
+			auto fullKeybind = keys;
+
+			// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
+			fullKeybind.erase(VK_LBUTTON);
+
+			for (const auto& ek : changedKeys)
 			{
-				fullKeybind.insert(ek.vk);
-				keyLifted = true;
+				if(ek.vk == VK_LBUTTON)
+					continue;
+
+				if (!ek.down)
+				{
+					fullKeybind.insert(ek.vk);
+					keyLifted = true;
+				}
+			}
+
+
+			keybind_.keys(fullKeybind);
+			centralKeybind_.keys(fullKeybind);
+
+			if(keyLifted)
+			{
+				keybind_.isBeingModified(false);	
+				centralKeybind_.isBeingModified(false);	
+			}
+
+			for (auto& we : wheelElements_)
+			{
+				we->keybind().keys(fullKeybind);	
+				if(keyLifted)
+					we->keybind().isBeingModified(false);	
 			}
 		}
 
-		// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
-		fullKeybind.erase(VK_LBUTTON);
-
-		keybind_.keys(fullKeybind);
-		centralKeybind_.keys(fullKeybind);
-
-		if(keyLifted)
-		{
-			keybind_.isBeingModified(false);	
-			centralKeybind_.isBeingModified(false);	
-		}
-
-		for (auto& we : wheelElements_)
-		{
-			we->keybind().keys(fullKeybind);	
-			if(keyLifted)
-				we->keybind().isBeingModified(false);	
-		}
+		if(isAnyElementBeingModified)
+			return InputResponse::PREVENT_ALL;
 	}
-
-	if(isAnyElementBeingModified)
-		return InputResponse::PREVENT_ALL;
 
 	if (isVisible_ && lockCameraWhenOverlayedOption_.value())
 		return InputResponse::PREVENT_MOUSE;
