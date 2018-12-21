@@ -18,6 +18,13 @@ DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {
+	auto rtss = GetModuleHandleA("RTSSHooks64.dll");
+	if(rtss)
+	{
+		MessageBox(nullptr, TEXT("ERROR: RivaTuner Statistics Server has been detected. GW2Addons is incompatible with RTSS. Please disable RTSS and try again."), TEXT("RTSS Detected"), MB_OK);
+		exit(1);
+	}
+
 	i()->dllModule_ = dll;
 	i()->InternalInit();
 }
@@ -76,7 +83,7 @@ void Core::InternalInit()
 
 void Core::OnFocusLost()
 {
-	wheelMounts_->OnFocusLost();
+	if(wheelMounts_) wheelMounts_->OnFocusLost();
 	Input::i()->OnFocusLost();
 }
 
@@ -135,17 +142,9 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	// Initialize graphics
 	screenWidth_ = presentationParameters->BackBufferWidth;
 	screenHeight_ = presentationParameters->BackBufferHeight;
-	try { quad_ = std::make_unique<UnitQuad>(device); }
-	catch (...) { quad_ = nullptr; }
 	firstFrame_ = true;
-
-	ID3DXBuffer *errorBuffer = nullptr;
-	D3DXCreateEffectFromResource(device, dllModule_, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr,
-	                             &mainEffect_, &errorBuffer);
-	COM_RELEASE(errorBuffer);
-
-	wheelMounts_ = std::make_unique<Wheel>(IDR_BG, "mounts", "Mounts", device);
-	Mount::AddAllMounts(wheelMounts_.get(), device);
+	
+	ImGui_ImplDX9_Init(device);
 }
 
 void Core::OnDeviceUnset()
@@ -163,8 +162,6 @@ void Core::PreReset()
 
 void Core::PostReset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS *presentationParameters)
 {
-	ImGui_ImplDX9_CreateDeviceObjects();
-
 	OnDeviceSet(device, presentationParameters);
 }
 
@@ -176,9 +173,23 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 	if (frameDrawn)
 		return;
 
-	if (!firstFrame_)
+	if (firstFrame_)
 	{
+		try { quad_ = std::make_unique<UnitQuad>(device); }
+		catch (...) { quad_ = nullptr; }
 
+		ID3DXBuffer *errorBuffer = nullptr;
+		D3DXCreateEffectFromResource(device, dllModule_, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr,
+		                             &mainEffect_, &errorBuffer);
+		COM_RELEASE(errorBuffer);
+
+		wheelMounts_ = std::make_unique<Wheel>(IDR_BG, "mounts", "Mounts", device);
+		Mount::AddAllMounts(wheelMounts_.get(), device);
+		
+		firstFrame_ = false;
+	}
+	else
+	{
 		// We have to use Present rather than hooking EndScene because the game seems to do final UI compositing after EndScene
 		// This unfortunately means that we have to call Begin/EndScene before Present so we can render things, but thankfully for modern GPUs that doesn't cause bugs
 		if (sceneEnded)
@@ -219,7 +230,6 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-	firstFrame_ = false;
 }
 
 }

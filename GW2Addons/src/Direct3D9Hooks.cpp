@@ -52,8 +52,7 @@ HRESULT Direct3D9Hooks::Reset_hook(IDirect3DDevice9 *sThis, D3DPRESENT_PARAMETER
 {
 	preResetCallback_();
 
-	HRESULT hr = Reset_real(sThis, pPresentationParameters);
-	if (hr != D3D_OK)
+	if (HRESULT hr = Reset_real(sThis, pPresentationParameters); FAILED(hr))
 		return hr;
 
 	postResetCallback_(sThis, pPresentationParameters);
@@ -67,8 +66,7 @@ HRESULT Direct3D9Hooks::ResetEx_hook(IDirect3DDevice9Ex *sThis,
 {
 	preResetCallback_();
 
-	HRESULT hr = ResetEx_real(sThis, pPresentationParameters, pFullscreenDisplayMode);
-	if (hr != D3D_OK)
+	if (HRESULT hr = ResetEx_real(sThis, pPresentationParameters, pFullscreenDisplayMode); FAILED(hr))
 		return hr;
 
 	postResetCallback_(sThis, pPresentationParameters);
@@ -168,15 +166,14 @@ HRESULT Direct3D9Hooks::CreateDevice_hook(IDirect3D9 *sThis, UINT Adapter, D3DDE
 		}
 	#endif
 
-	IDirect3DDevice9 *temp_device = nullptr;
-	HRESULT hr = CreateDevice_real(sThis, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters,
-	                               &temp_device);
-	if (hr != D3D_OK)
+	IDirect3DDevice9 *tempDevice = nullptr;
+	if (const auto hr = CreateDevice_real(sThis, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters,
+	                               &tempDevice); FAILED(hr))
 		return hr;
 
-	*ppReturnedDeviceInterface = temp_device;
+	*ppReturnedDeviceInterface = tempDevice;
 
-	auto vftd = GetVirtualFunctionTableD3DDevice9(temp_device);
+	auto vftd = GetVirtualFunctionTableD3DDevice9(tempDevice);
 
 	MH_CreateHook(NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.Reset, vftd.Reset), D3DTRAMPOLINE(Reset_hook), (LPVOID*)&Reset_real);
 	MH_CreateHook(
@@ -195,9 +192,9 @@ HRESULT Direct3D9Hooks::CreateDevice_hook(IDirect3D9 *sThis, UINT Adapter, D3DDE
 		(LPVOID*)&SetPixelShader_real);
 	MH_EnableHook(MH_ALL_HOOKS);
 
-	postCreateDeviceCallback_(temp_device, pPresentationParameters);
+	postCreateDeviceCallback_(tempDevice, pPresentationParameters);
 
-	return hr;
+	return D3D_OK;
 }
 
 HRESULT Direct3D9Hooks::CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D3DDEVTYPE DeviceType,
@@ -208,15 +205,15 @@ HRESULT Direct3D9Hooks::CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D
 {
 	preCreateDeviceCallback_(hFocusWindow);
 
-	IDirect3DDevice9Ex *temp_device = nullptr;
-	HRESULT hr = CreateDeviceEx_real(sThis, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters,
-	                                 pFullscreenDisplayMode, &temp_device);
-	if (hr != D3D_OK)
+	IDirect3DDevice9Ex *tempDevice = nullptr;
+	
+	if (const auto hr = CreateDeviceEx_real(sThis, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters,
+	                                 pFullscreenDisplayMode, &tempDevice); FAILED(hr))
 		return hr;
 
-	*ppReturnedDeviceInterface = temp_device;
+	*ppReturnedDeviceInterface = tempDevice;
 
-	auto vftd = GetVirtualFunctionTableD3DDevice9Ex(temp_device);
+	auto vftd = GetVirtualFunctionTableD3DDevice9Ex(tempDevice);
 
 	MH_CreateHook(NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.Reset, vftd.Reset), D3DTRAMPOLINE(Reset_hook), (LPVOID*)&Reset_real);
 	MH_CreateHook(
@@ -242,9 +239,9 @@ HRESULT Direct3D9Hooks::CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D
 		(LPVOID*)&SetPixelShader_real);
 	MH_EnableHook(MH_ALL_HOOKS);
 
-	postCreateDeviceCallback_(temp_device, pPresentationParameters);
+	postCreateDeviceCallback_(tempDevice, pPresentationParameters);
 
-	return hr;
+	return D3D_OK;
 }
 
 void Direct3D9Hooks::OnD3DCreate()
