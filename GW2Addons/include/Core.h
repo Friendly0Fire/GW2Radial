@@ -43,7 +43,8 @@ protected:
 
 	void PreReset();
 	void PostReset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS *presentationParameters);
-
+	
+	void DrawUnder(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded);
 	void DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded);
 
 	HWND gameWindow_ = nullptr;

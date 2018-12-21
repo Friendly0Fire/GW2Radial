@@ -28,6 +28,8 @@ public:
 	void Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, class UnitQuad* quad);
 	void OnFocusLost();
 
+	bool drawOverUI() const { return showOverGameUIOption_.value(); }
+
 protected:
 	WheelElement* ModifyCenterHoveredElement(WheelElement* elem);
 	std::vector<WheelElement*> GetActiveElements();
@@ -50,6 +52,7 @@ protected:
 	
 	ConfigurationOption<bool> resetCursorOnLockedKeybindOption_;
 	ConfigurationOption<bool> lockCameraWhenOverlayedOption_;
+	ConfigurationOption<bool> showOverGameUIOption_;
 
 	D3DXVECTOR2 currentPosition_;
 	mstime currentTriggerTime_ = 0;

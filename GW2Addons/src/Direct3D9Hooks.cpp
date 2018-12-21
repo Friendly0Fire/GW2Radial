@@ -32,7 +32,7 @@ Direct3D9Hooks::Direct3D9Hooks()
 HRESULT Direct3D9Hooks::Present_hook(IDirect3DDevice9 *sThis, const RECT *pSourceRect, const RECT *pDestRect,
                                             HWND hDestWindowOverride, const RGNDATA *pDirtyRegion)
 {
-	drawOverCallback_(sThis, false, true);
+	drawOverCallback_(sThis, isFrameDrawn_, true);
 	isFrameDrawn_ = false;
 
 	return Present_real(sThis, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
@@ -42,7 +42,7 @@ HRESULT Direct3D9Hooks::PresentEx_hook(IDirect3DDevice9Ex *sThis, const RECT *pS
                                                   const RECT *pDestRect, HWND hDestWindowOverride,
                                                   const RGNDATA *pDirtyRegion, DWORD dwFlags)
 {
-	drawOverCallback_(sThis, false, true);
+	drawOverCallback_(sThis, isFrameDrawn_, true);
 	isFrameDrawn_ = false;
 
 	return PresentEx_real(sThis, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);

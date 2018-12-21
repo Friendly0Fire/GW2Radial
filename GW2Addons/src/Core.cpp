@@ -76,7 +76,7 @@ void Core::InternalInit()
 	Direct3D9Hooks::i()->postResetCallback([this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); });
 	
 	Direct3D9Hooks::i()->drawOverCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); });
-	Direct3D9Hooks::i()->drawUnderCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); });
+	Direct3D9Hooks::i()->drawUnderCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); });
 	
 	ImGui::CreateContext();
 }
@@ -165,13 +165,24 @@ void Core::PostReset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS *presentati
 	OnDeviceSet(device, presentationParameters);
 }
 
+void Core::DrawUnder(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
+{
+	if (!firstFrame_ && !frameDrawn)
+	{
+		if (sceneEnded)
+			device->BeginScene();
+
+		if(!wheelMounts_->drawOverUI()) wheelMounts_->Draw(device, mainEffect_, quad_.get());
+
+		if (sceneEnded)
+			device->EndScene();
+	}
+}
+
 void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 {
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i()->OnUpdate();
-
-	if (frameDrawn)
-		return;
 
 	if (firstFrame_)
 	{
@@ -221,7 +232,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		ImGui::Render();
 		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-		wheelMounts_->Draw(device, mainEffect_, quad_.get());
+		if(wheelMounts_->drawOverUI() || !frameDrawn) wheelMounts_->Draw(device, mainEffect_, quad_.get());
 
 		if (sceneEnded)
 			device->EndScene();

@@ -22,7 +22,8 @@ Wheel::Wheel(uint resourceId, std::string nickname, std::string displayName, IDi
 	  centerScaleOption_("Center scale", "center_scale", "wheel_" + nickname_, 0.2f),
 	  displayDelayOption_("Pop-up delay", "delay", "wheel_" + nickname_),
 	  resetCursorOnLockedKeybindOption_("Reset cursor to center with Center Locked keybind", "reset_cursor_cl", "wheel_" + nickname_, true),
-	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_, true)
+	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_, true),
+	  showOverGameUIOption_("Show on top of game UI", "show_over_ui", "wheel_" + nickname_, true)
 {
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(resourceId), &appearance_);
 
@@ -147,6 +148,7 @@ void Wheel::DrawMenu()
 	
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
 
 	ImGui::Separator();
 	ImGuiSpacing();
