@@ -20,7 +20,7 @@ public:
 		FAVORITE = 2
 	};
 
-	Wheel(uint resourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
+	Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
 	virtual ~Wheel();
 
 	void UpdateHover();
@@ -61,10 +61,16 @@ protected:
 	WheelElement* previousHovered_ = nullptr;
 	WheelElement* previousUsed_ = nullptr;
 	
-	IDirect3DTexture9* appearance_ = nullptr;
+	IDirect3DTexture9* backgroundTexture_ = nullptr;
+	IDirect3DTexture9* inkTexture_ = nullptr;
 	
 	Input::MouseMoveCallback mouseMoveCallback_;
 	Input::InputChangeCallback inputChangeCallback_;
+
+	D3DXVECTOR3 inkSpots_[3];
+	
+	const float fadeInTime_ = 0.33f;
+	const float inkInTime_ = 0.75f;
 
 	void DrawMenu() override;
 

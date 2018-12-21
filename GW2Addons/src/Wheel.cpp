@@ -13,7 +13,7 @@
 namespace GW2Addons
 {
 
-Wheel::Wheel(uint resourceId, std::string nickname, std::string displayName, IDirect3DDevice9 * dev)
+Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, IDirect3DDevice9 * dev)
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
 	  keybind_(nickname_, "Show on mouse"), centralKeybind_(nickname_ + "_cl", "Show in center"),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
@@ -25,7 +25,8 @@ Wheel::Wheel(uint resourceId, std::string nickname, std::string displayName, IDi
 	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_, true),
 	  showOverGameUIOption_("Show on top of game UI", "show_over_ui", "wheel_" + nickname_, true)
 {
-	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(resourceId), &appearance_);
+	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(bgResourceId), &backgroundTexture_);
+	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(inkResourceId), &inkTexture_);
 
 	mouseMoveCallback_ = [this]() { OnMouseMove(); };
 	Input::i()->AddMouseMoveCallback(&mouseMoveCallback_);
@@ -37,7 +38,8 @@ Wheel::Wheel(uint resourceId, std::string nickname, std::string displayName, IDi
 
 Wheel::~Wheel()
 {
-	COM_RELEASE(appearance_);
+	COM_RELEASE(backgroundTexture_);
+	COM_RELEASE(inkTexture_);
 
 	if(auto i = Input::iNoInit(); i)
 	{
@@ -210,8 +212,9 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				baseSpriteDimensions.y = currentPosition_.y;
 				baseSpriteDimensions.z = scaleOption_.value() * 0.5f * screenSize.y * screenSize.z;
 				baseSpriteDimensions.w = scaleOption_.value() * 0.5f;
-
-				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / 1000.f * 6);
+				
+				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / (1000.f * fadeInTime_));
+				const float inkTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / (1000.f * inkInTime_));
 				
 				const auto elementHovered = ModifyCenterHoveredElement(currentHovered_);
 
@@ -221,9 +224,11 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 					[&](const WheelElement* elem) { return elem->hoverFadeIn(currentTime, this); });
 
 				fx->SetTechnique("BgImage");
-				fx->SetTexture("texBgImage", appearance_);
+				fx->SetTexture("texBgImage", backgroundTexture_);
+				fx->SetTexture("texInkImage", inkTexture_);
+				fx->SetValue("g_vInkSpots", inkSpots_, sizeof(inkSpots_));
 				fx->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
-				fx->SetFloat("g_fWheelFadeIn", fadeTimer);
+				fx->SetValue("g_fWheelFadeIn", &D3DXVECTOR2(fadeTimer, inkTimer), sizeof(D3DXVECTOR2));
 				fx->SetFloat("g_fAnimationTimer", fmod(currentTime / 1010.f, 55000.f));
 				fx->SetFloat("g_fCenterScale", centerScaleOption_.value());
 				fx->SetInt("g_iElementCount", int(activeElements.size()));
@@ -235,7 +240,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				fx->End();
 
 				fx->SetTechnique("MountImage");
-				fx->SetTexture("texBgImage", appearance_);
+				fx->SetTexture("texBgImage", backgroundTexture_);
 				fx->SetVector("g_vScreenSize", &screenSize);
 				fx->Begin(&passes, 0);
 				fx->BeginPass(0);
@@ -255,7 +260,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				const auto& io = ImGui::GetIO();
 
 				fx->SetTechnique("Cursor");
-				fx->SetTexture("texBgImage", appearance_);
+				fx->SetTexture("texBgImage", backgroundTexture_);
 				D3DXVECTOR4 spriteDimensions(io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f);
 				fx->SetVector("g_vSpriteDimensions", &spriteDimensions);
 
@@ -350,6 +355,10 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 		}
 
 		currentTriggerTime_ = TimeInMilliseconds();
+		
+		inkSpots_[0] = D3DXVECTOR3(frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * M_PI);
+		inkSpots_[1] = D3DXVECTOR3(frand() * 0.50f + 0.25f, frand() * 0.50f + 0.25f, frand() * 2 * M_PI);
+		inkSpots_[2] = D3DXVECTOR3(frand() * 0.50f + 0.25f, frand() * 0.50f + 0.25f, frand() * 2 * M_PI);
 
 		UpdateHover();
 	}

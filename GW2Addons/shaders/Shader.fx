@@ -38,6 +38,19 @@ sampler_state
     AddressV = CLAMP;
 };
 
+texture texInkImage;
+
+sampler2D texInkImageSampler =
+sampler_state
+{
+    texture = <texInkImage>;
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
 // Screen dimensions as (width, height, 1/width, 1/height)
 float4 g_vScreenSize;
 // Timer for miscellaneous, low importance animations
@@ -46,7 +59,7 @@ float g_fAnimationTimer;
 float4 g_vSpriteDimensions;
 
 // [0..1] ratio of fade in when opening/dismissing the wheel
-float g_fWheelFadeIn;
+float2 g_fWheelFadeIn;
 // [0..1] ratio of the central gap's radius over the total wheel's radius
 float g_fCenterScale;
 // Total number of elements, cannot be larger than MAX_ELEMENT_COUNT
@@ -54,6 +67,7 @@ int g_iElementCount;
 // [0..1] ratio of fade in when hovering over a wheel element, for every element in the wheel
 // MAX_ELEMENT_COUNT-1 is hardcoded to be the center element
 float g_fHoverFadeIns[MAX_ELEMENT_COUNT];
+float3 g_vInkSpots[3];
 
 float2 makeSmoothRandom(float2 uv, float4 scales, float4 timeScales)
 {
@@ -76,8 +90,30 @@ VS_SCREEN Default_VS(in float2 UV : TEXCOORD0)
     return Out;
 }
 
+float2 rotate(float2 uv, float angle)
+{
+	float2x2 mat = float2x2(cos(angle), -sin(angle), sin(angle), cos(angle));
+	return mul(uv, mat);
+}
+
+float rescale(float value, float2 bounds)
+{
+	return saturate((value - bounds.x) / (bounds.y - bounds.x));
+}
+
+float2 GetInkValue(in float2 uv, in float3 centerRotate, in float scale)
+{
+	return tex2D(texInkImageSampler, rotate((uv - centerRotate.xy) / scale, centerRotate.z) + 0.5f).r * float2(1.f, 1.f + centerRotate.z / 6);
+}
+
 float4 BgImage_PS(VS_SCREEN In) : COLOR0
 {
+	float2 wheelFadeIn = 0.33f + GetInkValue(In.UV, g_vInkSpots[0], 0.02f + 2.5f * pow(g_fWheelFadeIn.y, 0.3f));
+	wheelFadeIn = max(wheelFadeIn, GetInkValue(In.UV, g_vInkSpots[1], 0.02f + 3.5f * pow(rescale(g_fWheelFadeIn.y, float2(0.33f, 0.77f)), 0.3f)));
+	wheelFadeIn = max(wheelFadeIn, GetInkValue(In.UV, g_vInkSpots[2], 0.02f + 3.5f * pow(rescale(g_fWheelFadeIn.y, float2(0.55f, 1.f)), 0.3f)));
+	wheelFadeIn *= smoothstep(0.f, 0.05f, g_fWheelFadeIn.x);
+	wheelFadeIn = lerp(saturate(wheelFadeIn), 1.f, rescale(g_fWheelFadeIn.y, float2(0.75f, 1.f)));
+
 	// Multiply by -3 rather than 2 to mirror and scale down
 	float2 coords = -3 * (In.UV - 0.5f);
 	// Compute polar coordinates with theta \in [0, 2pi)
@@ -144,7 +180,7 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 	border_mask *= lerp(1.5f, 1.f, smoothstep(g_fCenterScale, min(0.5f, g_fCenterScale * 4), coordsPolar.x));
 
 	// Combine all masks, ensuring that the edge and center masks never increase brightness when combined and that the border mask never darkens the circle
-	return color * saturate(edge_mask * center_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * g_fWheelFadeIn;
+	return color * saturate(edge_mask * center_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * wheelFadeIn.xxxy;
 }
 
 technique BgImage
@@ -197,7 +233,7 @@ float4 MountImage_PS(VS_SCREEN In) : COLOR0
 		glow = g_vElementColor.rgb * (glow_mask / 4) * hoverFadeIn * 0.5f * (0.5f + 0.5f * snoise(In.UV * 3.18f + 0.15f * float2(cos(g_fAnimationTimer * 3), sin(g_fAnimationTimer * 2))));
 	}
 
-	return float4(color * mask + glow, g_vElementColor.a * max(mask, shadow)) * g_fWheelFadeIn;
+	return float4(color * mask + glow, g_vElementColor.a * max(mask, shadow)) * g_fWheelFadeIn.x;
 }
 
 technique MountImage

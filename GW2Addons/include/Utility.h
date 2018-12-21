@@ -55,6 +55,11 @@ inline float SmoothStep(float x)
 	return 3 * x * x - 2 * x * x * x;
 }
 
+inline float frand()
+{
+	return float(rand()) / RAND_MAX;
+}
+
 inline void FormattedOutputDebugString(const char* fmt, ...)
 {
 	char buffer[4096];

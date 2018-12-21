@@ -150,7 +150,7 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	                             &mainEffect_, &errorBuffer);
 	COM_RELEASE(errorBuffer);
 
-	wheelMounts_ = std::make_unique<Wheel>(IDR_BG, "mounts", "Mounts", device);
+	wheelMounts_ = std::make_unique<Wheel>(IDR_BG, IDR_INK, "mounts", "Mounts", device);
 	Mount::AddAllMounts(wheelMounts_.get(), device);
 
 	ImGui_ImplDX9_Init(device);
