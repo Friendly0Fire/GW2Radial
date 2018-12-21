@@ -62,5 +62,7 @@ protected:
 	std::unique_ptr<Wheel> wheelMounts_, wheelNovelties_;
 
 	ConfigurationOption<bool> firstMessageShown_;
+
+	ImGuiContext* imguiContext_ = nullptr;
 };
 }

@@ -78,7 +78,7 @@ void Core::InternalInit()
 	Direct3D9Hooks::i()->drawOverCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); });
 	Direct3D9Hooks::i()->drawUnderCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); });
 	
-	ImGui::CreateContext();
+	imguiContext_ = ImGui::CreateContext();
 }
 
 void Core::OnFocusLost()
@@ -130,8 +130,6 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 	if(font_)
 		imio.FontDefault = font_;
 
-	// Setup ImGui binding
-	ImGui_ImplDX9_Init(device);
 	ImGui_ImplWin32_Init(gameWindow_);
 
 	OnDeviceSet(device, presentationParameters);
@@ -143,7 +141,18 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	screenWidth_ = presentationParameters->BackBufferWidth;
 	screenHeight_ = presentationParameters->BackBufferHeight;
 	firstFrame_ = true;
-	
+
+	try { quad_ = std::make_unique<UnitQuad>(device); }
+	catch (...) { quad_ = nullptr; }
+
+	ID3DXBuffer *errorBuffer = nullptr;
+	D3DXCreateEffectFromResource(device, dllModule_, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr,
+	                             &mainEffect_, &errorBuffer);
+	COM_RELEASE(errorBuffer);
+
+	wheelMounts_ = std::make_unique<Wheel>(IDR_BG, "mounts", "Mounts", device);
+	Mount::AddAllMounts(wheelMounts_.get(), device);
+
 	ImGui_ImplDX9_Init(device);
 }
 
@@ -186,17 +195,6 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 	if (firstFrame_)
 	{
-		try { quad_ = std::make_unique<UnitQuad>(device); }
-		catch (...) { quad_ = nullptr; }
-
-		ID3DXBuffer *errorBuffer = nullptr;
-		D3DXCreateEffectFromResource(device, dllModule_, MAKEINTRESOURCE(IDR_SHADER), nullptr, nullptr, 0, nullptr,
-		                             &mainEffect_, &errorBuffer);
-		COM_RELEASE(errorBuffer);
-
-		wheelMounts_ = std::make_unique<Wheel>(IDR_BG, "mounts", "Mounts", device);
-		Mount::AddAllMounts(wheelMounts_.get(), device);
-		
 		firstFrame_ = false;
 	}
 	else
@@ -205,7 +203,13 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		// This unfortunately means that we have to call Begin/EndScene before Present so we can render things, but thankfully for modern GPUs that doesn't cause bugs
 		if (sceneEnded)
 			device->BeginScene();
-		
+
+		ImGui_ImplDX9_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+
+		if(wheelMounts_->drawOverUI() || !frameDrawn) wheelMounts_->Draw(device, mainEffect_, quad_.get());
+
 		SettingsMenu::i()->Draw();
 
 		if(!firstMessageShown_.value())
@@ -230,17 +234,11 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		}
 
 		ImGui::Render();
-		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
-
-		if(wheelMounts_->drawOverUI() || !frameDrawn) wheelMounts_->Draw(device, mainEffect_, quad_.get());
+		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());	
 
 		if (sceneEnded)
 			device->EndScene();
 	}
-
-	ImGui_ImplDX9_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
 }
 
 }
