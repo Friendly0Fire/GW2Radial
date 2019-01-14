@@ -168,11 +168,11 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 		border_mask = lerp(border_mask, 1.f, hoverFadeIn);
 
 	// Also brighten when the dead zone is hovered and has an action assigned to it
-	if (g_fHoverFadeIns[MAX_ELEMENT_COUNT-1] > 0.f)
+	if (g_fHoverFadeIns[g_iElementCount] > 0.f)
 	{
         if (isLocalMountHovered)
 			border_mask *= 1 - hoverFadeIn;
-		center_mask = lerp(center_mask, 1.f, hoverFadeIn);
+		center_mask = lerp(center_mask, 1.f, g_fHoverFadeIns[g_iElementCount]);
 	}
 	
 	// Add some flair to the inner region of the circle

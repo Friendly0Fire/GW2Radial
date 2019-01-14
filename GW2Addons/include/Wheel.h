@@ -24,14 +24,15 @@ public:
 	virtual ~Wheel();
 
 	void UpdateHover();
-	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); }
+	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); Sort(); }
 	void Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, class UnitQuad* quad);
 	void OnFocusLost();
 
 	bool drawOverUI() const { return showOverGameUIOption_.value(); }
 
 protected:
-	WheelElement* ModifyCenterHoveredElement(WheelElement* elem);
+	void Sort();
+	WheelElement* GetCenterHoveredElement();
 	std::vector<WheelElement*> GetActiveElements();
 	void OnMouseMove();
 	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);
@@ -40,6 +41,7 @@ protected:
 
 	std::vector<std::unique_ptr<WheelElement>> wheelElements_;
 	bool isVisible_ = false;
+	uint minElementId_ = 0;
 	Keybind keybind_, centralKeybind_;
 
 	ConfigurationOption<int> centerBehaviorOption_;
@@ -58,7 +60,6 @@ protected:
 	mstime currentTriggerTime_ = 0;
 
 	WheelElement* currentHovered_ = nullptr;
-	WheelElement* previousHovered_ = nullptr;
 	WheelElement* previousUsed_ = nullptr;
 	
 	IDirect3DTexture9* backgroundTexture_ = nullptr;

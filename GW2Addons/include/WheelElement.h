@@ -36,7 +36,7 @@ public:
 	
 	const Keybind& keybind() const { return keybind_; }
 	Keybind& keybind() { return keybind_; }
-	bool isActive() const { return keybind_.isSet(); }
+	bool isActive() const { return keybind_.isSet() && isShownOption_.value(); }
 
 protected:
 	virtual std::array<float, 4> color() = 0;

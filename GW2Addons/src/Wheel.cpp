@@ -79,16 +79,14 @@ void Wheel::UpdateHover()
 		currentHovered_ = activeElements[elementId];
 	}
 	else
-		currentHovered_ = nullptr;
+		currentHovered_ = GetCenterHoveredElement();
 
-	const auto modifiedElementHovered = ModifyCenterHoveredElement(currentHovered_);
-	const auto modifiedLastElementHovered = ModifyCenterHoveredElement(lastHovered);
-
-	if (currentHovered_ && lastHovered != currentHovered_ && modifiedLastElementHovered != modifiedElementHovered)
+	if (lastHovered != currentHovered_)
 	{
 		const auto time = TimeInMilliseconds();
+
 		if(lastHovered) lastHovered->currentExitTime(time);
-		currentHovered_->currentHoverTime(time);	
+		if(currentHovered_) currentHovered_->currentHoverTime(time);
 	}
 }
 
@@ -216,12 +214,25 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / (1000.f * fadeInTime_));
 				const float inkTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / (1000.f * inkInTime_));
 				
-				const auto elementHovered = ModifyCenterHoveredElement(currentHovered_);
-
 				std::vector<float> hoveredFadeIns;
-				// TODO: Center not handled yet
 				std::transform(activeElements.begin(), activeElements.end(), std::back_inserter(hoveredFadeIns),
 					[&](const WheelElement* elem) { return elem->hoverFadeIn(currentTime, this); });
+
+				switch(CenterBehavior(centerBehaviorOption_.value()))
+				{
+				case CenterBehavior::PREVIOUS:
+					if(previousUsed_)
+						hoveredFadeIns.push_back(previousUsed_->hoverFadeIn(currentTime, this));
+					break;
+				case CenterBehavior::FAVORITE:
+					for(const auto& e : wheelElements_)
+						if(e->elementId() == minElementId_ + uint(centerFavoriteOption_.value()))
+							hoveredFadeIns.push_back(e->hoverFadeIn(currentTime, this));
+					break;
+				default:
+					hoveredFadeIns.push_back(0.f);
+					break;
+				}
 
 				fx->SetTechnique("BgImage");
 				fx->SetTexture("texBgImage", backgroundTexture_);
@@ -248,7 +259,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				int n = 0;
 				for (auto it : activeElements)
 				{
-					it->Draw(n, baseSpriteDimensions, activeElements.size(), currentTime, elementHovered, this);
+					it->Draw(n, baseSpriteDimensions, activeElements.size(), currentTime, currentHovered_, this);
 					n++;
 				}
 
@@ -276,23 +287,27 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 
 void Wheel::OnFocusLost()
 {
-	currentHovered_ = previousHovered_ = nullptr;
+	currentHovered_ = previousUsed_ = nullptr;
 	isVisible_ = false;
 	currentTriggerTime_ = 0;
 }
 
-WheelElement * Wheel::ModifyCenterHoveredElement(WheelElement * elem)
+void Wheel::Sort()
 {
-	if (elem)
-		return elem;
+	std::sort(wheelElements_.begin(), wheelElements_.end(),
+		[](const std::unique_ptr<WheelElement>& a, const std::unique_ptr<WheelElement>& b) { return a->elementId() < b->elementId(); });
+	minElementId_ = wheelElements_.front()->elementId();
+}
 
+WheelElement* Wheel::GetCenterHoveredElement()
+{
 	switch (CenterBehavior(centerBehaviorOption_.value()))
 	{
 	case CenterBehavior::PREVIOUS:
-		return previousHovered_;
+		return previousUsed_;
 	case CenterBehavior::FAVORITE:
 		for(const auto& e : wheelElements_)
-			if(int(e->elementId()) == centerFavoriteOption_.value())
+			if(e->elementId() == minElementId_ + uint(centerFavoriteOption_.value()))
 				return e.get();
 	default:
 		return nullptr;
@@ -365,7 +380,8 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 	else if (!isVisible_ && previousVisibility)
 	{
 		// Check for special behavior if no mount is hovered
-		currentHovered_ = ModifyCenterHoveredElement(currentHovered_);
+		if(!currentHovered_)
+			currentHovered_ = GetCenterHoveredElement();
 
 		// Mount overlay is turned off, send the keybind
 		if (currentHovered_)
