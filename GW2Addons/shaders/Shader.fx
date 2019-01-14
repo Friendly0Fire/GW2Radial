@@ -151,7 +151,7 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 	float border_mask = 1.f;
 
 	// Calculate edge regions (localCoordPercentage is near 0 or 1), but only for non-hovered mount spans
-    if (!isLocalMountHovered || hoverFadeIn < 1)
+    if (hoverFadeIn < 1)
 	{
 		float min_thickness = 0.003f / (0.001f + coordsPolar.x);
 		float max_thickness = 0.005f / (0.001f + coordsPolar.x);
@@ -172,7 +172,7 @@ float4 BgImage_PS(VS_SCREEN In) : COLOR0
 	{
         if (isLocalMountHovered)
 			border_mask *= 1 - hoverFadeIn;
-		center_mask = lerp(center_mask, 1.f, g_fHoverFadeIns[g_iElementCount]);
+		center_mask = lerp(center_mask, (1 - luma * 0.2f), g_fHoverFadeIns[g_iElementCount]);
 	}
 	
 	// Add some flair to the inner region of the circle
