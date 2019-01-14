@@ -237,7 +237,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				fx->SetTechnique("BgImage");
 				fx->SetTexture("texBgImage", backgroundTexture_);
 				fx->SetTexture("texInkImage", inkTexture_);
-				fx->SetValue("g_vInkSpots", inkSpots_, sizeof(inkSpots_));
+				fx->SetValue("g_vInkSpot", inkSpot_, sizeof(inkSpot_));
 				fx->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
 				fx->SetValue("g_fWheelFadeIn", &D3DXVECTOR2(fadeTimer, inkTimer), sizeof(D3DXVECTOR2));
 				fx->SetFloat("g_fAnimationTimer", fmod(currentTime / 1010.f, 55000.f));
@@ -371,9 +371,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 
 		currentTriggerTime_ = TimeInMilliseconds();
 		
-		inkSpots_[0] = D3DXVECTOR3(frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * M_PI);
-		inkSpots_[1] = D3DXVECTOR3(frand() * 0.50f + 0.25f, frand() * 0.50f + 0.25f, frand() * 2 * M_PI);
-		inkSpots_[2] = D3DXVECTOR3(frand() * 0.50f + 0.25f, frand() * 0.50f + 0.25f, frand() * 2 * M_PI);
+		inkSpot_ = D3DXVECTOR3(frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * M_PI);
 
 		UpdateHover();
 	}

@@ -68,7 +68,7 @@ protected:
 	Input::MouseMoveCallback mouseMoveCallback_;
 	Input::InputChangeCallback inputChangeCallback_;
 
-	D3DXVECTOR3 inkSpots_[3];
+	D3DXVECTOR3 inkSpot_;
 	
 	const float fadeInTime_ = 0.33f;
 	const float inkInTime_ = 0.75f;
