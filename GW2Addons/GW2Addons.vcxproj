@@ -127,6 +127,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClCompile Include="src\Keybind.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Mount.cpp" />
+    <ClCompile Include="src\Novelty.cpp" />
     <ClCompile Include="src\SettingsMenu.cpp" />
     <ClCompile Include="src\UnitQuad.cpp" />
     <ClCompile Include="src\Utility.cpp" />
@@ -153,6 +154,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClInclude Include="include\Keybind.h" />
     <ClInclude Include="include\Main.h" />
     <ClInclude Include="include\Mount.h" />
+    <ClInclude Include="include\Novelty.h" />
     <ClInclude Include="include\Resource.h" />
     <ClInclude Include="include\SettingsMenu.h" />
     <ClInclude Include="include\Singleton.h" />

@@ -15,6 +15,17 @@
 #define IDR_MOUNT8		218
 #define IDR_MOUNT9		219
 
+#define IDR_NOVELTIES		221
+#define IDR_NOVELTY1		221
+#define IDR_NOVELTY2		222
+#define IDR_NOVELTY3		223
+#define IDR_NOVELTY4		224
+#define IDR_NOVELTY5		225
+#define IDR_NOVELTY6		226
+#define IDR_NOVELTY7		227
+#define IDR_NOVELTY8		228
+#define IDR_NOVELTY9		229
+
 
 #define IDR_FONT		300
 #define IDR_FONT_BLACK	301

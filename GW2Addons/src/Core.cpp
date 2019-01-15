@@ -10,7 +10,8 @@
 #include <Mount.h>
 #include <SettingsMenu.h>
 #include <Utility.h>
-#include "../imgui/imgui_internal.h"
+#include <imgui/imgui_internal.h>
+#include <Novelty.h>
 
 namespace GW2Addons
 {
@@ -84,6 +85,7 @@ void Core::InternalInit()
 void Core::OnFocusLost()
 {
 	if(wheelMounts_) wheelMounts_->OnFocusLost();
+	if(wheelNovelties_) wheelNovelties_->OnFocusLost();
 	Input::i()->OnFocusLost();
 }
 
@@ -153,6 +155,9 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	wheelMounts_ = std::make_unique<Wheel>(IDR_BG, IDR_INK, "mounts", "Mounts", device);
 	Mount::AddAllMounts(wheelMounts_.get(), device);
 
+	wheelNovelties_ = std::make_unique<Wheel>(IDR_BG, IDR_INK, "novelties", "Novelties", device);
+	Novelty::AddAllNovelties(wheelNovelties_.get(), device);
+
 	ImGui_ImplDX9_Init(device);
 }
 
@@ -161,6 +166,7 @@ void Core::OnDeviceUnset()
 	ImGui_ImplDX9_InvalidateDeviceObjects();
 	quad_.reset();
 	wheelMounts_.reset();
+	wheelNovelties_.reset();
 	COM_RELEASE(mainEffect_);
 }
 
@@ -180,8 +186,9 @@ void Core::DrawUnder(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 	{
 		if (sceneEnded)
 			device->BeginScene();
-
+		
 		if(!wheelMounts_->drawOverUI()) wheelMounts_->Draw(device, mainEffect_, quad_.get());
+		if(!wheelNovelties_->drawOverUI()) wheelNovelties_->Draw(device, mainEffect_, quad_.get());
 
 		if (sceneEnded)
 			device->EndScene();
@@ -207,8 +214,9 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		ImGui_ImplDX9_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
-
+		
 		if(wheelMounts_->drawOverUI() || !frameDrawn) wheelMounts_->Draw(device, mainEffect_, quad_.get());
+		if(wheelNovelties_->drawOverUI() || !frameDrawn) wheelNovelties_->Draw(device, mainEffect_, quad_.get());
 
 		SettingsMenu::i()->Draw();
 
