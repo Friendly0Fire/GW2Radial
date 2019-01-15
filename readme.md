@@ -1,9 +1,9 @@
-# GW2 Addons
+# GW2 Radial
 
-An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) plugin to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/MealyFluffyGermanspitz.mp4) to select a mount on the fly for *Guild Wars 2: Path of Fire*.
+An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) plugin to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/MealyFluffyGermanspitz.mp4) to select a mount (and more!) on the fly for *Guild Wars 2: Path of Fire*.
 
 ## Installation
-- Download the archive ``gw2_mounts.zip`` found in the [latest release](https://github.com/Friendly0Fire/GW2Addons/releases/latest) (link is at the very bottom).
+- Download the archive ``GW2Radial.zip`` found in the [latest release](https://github.com/Friendly0Fire/GW2Radial/releases/latest).
 - Place ``d3d9.dll`` in your bin64 directory (default path: ``C:\Program Files\Guild Wars 2\bin64``).
 - Run the game!
 
@@ -11,7 +11,7 @@ An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/commen
 - When in game, press ``Shift+Alt+M`` for the options menu.
 - Set a keybind to use the overlay. This is the only keybind you will use in practice.
 - Set each game keybind for the mounts (you must set these first in your game options, under controls, after you've unlocked the mounts). These are used by the plugin to trigger mounting. They should be matching up like so (credit /u/Mikun for the image): ![Keybinds](https://i.imgur.com/y1aG8jA.png)
-- Hold the main key to show overlay, move mouse in the desired direction, release key to trigger mounting/dismounting.
+- Hold the main key to show the overlay, move the mouse in the desired direction, then release the key to trigger mounting/dismounting.
 
 ## Credits
 - Cerulean Dream for providing me with the initial motivator and inspiration in making his AutoHotkey-based radial menu
@@ -35,12 +35,12 @@ A: You have two options: either the other thing you want to run supports *chainl
 
 The most common use case would be combining ArcDPS, GW2Hook and this. For this instance, I heavily recommend setting things up as follows:
 - ArcDPS is named ``d3d9.dll``.
-- GW2Addons is named ``d3d9_chainload.dll``.
+- GW2Radial is named ``d3d9_chainload.dll``.
 - GW2Hook is named ``ReShade64.dll``.
 
 *N.B. If your Windows options hide file extensions (which is the default, you can confirm by looking at whether the game's file name is "Gw2-64.exe" or just "Gw2-64") leave out the ".dll" part of the file names (i.e. use "d3d9", "d3d9_chainload" and "ReShade64" respectively).
 
-This should allow all addons to load properly. Note that there is special code present within GW2Addons to load GW2Hook properly, but this could break unexpectedly if GW2Hook changes.
+This should allow all addons to load properly. Note that there is special code present within GW2Radial to load GW2Hook properly, but this could break unexpectedly if GW2Hook/Reshade changes.
 
 Finally, note that combining addons is largely unsupported. I will attempt to keep ArcDPS and GW2Hook compatible with this, but that is the most I am able to do in a reasonable amount of time.
 
@@ -48,11 +48,15 @@ Finally, note that combining addons is largely unsupported. I will attempt to ke
 
 A: There seems to be a lot of potential reasons for this particular crash. [BGDM's website](http://gw2bgdm.blogspot.com/p/faq.html#2.5) lists quite a few. I'd especially recommend making sure you have the very latest [VC++ Redist](https://go.microsoft.com/fwlink/?LinkId=746572).
 
-### Q: What is the "center locked" keybind used for?
+### Q: What is the "show in center" keybind used for?
 
 A: It's a convenience feature for Action Camera users. When using Action Camera, the cursor is hidden and replaced with a targeting reticule fixed in the middle of the screen. Since that means the radial menu would appear all over the place, that keybind can be used to make it show up in the middle of the screen instead. As a bonus, it'll recenter the mouse to the middle of the radial menu so it's as easy as possible to select a mount *and* it'll show a temporary cursor so you know exactly where you're pointing.
 
 Unfortunately, I can't make this automatic (i.e. switching to that mode when Action Camera is enabled) without hooking game functions, which would then require this become closed source again to avoid cheaters using it. On top of that, I'd be far more likely to break the EULA, so I'm afraid it's off limits without an official API.
+
+### Q: Can you make it so selecting a mount while already mounted will directly swap to the new mount?
+
+No. I talked with GW2 staff about this and they've decided that the can of worms it could potentially open is not worth it. Unfortunately, you'll need to select the new mount you want to use twice, once to unmount and then again to remount. This will not change unless ArenaNet's policy on addons changes.
 
 ### Q: Can I use this code for my project?
 
