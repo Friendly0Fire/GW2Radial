@@ -12,6 +12,7 @@
 #include <Utility.h>
 #include <imgui/imgui_internal.h>
 #include <Novelty.h>
+#include <shellapi.h>
 
 namespace GW2Addons
 {
@@ -222,15 +223,20 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 		if(!firstMessageShown_.value())
 		{
-			if(ImGui::Begin("Welcome to GW2Addons!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+			if(ImGui::Begin("Welcome to GW2Radial!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
 			{
-				const auto size = ImVec2(screenWidth_ * 0.35f, screenHeight_ * 0.17f);
+				const auto size = ImVec2(screenWidth_ * 0.35f, screenHeight_ * 0.2f);
 				const auto pos = ImVec2(0.5f * screenWidth_ - size.x / 2, 0.45f * screenHeight_ - size.y / 2);
 				ImGui::SetWindowPos(pos);
 				ImGui::SetWindowSize(size);
-				ImGui::TextWrapped("Welcome to GW2Addons! This small addon provides a collection of features, chief among them the radial menu for mounts and novelties. "
+				ImGui::TextWrapped("Welcome to GW2Radial! This small addon shows a convenient, customizable radial menu overlay to select a mount or novelty on the fly for Guild Wars 2: Path of Fire. "
 				"To begin, use the shortcut Shift+Alt+M to open the settings menu and take a moment to bind your keys. If you ever need further assistance, please visit "
-				"this project's website at https://github.com/Friendly0Fire/GW2Addons !");
+				"this project's website at");
+				
+				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.1f);
+
+				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Addons", ImVec2(ImGui::GetWindowSize().x * 0.8f, ImGui::GetFontSize() * 1.2f)))
+					ShellExecute(0, 0, L"https://github.com/Friendly0Fire/GW2Addons", 0, 0 , SW_SHOW );
 				
 				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.4f);
 				ImGui::SetCursorPosY(ImGui::GetWindowSize().y - ImGui::GetFontSize() * 2.5f);

@@ -15,7 +15,7 @@
 //#define NOKEYSTATES // - MK_*
 #define NOSYSCOMMANDS // - SC_*
 #define NORASTEROPS // - Binary and Tertiary raster ops
-#define NOSHOWWINDOW // - SW_*
+//#define NOSHOWWINDOW // - SW_*
 #define OEMRESOURCE // - OEM Resource values
 #define NOATOM // - Atom Manager routines
 //#define NOCLIPBOARD // - Clipboard routines

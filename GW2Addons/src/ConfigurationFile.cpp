@@ -23,7 +23,7 @@ void ConfigurationFile::Reload()
 	GetModuleFileName(nullptr, exeFullPath, MAX_PATH);
 	tstring exeFolder;
 	SplitFilename(exeFullPath, &exeFolder, nullptr);
-	folder_ = exeFolder + TEXT("\\addons\\gw2addons\\");
+	folder_ = exeFolder + TEXT("\\addons\\gw2radial\\");
 	_tcscpy_s(location_, (folder_ + g_configName).c_str());
 #if _UNICODE
 	strcpy_s(imguiLocation_, utf8_encode(folder_ + g_imguiConfigName).c_str());
