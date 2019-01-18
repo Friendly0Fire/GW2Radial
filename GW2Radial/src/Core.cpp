@@ -228,7 +228,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 		if(!firstMessageShown_.value())
 		{
-			if(ImGui::Begin("Welcome to GW2Radial!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+			if(ImGui::Begin("Welcome to GW2Radial!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
 			{
 				const auto size = ImVec2(screenWidth_ * 0.35f, screenHeight_ * 0.2f);
 				const auto pos = ImVec2(0.5f * screenWidth_ - size.x / 2, 0.45f * screenHeight_ - size.y / 2);
@@ -240,7 +240,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 				
 				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.1f);
 
-				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial", ImVec2(ImGui::GetWindowSize().x * 0.8f, ImGui::GetFontSize() * 1.2f)))
+				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial", ImVec2(ImGui::GetWindowSize().x * 0.8f, ImGui::GetFontSize() * 1.3f)))
 					ShellExecute(0, 0, L"https://github.com/Friendly0Fire/GW2Radial", 0, 0 , SW_SHOW );
 				
 				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.4f);
@@ -253,7 +253,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 		if(UpdateCheck::i()->updateAvailable() && !UpdateCheck::i()->updateDismissed())
 		{
-			if(ImGui::Begin("Update available!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+			if(ImGui::Begin("Update available!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
 			{
 				const auto size = ImVec2(screenWidth_ * 0.35f, screenHeight_ * 0.2f);
 				const auto pos = ImVec2(0.5f * screenWidth_ - size.x / 2, 0.45f * screenHeight_ - size.y / 2);
@@ -264,7 +264,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 				
 				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.1f);
 
-				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial/releases/latest", ImVec2(ImGui::GetWindowSize().x * 0.8f, ImGui::GetFontSize() * 1.2f)))
+				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial/releases/latest", ImVec2(ImGui::GetWindowSize().x * 0.8f, ImGui::GetFontSize() * 1.3f)))
 					ShellExecute(0, 0, L"https://github.com/Friendly0Fire/GW2Radial/releases/latest", 0, 0 , SW_SHOW );
 				
 				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.4f);
