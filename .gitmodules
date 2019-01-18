@@ -1,15 +1,15 @@
-[submodule "GW2Addons/imgui"]
-	path = GW2Addons/imgui
+[submodule "GW2Radial/imgui"]
+	path = GW2Radial/imgui
 	url = https://github.com/Friendly0Fire/imgui.git
-[submodule "GW2Addons/simpleini"]
-	path = GW2Addons/simpleini
+[submodule "GW2Radial/simpleini"]
+	path = GW2Radial/simpleini
 	url = https://github.com/brofield/simpleini.git
-[submodule "GW2Addons/minhook"]
-	path = GW2Addons/minhook
+[submodule "GW2Radial/minhook"]
+	path = GW2Radial/minhook
 	url = https://github.com/Friendly0Fire/minhook.git
-[submodule "GW2Addons/xxhash"]
-	path = GW2Addons/xxhash
+[submodule "GW2Radial/xxhash"]
+	path = GW2Radial/xxhash
 	url = https://github.com/Cyan4973/xxHash.git
-[submodule "GW2Addons/json"]
-	path = GW2Addons/json
+[submodule "GW2Radial/json"]
+	path = GW2Radial/json
 	url = https://github.com/nlohmann/json.git

@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{7EFE6DCC-544A-4116-9EF2-13C0431356E6}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>GW2Radial</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <ProjectName>GW2Radial</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
+    <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
+    <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>D3D_DEBUG_INFO;_DEBUG;GW2Radial_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
+      <AdditionalDependencies>Wininet.lib;d3dx9.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.dll"
+copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.pdb"</Command>
+    </PostBuildEvent>
+    <FxCompile>
+      <ObjectFileOutput>$(ProjectDir)int\%(Filename).cso</ObjectFileOutput>
+      <ShaderModel>3.0</ShaderModel>
+    </FxCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;GW2Radial_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
+      <AdditionalDependencies>Wininet.lib;d3dx9.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.dll"
+copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.pdb"</Command>
+    </PostBuildEvent>
+    <FxCompile>
+      <ObjectFileOutput>$(ProjectDir)int\%(Filename).cso</ObjectFileOutput>
+      <ShaderModel>3.0</ShaderModel>
+    </FxCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="imgui\examples\imgui_impl_dx9.cpp" />
+    <ClCompile Include="imgui\examples\imgui_impl_win32.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="src\ConfigurationFile.cpp" />
+    <ClCompile Include="src\Core.cpp" />
+    <ClCompile Include="src\Direct3D9Hooks.cpp" />
+    <ClCompile Include="src\Direct3DVirtualFunctionTable.c" />
+    <ClCompile Include="src\ImGuiExtensions.cpp" />
+    <ClCompile Include="src\Input.cpp" />
+    <ClCompile Include="src\Keybind.cpp" />
+    <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Mount.cpp" />
+    <ClCompile Include="src\Novelty.cpp" />
+    <ClCompile Include="src\SettingsMenu.cpp" />
+    <ClCompile Include="src\UnitQuad.cpp" />
+    <ClCompile Include="src\UpdateCheck.cpp" />
+    <ClCompile Include="src\Utility.cpp" />
+    <ClCompile Include="src\Wheel.cpp" />
+    <ClCompile Include="src\WheelElement.cpp" />
+    <ClCompile Include="xxhash\xxhash.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="imgui\examples\imgui_impl_dx9.h" />
+    <ClInclude Include="imgui\examples\imgui_impl_win32.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\stb_rect_pack.h" />
+    <ClInclude Include="imgui\stb_textedit.h" />
+    <ClInclude Include="imgui\stb_truetype.h" />
+    <ClInclude Include="include\ConfigurationFile.h" />
+    <ClInclude Include="include\ConfigurationOption.h" />
+    <ClInclude Include="include\Core.h" />
+    <ClInclude Include="include\Direct3D9Hooks.h" />
+    <ClInclude Include="include\Direct3DVirtualFunctionTable.h" />
+    <ClInclude Include="include\ImGuiExtensions.h" />
+    <ClInclude Include="include\Input.h" />
+    <ClInclude Include="include\Keybind.h" />
+    <ClInclude Include="include\Main.h" />
+    <ClInclude Include="include\Mount.h" />
+    <ClInclude Include="include\Novelty.h" />
+    <ClInclude Include="include\Resource.h" />
+    <ClInclude Include="include\SettingsMenu.h" />
+    <ClInclude Include="include\Singleton.h" />
+    <ClInclude Include="include\Tag.h" />
+    <ClInclude Include="include\UnitQuad.h" />
+    <ClInclude Include="include\UpdateCheck.h" />
+    <ClInclude Include="include\Utility.h" />
+    <ClInclude Include="include\Wheel.h" />
+    <ClInclude Include="include\WheelElement.h" />
+    <ClInclude Include="simpleini\SimpleIni.h" />
+    <ClInclude Include="xxhash\xxhash.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Main.def" />
+    <None Include="rt_rcdat.bin" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="minhook\build\VC15\libMinHook.vcxproj">
+      <Project>{f142a341-5ee0-442d-a15f-98ae9b48dbae}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="shaders\perlin.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Library</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
+      <FileType>Document</FileType>
+    </Text>
+    <FxCompile Include="shaders\Shader.fx">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">2.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">2.0</ShaderModel>
+    </FxCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

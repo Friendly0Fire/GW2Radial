@@ -22,7 +22,7 @@ If applicable, add screenshots to help explain your problem.
 **System configuration (please fill in):**
  - OS: [e.g. Windows 10]
  - GPU: [e.g. GTX1080]
- - Chainloading, if any [e.g. arcdps -> GW2Addons -> GW2Hook]
+ - Chainloading, if any [e.g. arcdps -> GW2Radial -> GW2Hook]
 
 **Additional context**
 Add any other context about the problem here.
