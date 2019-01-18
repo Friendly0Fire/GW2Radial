@@ -10,3 +10,6 @@
 [submodule "GW2Addons/xxhash"]
 	path = GW2Addons/xxhash
 	url = https://github.com/Cyan4973/xxHash.git
+[submodule "GW2Addons/json"]
+	path = GW2Addons/json
+	url = https://github.com/nlohmann/json.git

@@ -1,7 +1,7 @@
 #include <SettingsMenu.h>
 #include <imgui.h>
 #include <ImGuiExtensions.h>
-#include <examples/imgui_impl_dx9.h>
+#include <UpdateCheck.h>
 
 namespace GW2Addons
 {
@@ -17,7 +17,7 @@ void SettingsMenu::Draw()
 {
 	if (isVisible_)
 	{
-		if(!ImGui::Begin("GW2Addons Options Menu", &isVisible_))
+		if(!ImGui::Begin("GW2Radial Options Menu", &isVisible_))
 		{
 			ImGui::End();
 			return;

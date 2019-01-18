@@ -13,6 +13,7 @@
 #include <imgui/imgui_internal.h>
 #include <Novelty.h>
 #include <shellapi.h>
+#include <UpdateCheck.h>
 
 namespace GW2Addons
 {
@@ -23,7 +24,7 @@ void Core::Init(HMODULE dll)
 	auto rtss = GetModuleHandleA("RTSSHooks64.dll");
 	if(rtss)
 	{
-		MessageBox(nullptr, TEXT("ERROR: RivaTuner Statistics Server has been detected. GW2Addons is incompatible with RTSS. Please disable RTSS and try again."), TEXT("RTSS Detected"), MB_OK);
+		MessageBox(nullptr, TEXT("ERROR: RivaTuner Statistics Server has been detected. GW2Radial is incompatible with RTSS. Please disable RTSS and try again."), TEXT("RTSS Detected"), MB_OK);
 		exit(1);
 	}
 
@@ -153,6 +154,8 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	                             &mainEffect_, &errorBuffer);
 	COM_RELEASE(errorBuffer);
 
+	UpdateCheck::i()->CheckForUpdates();
+
 	wheelMounts_ = std::make_unique<Wheel>(IDR_BG, IDR_INK, "mounts", "Mounts", device);
 	Mount::AddAllMounts(wheelMounts_.get(), device);
 
@@ -201,6 +204,8 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i()->OnUpdate();
 
+	UpdateCheck::i()->CheckForUpdates();
+
 	if (firstFrame_)
 	{
 		firstFrame_ = false;
@@ -244,7 +249,30 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 					firstMessageShown_.value(true);
 			}
 			ImGui::End();
-			
+		}
+
+		if(UpdateCheck::i()->updateAvailable() && !UpdateCheck::i()->updateDismissed())
+		{
+			if(ImGui::Begin("Update available!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+			{
+				const auto size = ImVec2(screenWidth_ * 0.35f, screenHeight_ * 0.2f);
+				const auto pos = ImVec2(0.5f * screenWidth_ - size.x / 2, 0.45f * screenHeight_ - size.y / 2);
+				ImGui::SetWindowPos(pos);
+				ImGui::SetWindowSize(size);
+				ImGui::TextWrapped("A new version of GW2Radial has been released! Please follow the link below to look at the changes and download the update. "
+				"Remember that you can always disable this version check in the settings.");
+				
+				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.1f);
+
+				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Addons/releases/latest", ImVec2(ImGui::GetWindowSize().x * 0.8f, ImGui::GetFontSize() * 1.2f)))
+					ShellExecute(0, 0, L"https://github.com/Friendly0Fire/GW2Addons/releases/latest", 0, 0 , SW_SHOW );
+				
+				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.4f);
+				ImGui::SetCursorPosY(ImGui::GetWindowSize().y - ImGui::GetFontSize() * 2.5f);
+				if(ImGui::Button("OK", ImVec2(ImGui::GetWindowSize().x * 0.2f, ImGui::GetFontSize() * 1.5f)))
+					UpdateCheck::i()->updateDismissed(true);
+			}
+			ImGui::End();
 		}
 
 		ImGui::Render();

@@ -46,13 +46,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
   </PropertyGroup>
@@ -71,7 +71,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
-      <AdditionalDependencies>d3dx9.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wininet.lib;d3dx9.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y $(TargetPath) "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.dll"
@@ -101,7 +101,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
-      <AdditionalDependencies>d3dx9.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wininet.lib;d3dx9.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y $(TargetPath) "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.dll"
@@ -130,6 +130,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClCompile Include="src\Novelty.cpp" />
     <ClCompile Include="src\SettingsMenu.cpp" />
     <ClCompile Include="src\UnitQuad.cpp" />
+    <ClCompile Include="src\UpdateCheck.cpp" />
     <ClCompile Include="src\Utility.cpp" />
     <ClCompile Include="src\Wheel.cpp" />
     <ClCompile Include="src\WheelElement.cpp" />
@@ -158,7 +159,9 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClInclude Include="include\Resource.h" />
     <ClInclude Include="include\SettingsMenu.h" />
     <ClInclude Include="include\Singleton.h" />
+    <ClInclude Include="include\Tag.h" />
     <ClInclude Include="include\UnitQuad.h" />
+    <ClInclude Include="include\UpdateCheck.h" />
     <ClInclude Include="include\Utility.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
