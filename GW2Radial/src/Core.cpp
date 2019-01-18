@@ -125,11 +125,11 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 	void *fontPtr, *fontBlackPtr, *fontItalicPtr;
 	size_t fontSize, fontBlackSize, fontItalicSize;
 	if(LoadFontResource(IDR_FONT, fontPtr, fontSize))
-		font_ = imio.Fonts->AddFontFromMemoryTTF(fontPtr, fontSize, 25.f, &fontCfg);
+		font_ = imio.Fonts->AddFontFromMemoryTTF(fontPtr, int(fontSize), 25.f, &fontCfg);
 	if(LoadFontResource(IDR_FONT_BLACK, fontBlackPtr, fontBlackSize))
-		fontBlack_ = imio.Fonts->AddFontFromMemoryTTF(fontBlackPtr, fontBlackSize, 35.f, &fontCfg);
+		fontBlack_ = imio.Fonts->AddFontFromMemoryTTF(fontBlackPtr, int(fontBlackSize), 35.f, &fontCfg);
 	if(LoadFontResource(IDR_FONT_ITALIC, fontItalicPtr, fontItalicSize))
-		fontItalic_ = imio.Fonts->AddFontFromMemoryTTF(fontItalicPtr, fontItalicSize, 25.f, &fontCfg);
+		fontItalic_ = imio.Fonts->AddFontFromMemoryTTF(fontItalicPtr, int(fontItalicSize), 25.f, &fontCfg);
 
 	if(font_)
 		imio.FontDefault = font_;

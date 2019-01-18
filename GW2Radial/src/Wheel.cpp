@@ -243,7 +243,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				fx->SetFloat("g_fAnimationTimer", fmod(currentTime / 1010.f, 55000.f));
 				fx->SetFloat("g_fCenterScale", centerScaleOption_.value());
 				fx->SetInt("g_iElementCount", int(activeElements.size()));
-				fx->SetFloatArray("g_fHoverFadeIns", hoveredFadeIns.data(), hoveredFadeIns.size());
+				fx->SetFloatArray("g_fHoverFadeIns", hoveredFadeIns.data(), UINT(hoveredFadeIns.size()));
 				fx->Begin(&passes, 0);
 				fx->BeginPass(0);
 				quad->Draw();
@@ -371,7 +371,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 
 		currentTriggerTime_ = TimeInMilliseconds();
 		
-		inkSpot_ = D3DXVECTOR3(frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * M_PI);
+		inkSpot_ = D3DXVECTOR3(frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * float(M_PI));
 
 		UpdateHover();
 	}

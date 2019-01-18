@@ -145,7 +145,7 @@ std::string UpdateCheck::FetchReleaseData() const
 							DWORD readCount;
 							std::vector<char> data;
 							data.resize(availDataLen);
-		                    InternetReadFile(hRequest, data.data(), data.size(), &readCount);
+		                    InternetReadFile(hRequest, data.data(), DWORD(data.size()), &readCount);
 
 		                    ss.write(data.data(), data.size());
 	                    }

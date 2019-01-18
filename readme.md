@@ -1,16 +1,16 @@
 # GW2 Radial
 
-An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) plugin to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/MealyFluffyGermanspitz.mp4) to select a mount (and more!) on the fly for *Guild Wars 2: Path of Fire*.
+An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) addon to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/MealyFluffyGermanspitz.mp4) to select a mount or novelty item on the fly for *Guild Wars 2: Path of Fire*.
 
 ## Installation
-- Download the archive ``GW2Radial.zip`` found in the [latest release](https://github.com/Friendly0Fire/GW2Radial/releases/latest).
+- Download and extract the archive ``GW2Radial.zip`` found in the [latest release](https://github.com/Friendly0Fire/GW2Radial/releases/latest).
 - Place ``d3d9.dll`` in your bin64 directory (default path: ``C:\Program Files\Guild Wars 2\bin64``).
-- Run the game!
+- Run the game! If everything was setup properly, you should be greeted by a prompt on your first launch.
 
 ## Usage
 - When in game, press ``Shift+Alt+M`` for the options menu.
 - Set a keybind to use the overlay. This is the only keybind you will use in practice.
-- Set each game keybind for the mounts (you must set these first in your game options, under controls, after you've unlocked the mounts). These are used by the plugin to trigger mounting. They should be matching up like so (credit /u/Mikun for the image): ![Keybinds](https://i.imgur.com/y1aG8jA.png)
+- Set each game keybind for the mounts (you must set these first in your game options, under controls, after you've unlocked the mounts). These are used by the plugin to trigger mounting. They should be matching up like so: ![Setting your keybinds](https://i.imgur.com/gvQPQfX.png)
 - Hold the main key to show the overlay, move the mouse in the desired direction, then release the key to trigger mounting/dismounting.
 
 ## Credits
@@ -29,6 +29,24 @@ An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/commen
 
 A: I do this for fun/because I wanted this to exist, but if you really want to, feel free to send me mail in game to my account ``FriendlyFire.6275`` and toss a few gold my way or just say hi!
 
+### Q: I'm having a crash on launch mentioning "Coherent DLL", what do?
+
+A: There seems to be a lot of potential reasons for this particular crash. [BGDM's website](http://gw2bgdm.blogspot.com/p/faq.html#2.5) lists quite a few. I'd especially recommend making sure you have the very latest [VC++ Redist](https://go.microsoft.com/fwlink/?LinkId=746572).
+
+### Q: The addon doesn't seem to be loading at all, what's wrong?
+
+A: There can be a few reasons for this, but the most common one is that you're using a special shortcut which skips the login prompt and boots the game directly. In this specific circumstance, you must put the addon's ``d3d9.dll`` directly next to the game's ``Gw2-64.exe`` (default path: ``C:\Program Files\Guild Wars 2``).
+
+### Q: The addon's settings keep getting reset every time I launch the game, how do I fix that?
+
+A: This is almost invariably an issue with Windows permissions. The easiest way to fix this is to restart the game as Administrator (right click the game's shortcut for this option), configure the addon to your likings, then close the game and restart it normally. The settings should now have been saved properly. You will need to do this every time you need to change settings.
+
+A more convenient solution exists, but requires some more work with the Windows permissions system. Follow the steps outlined on [this page](https://support.microsoft.com/en-ca/help/2623670/access-denied-or-other-errors-when-you-access-or-work-with-files-and-f) under the heading "Issue 1", specifically the sections "You may not have ownership of a file or folder" and "You may not have the appropriate permissions". You need to take ownership of the ``addons`` folder (default location: ``C:\Program Files\Guild Wars 2\addons``), making sure to also select the "Replace owner on subcontainers and objects" checkbox, and give your account complete control over the folder.
+
+### Q: The game crashes with an error message mentioning "RivaTuner Statistics Server/RTSS", what's that?
+
+A: RivaTuner Statistics Server is a component of some GPU management software such as MSI Afterburner which displays some information overlaid on top of games, such as FPS, temperatures, clocks, etc. Unfortunately, RTSS works in such a way that it breaks this addon, and as a result you must disable RTSS before launching the game. Fortunately, you do not have to uninstall RTSS or MSI Afterburner, simply shutting down the server (which can be done from the notification area located on the right side of the taskbar) before launching the game is sufficient. ![Shutting down RTSS](https://i.imgur.com/O9t9qZq.png)
+
 ### Q: I want to load up ArcDPS/GW2Hook/something else which also needs to be called ``d3d9.dll``, how do I load both?
 
 A: You have two options: either the other thing you want to run supports *chainloading* this, in which case you should look up the documentation for that plugin (e.g. ArcDPS supports chainloading by renaming this plugin to ``d3d9_chainload.dll``), or you can make this plugin chainload something else by renaming that other plugin to ``d3d9_mchain.dll``.
@@ -43,10 +61,6 @@ The most common use case would be combining ArcDPS, GW2Hook and this. For this i
 This should allow all addons to load properly. Note that there is special code present within GW2Radial to load GW2Hook properly, but this could break unexpectedly if GW2Hook/Reshade changes.
 
 Finally, note that combining addons is largely unsupported. I will attempt to keep ArcDPS and GW2Hook compatible with this, but that is the most I am able to do in a reasonable amount of time.
-
-### Q: I'm having a crash on launch mentioning "Coherent DLL", what do?
-
-A: There seems to be a lot of potential reasons for this particular crash. [BGDM's website](http://gw2bgdm.blogspot.com/p/faq.html#2.5) lists quite a few. I'd especially recommend making sure you have the very latest [VC++ Redist](https://go.microsoft.com/fwlink/?LinkId=746572).
 
 ### Q: What is the "show in center" keybind used for?
 
