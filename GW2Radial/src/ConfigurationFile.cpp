@@ -43,6 +43,7 @@ void ConfigurationFile::Save()
 
 	if (r < 0)
 	{
+		const auto prevSaveError = lastSaveError_;
 		switch (r)
 		{
 		case SI_FAIL:
@@ -61,7 +62,8 @@ void ConfigurationFile::Save()
 		default:
 			lastSaveError_ = "Unknown error";
 		}
-		lastSaveErrorChanged_ = true;
+
+		lastSaveErrorChanged_ |= prevSaveError != lastSaveError_;
 	}
 	else if(!lastSaveError_.empty())
 	{

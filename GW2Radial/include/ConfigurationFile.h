@@ -16,6 +16,7 @@ public:
 	
 	const std::string& lastSaveError() const { return lastSaveError_; }
 	bool lastSaveErrorChanged() const { return lastSaveErrorChanged_; }
+	void lastSaveErrorChanged(bool v) { lastSaveErrorChanged_ = v; lastSaveError_.clear(); }
 
 	const char* imguiLocation() const { return imguiLocation_; }
 	const TCHAR* location() const { return location_; }

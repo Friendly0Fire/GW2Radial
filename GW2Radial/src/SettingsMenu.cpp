@@ -31,19 +31,6 @@ void SettingsMenu::Draw()
 		ImGui::PopItemWidth();
 
 		ImGui::End();
-
-		if (!ConfigurationFile::i()->lastSaveError().empty() && !ImGui::IsPopupOpen("Configuration Update Error") && ConfigurationFile::i()->lastSaveErrorChanged())
-			ImGui::OpenPopup("Configuration Update Error");
-
-		if (ImGui::BeginPopup("Configuration Update Error"))
-		{
-			ImGui::Text("Could not save addon configuration. Reason given was:");
-			ImGui::TextWrapped(ConfigurationFile::i()->lastSaveError().c_str());
-			if (ImGui::Button("OK"))
-				ImGui::CloseCurrentPopup();
-			ImGui::EndPopup();
-		}
-
 	}
 }
 

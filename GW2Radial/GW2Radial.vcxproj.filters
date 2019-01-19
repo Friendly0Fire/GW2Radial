@@ -88,6 +88,9 @@
     <ClCompile Include="src\UpdateCheck.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGuiPopup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -178,6 +181,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Tag.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ImGuiPopup.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

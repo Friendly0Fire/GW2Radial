@@ -14,6 +14,7 @@
 #include <Novelty.h>
 #include <shellapi.h>
 #include <UpdateCheck.h>
+#include <ImGuiPopup.h>
 
 namespace GW2Radial
 {
@@ -227,53 +228,37 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		SettingsMenu::i()->Draw();
 
 		if(!firstMessageShown_.value())
-		{
-			if(ImGui::Begin("Welcome to GW2Radial!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
+			ImGuiPopup("Welcome to GW2Radial!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2& windowSize)
 			{
-				const auto size = ImVec2(screenWidth_ * 0.35f, screenHeight_ * 0.2f);
-				const auto pos = ImVec2(0.5f * screenWidth_ - size.x / 2, 0.45f * screenHeight_ - size.y / 2);
-				ImGui::SetWindowPos(pos);
-				ImGui::SetWindowSize(size);
 				ImGui::TextWrapped("Welcome to GW2Radial! This small addon shows a convenient, customizable radial menu overlay to select a mount or novelty on the fly for Guild Wars 2: Path of Fire. "
 				"To begin, use the shortcut Shift+Alt+M to open the settings menu and take a moment to bind your keys. If you ever need further assistance, please visit "
 				"this project's website at");
 				
-				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.1f);
+				ImGui::SetCursorPosX(windowSize.x * 0.1f);
 
-				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial", ImVec2(ImGui::GetWindowSize().x * 0.8f, ImGui::GetFontSize() * 1.3f)))
+				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial", ImVec2(windowSize.x * 0.8f, ImGui::GetFontSize() * 1.3f)))
 					ShellExecute(0, 0, L"https://github.com/Friendly0Fire/GW2Radial", 0, 0 , SW_SHOW );
-				
-				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.4f);
-				ImGui::SetCursorPosY(ImGui::GetWindowSize().y - ImGui::GetFontSize() * 2.5f);
-				if (ImGui::Button("OK", ImVec2(ImGui::GetWindowSize().x * 0.2f, ImGui::GetFontSize() * 1.5f)))
-					firstMessageShown_.value(true);
-			}
-			ImGui::End();
-		}
+			}, [&]() { firstMessageShown_.value(true); });
+
+		if (!ConfigurationFile::i()->lastSaveError().empty() && ConfigurationFile::i()->lastSaveErrorChanged())
+			ImGuiPopup("Configuration could not be saved!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2&)
+			{
+				ImGui::Text("Could not save addon configuration. Reason given was:");
+				ImGui::TextWrapped(ConfigurationFile::i()->lastSaveError().c_str());
+			}, []() { ConfigurationFile::i()->lastSaveErrorChanged(false); });
 
 		if(UpdateCheck::i()->updateAvailable() && !UpdateCheck::i()->updateDismissed())
-		{
-			if(ImGui::Begin("Update available!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
+			ImGuiPopup("Update available!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2& windowSize)
 			{
-				const auto size = ImVec2(screenWidth_ * 0.35f, screenHeight_ * 0.2f);
-				const auto pos = ImVec2(0.5f * screenWidth_ - size.x / 2, 0.45f * screenHeight_ - size.y / 2);
-				ImGui::SetWindowPos(pos);
-				ImGui::SetWindowSize(size);
-				ImGui::TextWrapped("A new version of GW2Radial has been released! Please follow the link below to look at the changes and download the update. "
-				"Remember that you can always disable this version check in the settings.");
+				ImGui::TextWrapped("A new version of GW2Radial has been released! "
+					"Please follow the link below to look at the changes and download the update. "
+					"Remember that you can always disable this version check in the settings.");
 				
-				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.1f);
+				ImGui::SetCursorPosX(windowSize.x * 0.1f);
 
-				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial/releases/latest", ImVec2(ImGui::GetWindowSize().x * 0.8f, ImGui::GetFontSize() * 1.3f)))
+				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial/releases/latest", ImVec2(windowSize.x * 0.8f, ImGui::GetFontSize() * 1.3f)))
 					ShellExecute(0, 0, L"https://github.com/Friendly0Fire/GW2Radial/releases/latest", 0, 0 , SW_SHOW );
-				
-				ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.4f);
-				ImGui::SetCursorPosY(ImGui::GetWindowSize().y - ImGui::GetFontSize() * 2.5f);
-				if(ImGui::Button("OK", ImVec2(ImGui::GetWindowSize().x * 0.2f, ImGui::GetFontSize() * 1.5f)))
-					UpdateCheck::i()->updateDismissed(true);
-			}
-			ImGui::End();
-		}
+			}, []() { UpdateCheck::i()->updateDismissed(true); });
 
 		ImGui::Render();
 		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());	
