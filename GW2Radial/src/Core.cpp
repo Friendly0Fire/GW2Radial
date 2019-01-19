@@ -41,11 +41,6 @@ void Core::Shutdown()
 	// and calling FreeLibrary in DllMain causes deadlocks
 }
 
-Core::Core()
-	: firstMessageShown_("", "first_message_shown_v1", "Core", false)
-{
-}
-
 Core::~Core()
 {
 	ImGui::DestroyContext();
@@ -119,7 +114,8 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 {
 	// Init ImGui
 	auto &imio = ImGui::GetIO();
-	imio.IniFilename = ConfigurationFile::i()->imguiLocation();
+	imio.IniFilename = nullptr;
+	imio.IniSavingRate = 1.0f;
 	auto fontCfg = ImFontConfig();
 	fontCfg.FontDataOwnedByAtlas = false;
 
@@ -136,6 +132,8 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 		imio.FontDefault = font_;
 
 	ImGui_ImplWin32_Init(gameWindow_);
+
+	firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
 
 	OnDeviceSet(device, presentationParameters);
 }
@@ -204,6 +202,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 {
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i()->OnUpdate();
+	ConfigurationFile::i()->OnUpdate();
 
 	UpdateCheck::i()->CheckForUpdates();
 
@@ -227,7 +226,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 		SettingsMenu::i()->Draw();
 
-		if(!firstMessageShown_.value())
+		if(!firstMessageShown_->value())
 			ImGuiPopup("Welcome to GW2Radial!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2& windowSize)
 			{
 				ImGui::TextWrapped("Welcome to GW2Radial! This small addon shows a convenient, customizable radial menu overlay to select a mount or novelty on the fly for Guild Wars 2: Path of Fire. "
@@ -238,7 +237,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial", ImVec2(windowSize.x * 0.8f, ImGui::GetFontSize() * 1.3f)))
 					ShellExecute(0, 0, L"https://github.com/Friendly0Fire/GW2Radial", 0, 0 , SW_SHOW );
-			}, [&]() { firstMessageShown_.value(true); });
+			}, [&]() { firstMessageShown_->value(true); });
 
 		if (!ConfigurationFile::i()->lastSaveError().empty() && ConfigurationFile::i()->lastSaveErrorChanged())
 			ImGuiPopup("Configuration could not be saved!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2&)

@@ -10,7 +10,7 @@ namespace GW2Radial
 WheelElement::WheelElement(uint id, const std::string &nickname, const std::string &category,
 							const std::string &displayName, IDirect3DDevice9* dev)
 	: nickname_(nickname), displayName_(displayName), elementId_(id),
-	  isShownOption_(displayName + " Hidden", nickname + "_hidden", category, true),
+	  isShownOption_(displayName + " Visible", nickname + "_visible", category, true),
 	  sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, int(id)),
 	  keybind_(nickname, displayName)
 {

@@ -37,12 +37,6 @@ A: There seems to be a lot of potential reasons for this particular crash. [BGDM
 
 A: There can be a few reasons for this, but the most common one is that you're using a special shortcut which skips the login prompt and boots the game directly. In this specific circumstance, you must put the addon's ``d3d9.dll`` directly next to the game's ``Gw2-64.exe`` (default path: ``C:\Program Files\Guild Wars 2``).
 
-### Q: The addon's settings keep getting reset every time I launch the game, how do I fix that?
-
-A: This is almost invariably an issue with Windows permissions. The easiest way to fix this is to restart the game as Administrator (right click the game's shortcut for this option), configure the addon to your likings, then close the game and restart it normally. The settings should now have been saved properly. You will need to do this every time you need to change settings.
-
-A more convenient solution exists, but requires some more work with the Windows permissions system. Follow the steps outlined on [this page](https://support.microsoft.com/en-ca/help/2623670/access-denied-or-other-errors-when-you-access-or-work-with-files-and-f) under the heading "Issue 1", specifically the sections "You may not have ownership of a file or folder" and "You may not have the appropriate permissions". You need to take ownership of the ``addons`` folder (default location: ``C:\Program Files\Guild Wars 2\addons``), making sure to also select the "Replace owner on subcontainers and objects" checkbox, and give your account complete control over the folder.
-
 ### Q: The game crashes with an error message mentioning "RivaTuner Statistics Server/RTSS", what's that?
 
 A: RivaTuner Statistics Server is a component of some GPU management software such as MSI Afterburner which displays some information overlaid on top of games, such as FPS, temperatures, clocks, etc. Unfortunately, RTSS works in such a way that it breaks this addon, and as a result you must disable RTSS before launching the game. Fortunately, you do not have to uninstall RTSS or MSI Afterburner, simply shutting down the server (which can be done from the notification area located on the right side of the taskbar) before launching the game is sufficient. ![Shutting down RTSS](https://i.imgur.com/O9t9qZq.png)

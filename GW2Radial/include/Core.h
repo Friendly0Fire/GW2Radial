@@ -17,7 +17,7 @@ public:
 
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-	Core();
+	Core() = default;
 	~Core();
 
 	HWND gameWindow() const { return gameWindow_; }
@@ -61,7 +61,7 @@ protected:
 
 	std::unique_ptr<Wheel> wheelMounts_, wheelNovelties_;
 
-	ConfigurationOption<bool> firstMessageShown_;
+	std::unique_ptr<ConfigurationOption<bool>> firstMessageShown_;
 
 	ImGuiContext* imguiContext_ = nullptr;
 };
