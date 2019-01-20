@@ -17,10 +17,8 @@ An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/commen
 - Cerulean Dream for providing me with the initial motivator and inspiration in making his AutoHotkey-based radial menu
 - Ghost for the new mount art found in v0.3+
 - [freepik](https://www.freepik.com/) for novelty art
-- Lavender for showing me where to get the mount concept art (especially the separate Skimmer image)
 - deltaconnected and Bhagawan for their amazing addons which helped frame this and direct the approach to take, including the ReShade compatibility fixes
-- Shaun Lebron for his nice, straightforward [D3D9 wrapper](https://gist.github.com/shaunlebron/3854bf4eec5bec297907)
-- Dulfy and /u/Levi4than for the Griffon ingame art screenshot
+- WoodenPotatoes for the great feedback and exposure, as well as the Spud Club for helping with testing
 - /u/that_shaman for another really nice radial menu concept which requires far better Photoshop skills than I have to reproduce
 
 ## FAQ
