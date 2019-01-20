@@ -12,9 +12,9 @@ namespace GW2Radial
 
 enum class InputResponse : uint
 {
-	PASS_TO_GAME = 0,
-	PREVENT_MOUSE = 1,
-	PREVENT_ALL = 2
+	PASS_TO_GAME = 0, // Do not prevent any input from reaching the game
+	PREVENT_MOUSE = 1, // Prevent mouse movement only from reaching the game
+	PREVENT_ALL = 2 // Prevent all input from reaching the game
 };
 
 struct EventKey
@@ -36,7 +36,7 @@ inline InputResponse operator|=(InputResponse& a, InputResponse b)
 class Input : public Singleton<Input>
 {
 public:
-	using MouseMoveCallback = std::function<void()>;
+	using MouseMoveCallback = std::function<bool()>;
 	using InputChangeCallback = std::function<InputResponse(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys)>;
 	Input();
 

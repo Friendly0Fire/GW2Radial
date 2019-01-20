@@ -26,6 +26,19 @@ Input::Input()
 	id_H_KEYUP_       = RegisterWindowMessage(TEXT("H_KEYUP"));
 }
 
+bool IsRawInputMouse(LPARAM lParam)
+{
+	UINT dwSize = 40;
+	static BYTE lpb[40];
+
+	GetRawInputData((HRAWINPUT)lParam, RID_INPUT,
+		lpb, &dwSize, sizeof(RAWINPUTHEADER));
+
+	RAWINPUT* raw = (RAWINPUT*)lpb;
+
+	return raw->header.dwType == RIM_TYPEMOUSE;
+}
+
 bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 {
 	std::list<EventKey> eventKeys;
@@ -74,9 +87,12 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 		}
 	}
 
-	if(msg == WM_MOUSEMOVE)
+	const auto isRawInputMouse = msg == WM_INPUT && IsRawInputMouse(lParam);
+
+	bool preventMouseMove = false;
+	if(msg == WM_MOUSEMOVE || isRawInputMouse)
 		for(auto& cb : mouseMoveCallbacks_)
-			(*cb)();
+			preventMouseMove |= (*cb)();
 
 	bool downKeysChanged = false;
 
@@ -123,27 +139,16 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 	if(response == InputResponse::PREVENT_ALL)
 		return true;
 
-	if(response == InputResponse::PREVENT_MOUSE)
+	if(response == InputResponse::PREVENT_MOUSE || preventMouseMove)
 	{
 		switch (msg)
 		{
 		case WM_MOUSEMOVE:
 			return true;
 		case WM_INPUT:
-		{
-			UINT dwSize = 40;
-			static BYTE lpb[40];
-
-			GetRawInputData((HRAWINPUT)lParam, RID_INPUT,
-				lpb, &dwSize, sizeof(RAWINPUTHEADER));
-
-			RAWINPUT* raw = (RAWINPUT*)lpb;
-
-			if (raw->header.dwType == RIM_TYPEMOUSE)
+			if(isRawInputMouse)
 				return true;
-
 			break;
-		}
 		case WM_LBUTTONDOWN:
 		case WM_LBUTTONUP:
 		case WM_RBUTTONDOWN:

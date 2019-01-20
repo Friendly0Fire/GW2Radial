@@ -34,7 +34,7 @@ protected:
 	void Sort();
 	WheelElement* GetCenterHoveredElement();
 	std::vector<WheelElement*> GetActiveElements();
-	void OnMouseMove();
+	bool OnMouseMove();
 	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);
 
 	std::string nickname_, displayName_;

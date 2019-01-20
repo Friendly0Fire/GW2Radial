@@ -28,7 +28,7 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(bgResourceId), &backgroundTexture_);
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(inkResourceId), &inkTexture_);
 
-	mouseMoveCallback_ = [this]() { OnMouseMove(); };
+	mouseMoveCallback_ = [this]() { return OnMouseMove(); };
 	Input::i()->AddMouseMoveCallback(&mouseMoveCallback_);
 	inputChangeCallback_ = [this](bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, keys, changedKeys); };
 	Input::i()->AddInputChangeCallback(&inputChangeCallback_);
@@ -324,10 +324,12 @@ std::vector<WheelElement*> Wheel::GetActiveElements()
 	return elems;
 }
 
-void Wheel::OnMouseMove()
+bool Wheel::OnMouseMove()
 {
 	if(isVisible_)
 		UpdateHover();
+
+	return isVisible_ && lockCameraWhenOverlayedOption_.value();
 }
 
 InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys)
