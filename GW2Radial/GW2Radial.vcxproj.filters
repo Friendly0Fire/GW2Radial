@@ -208,4 +208,9 @@
   <ItemGroup>
     <Text Include="shaders\perlin.hlsl" />
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="..\readme.md">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
 </Project>
