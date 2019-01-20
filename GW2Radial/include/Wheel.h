@@ -51,6 +51,7 @@ protected:
 	ConfigurationOption<float> centerScaleOption_;
 	
 	ConfigurationOption<int> displayDelayOption_;
+	ConfigurationOption<int> animationTimeOption_;
 	
 	ConfigurationOption<bool> resetCursorOnLockedKeybindOption_;
 	ConfigurationOption<bool> lockCameraWhenOverlayedOption_;
@@ -69,9 +70,6 @@ protected:
 	Input::InputChangeCallback inputChangeCallback_;
 
 	D3DXVECTOR3 inkSpot_;
-	
-	const float fadeInTime_ = 0.33f;
-	const float inkInTime_ = 0.75f;
 
 	void DrawMenu() override;
 

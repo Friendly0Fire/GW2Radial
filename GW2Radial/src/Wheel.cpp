@@ -21,6 +21,7 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 	  scaleOption_("Scale", "scale", "wheel_" + nickname_, 1.f),
 	  centerScaleOption_("Center scale", "center_scale", "wheel_" + nickname_, 0.2f),
 	  displayDelayOption_("Pop-up delay", "delay", "wheel_" + nickname_),
+	  animationTimeOption_("Fade-in time", "anim_time", "wheel_" + nickname_, 750),
 	  resetCursorOnLockedKeybindOption_("Reset cursor to center with Center Locked keybind", "reset_cursor_cl", "wheel_" + nickname_, true),
 	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_, true),
 	  showOverGameUIOption_("Show on top of game UI", "show_over_ui", "wheel_" + nickname_, true)
@@ -110,6 +111,7 @@ void Wheel::DrawMenu()
 	ImGui::PushItemWidth(0.66f * ImGui::GetWindowContentRegionWidth());
 	
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
+	ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms");
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.25f, 4.f, "%.2f", 1.f);
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.05f, 0.25f, "%.2f", 1.f);
 
@@ -211,8 +213,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				baseSpriteDimensions.z = scaleOption_.value() * 0.5f * screenSize.y * screenSize.z;
 				baseSpriteDimensions.w = scaleOption_.value() * 0.5f;
 				
-				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / (1000.f * fadeInTime_));
-				const float inkTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / (1000.f * inkInTime_));
+				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / float(animationTimeOption_.value() * 0.45f));
+				const float inkTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / float(animationTimeOption_.value()));
 				
 				std::vector<float> hoveredFadeIns;
 				std::transform(activeElements.begin(), activeElements.end(), std::back_inserter(hoveredFadeIns),
@@ -436,9 +438,6 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 		if(isAnyElementBeingModified)
 			return InputResponse::PREVENT_ALL;
 	}
-
-	if (isVisible_ && lockCameraWhenOverlayedOption_.value())
-		return InputResponse::PREVENT_MOUSE;
 	
 	return InputResponse::PASS_TO_GAME;
 }
