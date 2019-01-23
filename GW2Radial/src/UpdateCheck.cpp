@@ -5,6 +5,7 @@
 #include <ImGuiExtensions.h>
 #include <WinInet.h>
 #include <sstream>
+#include <cpp-semver.hpp>
 
 namespace GW2Radial
 {
@@ -47,7 +48,7 @@ void UpdateCheck::CheckForUpdates()
 
 		auto tagName = j["tag_name"].get<std::string>();
 
-		if(std::lexicographical_compare(CurrentVersion.begin(), CurrentVersion.end(), tagName.begin(), tagName.end()))
+		if(semver::lt(CurrentVersion.substr(1), tagName.substr(1)))
 			updateAvailable_ = true;
 
 		checkSucceeded_ = true;

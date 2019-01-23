@@ -46,14 +46,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>d3d9</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>d3d9</TargetName>

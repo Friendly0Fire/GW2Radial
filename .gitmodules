@@ -13,3 +13,6 @@
 [submodule "GW2Radial/json"]
 	path = GW2Radial/json
 	url = https://github.com/nlohmann/json.git
+[submodule "GW2Radial/cpp-semver"]
+	path = GW2Radial/cpp-semver
+	url = https://github.com/easz/cpp-semver.git
