@@ -22,13 +22,6 @@ DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {
-	auto rtss = GetModuleHandleA("RTSSHooks64.dll");
-	if(rtss)
-	{
-		MessageBox(nullptr, TEXT("ERROR: RivaTuner Statistics Server has been detected. GW2Radial is incompatible with RTSS. Please disable RTSS and try again."), TEXT("RTSS Detected"), MB_OK);
-		exit(1);
-	}
-
 	i()->dllModule_ = dll;
 	i()->InternalInit();
 }
@@ -134,6 +127,20 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 	ImGui_ImplWin32_Init(gameWindow_);
 
 	firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
+	ignoreRTSS_ = std::make_unique<ConfigurationOption<bool>>("", "ignore_rtss", "Core", false);
+
+	if(!ignoreRTSS_->value())
+	{
+		const auto rtss = GetModuleHandleA("RTSSHooks64.dll");
+		if(rtss)
+		{
+			const auto retval = MessageBox(nullptr, TEXT("WARNING: RivaTuner Statistics Server has been detected! GW2Radial is incompatible with RTSS, anomalous behavior may occur. Are you sure you want to continue? Continuing will prevent this message from showing again."), TEXT("RTSS Detected"), MB_ICONWARNING | MB_YESNO);
+			if(retval == IDNO)
+				exit(1);
+			else if(retval == IDYES)
+				ignoreRTSS_->value(true);
+		}
+	}
 
 	OnDeviceSet(device, presentationParameters);
 }
