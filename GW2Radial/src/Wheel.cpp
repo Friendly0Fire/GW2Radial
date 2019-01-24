@@ -24,7 +24,8 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 	  animationTimeOption_("Fade-in time", "anim_time", "wheel_" + nickname_, 750),
 	  resetCursorOnLockedKeybindOption_("Reset cursor to center with Center Locked keybind", "reset_cursor_cl", "wheel_" + nickname_, true),
 	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_, true),
-	  showOverGameUIOption_("Show on top of game UI", "show_over_ui", "wheel_" + nickname_, true)
+	  showOverGameUIOption_("Show on top of game UI", "show_over_ui", "wheel_" + nickname_, true),
+	  noHoldOption_("Activate first hovered mount without holding down", "no_hold", "wheel_" + nickname_, false)
 {
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(bgResourceId), &backgroundTexture_);
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(inkResourceId), &inkTexture_);
@@ -116,36 +117,41 @@ void Wheel::DrawMenu()
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.05f, 0.25f, "%.2f", 1.f);
 
 	ImGui::PopItemWidth();
-	
-	ImGui::Text((centerBehaviorOption_.displayName() + ":").c_str());
-	ImGui::SameLine();
-	ImGui::PushItemWidth(0.25f * ImGui::GetWindowContentRegionWidth());
 
-	bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
-	ImGuiConfigurationWrapper(rb, "Nothing", centerBehaviorOption_, int(CenterBehavior::NOTHING));
-	ImGui::SameLine();
-	ImGuiConfigurationWrapper(rb, "Previous", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
-	ImGui::SameLine();
-	ImGuiConfigurationWrapper(rb, "Favorite", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
-	
-	ImGui::PopItemWidth();
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
 
-	if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
+	if(!noHoldOption_.value())
 	{
-		ImGuiIndent();
+		ImGui::Text((centerBehaviorOption_.displayName() + ":").c_str());
+		ImGui::SameLine();
+		ImGui::PushItemWidth(0.25f * ImGui::GetWindowContentRegionWidth());
+
+		bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
+		ImGuiConfigurationWrapper(rb, "Nothing", centerBehaviorOption_, int(CenterBehavior::NOTHING));
+		ImGui::SameLine();
+		ImGuiConfigurationWrapper(rb, "Previous", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
+		ImGui::SameLine();
+		ImGuiConfigurationWrapper(rb, "Favorite", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
 		
-		const auto textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
-		const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
-		ImGui::PushItemWidth(itemSize);
-
-		std::vector<const char*> potentialNames(wheelElements_.size());
-			for (uint i = 0; i < wheelElements_.size(); i++)
-				potentialNames[i] = wheelElements_[i]->displayName().c_str();
-
-		bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
-		ImGuiConfigurationWrapper(cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
 		ImGui::PopItemWidth();
-		ImGuiUnindent();
+	
+		if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
+		{
+			ImGuiIndent();
+			
+			const auto textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
+			const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
+			ImGui::PushItemWidth(itemSize);
+
+			std::vector<const char*> potentialNames(wheelElements_.size());
+				for (uint i = 0; i < wheelElements_.size(); i++)
+					potentialNames[i] = wheelElements_[i]->displayName().c_str();
+
+			bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
+			ImGuiConfigurationWrapper(cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
+			ImGui::PopItemWidth();
+			ImGuiUnindent();
+		}
 	}
 	
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
@@ -303,6 +309,9 @@ void Wheel::Sort()
 
 WheelElement* Wheel::GetCenterHoveredElement()
 {
+	if(noHoldOption_.value())
+		return nullptr;
+
 	switch (CenterBehavior(centerBehaviorOption_.value()))
 	{
 	case CenterBehavior::PREVIOUS:
@@ -329,7 +338,13 @@ std::vector<WheelElement*> Wheel::GetActiveElements()
 bool Wheel::OnMouseMove()
 {
 	if(isVisible_)
+	{
 		UpdateHover();
+		
+		// If holding down the button is not necessary, modify behavior
+		if(noHoldOption_.value() && isVisible_ && currentHovered_ != nullptr)
+			DeactivateWheel();
+	}
 
 	return isVisible_ && lockCameraWhenOverlayedOption_.value();
 }
@@ -342,56 +357,15 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 	const bool mountOverlayLocked = centralKeybind_.isSet() && std::includes(keys.begin(), keys.end(), centralKeybind_.keys().begin(), centralKeybind_.keys().end());
 
 	isVisible_ = mountOverlayLocked || mountOverlay;
+	
+	// If holding down the button is not necessary, modify behavior
+	if(noHoldOption_.value() && previousVisibility && currentHovered_ == nullptr)
+		isVisible_ = true;
 
 	if (isVisible_ && !previousVisibility)
-	{
-		// Mount overlay is turned on
-
-		if (mountOverlayLocked)
-		{
-			currentPosition_.x = currentPosition_.y = 0.5f;
-
-			// Attempt to move the cursor to the middle of the screen
-			if (resetCursorOnLockedKeybindOption_.value())
-			{
-				RECT rect = { };
-				if (GetWindowRect(Core::i()->gameWindow(), &rect))
-				{
-					if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
-					{
-						auto& io = ImGui::GetIO();
-						io.MousePos.x = Core::i()->screenWidth() * 0.5f;
-						io.MousePos.y = Core::i()->screenHeight() * 0.5f;
-					}
-				}
-			}
-		}
-		else
-		{
-			const auto& io = ImGui::GetIO();
-			currentPosition_.x = io.MousePos.x / float(Core::i()->screenWidth());
-			currentPosition_.y = io.MousePos.y / float(Core::i()->screenHeight());
-		}
-
-		currentTriggerTime_ = TimeInMilliseconds();
-		
-		inkSpot_ = D3DXVECTOR3(frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * float(M_PI));
-
-		UpdateHover();
-	}
+		ActivateWheel(mountOverlayLocked);
 	else if (!isVisible_ && previousVisibility)
-	{
-		// Check for special behavior if no mount is hovered
-		if(!currentHovered_)
-			currentHovered_ = GetCenterHoveredElement();
-
-		// Mount overlay is turned off, send the keybind
-		if (currentHovered_)
-			Input::i()->SendKeybind(currentHovered_->keybind().keys());
-
-		previousUsed_ = currentHovered_;
-		currentHovered_ = nullptr;
-	}
+		DeactivateWheel();
 	
 	{
 		const auto isAnyElementBeingModified = std::any_of(wheelElements_.begin(), wheelElements_.end(),
@@ -440,6 +414,58 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 	}
 	
 	return InputResponse::PASS_TO_GAME;
+}
+
+void Wheel::ActivateWheel(bool isMountOverlayLocked)
+{
+	// Mount overlay is turned on
+	if (isMountOverlayLocked)
+	{
+		currentPosition_.x = currentPosition_.y = 0.5f;
+
+		// Attempt to move the cursor to the middle of the screen
+		if (resetCursorOnLockedKeybindOption_.value())
+		{
+			RECT rect = { };
+			if (GetWindowRect(Core::i()->gameWindow(), &rect))
+			{
+				if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
+				{
+					auto& io = ImGui::GetIO();
+					io.MousePos.x = Core::i()->screenWidth() * 0.5f;
+					io.MousePos.y = Core::i()->screenHeight() * 0.5f;
+				}
+			}
+		}
+	}
+	else
+	{
+		const auto& io = ImGui::GetIO();
+		currentPosition_.x = io.MousePos.x / float(Core::i()->screenWidth());
+		currentPosition_.y = io.MousePos.y / float(Core::i()->screenHeight());
+	}
+
+	currentTriggerTime_ = TimeInMilliseconds();
+	
+	inkSpot_ = D3DXVECTOR3(frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * float(M_PI));
+
+	UpdateHover();
+}
+
+void Wheel::DeactivateWheel()
+{
+	isVisible_ = false;
+
+	// Check for special behavior if no mount is hovered
+	if(!currentHovered_)
+		currentHovered_ = GetCenterHoveredElement();
+
+	// Mount overlay is turned off, send the keybind
+	if (currentHovered_)
+		Input::i()->SendKeybind(currentHovered_->keybind().keys());
+
+	previousUsed_ = currentHovered_;
+	currentHovered_ = nullptr;
 }
 
 }

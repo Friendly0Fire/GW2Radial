@@ -36,6 +36,8 @@ protected:
 	std::vector<WheelElement*> GetActiveElements();
 	bool OnMouseMove();
 	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);
+	void ActivateWheel(bool isMountOverlayLocked);
+	void DeactivateWheel();
 
 	std::string nickname_, displayName_;
 
@@ -56,6 +58,7 @@ protected:
 	ConfigurationOption<bool> resetCursorOnLockedKeybindOption_;
 	ConfigurationOption<bool> lockCameraWhenOverlayedOption_;
 	ConfigurationOption<bool> showOverGameUIOption_;
+	ConfigurationOption<bool> noHoldOption_;
 
 	D3DXVECTOR2 currentPosition_;
 	mstime currentTriggerTime_ = 0;
