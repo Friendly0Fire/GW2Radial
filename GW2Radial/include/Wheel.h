@@ -86,6 +86,7 @@ protected:
 
 	D3DXVECTOR3 inkSpot_;
 
+	const char* GetTabName() const override { return displayName_.c_str(); }
 	void DrawMenu() override;
 
 	friend class WheelElement;

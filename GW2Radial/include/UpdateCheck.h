@@ -13,6 +13,7 @@ public:
 	~UpdateCheck();
 
 	void CheckForUpdates();
+	const char* GetTabName() const override { return "Update Check"; }
 	void DrawMenu() override;
 
 	bool updateAvailable() const { return updateAvailable_; }
