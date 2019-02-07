@@ -59,7 +59,7 @@ protected:
 
 	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr;
 
-	std::unique_ptr<Wheel> wheelMounts_, wheelNovelties_;
+	std::vector<std::unique_ptr<Wheel>> wheels_;
 	
 	std::unique_ptr<ConfigurationOption<bool>> firstMessageShown_;
 	std::unique_ptr<ConfigurationOption<bool>> ignoreRTSS_;
