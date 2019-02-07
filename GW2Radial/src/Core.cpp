@@ -15,6 +15,7 @@
 #include <shellapi.h>
 #include <UpdateCheck.h>
 #include <ImGuiPopup.h>
+#include <Marker.h>
 
 namespace GW2Radial
 {
@@ -166,6 +167,8 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 
 	wheels_.emplace_back(Wheel::Create<Mount>(IDR_BG, IDR_INK, "mounts", "Mounts", device));
 	wheels_.emplace_back(Wheel::Create<Novelty>(IDR_BG, IDR_INK, "novelties", "Novelties", device));
+	wheels_.emplace_back(Wheel::Create<Marker>(IDR_BG, IDR_INK, "markers", "Markers", device));
+	wheels_.emplace_back(Wheel::Create<ObjectMarker>(IDR_BG, IDR_INK, "object_markers", "Object Markers", device));
 
 	ImGui_ImplDX9_Init(device);
 }

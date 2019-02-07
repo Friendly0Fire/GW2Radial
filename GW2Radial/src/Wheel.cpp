@@ -258,7 +258,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				fx->EndPass();
 				fx->End();
 
-				fx->SetTechnique("MountImage");
+				fx->SetTechnique(alphaBlended_ ? "MountImageAlphaBlended" : "MountImage");
 				fx->SetTexture("texBgImage", backgroundTexture_);
 				fx->SetVector("g_vScreenSize", &screenSize);
 				fx->Begin(&passes, 0);
@@ -418,6 +418,11 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 
 void Wheel::ActivateWheel(bool isMountOverlayLocked)
 {
+	auto& io = ImGui::GetIO();
+
+	if (resetCursorPositionBeforeKeyPress_)
+		cursorResetPosition_ = { static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y) };
+
 	// Mount overlay is turned on
 	if (isMountOverlayLocked)
 	{
@@ -431,7 +436,6 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
 			{
 				if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
 				{
-					auto& io = ImGui::GetIO();
 					io.MousePos.x = Core::i()->screenWidth() * 0.5f;
 					io.MousePos.y = Core::i()->screenHeight() * 0.5f;
 				}
@@ -440,7 +444,6 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
 	}
 	else
 	{
-		const auto& io = ImGui::GetIO();
 		currentPosition_.x = io.MousePos.x / float(Core::i()->screenWidth());
 		currentPosition_.y = io.MousePos.y / float(Core::i()->screenHeight());
 	}
@@ -462,7 +465,7 @@ void Wheel::DeactivateWheel()
 
 	// Mount overlay is turned off, send the keybind
 	if (currentHovered_)
-		Input::i()->SendKeybind(currentHovered_->keybind().keys());
+		Input::i()->SendKeybind(currentHovered_->keybind().keys(), cursorResetPosition_);
 
 	previousUsed_ = currentHovered_;
 	currentHovered_ = nullptr;

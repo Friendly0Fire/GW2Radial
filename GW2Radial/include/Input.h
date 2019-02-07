@@ -6,6 +6,7 @@
 #include <list>
 #include <functional>
 #include <algorithm>
+#include <optional>
 
 namespace GW2Radial
 {
@@ -21,6 +22,12 @@ struct EventKey
 {
 	uint vk : 31;
 	bool down : 1;
+};
+
+struct Point
+{
+	int x;
+	int y;
 };
 
 inline InputResponse operator|(InputResponse a, InputResponse b)
@@ -60,7 +67,7 @@ public:
 	void AddInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.push_back(cb); }
 	void RemoveMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.remove(cb); }
 	void RemoveInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.remove(cb); }
-	void SendKeybind(const std::set<uint> &vkeys);
+	void SendKeybind(const std::set<uint> &vkeys, std::optional<Point> const& cursorPos = { });
 
 protected:
 	struct DelayedInput
@@ -70,10 +77,12 @@ protected:
 		LPARAM lParam;
 
 		mstime t;
+		std::optional<Point> cursorPos;
 	};
 
 	uint ConvertHookedMessage(uint msg) const;
-	DelayedInput TransformVKey(uint vk, bool down, mstime t);
+	DelayedInput TransformVKey(uint vk, bool down, mstime t, const std::optional<Point>& cursorPos);
+	std::tuple<WPARAM, LPARAM> CreateMouseEventParams(const std::optional<Point>& cursorPos) const;
 	void SendQueuedInputs();
 
 	// ReSharper disable CppInconsistentNaming
@@ -87,6 +96,7 @@ protected:
 	uint id_H_SYSKEYUP_;
 	uint id_H_KEYDOWN_;
 	uint id_H_KEYUP_;
+	uint id_H_MOUSEMOVE_;
 	// ReSharper restore CppInconsistentNaming
 
 	std::set<uint> DownKeys;

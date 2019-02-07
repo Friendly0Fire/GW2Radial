@@ -24,6 +24,7 @@ Input::Input()
 	id_H_SYSKEYUP_    = RegisterWindowMessage(TEXT("H_SYSKEYUP"));
 	id_H_KEYDOWN_     = RegisterWindowMessage(TEXT("H_KEYDOWN"));
 	id_H_KEYUP_       = RegisterWindowMessage(TEXT("H_KEYUP"));
+	id_H_MOUSEMOVE_   = RegisterWindowMessage(TEXT("H_MOUSEMOVE"));
 }
 
 bool IsRawInputMouse(LPARAM lParam)
@@ -245,31 +246,20 @@ uint Input::ConvertHookedMessage(uint msg) const
 		return WM_KEYDOWN;
 	if (msg == id_H_KEYUP_)
 		return WM_KEYUP;
+	if (msg == id_H_MOUSEMOVE_)
+		return WM_MOUSEMOVE;
 
 	return msg;
 }
 
-Input::DelayedInput Input::TransformVKey(uint vk, bool down, mstime t)
+Input::DelayedInput Input::TransformVKey(uint vk, bool down, mstime t, const std::optional<Point>& cursorPos)
 {
 	DelayedInput i { };
 	i.t = t;
+	i.cursorPos = cursorPos;
 	if (vk == VK_LBUTTON || vk == VK_MBUTTON || vk == VK_RBUTTON)
 	{
-		i.wParam = i.lParam = 0;
-		if (DownKeys.count(VK_CONTROL))
-			i.wParam += MK_CONTROL;
-		if (DownKeys.count(VK_SHIFT))
-			i.wParam += MK_SHIFT;
-		if (DownKeys.count(VK_LBUTTON))
-			i.wParam += MK_LBUTTON;
-		if (DownKeys.count(VK_RBUTTON))
-			i.wParam += MK_RBUTTON;
-		if (DownKeys.count(VK_MBUTTON))
-			i.wParam += MK_MBUTTON;
-
-		const auto &io = ImGui::GetIO();
-
-		i.lParam = MAKELPARAM((static_cast<int>(io.MousePos.x)), (static_cast<int>(io.MousePos.y)));
+		std::tie(i.wParam, i.lParam) = CreateMouseEventParams(cursorPos);
 	}
 	else
 	{
@@ -320,7 +310,27 @@ Input::DelayedInput Input::TransformVKey(uint vk, bool down, mstime t)
 	return i;
 }
 
-void Input::SendKeybind(const std::set<uint> &vkeys)
+std::tuple<WPARAM, LPARAM> Input::CreateMouseEventParams(const std::optional<Point>& cursorPos) const
+{
+	WPARAM wParam = 0;
+	if (DownKeys.count(VK_CONTROL))
+		wParam += MK_CONTROL;
+	if (DownKeys.count(VK_SHIFT))
+		wParam += MK_SHIFT;
+	if (DownKeys.count(VK_LBUTTON))
+		wParam += MK_LBUTTON;
+	if (DownKeys.count(VK_RBUTTON))
+		wParam += MK_RBUTTON;
+	if (DownKeys.count(VK_MBUTTON))
+		wParam += MK_MBUTTON;
+
+	const auto& io = ImGui::GetIO();
+
+	LPARAM lParam = MAKELPARAM(cursorPos ? cursorPos->x : (static_cast<int>(io.MousePos.x)), cursorPos ? cursorPos->y : (static_cast<int>(io.MousePos.y)));
+	return { wParam, lParam };
+}
+
+void Input::SendKeybind(const std::set<uint> &vkeys, const std::optional<Point>& cursorPos)
 {
 	if (vkeys.empty())
 		return;
@@ -341,7 +351,7 @@ void Input::SendKeybind(const std::set<uint> &vkeys)
 		if (DownKeys.count(vk))
 			continue;
 
-		DelayedInput i = TransformVKey(vk, true, currentTime);
+		DelayedInput i = TransformVKey(vk, true, currentTime, cursorPos);
 		QueuedInputs.push_back(i);
 		currentTime += 20;
 	}
@@ -353,7 +363,7 @@ void Input::SendKeybind(const std::set<uint> &vkeys)
 		if (DownKeys.count(vk))
 			continue;
 
-		DelayedInput i = TransformVKey(vk, false, currentTime);
+		DelayedInput i = TransformVKey(vk, false, currentTime, cursorPos);
 		QueuedInputs.push_back(i);
 		currentTime += 20;
 	}
@@ -370,6 +380,12 @@ void Input::SendQueuedInputs()
 
 	if (currentTime < qi.t)
 		return;
+
+	if (qi.cursorPos)
+	{
+		auto [wParam, lParam] = CreateMouseEventParams(qi.cursorPos);
+		PostMessage(Core::i()->gameWindow(), id_H_MOUSEMOVE_, wParam, lParam);
+	}
 
 	PostMessage(Core::i()->gameWindow(), qi.msg, qi.wParam, qi.lParam);
 

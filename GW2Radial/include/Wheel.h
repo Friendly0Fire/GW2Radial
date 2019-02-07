@@ -42,6 +42,9 @@ public:
 
 	bool drawOverUI() const { return showOverGameUIOption_.value(); }
 
+	void SetAlphaBlended(bool enabled) { alphaBlended_ = enabled; }
+	void SetResetCursorPositionBeforeKeyPress(bool enabled) { resetCursorPositionBeforeKeyPress_ = enabled; }
+
 protected:
 	void Sort();
 	WheelElement* GetCenterHoveredElement();
@@ -52,6 +55,8 @@ protected:
 	void DeactivateWheel();
 
 	std::string nickname_, displayName_;
+	bool alphaBlended_ = false;
+	bool resetCursorPositionBeforeKeyPress_ = false;
 
 	std::vector<std::unique_ptr<WheelElement>> wheelElements_;
 	bool isVisible_ = false;
@@ -72,6 +77,7 @@ protected:
 	ConfigurationOption<bool> showOverGameUIOption_;
 	ConfigurationOption<bool> noHoldOption_;
 
+	std::optional<Point> cursorResetPosition_;
 	D3DXVECTOR2 currentPosition_;
 	mstime currentTriggerTime_ = 0;
 
