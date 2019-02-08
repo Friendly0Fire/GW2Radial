@@ -234,7 +234,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 					break;
 				case CenterBehavior::FAVORITE:
 					for(const auto& e : wheelElements_)
-						if(e->elementId() == minElementId_ + uint(centerFavoriteOption_.value()))
+						if(e->sortingPriority() == minElementSroting_ + uint(centerFavoriteOption_.value()))
 							hoveredFadeIns.push_back(e->hoverFadeIn(currentTime, this));
 					break;
 				default:
@@ -303,8 +303,8 @@ void Wheel::OnFocusLost()
 void Wheel::Sort()
 {
 	std::sort(wheelElements_.begin(), wheelElements_.end(),
-		[](const std::unique_ptr<WheelElement>& a, const std::unique_ptr<WheelElement>& b) { return a->elementId() < b->elementId(); });
-	minElementId_ = wheelElements_.front()->elementId();
+		[](const std::unique_ptr<WheelElement>& a, const std::unique_ptr<WheelElement>& b) { return a->sortingPriority() < b->sortingPriority(); });
+	minElementSroting_ = wheelElements_.front()->sortingPriority();
 }
 
 WheelElement* Wheel::GetCenterHoveredElement()
@@ -318,7 +318,7 @@ WheelElement* Wheel::GetCenterHoveredElement()
 		return previousUsed_;
 	case CenterBehavior::FAVORITE:
 		for(const auto& e : wheelElements_)
-			if(e->elementId() == minElementId_ + uint(centerFavoriteOption_.value()))
+			if(e->sortingPriority() == minElementSroting_ + uint(centerFavoriteOption_.value()))
 				return e.get();
 	default:
 		return nullptr;
