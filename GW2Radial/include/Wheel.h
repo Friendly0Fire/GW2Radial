@@ -24,16 +24,16 @@ public:
 	virtual ~Wheel();
 
 	template<typename T>
-	void Setup(IDirect3DDevice9* dev); // Requires implementation for each wheel element type
-
-	template<typename T>
 	static std::unique_ptr<Wheel> Create(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev)
 	{
 		// TODO: Would be nice to somehow let wheel element .cpps determine these parameters as well
-		std::unique_ptr<Wheel> w = std::make_unique<Wheel>(bgResourceId, inkResourceId, std::move(nickname), std::move(displayName), dev);
-		w->Setup<T>(dev);
-		return std::move(w);
+		auto wheel = std::make_unique<Wheel>(bgResourceId, inkResourceId, std::move(nickname), std::move(displayName), dev);
+		wheel->Setup<T>(dev);
+		return std::move(wheel);
 	}
+
+	template<typename T>
+	void Setup(IDirect3DDevice9* dev); // Requires implementation for each wheel element type
 
 	void UpdateHover();
 	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); Sort(); }

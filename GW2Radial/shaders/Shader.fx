@@ -267,7 +267,7 @@ float4 MountImageAlphaBlended_PS(VS_SCREEN In) : COLOR0
 
 	float3 faded_color = lerp(src.rgb, luma, 0.33f);
 
-	float3 color = tex2D(texElementImageSampler, In.UV).rgb;
+	float3 color = src.rgb;
 	float3 glow = 0;
 	if(hoverFadeIn > 0.f)
 	{

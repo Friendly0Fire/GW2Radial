@@ -37,6 +37,7 @@ void SettingsMenu::Draw()
 			auto inactiveTabColor = currentTabColor;
 			inactiveTabColor.w /= 4;
 
+			// Draw buttons simulating tabs
 			for (const auto& i : implementers_)
 			{
 				ImGui::SameLine();
@@ -50,6 +51,7 @@ void SettingsMenu::Draw()
 				ImGui::PopStyleColor(3);
 			}
 
+			// Draw a fake line below the tabs to make the buttons look more like actual tabs
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y);
 			ImGui::PushStyleColor(ImGuiCol_::ImGuiCol_Button, currentTabColor);
 			ImGui::PushStyleColor(ImGuiCol_::ImGuiCol_ButtonActive, currentTabColor);
@@ -57,6 +59,7 @@ void SettingsMenu::Draw()
 			ImGui::Button("", { ImGui::GetContentRegionAvailWidth(), 2 });
 			ImGui::PopStyleColor(3);
 
+			// Draw selected tab's contents inside its own scrolling frame
 			if (currentTab_)
 			{
 				ImGui::BeginChild((std::string("CurrentTab") + currentTab_->GetTabName()).c_str());
