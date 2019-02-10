@@ -44,13 +44,13 @@ protected:
 	// ReSharper disable once CppMemberFunctionMayBeConst
 	void LoadValue()
 	{
-		throw std::invalid_argument("Unsupported value type");
+		static_assert(false, "Unsupported value type");
 	}
 
 	// ReSharper disable once CppMemberFunctionMayBeStatic
 	void SaveValue() const
 	{
-		throw std::invalid_argument("Unsupported value type");
+		static_assert(false, "Unsupported value type");
 	}
 
 	std::string displayName_, nickname_, category_;

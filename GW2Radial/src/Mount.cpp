@@ -8,10 +8,11 @@ Mount::Mount(MountType m, IDirect3DDevice9* dev)
 	: WheelElement(uint(m), std::string("mount_") + GetMountNicknameFromType(m), "Mounts", GetMountNameFromType(m), dev)
 { }
 
-void Mount::AddAllMounts(Wheel* w, IDirect3DDevice9* dev)
+template<>
+void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 {
 	for(auto i = MountType::FIRST; i <= MountType::LAST; i = MountType(uint(i) + 1))
-		w->AddElement(std::make_unique<Mount>(i, dev));
+		AddElement(std::make_unique<Mount>(i, dev));
 }
 
 std::array<float, 4> Mount::color()

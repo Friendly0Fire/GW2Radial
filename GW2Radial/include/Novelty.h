@@ -24,8 +24,6 @@ class Novelty : public WheelElement
 public:
 	Novelty(NoveltyType m, IDirect3DDevice9* dev);
 
-	static void AddAllNovelties(class Wheel* w, IDirect3DDevice9* dev);
-
 protected:
 	static const char* GetNoveltyNameFromType(NoveltyType m)
 	{

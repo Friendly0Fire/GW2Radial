@@ -23,12 +23,27 @@ public:
 	Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
 	virtual ~Wheel();
 
+	template<typename T>
+	static std::unique_ptr<Wheel> Create(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev)
+	{
+		// TODO: Would be nice to somehow let wheel element .cpps determine these parameters as well
+		auto wheel = std::make_unique<Wheel>(bgResourceId, inkResourceId, std::move(nickname), std::move(displayName), dev);
+		wheel->Setup<T>(dev);
+		return std::move(wheel);
+	}
+
+	template<typename T>
+	void Setup(IDirect3DDevice9* dev); // Requires implementation for each wheel element type
+
 	void UpdateHover();
 	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); Sort(); }
 	void Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, class UnitQuad* quad);
 	void OnFocusLost();
 
 	bool drawOverUI() const { return showOverGameUIOption_.value(); }
+
+	void SetAlphaBlended(bool enabled) { alphaBlended_ = enabled; }
+	void SetResetCursorPositionBeforeKeyPress(bool enabled) { resetCursorPositionBeforeKeyPress_ = enabled; }
 
 protected:
 	void Sort();
@@ -40,6 +55,8 @@ protected:
 	void DeactivateWheel();
 
 	std::string nickname_, displayName_;
+	bool alphaBlended_ = false;
+	bool resetCursorPositionBeforeKeyPress_ = false;
 
 	std::vector<std::unique_ptr<WheelElement>> wheelElements_;
 	bool isVisible_ = false;
@@ -60,6 +77,7 @@ protected:
 	ConfigurationOption<bool> showOverGameUIOption_;
 	ConfigurationOption<bool> noHoldOption_;
 
+	std::optional<Point> cursorResetPosition_;
 	D3DXVECTOR2 currentPosition_;
 	mstime currentTriggerTime_ = 0;
 
@@ -74,6 +92,7 @@ protected:
 
 	D3DXVECTOR3 inkSpot_;
 
+	const char* GetTabName() const override { return displayName_.c_str(); }
 	void DrawMenu() override;
 
 	friend class WheelElement;

@@ -4,7 +4,7 @@
 #define PI 3.14159f
 #define SQRT2 1.4142136f
 #define ONE_OVER_SQRT2 0.707107f
-#define MAX_ELEMENT_COUNT 8
+#define MAX_ELEMENT_COUNT 9
 
 struct VS_SCREEN
 {
@@ -254,6 +254,53 @@ technique MountImage
 
 		VertexShader = compile vs_3_0 Default_VS();
 		PixelShader = compile ps_3_0 MountImage_PS();
+	}
+}
+
+float4 MountImageAlphaBlended_PS(VS_SCREEN In) : COLOR0
+{
+	float hoverFadeIn = g_fHoverFadeIns[g_iElementID];
+
+	float4 src = tex2D(texElementImageSampler, In.UV);
+	
+	float luma = dot(src.rgb, float3(0.2126, 0.7152, 0.0722));
+
+	float3 faded_color = lerp(src.rgb, luma, 0.33f);
+
+	float3 color = src.rgb;
+	float3 glow = 0;
+	if(hoverFadeIn > 0.f)
+	{
+		color = lerp(faded_color, src.rgb, hoverFadeIn);
+
+		float glow_mask = 0;
+		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(0.01f, 0.01f)).r;
+		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(-0.01f, 0.01f)).r;
+		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(0.01f, -0.01f)).r;
+		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(-0.01f, -0.01f)).r;
+
+		glow = src.rgb * (glow_mask / 4) * hoverFadeIn * 0.5f * (0.5f + 0.5f * snoise(In.UV * 3.18f + 0.15f * float2(cos(g_fAnimationTimer * 3), sin(g_fAnimationTimer * 2))));
+	}
+
+	return float4(color + glow, src.a) * g_fWheelFadeIn.x;
+}
+
+technique MountImageAlphaBlended
+{
+	pass P0
+	{
+		ZEnable = false;
+		ZWriteEnable = false;
+		CullMode = None;
+		AlphaTestEnable = false;
+		AlphaBlendEnable = true;
+
+		SrcBlend = SrcAlpha;
+		DestBlend = InvSrcAlpha;
+		BlendOp = Add;
+
+		VertexShader = compile vs_3_0 Default_VS();
+		PixelShader = compile ps_3_0 MountImageAlphaBlended_PS();
 	}
 }
 

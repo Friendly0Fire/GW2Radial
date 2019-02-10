@@ -26,6 +26,16 @@
 #define IDR_NOVELTY8		228
 #define IDR_NOVELTY9		229
 
+#define IDR_MARKERS		231
+#define IDR_MARKER1		231
+#define IDR_MARKER2		232
+#define IDR_MARKER3		233
+#define IDR_MARKER4		234
+#define IDR_MARKER5		235
+#define IDR_MARKER6		236
+#define IDR_MARKER7		237
+#define IDR_MARKER8		238
+#define IDR_MARKER9		239
 
 #define IDR_FONT		300
 #define IDR_FONT_BLACK	301

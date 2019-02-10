@@ -8,10 +8,11 @@ Novelty::Novelty(NoveltyType m, IDirect3DDevice9* dev)
 	: WheelElement(uint(m), std::string("novelty_") + GetNoveltyNicknameFromType(m), "Mounts", GetNoveltyNameFromType(m), dev)
 { }
 
-void Novelty::AddAllNovelties(Wheel* w, IDirect3DDevice9* dev)
+template<>
+void Wheel::Setup<Novelty>(IDirect3DDevice9* dev)
 {
 	for(auto i = NoveltyType::FIRST; i <= NoveltyType::LAST; i = NoveltyType(uint(i) + 1))
-		w->AddElement(std::make_unique<Novelty>(i, dev));
+		AddElement(std::make_unique<Novelty>(i, dev));
 }
 
 std::array<float, 4> Novelty::color()
