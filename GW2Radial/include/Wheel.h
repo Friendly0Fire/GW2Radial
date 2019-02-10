@@ -43,7 +43,7 @@ protected:
 
 	std::vector<std::unique_ptr<WheelElement>> wheelElements_;
 	bool isVisible_ = false;
-	uint minElementSroting_ = 0;
+	uint minElementSortingPriority_ = 0;
 	Keybind keybind_, centralKeybind_;
 
 	ConfigurationOption<int> centerBehaviorOption_;
