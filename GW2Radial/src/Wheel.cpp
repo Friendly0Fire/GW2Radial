@@ -96,7 +96,6 @@ void Wheel::DrawMenu()
 {
 	ImGui::PushID((nickname_ + "Elements").c_str());
 	ImGui::BeginGroup();
-	//ImGuiTitle(displayName_.c_str());
 
 	ImGui::TextUnformatted("Set the following to your in-game keybinds:");
 

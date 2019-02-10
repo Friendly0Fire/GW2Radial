@@ -209,33 +209,46 @@ int g_iElementID;
 // Color of the current element
 float4 g_vElementColor;
 
-float4 MountImage_PS(VS_SCREEN In) : COLOR0
+float3 g_vLumaDot = float3(0.2126, 0.7152, 0.0722);
+
+float4 MountImage_PS(VS_SCREEN In, uniform bool imageIsMask) : COLOR0
 {
 	float hoverFadeIn = g_fHoverFadeIns[g_iElementID];
 
-	float mask = 1.f - tex2D(texElementImageSampler, In.UV).r;
-	float shadow = 1.f - tex2D(texElementImageSampler, In.UV + 0.01f).r;
+	float mask = 1, shadow = 0, luma;
+	float4 color = 1;
+	if(imageIsMask)
+	{
+		mask = 1.f - tex2D(texElementImageSampler, In.UV).r;
+		shadow = 1.f - tex2D(texElementImageSampler, In.UV + 0.01f).r;
+
+		color = g_vElementColor;
+		luma = dot(g_vElementColor.rgb, g_vLumaDot);
+	}
+	else
+	{
+		color = tex2D(texElementImageSampler, In.UV);
+		luma = dot(g_vElementColor.rgb, g_vLumaDot);
+	}
 	
-	float luma = dot(g_vElementColor.rgb, float3(0.2126, 0.7152, 0.0722));
+	float3 fadedColor = lerp(color.rgb, luma, 0.33f);
+	float3 finalColor = fadedColor;
 
-	float3 faded_color = lerp(g_vElementColor.rgb, luma, 0.33f);
-
-	float3 color = faded_color;
 	float3 glow = 0;
 	if(hoverFadeIn > 0.f)
 	{
-		color = lerp(faded_color, g_vElementColor.rgb, hoverFadeIn);
+		finalColor = lerp(fadedColor, finalColor, hoverFadeIn);
 
-		float glow_mask = 0;
-		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(0.01f, 0.01f)).r;
-		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(-0.01f, 0.01f)).r;
-		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(0.01f, -0.01f)).r;
-		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(-0.01f, -0.01f)).r;
+		float glowMask = 0;
+		glowMask += 1.f - tex2D(texElementImageSampler, In.UV + float2(0.01f, 0.01f)).r;
+		glowMask += 1.f - tex2D(texElementImageSampler, In.UV + float2(-0.01f, 0.01f)).r;
+		glowMask += 1.f - tex2D(texElementImageSampler, In.UV + float2(0.01f, -0.01f)).r;
+		glowMask += 1.f - tex2D(texElementImageSampler, In.UV + float2(-0.01f, -0.01f)).r;
 
-		glow = g_vElementColor.rgb * (glow_mask / 4) * hoverFadeIn * 0.5f * (0.5f + 0.5f * snoise(In.UV * 3.18f + 0.15f * float2(cos(g_fAnimationTimer * 3), sin(g_fAnimationTimer * 2))));
+		glow = color.rgb * (glowMask / 4) * hoverFadeIn * 0.5f * (0.5f + 0.5f * snoise(In.UV * 3.18f + 0.15f * float2(cos(g_fAnimationTimer * 3), sin(g_fAnimationTimer * 2))));
 	}
 
-	return float4(color * mask + glow, g_vElementColor.a * max(mask, shadow)) * g_fWheelFadeIn.x;
+	return float4(finalColor * mask + glow, color.a * max(mask, shadow)) * g_fWheelFadeIn.x;
 }
 
 technique MountImage
@@ -253,36 +266,8 @@ technique MountImage
 		BlendOp = Add;
 
 		VertexShader = compile vs_3_0 Default_VS();
-		PixelShader = compile ps_3_0 MountImage_PS();
+		PixelShader = compile ps_3_0 MountImage_PS(true);
 	}
-}
-
-float4 MountImageAlphaBlended_PS(VS_SCREEN In) : COLOR0
-{
-	float hoverFadeIn = g_fHoverFadeIns[g_iElementID];
-
-	float4 src = tex2D(texElementImageSampler, In.UV);
-	
-	float luma = dot(src.rgb, float3(0.2126, 0.7152, 0.0722));
-
-	float3 faded_color = lerp(src.rgb, luma, 0.33f);
-
-	float3 color = src.rgb;
-	float3 glow = 0;
-	if(hoverFadeIn > 0.f)
-	{
-		color = lerp(faded_color, src.rgb, hoverFadeIn);
-
-		float glow_mask = 0;
-		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(0.01f, 0.01f)).r;
-		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(-0.01f, 0.01f)).r;
-		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(0.01f, -0.01f)).r;
-		glow_mask += 1.f - tex2D(texElementImageSampler, In.UV + float2(-0.01f, -0.01f)).r;
-
-		glow = src.rgb * (glow_mask / 4) * hoverFadeIn * 0.5f * (0.5f + 0.5f * snoise(In.UV * 3.18f + 0.15f * float2(cos(g_fAnimationTimer * 3), sin(g_fAnimationTimer * 2))));
-	}
-
-	return float4(color + glow, src.a) * g_fWheelFadeIn.x;
 }
 
 technique MountImageAlphaBlended
@@ -300,7 +285,7 @@ technique MountImageAlphaBlended
 		BlendOp = Add;
 
 		VertexShader = compile vs_3_0 Default_VS();
-		PixelShader = compile ps_3_0 MountImageAlphaBlended_PS();
+		PixelShader = compile ps_3_0 MountImage_PS(false);
 	}
 }
 
