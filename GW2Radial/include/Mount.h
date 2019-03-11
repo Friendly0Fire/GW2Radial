@@ -26,6 +26,8 @@ class Mount : public WheelElement
 public:
 	Mount(MountType m, IDirect3DDevice9* dev);
 
+	bool isActive() const override;
+
 protected:
 	static const char* GetMountNameFromType(MountType m)
 	{

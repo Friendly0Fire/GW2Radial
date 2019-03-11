@@ -86,12 +86,12 @@ void WheelElement::Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElemen
 	switch (activeElementsCount)
 	{
 	case 1:
-		spriteDimensions.z *= 0.8f;
-		spriteDimensions.w *= 0.8f;
+		spriteDimensions.z *= 0.5f;
+		spriteDimensions.w *= 0.5f;
 		break;
 	case 2:
-		spriteDimensions.z *= 0.85f;
-		spriteDimensions.w *= 0.85f;
+		spriteDimensions.z *= 0.7f;
+		spriteDimensions.w *= 0.7f;
 		break;
 	case 3:
 		spriteDimensions.z *= 0.9f;

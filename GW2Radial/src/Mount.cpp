@@ -1,5 +1,6 @@
 #include <Mount.h>
 #include <Wheel.h>
+#include <MumbleLink.h>
 
 namespace GW2Radial
 {
@@ -7,6 +8,17 @@ namespace GW2Radial
 Mount::Mount(MountType m, IDirect3DDevice9* dev)
 	: WheelElement(uint(m), std::string("mount_") + GetMountNicknameFromType(m), "Mounts", GetMountNameFromType(m), dev)
 { }
+
+bool Mount::isActive() const
+{
+	if(!WheelElement::isActive())
+		return false;
+
+	if(elementId_ != uint(MountType::WARCLAW))
+		return !MumbleLink::i()->isWvW();
+	
+	return true;
+}
 
 template<>
 void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
