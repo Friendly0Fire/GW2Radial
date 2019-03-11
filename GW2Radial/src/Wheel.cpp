@@ -196,6 +196,20 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 
 		if (currentTime >= currentTriggerTime_ + displayDelayOption_.value())
 		{
+			if(resetCursorPositionToCenter_)
+			{
+				RECT rect = { };
+				if (GetWindowRect(Core::i()->gameWindow(), &rect))
+				{
+					if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
+					{
+						auto& io = ImGui::GetIO();
+						io.MousePos.x = Core::i()->screenWidth() * 0.5f;
+						io.MousePos.y = Core::i()->screenHeight() * 0.5f;
+					}
+				}
+				resetCursorPositionToCenter_ = false;
+			}
 			uint passes = 0;
 
 			// Setup viewport
@@ -427,22 +441,12 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
 	{
 		currentPosition_.x = currentPosition_.y = 0.5f;
 
-		// Attempt to move the cursor to the middle of the screen
 		if (resetCursorOnLockedKeybindOption_.value())
-		{
-			RECT rect = { };
-			if (GetWindowRect(Core::i()->gameWindow(), &rect))
-			{
-				if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
-				{
-					io.MousePos.x = Core::i()->screenWidth() * 0.5f;
-					io.MousePos.y = Core::i()->screenHeight() * 0.5f;
-				}
-			}
-		}
+			resetCursorPositionToCenter_ = true;
 	}
 	else
 	{
+		resetCursorPositionToCenter_ = false;
 		currentPosition_.x = io.MousePos.x / float(Core::i()->screenWidth());
 		currentPosition_.y = io.MousePos.y / float(Core::i()->screenHeight());
 	}
@@ -457,6 +461,7 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
 void Wheel::DeactivateWheel()
 {
 	isVisible_ = false;
+	resetCursorPositionToCenter_ = false;
 
 	// Check for special behavior if no mount is hovered
 	if(!currentHovered_)

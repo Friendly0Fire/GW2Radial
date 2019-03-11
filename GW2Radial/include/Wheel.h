@@ -57,6 +57,7 @@ protected:
 	std::string nickname_, displayName_;
 	bool alphaBlended_ = false;
 	bool resetCursorPositionBeforeKeyPress_ = false;
+	bool resetCursorPositionToCenter_ = false;
 
 	std::vector<std::unique_ptr<WheelElement>> wheelElements_;
 	bool isVisible_ = false;
