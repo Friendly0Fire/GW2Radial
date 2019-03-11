@@ -34,6 +34,8 @@ public:
 	const char* keysDisplayString() const { return keysDisplayString_.data(); }
 	std::array<char, 256>& keysDisplayStringArray() { return keysDisplayString_; }
 
+	bool conflicts(const std::set<uint>& pressedKeys) const;
+
 protected:
 	void UpdateDisplayString();
 	void ApplyKeys();

@@ -97,6 +97,18 @@ void Keybind::CheckForConflict(bool recurse)
 	}
 }
 
+bool Keybind::conflicts(const std::set<uint>& pressedKeys) const
+{
+	for(auto& elem : keyMaps_)
+	{
+		if(elem.first != this && keys_.size() < elem.second.size()
+			&& std::includes(pressedKeys.begin(), pressedKeys.end(), elem.second.begin(), elem.second.end()))
+			return true;
+	}
+
+	return false;
+}
+
 void Keybind::UpdateDisplayString()
 {
 	if(keys_.empty())

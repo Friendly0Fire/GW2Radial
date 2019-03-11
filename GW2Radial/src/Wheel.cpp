@@ -366,8 +366,13 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 {
 	const bool previousVisibility = isVisible_;
 
-	const bool mountOverlay = keybind_.isSet() && std::includes(keys.begin(), keys.end(), keybind_.keys().begin(), keybind_.keys().end());
-	const bool mountOverlayLocked = centralKeybind_.isSet() && std::includes(keys.begin(), keys.end(), centralKeybind_.keys().begin(), centralKeybind_.keys().end());
+	bool mountOverlay = keybind_.isSet() && std::includes(keys.begin(), keys.end(), keybind_.keys().begin(), keybind_.keys().end());
+	bool mountOverlayLocked = centralKeybind_.isSet() && std::includes(keys.begin(), keys.end(), centralKeybind_.keys().begin(), centralKeybind_.keys().end());
+	
+	if(mountOverlay)
+		mountOverlay &= !keybind_.conflicts(keys);
+	if(mountOverlayLocked)
+		mountOverlayLocked &= !centralKeybind_.conflicts(keys);
 
 	isVisible_ = mountOverlayLocked || mountOverlay;
 	
