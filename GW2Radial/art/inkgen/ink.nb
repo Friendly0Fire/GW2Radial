@@ -1,0 +1,144 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 11.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      4985,        136]
+NotebookOptionsPosition[      4317,        119]
+NotebookOutlinePosition[      4661,        134]
+CellTagsIndexPosition[      4618,        131]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"SetDirectory", "[", 
+   RowBox[{"NotebookDirectory", "[", "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"createLayer", "[", 
+    RowBox[{"col_", ",", "alpha_"}], "]"}], ":=", 
+   RowBox[{"SetAlphaChannel", "[", 
+    RowBox[{
+     RowBox[{"ImageResize", "[", 
+      RowBox[{
+       RowBox[{"Image", "[", 
+        RowBox[{"{", 
+         RowBox[{"{", "col", "}"}], "}"}], "]"}], ",", 
+       RowBox[{"ImageDimensions", "[", 
+        RowBox[{"images", "[", 
+         RowBox[{"[", "1", "]"}], "]"}], "]"}]}], "]"}], ",", "alpha"}], 
+    "]"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.756475224186081*^9, 3.7564752348166184`*^9}, {
+  3.756476523935359*^9, 
+  3.7564765241283236`*^9}},ExpressionUUID->"e0483af2-4600-4f32-bd64-\
+b1613eeb03ef"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"images", " ", "=", " ", 
+   RowBox[{"Import", "/@", 
+    RowBox[{"FileNames", "[", "\"\<ink-*.png\>\"", "]"}]}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.7564752386543202`*^9, 3.756475256868865*^9}},
+ CellLabel->"In[4]:=",ExpressionUUID->"4a4b491a-6651-4710-9fbd-7f6b4f964d12"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"imagelayers", "=", 
+   RowBox[{"MapIndexed", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"createLayer", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{
+           RowBox[{"#2", "[", 
+            RowBox[{"[", "1", "]"}], "]"}], "-", "1"}], ")"}], "/", 
+         RowBox[{"Length", "[", "images", "]"}]}], ",", 
+        RowBox[{"ColorNegate", "[", 
+         RowBox[{"ColorConvert", "[", 
+          RowBox[{
+           RowBox[{"#1", "//", "ImageAdjust"}], ",", "\"\<Grayscale\>\""}], 
+          "]"}], "]"}]}], "]"}], "&"}], ",", "images"}], "]"}]}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.756475310467722*^9, 3.7564753205475206`*^9}, {
+  3.7564753890987015`*^9, 3.7564753913164263`*^9}, {3.7564754865553102`*^9, 
+  3.7564754957916975`*^9}, {3.7564755294771037`*^9, 3.7564755672096043`*^9}, {
+  3.756475778409608*^9, 3.7564757785827017`*^9}, {3.7564758346282673`*^9, 
+  3.7564758796850057`*^9}, {3.756475920205963*^9, 3.756475934096713*^9}, {
+  3.756476468066065*^9, 3.7564765609866705`*^9}, {3.7564766418281965`*^9, 
+  3.7564766443966365`*^9}},
+ CellLabel->"In[27]:=",ExpressionUUID->"c9f7d3bd-7800-4046-bf6d-dde0428b97a5"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"imagebase", "=", 
+   RowBox[{"createLayer", "[", 
+    RowBox[{"1", ",", "1"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"imageruntime", "=", "imagebase"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Scan", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"imageruntime", "=", 
+       RowBox[{"ImageCompose", "[", 
+        RowBox[{"imageruntime", ",", "#"}], "]"}]}], ")"}], "&"}], ",", 
+    RowBox[{"imagelayers", "//", "Reverse"}]}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"imageruntime", "=", 
+   RowBox[{"ImageAdjust", "[", "imageruntime", "]"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.7564766202361813`*^9, 3.756476628178563*^9}, {
+   3.7564766704678164`*^9, 3.7564768022979927`*^9}, 3.7564768631371946`*^9, {
+   3.7564769654072213`*^9, 3.7564769736911*^9}},
+ CellLabel->"In[37]:=",ExpressionUUID->"53a6e5a3-b98b-42e0-a6ad-dbed52e2a59d"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Export", "[", 
+   RowBox[{"\"\<ink.tif\>\"", ",", "imageruntime", ",", 
+    RowBox[{"\"\<BitDepth\>\"", "\[Rule]", "32"}], ",", 
+    RowBox[{"\"\<ColorSpace\>\"", "\[Rule]", "\"\<Grayscale\>\""}]}], "]"}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.756477053939393*^9, 3.756477055103554*^9}, {
+  3.756477304113183*^9, 3.7564773261500535`*^9}, {3.7564773696969748`*^9, 
+  3.756477393020757*^9}},ExpressionUUID->"2a971130-9473-488a-af6e-\
+9a2a2be563a4"]
+},
+WindowSize->{2048, 1069},
+WindowMargins->{{-8, Automatic}, {Automatic, -8}},
+FrontEndVersion->"11.3 for Microsoft Windows (64-bit) (March 6, 2018)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 807, 23, 48, "Input",ExpressionUUID->"e0483af2-4600-4f32-bd64-b1613eeb03ef"],
+Cell[1368, 45, 312, 6, 28, "Input",ExpressionUUID->"4a4b491a-6651-4710-9fbd-7f6b4f964d12"],
+Cell[1683, 53, 1194, 27, 28, "Input",ExpressionUUID->"c9f7d3bd-7800-4046-bf6d-dde0428b97a5"],
+Cell[2880, 82, 945, 23, 86, "Input",ExpressionUUID->"53a6e5a3-b98b-42e0-a6ad-dbed52e2a59d"],
+Cell[3828, 107, 485, 10, 28, "Input",ExpressionUUID->"2a971130-9473-488a-af6e-9a2a2be563a4"]
+}
+]
+*)
+

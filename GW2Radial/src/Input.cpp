@@ -32,10 +32,10 @@ bool IsRawInputMouse(LPARAM lParam)
 	UINT dwSize = 40;
 	static BYTE lpb[40];
 
-	GetRawInputData((HRAWINPUT)lParam, RID_INPUT,
+	GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT,
 		lpb, &dwSize, sizeof(RAWINPUTHEADER));
 
-	RAWINPUT* raw = (RAWINPUT*)lpb;
+	auto* raw = reinterpret_cast<RAWINPUT*>(lpb);
 
 	return raw->header.dwType == RIM_TYPEMOUSE;
 }

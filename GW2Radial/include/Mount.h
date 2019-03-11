@@ -14,9 +14,10 @@ enum class MountType : uint
 	JACKAL = IDR_MOUNT4,
 	BEETLE = IDR_MOUNT5,
 	GRIFFON = IDR_MOUNT6,
+	WARCLAW = IDR_MOUNT7,
 
 	FIRST = RAPTOR,
-	LAST = GRIFFON
+	LAST = WARCLAW
 };
 const unsigned int MountTypeCount = 6;
 
@@ -42,6 +43,8 @@ protected:
 			return "Roller Beetle";
 		case MountType::GRIFFON:
 			return "Griffon";
+		case MountType::WARCLAW:
+			return "Warclaw";
 		default:
 			return "[Unknown]";
 		}
@@ -62,6 +65,8 @@ protected:
 			return "beetle";
 		case MountType::GRIFFON:
 			return "griffon";
+		case MountType::WARCLAW:
+			return "warclaw";
 		default:
 			return "unknown";
 		}
