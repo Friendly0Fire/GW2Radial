@@ -1,6 +1,6 @@
 # GW2 Radial
 
-An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) addon to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/MealyFluffyGermanspitz.mp4) to select a mount or novelty item on the fly for *Guild Wars 2: Path of Fire*.
+An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) addon to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/WarpedInsistentIrishterrier.mp4) to select a mount, novelty item and more, on the fly, for *Guild Wars 2: Path of Fire*.
 
 ## Installation
 - Download and extract the archive ``GW2Radial.zip`` found in the [latest release](https://github.com/Friendly0Fire/GW2Radial/releases/latest).
@@ -63,6 +63,10 @@ Unfortunately, I can't make this automatic (i.e. switching to that mode when Act
 ### Q: Can you make it so selecting a mount while already mounted will directly swap to the new mount?
 
 No. I talked with GW2 staff about this and they've decided that the can of worms it could potentially open is not worth it. Unfortunately, you'll need to select the new mount you want to use twice, once to unmount and then again to remount. This will not change unless ArenaNet's policy on addons changes.
+
+### Q: Can you make it so the addon doesn't send keys to the chat window?
+
+No. Similarly to the previous question, I'd need to hook into the game in ways that the devs don't want to deal with. As a result, the best I can suggest is to use non-character keys for the mounts (e.g. the F-row).
 
 ### Q: Can I use this code for my project?
 
