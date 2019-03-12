@@ -26,7 +26,7 @@ public:
 	const Keybind& showKeybind() const { return showKeybind_; }
 	
 	void AddImplementer(Implementer* impl) { implementers_.push_back(impl); if (!currentTab_) currentTab_ = impl; }
-	void RemoveImplementer(Implementer* impl) { implementers_.remove(impl); }
+	void RemoveImplementer(Implementer* impl) { implementers_.remove(impl); if(currentTab_ == impl) currentTab_ = nullptr; }
 
 protected:
 	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);

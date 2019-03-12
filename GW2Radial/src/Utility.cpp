@@ -29,7 +29,6 @@ std::wstring GetKeyName(unsigned int virtualKey)
 {
 	unsigned int scanCode = MapVirtualKeyW(virtualKey, MAPVK_VK_TO_VSC);
 
-	// because MapVirtualKey strips the extended bit for some keys
 	switch (virtualKey)
 	{
 	case VK_LBUTTON:
@@ -42,6 +41,31 @@ std::wstring GetKeyName(unsigned int virtualKey)
 		return L"M4";
 	case VK_XBUTTON2:
 		return L"M5";
+	case VK_F13:
+		return L"F13";
+	case VK_F14:
+		return L"F14";
+	case VK_F15:
+		return L"F15";
+	case VK_F16:
+		return L"F16";
+	case VK_F17:
+		return L"F17";
+	case VK_F18:
+		return L"F18";
+	case VK_F19:
+		return L"F19";
+	case VK_F20:
+		return L"F20";
+	case VK_F21:
+		return L"F21";
+	case VK_F22:
+		return L"F22";
+	case VK_F23:
+		return L"F23";
+	case VK_F24:
+		return L"F24";
+	// because MapVirtualKey strips the extended bit for some keys
 	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // arrow keys
 	case VK_PRIOR: case VK_NEXT: // page up and page down
 	case VK_END: case VK_HOME:

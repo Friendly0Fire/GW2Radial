@@ -16,6 +16,7 @@
 #include <UpdateCheck.h>
 #include <ImGuiPopup.h>
 #include <Marker.h>
+#include <MiscTab.h>
 
 namespace GW2Radial
 {
@@ -164,6 +165,7 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	COM_RELEASE(errorBuffer);
 
 	UpdateCheck::i()->CheckForUpdates();
+	MiscTab::i();
 
 	wheels_.emplace_back(Wheel::Create<Mount>(IDR_BG, IDR_INK, "mounts", "Mounts", device));
 	wheels_.emplace_back(Wheel::Create<Novelty>(IDR_BG, IDR_INK, "novelties", "Novelties", device));

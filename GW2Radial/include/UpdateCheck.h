@@ -6,15 +6,12 @@
 
 namespace GW2Radial
 {
-class UpdateCheck : public Singleton<UpdateCheck>, public SettingsMenu::Implementer
+class UpdateCheck : public Singleton<UpdateCheck>
 {
 public:
 	UpdateCheck();
-	~UpdateCheck();
 
 	void CheckForUpdates();
-	const char* GetTabName() const override { return "Update Check"; }
-	void DrawMenu() override;
 
 	bool updateAvailable() const { return updateAvailable_; }
 	bool updateDismissed() const { return updateDismissed_; }
@@ -32,5 +29,7 @@ protected:
 	const int maxCheckAttempts_ = 10;
 	mstime lastCheckTime_ = 0;
 	const mstime checkTimeSpan_ = 1000;
+
+	friend class MiscTab;
 };
 }

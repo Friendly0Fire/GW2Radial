@@ -1,5 +1,6 @@
 #include <ImGuiExtensions.h>
 #include <Core.h>
+#include "../imgui/imgui_internal.h"
 
 ImVec2 operator*(const ImVec2& a, const ImVec2& b)
 {
@@ -25,13 +26,18 @@ ImVec4 operator/(const ImVec4& v, const float f)
 	return { v.x / f, v.y / f, v.z / f, v.w / f };
 }
 
+std::map<void*, int> specialIds;
+
 void ImGuiKeybindInput(GW2Radial::Keybind& setting)
 {
 	std::string suffix = "##" + setting.nickname();
 
 	const auto windowWidth = ImGui::GetWindowWidth();
 
-	ImGui::PushItemWidth(windowWidth * 0.4f);
+#if 0
+	ImGui::PushItemWidth(windowWidth * (setting.isBeingModified() ? 0.3f : 0.45f));
+#endif
+	ImGui::PushItemWidth(windowWidth * 0.45f);
 
 	int popcount = 1;
 	if (setting.isBeingModified())
@@ -52,6 +58,26 @@ void ImGuiKeybindInput(GW2Radial::Keybind& setting)
 
 	ImGui::SameLine();
 
+#if 0
+	if(setting.isBeingModified())
+	{
+		ImGui::PushItemWidth(windowWidth * 0.15f - ImGui::GetStyle().FramePadding.x * 2);
+
+		int& specialId = specialIds[&setting];
+		if(ImGui::Combo(("##specialkey" + suffix).c_str(), &specialId, "F13\0F14\0F15\0F16\0F17\0F18\0F19\0F20\0F21\0F22\0F23\0F24\0"))
+		{
+			const uint vk = VK_F13 + specialId;
+			setting.keys({ vk });
+			setting.isBeingModified(false);
+			specialId = 0;
+		}
+
+		ImGui::PopItemWidth();
+
+		ImGui::SameLine();
+	}
+#endif
+
 	if (!setting.isBeingModified() && ImGui::Button(("Set" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
 	{
 		setting.isBeingModified(true);
@@ -60,7 +86,6 @@ void ImGuiKeybindInput(GW2Radial::Keybind& setting)
 	else if (setting.isBeingModified() && ImGui::Button(("Clear" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
 	{
 		setting.isBeingModified(false);
-		setting.keysDisplayStringArray().at(0) = '\0';
 		setting.keys(std::set<uint>());
 	}
 

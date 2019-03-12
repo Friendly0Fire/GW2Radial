@@ -97,6 +97,9 @@
     <ClCompile Include="src\MumbleLink.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\MiscTab.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -196,6 +199,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\MumbleLink.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MiscTab.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

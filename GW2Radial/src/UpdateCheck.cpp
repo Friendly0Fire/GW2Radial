@@ -14,13 +14,6 @@ DEFINE_SINGLETON(UpdateCheck);
 UpdateCheck::UpdateCheck()
 	: checkEnabled_("Automatically check for update", "check_for_updates", "Core", true)
 {
-	SettingsMenu::i()->AddImplementer(this);
-}
-
-UpdateCheck::~UpdateCheck()
-{
-	if(auto i = SettingsMenu::iNoInit(); i)
-		i->RemoveImplementer(this);
 }
 
 void UpdateCheck::CheckForUpdates()
@@ -57,11 +50,6 @@ void UpdateCheck::CheckForUpdates()
 	{
 		checkSucceeded_ = false;
 	}
-}
-
-void UpdateCheck::DrawMenu()
-{
-	ImGuiConfigurationWrapper(ImGui::Checkbox, "Automatically check for updates", checkEnabled_);
 }
 
 // Retrieving Headers Using a Constant
