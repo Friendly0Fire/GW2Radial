@@ -42,7 +42,7 @@ struct MumbleContext
 
 MumbleLink::MumbleLink()
 {
-	fileMapping_ = OpenFileMappingW(FILE_MAP_READ, TRUE, L"MumbleLink");
+	fileMapping_ = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(LinkedMem), L"MumbleLink");
 	if(!fileMapping_)
 		return;
 
@@ -73,7 +73,9 @@ bool MumbleLink::isWvW() const
 	if(!linkedMemory_)
 		return false;
 
-	return context()->mapType >= 9;
+	auto mt = context()->mapType;
+
+	return mt >= 9 && mt <= 15 && mt != 13;
 }
 
 const MumbleContext* MumbleLink::context() const

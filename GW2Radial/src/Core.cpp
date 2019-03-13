@@ -17,6 +17,7 @@
 #include <ImGuiPopup.h>
 #include <Marker.h>
 #include <MiscTab.h>
+#include <MumbleLink.h>
 
 namespace GW2Radial
 {
@@ -24,6 +25,7 @@ DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {
+	MumbleLink::i();
 	i()->dllModule_ = dll;
 	i()->InternalInit();
 }
