@@ -308,7 +308,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 
 void Wheel::OnFocusLost()
 {
-	currentHovered_ = previousUsed_ = nullptr;
+	currentHovered_ = nullptr;
 	isVisible_ = false;
 	currentTriggerTime_ = 0;
 }
