@@ -35,6 +35,13 @@ public:
 	std::array<char, 256>& keysDisplayStringArray() { return keysDisplayString_; }
 
 	bool conflicts(const std::set<uint>& pressedKeys) const;
+	
+	bool matches(const std::set<uint>& pressedKeys) const { return pressedKeys == keys_; }
+	bool matchesPartial(const std::set<uint>& pressedKeys) const
+	{
+		return isSet() && std::includes(pressedKeys.begin(), pressedKeys.end(), keys_.begin(), keys_.end());
+	}
+	bool matchesNoLeftRight(const std::set<uint>& pressedKeys) const;
 
 protected:
 	void UpdateDisplayString();

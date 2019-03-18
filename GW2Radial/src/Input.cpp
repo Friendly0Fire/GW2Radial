@@ -13,6 +13,7 @@ namespace GW2Radial
 DEFINE_SINGLETON(Input);
 
 Input::Input()
+	: distinguishLeftRight_("Distinguish between left and right SHIFT/CONTROL/ALT", "distinguish_lr", "Core", false)
 {
 	id_H_LBUTTONDOWN_ = RegisterWindowMessage(TEXT("H_LBUTTONDOWN"));
 	id_H_LBUTTONUP_   = RegisterWindowMessage(TEXT("H_LBUTTONUP"));
@@ -25,6 +26,32 @@ Input::Input()
 	id_H_KEYDOWN_     = RegisterWindowMessage(TEXT("H_KEYDOWN"));
 	id_H_KEYUP_       = RegisterWindowMessage(TEXT("H_KEYUP"));
 	id_H_MOUSEMOVE_   = RegisterWindowMessage(TEXT("H_MOUSEMOVE"));
+}
+
+WPARAM MapLeftRightKeys(WPARAM vk, LPARAM lParam)
+{
+    WPARAM newVk = vk;
+    const UINT scancode = (lParam & 0x00ff0000) >> 16;
+    const int extended  = (lParam & 0x01000000) != 0;
+
+    switch (vk) {
+    case VK_SHIFT:
+        newVk = MapVirtualKey(scancode, MAPVK_VSC_TO_VK_EX);
+        break;
+    case VK_CONTROL:
+        newVk = extended ? VK_RCONTROL : VK_LCONTROL;
+        break;
+    case VK_MENU:
+        newVk = extended ? VK_RMENU : VK_LMENU;
+        break;
+    default:
+        // not a key we map from generic to left/right specialized
+        //  just return it.
+        newVk = vk;
+        break;    
+    }
+
+    return newVk;
 }
 
 bool IsRawInputMouse(LPARAM lParam)
@@ -54,17 +81,19 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 			eventDown = true;
 		case WM_SYSKEYUP:
 		case WM_KEYUP:
+		{
+			const uint key = distinguishLeftRight_.value() ? uint(MapLeftRightKeys(wParam, lParam)) : uint(wParam);
 			if ((msg == WM_SYSKEYDOWN || msg == WM_SYSKEYUP) && wParam != VK_F10)
 			{
 				if (((lParam >> 29) & 1) == 1)
-					eventKeys.push_back({ VK_MENU, true });
+					eventKeys.push_back({ key, true });
 				else
-					eventKeys.push_back({ VK_MENU, false });
+					eventKeys.push_back({ key, false });
 			}
 
-			eventKeys.push_back({ (uint)wParam, eventDown });
+			eventKeys.push_back({ key, eventDown });
 			break;
-
+		}
 		case WM_LBUTTONDOWN:
 			eventDown = true;
 		case WM_LBUTTONUP:
@@ -83,7 +112,7 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 		case WM_XBUTTONDOWN:
 			eventDown = true;
 		case WM_XBUTTONUP:
-			eventKeys.push_back({ (uint)(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2), eventDown });
+			eventKeys.push_back({ uint(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2), eventDown });
 			break;
 		}
 	}
@@ -281,7 +310,8 @@ Input::DelayedInput Input::TransformVKey(uint vk, bool down, mstime t, const std
 		case VK_RBUTTON:
 			i.msg = down ? id_H_RBUTTONDOWN_ : id_H_RBUTTONUP_;
 			break;
-		case VK_MENU:
+		case VK_LMENU:
+		case VK_RMENU:
 		case VK_F10:
 			i.msg = down ? id_H_SYSKEYDOWN_ : id_H_SYSKEYUP_;
 
@@ -313,9 +343,9 @@ Input::DelayedInput Input::TransformVKey(uint vk, bool down, mstime t, const std
 std::tuple<WPARAM, LPARAM> Input::CreateMouseEventParams(const std::optional<Point>& cursorPos) const
 {
 	WPARAM wParam = 0;
-	if (DownKeys.count(VK_CONTROL))
+	if (DownKeys.count(VK_LCONTROL) || DownKeys.count(VK_RCONTROL))
 		wParam += MK_CONTROL;
-	if (DownKeys.count(VK_SHIFT))
+	if (DownKeys.count(VK_LSHIFT) || DownKeys.count(VK_RSHIFT))
 		wParam += MK_SHIFT;
 	if (DownKeys.count(VK_LBUTTON))
 		wParam += MK_LBUTTON;
@@ -338,7 +368,7 @@ void Input::SendKeybind(const std::set<uint> &vkeys, const std::optional<Point>&
 	std::list<uint> vkeysSorted(vkeys.begin(), vkeys.end());
 	vkeysSorted.sort([](uint &a, uint &b)
 	{
-		if (a == VK_CONTROL || a == VK_SHIFT || a == VK_MENU)
+		if (std::set<uint>{ VK_LCONTROL, VK_RCONTROL, VK_LSHIFT, VK_RSHIFT, VK_LMENU, VK_RMENU }.count(a))
 			return true;
 		else
 			return a < b;

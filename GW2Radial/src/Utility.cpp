@@ -74,6 +74,18 @@ std::wstring GetKeyName(unsigned int virtualKey)
 	case VK_NUMLOCK:
 		scanCode |= 0x100; // set extended bit
 		break;
+	case VK_LCONTROL:
+		return L"LCTRL";
+	case VK_RCONTROL:
+		return L"RCTRL";
+	case VK_LSHIFT:
+		return L"LSHIFT";
+	case VK_RSHIFT:
+		return L"RSHIFT";
+	case VK_LMENU:
+		return L"LALT";
+	case VK_RMENU:
+		return L"RALT";
 	default:
 		break;
 	}

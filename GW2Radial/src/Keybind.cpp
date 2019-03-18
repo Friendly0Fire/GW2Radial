@@ -109,6 +109,27 @@ bool Keybind::conflicts(const std::set<uint>& pressedKeys) const
 	return false;
 }
 
+bool Keybind::matchesNoLeftRight(const std::set<uint>& pressedKeys) const
+{
+	auto k2 = pressedKeys;
+	const auto rep = [&](uint vk, uint vkr)
+	{
+		if(const auto k = k2.find(vk); k != k2.end())
+		{
+			k2.erase(k);
+			k2.insert(vkr);
+		}
+	};
+	rep(VK_LCONTROL, VK_CONTROL);
+	rep(VK_RCONTROL, VK_CONTROL);
+	rep(VK_LSHIFT, VK_SHIFT);
+	rep(VK_RSHIFT, VK_SHIFT);
+	rep(VK_LMENU, VK_MENU);
+	rep(VK_RMENU, VK_MENU);
+
+	return k2 == keys_;
+}
+
 void Keybind::UpdateDisplayString()
 {
 	if(keys_.empty())

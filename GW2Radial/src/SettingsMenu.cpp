@@ -74,9 +74,9 @@ void SettingsMenu::Draw()
 	}
 }
 
-InputResponse SettingsMenu::OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys)
+InputResponse SettingsMenu::OnInputChange(bool /*changed*/, const std::set<uint>& keys, const std::list<EventKey>& /*changedKeys*/)
 {
-	const bool isMenuKeybind = keys == showKeybind_.keys();
+	const bool isMenuKeybind = showKeybind_.matchesNoLeftRight(keys);
 	if(isMenuKeybind)
 		isVisible_ = true;
 

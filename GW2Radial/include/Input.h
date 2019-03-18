@@ -7,6 +7,7 @@
 #include <functional>
 #include <algorithm>
 #include <optional>
+#include "ConfigurationOption.h"
 
 namespace GW2Radial
 {
@@ -104,6 +105,10 @@ protected:
 	
 	std::list<MouseMoveCallback*> mouseMoveCallbacks_;
 	std::list<InputChangeCallback*> inputChangeCallbacks_;
+	
+	ConfigurationOption<bool> distinguishLeftRight_;
+
+	friend class MiscTab;
 };
 
 }
