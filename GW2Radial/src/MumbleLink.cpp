@@ -75,7 +75,7 @@ bool MumbleLink::isWvW() const
 
 	auto mt = context()->mapType;
 
-	return mt >= 9 && mt <= 15 && mt != 13;
+	return mt == 18 || (mt >= 9 && mt <= 15 && mt != 13);
 }
 
 const MumbleContext* MumbleLink::context() const
