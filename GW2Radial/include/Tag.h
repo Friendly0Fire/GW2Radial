@@ -1,4 +1,4 @@
 #pragma once
 #include <string>
 
-static const std::string CurrentVersion = "v1.2.2";
+static const std::string CurrentVersion = "v1.2.3";
