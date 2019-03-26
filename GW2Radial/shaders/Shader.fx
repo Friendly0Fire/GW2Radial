@@ -237,7 +237,7 @@ float4 MountImage_PS(VS_SCREEN In, uniform bool imageIsMask) : COLOR0
 	float3 glow = 0;
 	if(hoverFadeIn > 0.f)
 	{
-		finalColor = lerp(fadedColor, g_vElementColor.rgb, hoverFadeIn);
+		finalColor = lerp(fadedColor, color.rgb, hoverFadeIn);
 
 		float glowMask = 0;
 		glowMask += 1.f - tex2D(texElementImageSampler, In.UV + float2(0.01f, 0.01f)).r;
