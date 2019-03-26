@@ -215,7 +215,7 @@ float4 MountImage_PS(VS_SCREEN In, uniform bool imageIsMask) : COLOR0
 {
 	float hoverFadeIn = g_fHoverFadeIns[g_iElementID];
 
-	float mask = 1, shadow = 0, luma;
+	float mask = 1, shadow = 0;
 	float4 color = 1;
 	if(imageIsMask)
 	{
@@ -223,14 +223,13 @@ float4 MountImage_PS(VS_SCREEN In, uniform bool imageIsMask) : COLOR0
 		shadow = 1.f - tex2D(texElementImageSampler, In.UV + 0.01f).r;
 
 		color = g_vElementColor;
-		luma = dot(g_vElementColor.rgb, g_vLumaDot);
 	}
 	else
 	{
 		color = tex2D(texElementImageSampler, In.UV);
-		luma = dot(g_vElementColor.rgb, g_vLumaDot);
 	}
 	
+	float luma = dot(color.rgb, g_vLumaDot);
 	float3 fadedColor = lerp(color.rgb, luma, 0.33f);
 	float3 finalColor = fadedColor;
 
