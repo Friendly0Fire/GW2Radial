@@ -21,6 +21,8 @@ Input::Input()
 	id_H_RBUTTONUP_   = RegisterWindowMessage(TEXT("H_RBUTTONUP"));
 	id_H_MBUTTONDOWN_ = RegisterWindowMessage(TEXT("H_MBUTTONDOWN"));
 	id_H_MBUTTONUP_   = RegisterWindowMessage(TEXT("H_MBUTTONUP"));
+	id_H_XBUTTONDOWN_ = RegisterWindowMessage(TEXT("H_XBUTTONDOWN"));
+	id_H_XBUTTONUP_   = RegisterWindowMessage(TEXT("H_XBUTTONUP"));
 	id_H_SYSKEYDOWN_  = RegisterWindowMessage(TEXT("H_SYSKEYDOWN"));
 	id_H_SYSKEYUP_    = RegisterWindowMessage(TEXT("H_SYSKEYUP"));
 	id_H_KEYDOWN_     = RegisterWindowMessage(TEXT("H_KEYDOWN"));
@@ -267,6 +269,10 @@ uint Input::ConvertHookedMessage(uint msg) const
 		return WM_MBUTTONDOWN;
 	if (msg == id_H_MBUTTONUP_)
 		return WM_MBUTTONUP;
+	if (msg == id_H_XBUTTONDOWN_)
+		return WM_XBUTTONDOWN;
+	if (msg == id_H_XBUTTONUP_)
+		return WM_XBUTTONUP;
 	if (msg == id_H_SYSKEYDOWN_)
 		return WM_SYSKEYDOWN;
 	if (msg == id_H_SYSKEYUP_)
@@ -286,7 +292,7 @@ Input::DelayedInput Input::TransformVKey(uint vk, bool down, mstime t, const std
 	DelayedInput i { };
 	i.t = t;
 	i.cursorPos = cursorPos;
-	if (vk == VK_LBUTTON || vk == VK_MBUTTON || vk == VK_RBUTTON)
+	if (vk == VK_LBUTTON || vk == VK_MBUTTON || vk == VK_RBUTTON || vk == VK_XBUTTON1 || vk == VK_XBUTTON2)
 	{
 		std::tie(i.wParam, i.lParam) = CreateMouseEventParams(cursorPos);
 	}
@@ -309,6 +315,11 @@ Input::DelayedInput Input::TransformVKey(uint vk, bool down, mstime t, const std
 			break;
 		case VK_RBUTTON:
 			i.msg = down ? id_H_RBUTTONDOWN_ : id_H_RBUTTONUP_;
+			break;
+		case VK_XBUTTON1:
+		case VK_XBUTTON2:
+			i.msg = down ? id_H_XBUTTONDOWN_ : id_H_XBUTTONUP_;
+			i.wParam |= (WPARAM)(vk == VK_XBUTTON1 ? XBUTTON1 : XBUTTON2) << 16;
 			break;
 		case VK_LMENU:
 		case VK_RMENU:
@@ -353,6 +364,10 @@ std::tuple<WPARAM, LPARAM> Input::CreateMouseEventParams(const std::optional<Poi
 		wParam += MK_RBUTTON;
 	if (DownKeys.count(VK_MBUTTON))
 		wParam += MK_MBUTTON;
+	if (DownKeys.count(VK_XBUTTON1))
+		wParam += MK_XBUTTON1;
+	if (DownKeys.count(VK_XBUTTON2))
+		wParam += MK_XBUTTON2;
 
 	const auto& io = ImGui::GetIO();
 
