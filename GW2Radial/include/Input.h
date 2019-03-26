@@ -93,6 +93,8 @@ protected:
 	uint id_H_RBUTTONUP_;
 	uint id_H_MBUTTONDOWN_;
 	uint id_H_MBUTTONUP_;
+	uint id_H_XBUTTONDOWN_;
+	uint id_H_XBUTTONUP_;
 	uint id_H_SYSKEYDOWN_;
 	uint id_H_SYSKEYUP_;
 	uint id_H_KEYDOWN_;
