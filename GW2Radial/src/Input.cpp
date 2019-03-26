@@ -343,9 +343,9 @@ Input::DelayedInput Input::TransformVKey(uint vk, bool down, mstime t, const std
 std::tuple<WPARAM, LPARAM> Input::CreateMouseEventParams(const std::optional<Point>& cursorPos) const
 {
 	WPARAM wParam = 0;
-	if (DownKeys.count(VK_LCONTROL) || DownKeys.count(VK_RCONTROL))
+	if (DownKeys.count(VK_CONTROL) || DownKeys.count(VK_LCONTROL) || DownKeys.count(VK_RCONTROL))
 		wParam += MK_CONTROL;
-	if (DownKeys.count(VK_LSHIFT) || DownKeys.count(VK_RSHIFT))
+	if (DownKeys.count(VK_SHIFT) || DownKeys.count(VK_LSHIFT) || DownKeys.count(VK_RSHIFT))
 		wParam += MK_SHIFT;
 	if (DownKeys.count(VK_LBUTTON))
 		wParam += MK_LBUTTON;
@@ -368,7 +368,7 @@ void Input::SendKeybind(const std::set<uint> &vkeys, const std::optional<Point>&
 	std::list<uint> vkeysSorted(vkeys.begin(), vkeys.end());
 	vkeysSorted.sort([](uint &a, uint &b)
 	{
-		if (std::set<uint>{ VK_LCONTROL, VK_RCONTROL, VK_LSHIFT, VK_RSHIFT, VK_LMENU, VK_RMENU }.count(a))
+		if (std::set<uint>{ VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU }.count(a))
 			return true;
 		else
 			return a < b;
