@@ -17,7 +17,8 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
 	  keybind_(nickname_, "Show on mouse"), centralKeybind_(nickname_ + "_cl", "Show in center"),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
-	  centerFavoriteOption_("Favorite choice", "center_favorite", "wheel_" + nickname_),
+	  centerFavoriteOption_("Favorite choice##Center", "center_favorite", "wheel_" + nickname_),
+	  delayFavoriteOption_("Favorite choice##Delay", "delay_favorite", "wheel_" + nickname_),
 	  scaleOption_("Scale", "scale", "wheel_" + nickname_, 1.f),
 	  centerScaleOption_("Center scale", "center_scale", "wheel_" + nickname_, 0.2f),
 	  displayDelayOption_("Pop-up delay", "delay", "wheel_" + nickname_),
@@ -25,7 +26,8 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 	  resetCursorOnLockedKeybindOption_("Reset cursor to center with Center Locked keybind", "reset_cursor_cl", "wheel_" + nickname_, true),
 	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_, true),
 	  showOverGameUIOption_("Show on top of game UI", "show_over_ui", "wheel_" + nickname_, true),
-	  noHoldOption_("Activate first hovered option without holding down", "no_hold", "wheel_" + nickname_, false)
+	  noHoldOption_("Activate first hovered option without holding down", "no_hold", "wheel_" + nickname_, false),
+	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_)
 {
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(bgResourceId), &backgroundTexture_);
 	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(inkResourceId), &inkTexture_);
@@ -110,14 +112,51 @@ void Wheel::DrawMenu()
 
 	ImGui::PushItemWidth(0.66f * ImGui::GetWindowContentRegionWidth());
 	
-	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms");
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.25f, 4.f, "%.2f", 1.f);
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.05f, 0.25f, "%.2f", 1.f);
+	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
 
 	ImGui::PopItemWidth();
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
+
+	if(CenterBehavior(centerBehaviorOption_.value()) != CenterBehavior::NOTHING && displayDelayOption_.value() > 0)
+	{
+		ImGui::Text((behaviorOnReleaseBeforeDelay_.displayName() + ":").c_str());
+		ImGui::PushItemWidth(0.2f * ImGui::GetWindowContentRegionWidth());
+
+		ImGuiIndent();
+		bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
+		ImGuiConfigurationWrapper(rb, "Nothing##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::NOTHING));
+		ImGui::SameLine();
+		ImGuiConfigurationWrapper(rb, "Previous##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::PREVIOUS));
+		ImGui::SameLine();
+		ImGuiConfigurationWrapper(rb, "Favorite##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::FAVORITE));
+		ImGui::SameLine();
+		ImGuiConfigurationWrapper(rb, "As if opened##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::DIRECTION));
+		ImGuiUnindent();
+		
+		ImGui::PopItemWidth();
+
+		if (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()) == BehaviorBeforeDelay::FAVORITE)
+		{
+			ImGuiIndent();
+			
+			const auto textSize = ImGui::CalcTextSize(delayFavoriteOption_.displayName().c_str());
+			const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
+			ImGui::PushItemWidth(itemSize);
+
+			std::vector<const char*> potentialNames(wheelElements_.size());
+				for (uint i = 0; i < wheelElements_.size(); i++)
+					potentialNames[i] = wheelElements_[i]->displayName().c_str();
+
+			bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
+			ImGuiConfigurationWrapper(cmb, delayFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
+			ImGui::PopItemWidth();
+			ImGuiUnindent();
+		}
+	}
 
 	if(!noHoldOption_.value())
 	{
@@ -126,11 +165,11 @@ void Wheel::DrawMenu()
 		ImGui::PushItemWidth(0.25f * ImGui::GetWindowContentRegionWidth());
 
 		bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
-		ImGuiConfigurationWrapper(rb, "Nothing", centerBehaviorOption_, int(CenterBehavior::NOTHING));
+		ImGuiConfigurationWrapper(rb, "Nothing##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::NOTHING));
 		ImGui::SameLine();
-		ImGuiConfigurationWrapper(rb, "Previous", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
+		ImGuiConfigurationWrapper(rb, "Previous##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
 		ImGui::SameLine();
-		ImGuiConfigurationWrapper(rb, "Favorite", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
+		ImGuiConfigurationWrapper(rb, "Favorite##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
 		
 		ImGui::PopItemWidth();
 	
@@ -330,12 +369,19 @@ WheelElement* Wheel::GetCenterHoveredElement()
 	case CenterBehavior::PREVIOUS:
 		return previousUsed_;
 	case CenterBehavior::FAVORITE:
-		for(const auto& e : wheelElements_)
-			if(e->sortingPriority() == minElementSortingPriority_ + uint(centerFavoriteOption_.value()))
-				return e.get();
+		return GetFavorite(centerFavoriteOption_.value());
 	default:
 		return nullptr;
 	}
+}
+
+WheelElement* Wheel::GetFavorite(int favoriteId)
+{
+	for(const auto& e : wheelElements_)
+		if(e->sortingPriority() == minElementSortingPriority_ + uint(favoriteId))
+			return e.get();
+
+	return nullptr;
 }
 
 std::vector<WheelElement*> Wheel::GetActiveElements()
@@ -468,8 +514,26 @@ void Wheel::DeactivateWheel()
 	isVisible_ = false;
 	resetCursorPositionToCenter_ = false;
 
-	// Check for special behavior if no mount is hovered
-	if(!currentHovered_)
+	// If keybind release was done before the wheel is visible, check our behavior
+	if(currentTriggerTime_ + displayDelayOption_.value() > TimeInMilliseconds())
+	{
+		switch(BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()))
+		{
+		default:
+			currentHovered_ = nullptr;
+			break;
+		case BehaviorBeforeDelay::FAVORITE:
+			currentHovered_ = GetFavorite(delayFavoriteOption_.value());
+			break;
+		case BehaviorBeforeDelay::PREVIOUS:
+			currentHovered_= previousUsed_;
+			break;
+		case BehaviorBeforeDelay::DIRECTION:
+			if(!currentHovered_)
+				currentHovered_ = GetCenterHoveredElement();
+			break;
+		}
+	} else if(!currentHovered_)
 		currentHovered_ = GetCenterHoveredElement();
 
 	// Mount overlay is turned off, send the keybind

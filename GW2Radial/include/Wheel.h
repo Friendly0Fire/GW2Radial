@@ -19,6 +19,13 @@ public:
 		PREVIOUS = 1,
 		FAVORITE = 2
 	};
+	enum class BehaviorBeforeDelay : int
+	{
+		NOTHING = 0,
+		PREVIOUS = 1,
+		FAVORITE = 2,
+		DIRECTION = 3
+	};
 
 	Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
 	virtual ~Wheel();
@@ -48,6 +55,7 @@ public:
 protected:
 	void Sort();
 	WheelElement* GetCenterHoveredElement();
+	WheelElement* GetFavorite(int favoriteId);
 	std::vector<WheelElement*> GetActiveElements();
 	bool OnMouseMove();
 	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);
@@ -66,6 +74,7 @@ protected:
 
 	ConfigurationOption<int> centerBehaviorOption_;
 	ConfigurationOption<int> centerFavoriteOption_;
+	ConfigurationOption<int> delayFavoriteOption_;
 	
 	ConfigurationOption<float> scaleOption_;
 	ConfigurationOption<float> centerScaleOption_;
@@ -77,6 +86,7 @@ protected:
 	ConfigurationOption<bool> lockCameraWhenOverlayedOption_;
 	ConfigurationOption<bool> showOverGameUIOption_;
 	ConfigurationOption<bool> noHoldOption_;
+	ConfigurationOption<int> behaviorOnReleaseBeforeDelay_;
 
 	std::optional<Point> cursorResetPosition_;
 	D3DXVECTOR2 currentPosition_;

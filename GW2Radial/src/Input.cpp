@@ -13,7 +13,7 @@ namespace GW2Radial
 DEFINE_SINGLETON(Input);
 
 Input::Input()
-	: distinguishLeftRight_("Distinguish between left and right SHIFT/CONTROL/ALT", "distinguish_lr", "Core", false)
+	: distinguishLeftRight_("Distinguish between left and right Shift/Ctrl/Alt", "distinguish_lr", "Core", false)
 {
 	id_H_LBUTTONDOWN_ = RegisterWindowMessage(TEXT("H_LBUTTONDOWN"));
 	id_H_LBUTTONUP_   = RegisterWindowMessage(TEXT("H_LBUTTONUP"));

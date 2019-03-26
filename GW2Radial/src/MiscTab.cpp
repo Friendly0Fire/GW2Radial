@@ -22,9 +22,9 @@ MiscTab::~MiscTab()
 void MiscTab::DrawMenu()
 {
 	if(auto uc = UpdateCheck::iNoInit(); uc)
-		ImGuiConfigurationWrapper(ImGui::Checkbox, "Automatically check for updates", uc->checkEnabled_);
+		ImGuiConfigurationWrapper(ImGui::Checkbox, uc->checkEnabled_);
 	if(auto i = Input::iNoInit(); i)
-		ImGuiConfigurationWrapper(ImGui::Checkbox, "Distinguish between left and right SHIFT/CTRL/ALT", i->distinguishLeftRight_);
+		ImGuiConfigurationWrapper(ImGui::Checkbox, i->distinguishLeftRight_);
 
 #if 0
 	ImGui::Separator();
