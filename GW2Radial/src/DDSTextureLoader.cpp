@@ -1007,19 +1007,10 @@ static HRESULT CreateTextureFromDDS( LPDIRECT3DDEVICE9 pDev, DDS_HEADER* pHeader
     {
         // Create the texture (let the runtime do the validation)
         LPDIRECT3DTEXTURE9 pTexture;
-        LPDIRECT3DTEXTURE9 pStagingTexture;
         hr = pDev->CreateTexture( iWidth, iHeight, iMipCount,
-                                  0, fmt, D3DPOOL_DEFAULT, &pTexture, NULL );
+                                  0, fmt, D3DPOOL_MANAGED, &pTexture, NULL );
         if( FAILED( hr ) )
             return hr;
-
-        hr = pDev->CreateTexture( iWidth, iHeight, iMipCount,
-                                  0, fmt, D3DPOOL_SYSTEMMEM, &pStagingTexture, NULL );
-        if( FAILED( hr ) )
-        {
-            SAFE_RELEASE( pTexture );
-            return hr;
-        }
 
         // Lock, fill, unlock
         UINT NumBytes, RowBytes, NumRows;
@@ -1033,12 +1024,11 @@ static HRESULT CreateTextureFromDDS( LPDIRECT3DDEVICE9 pDev, DDS_HEADER* pHeader
 
             if ( (pSrcBits + NumBytes) > pEndBits )
             {
-                SAFE_RELEASE( pStagingTexture );
                 SAFE_RELEASE( pTexture );
                 return HRESULT_FROM_WIN32( ERROR_HANDLE_EOF );
             }
 
-            if( SUCCEEDED( pStagingTexture->LockRect( i, &LockedRect, NULL, 0 ) ) )
+            if( SUCCEEDED( pTexture->LockRect( i, &LockedRect, NULL, 0 ) ) )
             {
                 BYTE* pDestBits = ( BYTE* )LockedRect.pBits;
 
@@ -1050,7 +1040,7 @@ static HRESULT CreateTextureFromDDS( LPDIRECT3DDEVICE9 pDev, DDS_HEADER* pHeader
                     pSrcBits += RowBytes;
                 }
 
-                pStagingTexture->UnlockRect( i );
+                pTexture->UnlockRect( i );
             }
 
             iWidth = iWidth >> 1;
@@ -1059,14 +1049,6 @@ static HRESULT CreateTextureFromDDS( LPDIRECT3DDEVICE9 pDev, DDS_HEADER* pHeader
                 iWidth = 1;
             if( iHeight == 0 )
                 iHeight = 1;
-        }
-
-        hr = pDev->UpdateTexture( pStagingTexture, pTexture );
-        SAFE_RELEASE( pStagingTexture );
-        if( FAILED( hr ) )
-        {
-            SAFE_RELEASE( pTexture );
-            return hr;
         }
 
         *ppTex = pTexture;
