@@ -30,8 +30,6 @@ float g_iElementID : register (c5);
 // Color of the current element
 float4 g_vElementColor : register (c6);
 
-float3 g_vLumaDot = float3(0.2126, 0.7152, 0.0722);
-
 float techId : register (c7);
 
 // [0..1] ratio of fade in when hovering over a wheel element, for every element in the wheel
@@ -164,6 +162,7 @@ float4 MountImage_PS(PS_INPUT In, float imageIsMask)
 		color = tex2D(texElementImageSampler, In.UV);
 	}
 	
+	float3 g_vLumaDot = float3(0.2126, 0.7152, 0.0722);
 	float luma = dot(color.rgb, g_vLumaDot);
 	float3 fadedColor = lerp(color.rgb, luma, 0.33f);
 	float3 finalColor = fadedColor;
