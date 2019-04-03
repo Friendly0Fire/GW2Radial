@@ -247,13 +247,23 @@ HRESULT Direct3D9Hooks::CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D
 void Direct3D9Hooks::OnD3DCreate()
 {
 	if (!realD3D9Module_)
-	{
+	{	
 		TCHAR path[MAX_PATH];
 
-		GetSystemDirectory(path, MAX_PATH);
-		_tcscat_s(path, TEXT("\\d3d9.dll"));
+		GetCurrentDirectory(MAX_PATH, path);
+		_tcscat_s(path, TEXT("\\bin64\\d912pxy.dll"));
 
-		realD3D9Module_ = LoadLibrary(path);
+		if (FileExists(path))
+		{
+			realD3D9Module_ = LoadLibrary(path);
+		}
+		else {
+
+			GetSystemDirectory(path, MAX_PATH);
+			_tcscat_s(path, TEXT("\\d3d9.dll"));
+
+			realD3D9Module_ = LoadLibrary(path);
+		}
 	}
 
 	if (!chainD3D9Module_)
