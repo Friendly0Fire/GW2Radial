@@ -42,6 +42,24 @@ UnitQuad::UnitQuad(IDirect3DDevice9* device)
 
 	if (FAILED(hr))
 		throw std::exception();
+
+	hr = device_->CreateIndexBuffer(size(), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &ind_buffer_, nullptr);
+	if (FAILED(hr))
+		throw std::exception();
+
+	ptr = nullptr;
+	hr = ind_buffer_->Lock(0, 0, &ptr, 0);
+
+	if (FAILED(hr))
+		throw std::exception();
+
+	WORD indexes[6] = { 0, 1, 2, 2, 1, 3 };
+	CopyMemory(ptr, indexes, 6*2);
+
+	hr = ind_buffer_->Unlock();
+
+	if (FAILED(hr))
+		throw std::exception();
 }
 
 UnitQuad::~UnitQuad()
@@ -49,6 +67,7 @@ UnitQuad::~UnitQuad()
 	COM_RELEASE(device_);
 	COM_RELEASE(vertexDeclaration_);
 	COM_RELEASE(buffer_);
+	COM_RELEASE(ind_buffer_);
 }
 
 const D3DVERTEXELEMENT9 * UnitQuad::def()
@@ -64,6 +83,7 @@ void UnitQuad::Bind(uint stream, uint offset) const
 	device_->SetVertexDeclaration(vertexDeclaration_);
 
 	device_->SetStreamSource(stream, buffer_, offset, stride());
+	device_->SetIndices(ind_buffer_);
 }
 
 void UnitQuad::Draw(uint triCount, uint startVert) const
@@ -71,7 +91,7 @@ void UnitQuad::Draw(uint triCount, uint startVert) const
 	if (!device_)
 		return;
 
-	device_->DrawPrimitive(D3DPT_TRIANGLESTRIP, startVert, triCount);
+	device_->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, startVert, 0, 4, 0, triCount);
 }
 
 }
