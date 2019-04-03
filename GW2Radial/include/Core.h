@@ -2,7 +2,6 @@
 
 #include <Main.h>
 #include <Singleton.h>
-#include <d3dx9.h>
 #include <Wheel.h>
 #include <UnitQuad.h>
 
@@ -26,7 +25,7 @@ public:
 	uint screenWidth() const { return screenWidth_; }
 	uint screenHeight() const { return screenHeight_; }
 	const std::unique_ptr<UnitQuad>& quad() const { return quad_; }
-	ID3DXEffect* mainEffect() const { return mainEffect_; }
+	Effect* mainEffect() const { return mainEffect_; }
 	ImFont* font() const { return font_; }
 	ImFont* fontBlack() const { return fontBlack_; }
 	ImFont* fontItalic() const { return fontItalic_; }
@@ -55,7 +54,7 @@ protected:
 	bool firstFrame_ = true;
 
 	std::unique_ptr<UnitQuad> quad_;
-	ID3DXEffect* mainEffect_ = nullptr;
+	Effect* mainEffect_ = nullptr;
 
 	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr;
 

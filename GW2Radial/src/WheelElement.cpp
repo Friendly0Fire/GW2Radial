@@ -14,7 +14,7 @@ WheelElement::WheelElement(uint id, const std::string &nickname, const std::stri
 	  sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, int(id)),
 	  keybind_(nickname, displayName)
 {
-	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(elementId_), &appearance_);
+	appearance_ = CreateTextureFromResource(dev, Core::i()->dllModule(), elementId_);
 }
 
 WheelElement::~WheelElement()
@@ -62,7 +62,7 @@ int WheelElement::DrawPriority(int extremumIndicator)
 	return rv;
 }
 
-void WheelElement::Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const Wheel* parent)
+void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const Wheel* parent)
 {
 	auto fx = Core::i()->mainEffect();
 	auto& quad = Core::i()->quad();
@@ -72,7 +72,7 @@ void WheelElement::Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElemen
 	float elementAngle = float(n) / float(activeElementsCount) * 2 * float(M_PI);
 	if (activeElementsCount == 1)
 		elementAngle = 0;
-	const D3DXVECTOR2 elementLocation = D3DXVECTOR2(cos(elementAngle - float(M_PI) / 2), sin(elementAngle - float(M_PI) / 2)) * 0.2f;
+	const fVector2 elementLocation = fVector2{cos(elementAngle - float(M_PI) / 2) * 0.2f, sin(elementAngle - float(M_PI) / 2) * 0.2f };
 
 	spriteDimensions.x += elementLocation.x * spriteDimensions.z;
 	spriteDimensions.y += elementLocation.y * spriteDimensions.w;
@@ -108,12 +108,11 @@ void WheelElement::Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElemen
 	spriteDimensions.z *= elementDiameter;
 	spriteDimensions.w *= elementDiameter;
 	
-	fx->SetTexture("texElementImage", appearance_);
-	fx->SetVector("g_vSpriteDimensions", &spriteDimensions);
-	fx->SetInt("g_iElementID", elementId());
-	fx->SetValue("g_vElementColor", color().data(), sizeof(D3DXVECTOR4));
-	fx->CommitChanges();
-
+	fx->SetTexture(EFF_TS_ELEMENTIMG, appearance_);
+	fx->SetVector(EFF_VS_SPRITE_DIM, &spriteDimensions);
+	fx->SetFloat(EFF_VS_ELEMENT_ID, elementId() * 1.0f);
+	fx->SetValue(EFF_VS_ELEMENT_COLOR, color().data(), sizeof(fVector4));
+	
 	quad->Draw();
 }
 

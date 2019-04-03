@@ -3,6 +3,7 @@
 #include <d3d9types.h>
 #include <Core.h>
 #include <winuser.h>
+#include "DDSTextureLoader.h"
 
 namespace GW2Radial
 {
@@ -149,6 +150,26 @@ bool LoadFontResource(UINT resId, void*& dataPtr, size_t& dataSize)
 	}
 
 	return false;
+}
+
+IDirect3DTexture9 *
+CreateTextureFromResource(
+	IDirect3DDevice9 * pDev,
+	HMODULE hModule,
+	unsigned uResource)
+{
+	void* dataPtr;
+	size_t dataSz;
+	   
+	
+	if (!LoadFontResource(uResource, dataPtr, dataSz))
+		return 0;
+
+	IDirect3DBaseTexture9* ret = NULL;
+
+	CreateDDSTextureFromMemory(pDev, dataPtr, dataSz, &ret);
+
+	return (IDirect3DTexture9*)ret;
 }
 
 }

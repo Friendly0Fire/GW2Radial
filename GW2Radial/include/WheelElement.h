@@ -3,8 +3,6 @@
 #include <ImGuiExtensions.h>
 #include <SettingsMenu.h>
 
-#include <d3dx9.h>
-
 namespace GW2Radial
 {
 
@@ -16,7 +14,7 @@ public:
 
 	int DrawPriority(int extremumIndicator);
 
-	void Draw(int n, D3DXVECTOR4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
+	void Draw(int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
 
 	uint elementId() const { return elementId_; }
 	

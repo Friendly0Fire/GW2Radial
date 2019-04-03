@@ -100,6 +100,12 @@
     <ClCompile Include="src\MiscTab.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\DDSTextureLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Effect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -204,6 +210,16 @@
     <ClInclude Include="include\MiscTab.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\dds.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DDSTextureLoader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="include\Effect.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="rt_rcdat.bin">
@@ -212,6 +228,11 @@
     <None Include="Main.def">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="art\finals\rcdata1.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="int\Shader_vs.cso" />
+    <None Include="int\Shader_ps.cso" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -222,6 +243,12 @@
     <FxCompile Include="shaders\Shader.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\Shader_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\Shader_vs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="shaders\perlin.hlsl" />
@@ -230,5 +257,35 @@
     <CopyFileToFolders Include="..\readme.md">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="art\Finals\Background.dds" />
+    <Image Include="art\Finals\InkSplatter.dds" />
+    <Image Include="art\Finals\Raptor.dds" />
+    <Image Include="art\Finals\Springer.dds" />
+    <Image Include="art\Finals\Skimmer.dds" />
+    <Image Include="art\Finals\Jackal.dds" />
+    <Image Include="art\Finals\Beetle.dds" />
+    <Image Include="art\Finals\Griffon.dds" />
+    <Image Include="art\Finals\Warclaw.dds" />
+    <Image Include="art\Finals\chair.dds" />
+    <Image Include="art\Finals\music.dds" />
+    <Image Include="art\Finals\hand.dds" />
+    <Image Include="art\Finals\travel.dds" />
+    <Image Include="art\Finals\tonic.dds" />
+    <Image Include="art\Finals\arrow_marker.dds" />
+    <Image Include="art\Finals\circle_marker.dds" />
+    <Image Include="art\Finals\heart_marker.dds" />
+    <Image Include="art\Finals\square_marker.dds" />
+    <Image Include="art\Finals\star_marker.dds" />
+    <Image Include="art\Finals\spiral_marker.dds" />
+    <Image Include="art\Finals\triangle_marker.dds" />
+    <Image Include="art\Finals\x_marker.dds" />
+    <Image Include="art\Finals\clear_markers.dds" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="art\Fonts\SourceSansPro-Regular.ttf" />
+    <Font Include="art\Fonts\SourceSansPro-Black.ttf" />
+    <Font Include="art\Fonts\SourceSansPro-Italic.ttf" />
   </ItemGroup>
 </Project>

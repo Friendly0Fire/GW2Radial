@@ -17,10 +17,10 @@ UnitQuad::UnitQuad(IDirect3DDevice9* device)
 
 	device_->AddRef();
 
-	points[0].uv = D3DXVECTOR2(0.f, 0.f);
-	points[1].uv = D3DXVECTOR2(1.f, 0.f);
-	points[2].uv = D3DXVECTOR2(0.f, 1.f);
-	points[3].uv = D3DXVECTOR2(1.f, 1.f);
+	points[0].uv = { 0.f, 0.f };
+	points[1].uv = { 1.f, 0.f };
+	points[2].uv = { 0.f, 1.f };
+	points[3].uv = { 1.f, 1.f };
 
 	HRESULT hr = device_->CreateVertexDeclaration(def(), &vertexDeclaration_);
 	if (FAILED(hr))

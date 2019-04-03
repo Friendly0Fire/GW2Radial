@@ -71,3 +71,24 @@ typedef unsigned __int64 mstime;
 #ifndef M_PI
 #define M_PI 3.14159265359
 #endif
+
+typedef struct fVector4 {
+	FLOAT x;
+	FLOAT y;
+	FLOAT z;
+	FLOAT w;
+} fVector4;
+
+typedef struct fVector3 {
+	FLOAT x;
+	FLOAT y;
+	FLOAT z;	
+} fVector3;
+
+typedef struct fVector2 {
+	FLOAT x;
+	FLOAT y;
+} fVector2;
+
+#include "d3d9.h"
+#include "Effect.h"

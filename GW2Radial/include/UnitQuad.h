@@ -1,14 +1,14 @@
 #pragma once
 #include <Main.h>
 #include <d3d9.h>
-#include <d3dx9.h>
+
 
 namespace GW2Radial
 {
 
 struct ScreenVertex
 {
-	D3DXVECTOR2 uv;
+	fVector2 uv;
 };
 
 class UnitQuad
