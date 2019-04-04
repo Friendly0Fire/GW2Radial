@@ -3,6 +3,10 @@
 
 namespace GW2Radial {
 
+void* Effect_dx12::PSO_bgImg = 0;
+void* Effect_dx12::PSO_cursor = 0;
+void* Effect_dx12::PSO_mountAlpha = 0;
+
 Effect_dx12::Effect_dx12(IDirect3DDevice9 * iDev) : Effect(iDev)
 {
 
@@ -36,18 +40,21 @@ int Effect_dx12::Load()
 	dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 	dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 
+	PSO_bgImg = 0;
 	if (dev->GetRenderState(D3DRS_D912PXY_ENQUEUE_PSO_COMPILE, (DWORD*)&PSO_bgImg) < 0)
 		return 0;
 
 	dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 	dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 
+	PSO_mountAlpha = 0;
 	if (dev->GetRenderState(D3DRS_D912PXY_ENQUEUE_PSO_COMPILE, (DWORD*)&PSO_mountAlpha) < 0)
 		return 0;
 			
 	dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 	dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 
+	PSO_cursor = 0;
 	if (dev->GetRenderState(D3DRS_D912PXY_ENQUEUE_PSO_COMPILE, (DWORD*)&PSO_cursor) < 0)
 		return 0;
 

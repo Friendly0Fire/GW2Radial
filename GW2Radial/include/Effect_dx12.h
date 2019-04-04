@@ -25,9 +25,9 @@ public:
 	void End();
 
 private:
-	void* PSO_bgImg;
-	void* PSO_mountAlpha;
-	void* PSO_cursor;
+	static void* PSO_bgImg;
+	static void* PSO_mountAlpha;
+	static void* PSO_cursor;
 
 	DWORD tsSamplers[4] = { 0,0,0,0 };
 	DWORD tsTexId[4] = { 0,0,0,0 };
