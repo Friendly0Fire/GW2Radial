@@ -64,10 +64,10 @@ UnitQuad::UnitQuad(IDirect3DDevice9* device)
 
 UnitQuad::~UnitQuad()
 {
-	COM_RELEASE(device_);
 	COM_RELEASE(vertexDeclaration_);
 	COM_RELEASE(buffer_);
 	COM_RELEASE(ind_buffer_);
+	COM_RELEASE(device_);
 }
 
 const D3DVERTEXELEMENT9 * UnitQuad::def()

@@ -127,6 +127,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClCompile Include="src\Direct3D9Hooks.cpp" />
     <ClCompile Include="src\Direct3DVirtualFunctionTable.c" />
     <ClCompile Include="src\Effect.cpp" />
+    <ClCompile Include="src\Effect_dx12.cpp" />
     <ClCompile Include="src\ImGuiExtensions.cpp" />
     <ClCompile Include="src\ImGuiPopup.cpp" />
     <ClCompile Include="src\imgui_impl_dx9_custom.cpp" />
@@ -163,6 +164,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClInclude Include="include\Direct3D9Hooks.h" />
     <ClInclude Include="include\Direct3DVirtualFunctionTable.h" />
     <ClInclude Include="include\Effect.h" />
+    <ClInclude Include="include\Effect_dx12.h" />
     <ClInclude Include="include\ImGuiExtensions.h" />
     <ClInclude Include="include\ImGuiPopup.h" />
     <ClInclude Include="include\Input.h" />

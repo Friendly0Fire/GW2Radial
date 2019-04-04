@@ -232,8 +232,6 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		const int screenWidth = Core::i()->screenWidth();
 		const int screenHeight = Core::i()->screenHeight();
 
-		quad->Bind();
-
 		const auto currentTime = TimeInMilliseconds();
 
 		if (currentTime >= currentTriggerTime_ + displayDelayOption_.value())
@@ -254,6 +252,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			}
 			uint passes = 0;
 
+			fx->SceneBegin(quad);
+
 			// Setup viewport
 			D3DVIEWPORT9 vp;
 			vp.X = vp.Y = 0;
@@ -263,9 +263,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			vp.MaxZ = 1.0f;
 			dev->SetViewport(&vp);
 
-			fVector4 screenSize = { float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight };
-
-			fx->SceneBegin();
+			fVector4 screenSize = { float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight };			
+			
 
 			auto activeElements = GetActiveElements();
 			if (!activeElements.empty())

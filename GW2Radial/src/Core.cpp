@@ -18,6 +18,7 @@
 #include <Marker.h>
 #include <MiscTab.h>
 #include <MumbleLink.h>
+#include <Effect_dx12.h>
 
 namespace GW2Radial
 {
@@ -161,7 +162,12 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	try { quad_ = std::make_unique<UnitQuad>(device); }
 	catch (...) { quad_ = nullptr; }
 
-	mainEffect_ = new Effect(device);
+	//megai2: check for d912pxy
+	if (device->SetRenderState(D3DRS_ENABLE_D912PXY_API_HACKS, 1) == 343434)
+		mainEffect_ = new Effect_dx12(device);
+	else 
+		mainEffect_ = new Effect(device);
+
 	if (!mainEffect_->Load())
 		abort();
 

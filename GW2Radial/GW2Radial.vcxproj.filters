@@ -106,6 +106,7 @@
     <ClCompile Include="src\imgui_impl_dx9_custom.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="src\Effect_dx12.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -220,6 +221,7 @@
     <ClInclude Include="include\Effect.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Effect_dx12.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="rt_rcdat.bin">

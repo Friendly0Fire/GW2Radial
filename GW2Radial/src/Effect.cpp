@@ -1,5 +1,6 @@
 #include "Effect.h"
 #include "Utility.h"
+#include <UnitQuad.h>
 
 namespace GW2Radial {
 
@@ -15,6 +16,9 @@ Effect::Effect(IDirect3DDevice9 * iDev)
 
 Effect::~Effect()
 {
+	COM_RELEASE(ps);
+	COM_RELEASE(vs);
+	COM_RELEASE(sb);
 }
 
 int Effect::Load()
@@ -83,9 +87,12 @@ void Effect::SetTexture(EffectTextureSlot slot, IDirect3DTexture9 * val)
 	dev->SetTexture(slot, val);
 }
 
-void Effect::SceneBegin()
+void Effect::SceneBegin(void* drawBuf)
 {
 	sb->Capture();
+
+	//megai2: FIXME set UnitQuad* type to method parameter and make it compile
+	((UnitQuad*)drawBuf)->Bind();
 
 	dev->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
 	dev->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);

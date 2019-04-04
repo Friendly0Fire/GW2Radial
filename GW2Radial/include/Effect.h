@@ -37,31 +37,32 @@ public:
 	Effect(IDirect3DDevice9* iDev);
 	~Effect();
 
-	int Load();
+	virtual int Load();
 
-	void SetTechnique(EffectTechnique val);
+	virtual void SetTechnique(EffectTechnique val);
 	void SetVector(EffectVarSlot slot, fVector4* vec);
 	void SetValue(EffectVarSlot slot, void* val, int sz);
 	void SetFloat(EffectVarSlot slot, float fv);
 	void SetFloatArray(EffectVarSlot slot, float* fv, int sz);
 
-	void SetTexture(EffectTextureSlot slot, IDirect3DTexture9* val);
+	virtual void SetTexture(EffectTextureSlot slot, IDirect3DTexture9* val);
 
-	void SceneBegin();
-	void SceneEnd();
+	virtual void SceneBegin(void* drawBuf);
+	virtual void SceneEnd();
 
-	void BeginPass(int whatever);
-	void Begin(uint* pass, int whatever);
-	void EndPass();
-	void End();
+	virtual void BeginPass(int whatever);
+	virtual void Begin(uint* pass, int whatever);
+	virtual void EndPass();
+	virtual void End();
 
-private:
 	void SetVarToSlot(EffectVarSlot slot, float* mem, int sz);
 
+protected:
 	IDirect3DDevice9* dev;
 	IDirect3DPixelShader9* ps;
 	IDirect3DVertexShader9* vs;
 
+private:	
 	IDirect3DStateBlock9* sb;
 };
 
