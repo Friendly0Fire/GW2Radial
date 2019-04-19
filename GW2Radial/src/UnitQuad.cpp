@@ -15,7 +15,7 @@ UnitQuad::UnitQuad(IDirect3DDevice9* device)
 	if (!device_)
 		throw std::exception();
 
-	device_->AddRef();
+	//device_->AddRef();
 
 	points[0].uv = { 0.f, 0.f };
 	points[1].uv = { 1.f, 0.f };
@@ -67,7 +67,7 @@ UnitQuad::~UnitQuad()
 	COM_RELEASE(vertexDeclaration_);
 	COM_RELEASE(buffer_);
 	COM_RELEASE(ind_buffer_);
-	COM_RELEASE(device_);
+	//COM_RELEASE(device_);
 }
 
 const D3DVERTEXELEMENT9 * UnitQuad::def()
