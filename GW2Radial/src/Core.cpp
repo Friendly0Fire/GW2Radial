@@ -163,7 +163,8 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	catch (...) { quad_ = nullptr; }
 
 	//megai2: check for d912pxy
-	if (device->SetRenderState(D3DRS_ENABLE_D912PXY_API_HACKS, 1) == 343434)
+	//D3DRS_ENABLE_D912PXY_API_HACKS == 220
+	if (device->SetRenderState((D3DRENDERSTATETYPE)220, 1) == 343434)
 		mainEffect_ = new Effect_dx12(device);
 	else 
 		mainEffect_ = new Effect(device);
