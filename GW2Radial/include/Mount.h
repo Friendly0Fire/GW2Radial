@@ -15,11 +15,12 @@ enum class MountType : uint
 	BEETLE = IDR_MOUNT5,
 	GRIFFON = IDR_MOUNT6,
 	WARCLAW = IDR_MOUNT7,
+	SKYSCALE = IDR_MOUNT8,
 
 	FIRST = RAPTOR,
-	LAST = WARCLAW
+	LAST = SKYSCALE
 };
-const unsigned int MountTypeCount = 6;
+const unsigned int MountTypeCount = 7;
 
 class Mount : public WheelElement
 {
@@ -47,6 +48,8 @@ protected:
 			return "Griffon";
 		case MountType::WARCLAW:
 			return "Warclaw";
+		case MountType::SKYSCALE:
+			return "Skyscale";
 		default:
 			return "[Unknown]";
 		}
@@ -68,7 +71,9 @@ protected:
 		case MountType::GRIFFON:
 			return "griffon";
 		case MountType::WARCLAW:
-			return "warclaw";
+			return "Warclaw";
+		case MountType::SKYSCALE:
+			return "Skyscale";
 		default:
 			return "unknown";
 		}
