@@ -49,7 +49,7 @@ protected:
 		case MountType::WARCLAW:
 			return "Warclaw";
 		case MountType::SKYSCALE:
-			return "Warclaw";
+			return "Skyscale";
 		default:
 			return "[Unknown]";
 		}
