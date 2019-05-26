@@ -46,6 +46,8 @@ std::array<float, 4> Mount::color()
 		return { 136 / 255.f, 123 / 255.f, 195 / 255.f, 1 };
 	case MountType::WARCLAW:
 		return { 181 / 255.f, 255 / 255.f, 244 / 255.f, 1 };
+	case MountType::SKYSCALE:
+		return { 174 / 255.f, 141 / 255.f, 196 / 255.f, 1 };
 	default:
 		return { 1, 1, 1, 1 };
 	}
