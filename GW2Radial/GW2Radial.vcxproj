@@ -254,6 +254,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <Image Include="art\Finals\music.dds" />
     <Image Include="art\Finals\Raptor.dds" />
     <Image Include="art\Finals\Skimmer.dds" />
+    <Image Include="art\Finals\Skyscale.dds" />
     <Image Include="art\Finals\spiral_marker.dds" />
     <Image Include="art\Finals\Springer.dds" />
     <Image Include="art\Finals\square_marker.dds" />

@@ -20,6 +20,9 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{cad8217e-51ec-44e9-9e81-95b3f68e501c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>{8aecf9fe-356d-4cc7-bf13-297bcef89f0f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui_demo.cpp">
@@ -219,12 +222,14 @@
     <ClInclude Include="include\DDSTextureLoader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h" />
     <ClInclude Include="include\Effect.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Effect_dx12.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -237,8 +242,12 @@
     <None Include="art\finals\rcdata1.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="int\Shader_vs.cso" />
-    <None Include="int\Shader_ps.cso" />
+    <None Include="int\Shader_vs.cso">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="int\Shader_ps.cso">
+      <Filter>Assets</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -257,41 +266,98 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="shaders\perlin.hlsl" />
-  </ItemGroup>
-  <ItemGroup>
     <CopyFileToFolders Include="..\readme.md">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="art\Finals\Background.dds" />
-    <Image Include="art\Finals\InkSplatter.dds" />
-    <Image Include="art\Finals\Raptor.dds" />
-    <Image Include="art\Finals\Springer.dds" />
-    <Image Include="art\Finals\Skimmer.dds" />
-    <Image Include="art\Finals\Jackal.dds" />
-    <Image Include="art\Finals\Beetle.dds" />
-    <Image Include="art\Finals\Griffon.dds" />
-    <Image Include="art\Finals\Warclaw.dds" />
-    <Image Include="art\Finals\chair.dds" />
-    <Image Include="art\Finals\music.dds" />
-    <Image Include="art\Finals\hand.dds" />
-    <Image Include="art\Finals\travel.dds" />
-    <Image Include="art\Finals\tonic.dds" />
-    <Image Include="art\Finals\arrow_marker.dds" />
-    <Image Include="art\Finals\circle_marker.dds" />
-    <Image Include="art\Finals\heart_marker.dds" />
-    <Image Include="art\Finals\square_marker.dds" />
-    <Image Include="art\Finals\star_marker.dds" />
-    <Image Include="art\Finals\spiral_marker.dds" />
-    <Image Include="art\Finals\triangle_marker.dds" />
-    <Image Include="art\Finals\x_marker.dds" />
-    <Image Include="art\Finals\clear_markers.dds" />
+    <Image Include="art\Finals\arrow_marker.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\Background.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\Beetle.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\chair.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\circle_marker.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\clear_markers.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\Griffon.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\hand.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\heart_marker.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\InkSplatter.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\Jackal.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\music.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\Raptor.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\Skimmer.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\spiral_marker.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\Springer.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\square_marker.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\star_marker.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\tonic.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\travel.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\triangle_marker.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\Warclaw.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\x_marker.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\Skyscale.dds">
+      <Filter>Assets</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <Font Include="art\Fonts\SourceSansPro-Regular.ttf" />
-    <Font Include="art\Fonts\SourceSansPro-Black.ttf" />
-    <Font Include="art\Fonts\SourceSansPro-Italic.ttf" />
+    <Font Include="art\Fonts\SourceSansPro-Black.ttf">
+      <Filter>Assets</Filter>
+    </Font>
+    <Font Include="art\Fonts\SourceSansPro-Italic.ttf">
+      <Filter>Assets</Filter>
+    </Font>
+    <Font Include="art\Fonts\SourceSansPro-Regular.ttf">
+      <Filter>Assets</Filter>
+    </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="shaders\perlin.hlsl">
+      <Filter>Shaders</Filter>
+    </Text>
   </ItemGroup>
 </Project>
