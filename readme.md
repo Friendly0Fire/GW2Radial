@@ -29,7 +29,7 @@ A: I do this for fun/because I wanted this to exist, but if you really want to, 
 
 ### Q: I'm having a crash on launch (maybe mentioning "Coherent DLL"), what do?
 
-A: There seems to be a lot of potential reasons for this particular crash. [BGDM's website](http://gw2bgdm.blogspot.com/p/faq.html#2.5) lists quite a few. I'd especially recommend making sure you have the very latest [VC++ Redist](https://go.microsoft.com/fwlink/?LinkId=746572).
+A: There seems to be a lot of potential reasons for this particular crash. [BGDM's website](http://gw2bgdm.blogspot.com/p/faq.html#2.5) lists quite a few. I'd especially recommend making sure you have the very latest [VC++ Redist](https://go.microsoft.com/fwlink/?LinkId=746572). Please also ensure that your graphics card drivers are up-to-date.
 
 The crash may also be related to the Windows 10 Ransomware Protection system; you can add `Gw2-64.exe` and `CoherentUI_Host.exe` to the exception list following [these instructions](https://www.windowscentral.com/how-allow-blocked-apps-ransomware-protection-windows-10-october-2018-update) (thanks @Myster-Marz for the tip).
 
