@@ -78,10 +78,19 @@ ULONG Direct3D9Hooks::Release_hook(IDirect3DDevice9 *sThis)
 {
 	ULONG refcount = Release_real(sThis);
 
-	return refcount;
+	if (refcount == 1)
+	{
+		preResetCallback_();
+		Release_real(sThis);
+	}
+
+	return refcount-1;
 }
 
-ULONG Direct3D9Hooks::AddRef_hook(IDirect3DDevice9 *sThis) { return AddRef_real(sThis); }
+ULONG Direct3D9Hooks::AddRef_hook(IDirect3DDevice9 *sThis) 
+{ 
+	return AddRef_real(sThis)-1; 
+}
 
 HRESULT Direct3D9Hooks::CreateVertexShader_hook(IDirect3DDevice9 *sThis, const DWORD *pFunction,
                                                            IDirect3DVertexShader9 **ppShader)
@@ -190,6 +199,16 @@ HRESULT Direct3D9Hooks::CreateDevice_hook(IDirect3D9 *sThis, UINT Adapter, D3DDE
 	MH_CreateHook(
 		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.SetPixelShader, vftd.SetPixelShader), D3DTRAMPOLINE(SetPixelShader_hook),
 		(LPVOID*)&SetPixelShader_real);
+
+	tempDevice->AddRef();
+
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.Release, vftd.Release), D3DTRAMPOLINE(Release_hook),
+		(LPVOID*)&Release_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.AddRef, vftd.AddRef), D3DTRAMPOLINE(AddRef_hook),
+		(LPVOID*)&AddRef_real);
+
 	MH_EnableHook(MH_ALL_HOOKS);
 
 	postCreateDeviceCallback_(tempDevice, pPresentationParameters);
@@ -237,6 +256,16 @@ HRESULT Direct3D9Hooks::CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D
 	MH_CreateHook(
 		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.SetPixelShader, vftd.SetPixelShader), D3DTRAMPOLINE(SetPixelShader_hook),
 		(LPVOID*)&SetPixelShader_real);
+
+	tempDevice->AddRef();
+
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.Release, vftd.Release), D3DTRAMPOLINE(Release_hook),
+		(LPVOID*)&Release_real);
+	MH_CreateHook(
+		NULL_COALESCE(direct3DDevice9VirtualFunctionTable_.AddRef, vftd.AddRef), D3DTRAMPOLINE(AddRef_hook),
+		(LPVOID*)&AddRef_real);
+
 	MH_EnableHook(MH_ALL_HOOKS);
 
 	postCreateDeviceCallback_(tempDevice, pPresentationParameters);
@@ -247,13 +276,23 @@ HRESULT Direct3D9Hooks::CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D
 void Direct3D9Hooks::OnD3DCreate()
 {
 	if (!realD3D9Module_)
-	{
+	{	
 		TCHAR path[MAX_PATH];
 
-		GetSystemDirectory(path, MAX_PATH);
-		_tcscat_s(path, TEXT("\\d3d9.dll"));
+		GetCurrentDirectory(MAX_PATH, path);
+		_tcscat_s(path, TEXT("\\bin64\\d912pxy.dll"));
 
-		realD3D9Module_ = LoadLibrary(path);
+		if (FileExists(path))
+		{
+			realD3D9Module_ = LoadLibrary(path);
+		}
+		else {
+
+			GetSystemDirectory(path, MAX_PATH);
+			_tcscat_s(path, TEXT("\\d3d9.dll"));
+
+			realD3D9Module_ = LoadLibrary(path);
+		}
 	}
 
 	if (!chainD3D9Module_)

@@ -4,7 +4,7 @@
 #include <WheelElement.h>
 #include <ConfigurationOption.h>
 #include <SettingsMenu.h>
-#include <d3dx9.h>
+
 #include <Input.h>
 
 namespace GW2Radial
@@ -44,7 +44,7 @@ public:
 
 	void UpdateHover();
 	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); Sort(); }
-	void Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, class UnitQuad* quad);
+	void Draw(IDirect3DDevice9* dev, Effect* fx, class UnitQuad* quad);
 	void OnFocusLost();
 
 	bool drawOverUI() const { return showOverGameUIOption_.value(); }
@@ -89,7 +89,7 @@ protected:
 	ConfigurationOption<int> behaviorOnReleaseBeforeDelay_;
 
 	std::optional<Point> cursorResetPosition_;
-	D3DXVECTOR2 currentPosition_;
+	fVector2 currentPosition_;
 	mstime currentTriggerTime_ = 0;
 
 	WheelElement* currentHovered_ = nullptr;
@@ -101,7 +101,7 @@ protected:
 	Input::MouseMoveCallback mouseMoveCallback_;
 	Input::InputChangeCallback inputChangeCallback_;
 
-	D3DXVECTOR3 inkSpot_;
+	fVector3 inkSpot_;
 
 	const char* GetTabName() const override { return displayName_.c_str(); }
 	void DrawMenu() override;

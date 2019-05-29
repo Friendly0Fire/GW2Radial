@@ -1,5 +1,6 @@
 //{{NO_DEPENDENCIES}}
-#define IDR_SHADER		104
+#define IDR_SHADER_VS		104
+#define IDR_SHADER_PS		105
 
 #define IDR_BG			200
 #define IDR_INK			201

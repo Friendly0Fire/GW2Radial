@@ -70,4 +70,6 @@ inline void FormattedOutputDebugString(const char* fmt, ...)
 	va_end(args);
 }
 
+IDirect3DTexture9* CreateTextureFromResource(IDirect3DDevice9 * pDev, HMODULE hModule, unsigned uResource);
+
 }

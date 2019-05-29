@@ -1,14 +1,14 @@
 #pragma once
 #include <Main.h>
 #include <d3d9.h>
-#include <d3dx9.h>
+
 
 namespace GW2Radial
 {
 
 struct ScreenVertex
 {
-	D3DXVECTOR2 uv;
+	fVector2 uv;
 };
 
 class UnitQuad
@@ -22,6 +22,7 @@ public:
 	~UnitQuad();
 
 	ScreenVertex points[4];
+	WORD indices[6];
 	static uint size() { return sizeof(ScreenVertex) * 4; }
 	static uint stride() { return sizeof(ScreenVertex); }
 
@@ -34,6 +35,7 @@ private:
 	IDirect3DDevice9* device_ = nullptr;
 	IDirect3DVertexDeclaration9* vertexDeclaration_ = nullptr;
 	IDirect3DVertexBuffer9* buffer_ = nullptr;
+	IDirect3DIndexBuffer9* ind_buffer_ = nullptr;
 };
 
 }

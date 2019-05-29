@@ -29,9 +29,9 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 	  noHoldOption_("Activate first hovered option without holding down", "no_hold", "wheel_" + nickname_, false),
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_)
 {
-	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(bgResourceId), &backgroundTexture_);
-	D3DXCreateTextureFromResource(dev, Core::i()->dllModule(), MAKEINTRESOURCE(inkResourceId), &inkTexture_);
-
+	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
+	inkTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), inkResourceId);
+	
 	mouseMoveCallback_ = [this]() { return OnMouseMove(); };
 	Input::i()->AddMouseMoveCallback(&mouseMoveCallback_);
 	inputChangeCallback_ = [this](bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, keys, changedKeys); };
@@ -59,10 +59,11 @@ void Wheel::UpdateHover()
 {
 	const auto io = ImGui::GetIO();
 
-	D3DXVECTOR2 mousePos;
+	fVector2 mousePos;
 	mousePos.x = io.MousePos.x / float(Core::i()->screenWidth());
 	mousePos.y = io.MousePos.y / float(Core::i()->screenHeight());
-	mousePos -= currentPosition_;
+	mousePos.x -= currentPosition_.x;
+	mousePos.y -= currentPosition_.y;
 
 	mousePos.y *= float(Core::i()->screenHeight()) / float(Core::i()->screenWidth());
 
@@ -70,8 +71,10 @@ void Wheel::UpdateHover()
 
 	auto activeElements = GetActiveElements();
 
+	float mpLenSq = mousePos.x * mousePos.x + mousePos.y * mousePos.y;
+
 	// Middle circle does not count as a hover event
-	if (!activeElements.empty() && D3DXVec2LengthSq(&mousePos) > SQUARE(scaleOption_.value() * 0.125f * 0.8f * centerScaleOption_.value()))
+	if (!activeElements.empty() && mpLenSq > SQUARE(scaleOption_.value() * 0.125f * 0.8f * centerScaleOption_.value()))
 	{
 		float mouseAngle = atan2(-mousePos.y, -mousePos.x) - 0.5f * float(M_PI);
 		if (mouseAngle < 0)
@@ -222,14 +225,12 @@ void Wheel::DrawMenu()
 	ImGui::PopID();
 }
 
-void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
+void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 {
 	if (isVisible_)
 	{
 		const int screenWidth = Core::i()->screenWidth();
 		const int screenHeight = Core::i()->screenHeight();
-
-		quad->Bind();
 
 		const auto currentTime = TimeInMilliseconds();
 
@@ -251,6 +252,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 			}
 			uint passes = 0;
 
+			fx->SceneBegin(quad);
+
 			// Setup viewport
 			D3DVIEWPORT9 vp;
 			vp.X = vp.Y = 0;
@@ -260,12 +263,13 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 			vp.MaxZ = 1.0f;
 			dev->SetViewport(&vp);
 
-			D3DXVECTOR4 screenSize(float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight);
+			fVector4 screenSize = { float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight };			
+			
 
 			auto activeElements = GetActiveElements();
 			if (!activeElements.empty())
 			{
-				D3DXVECTOR4 baseSpriteDimensions;
+				fVector4 baseSpriteDimensions;
 				baseSpriteDimensions.x = currentPosition_.x;
 				baseSpriteDimensions.y = currentPosition_.y;
 				baseSpriteDimensions.z = scaleOption_.value() * 0.5f * screenSize.y * screenSize.z;
@@ -294,25 +298,26 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 					break;
 				}
 
-				fx->SetTechnique("BgImage");
-				fx->SetTexture("texBgImage", backgroundTexture_);
-				fx->SetTexture("texInkImage", inkTexture_);
-				fx->SetValue("g_vInkSpot", inkSpot_, sizeof(inkSpot_));
-				fx->SetVector("g_vSpriteDimensions", &baseSpriteDimensions);
-				fx->SetValue("g_fWheelFadeIn", &D3DXVECTOR2(fadeTimer, inkTimer), sizeof(D3DXVECTOR2));
-				fx->SetFloat("g_fAnimationTimer", fmod(currentTime / 1010.f, 55000.f));
-				fx->SetFloat("g_fCenterScale", centerScaleOption_.value());
-				fx->SetInt("g_iElementCount", int(activeElements.size()));
-				fx->SetFloatArray("g_fHoverFadeIns", hoveredFadeIns.data(), UINT(hoveredFadeIns.size()));
+				fVector2 vfWheelFadeIn = { fadeTimer, inkTimer };
+
+				fx->SetTechnique(EFF_TC_BGIMAGE);
+				fx->SetTexture(EFF_TS_BG, backgroundTexture_);
+				fx->SetTexture(EFF_TS_INK, inkTexture_);
+				fx->SetValue(EFF_VS_INK_SPOT, &inkSpot_, sizeof(inkSpot_));
+				fx->SetVector(EFF_VS_SPRITE_DIM, &baseSpriteDimensions);
+				fx->SetValue(EFF_VS_WHEEL_FADEIN, &vfWheelFadeIn, sizeof(fVector2));
+				fx->SetFloat(EFF_VS_ANIM_TIMER, fmod(currentTime / 1010.f, 55000.f));
+				fx->SetFloat(EFF_VS_CENTER_SCALE, centerScaleOption_.value());
+				fx->SetFloat(EFF_VS_ELEMENT_COUNT, float(activeElements.size()));
+				fx->SetFloatArray(EFF_VS_HOVER_FADEINS, hoveredFadeIns.data(), UINT(hoveredFadeIns.size()));
 				fx->Begin(&passes, 0);
 				fx->BeginPass(0);
 				quad->Draw();
 				fx->EndPass();
 				fx->End();
 
-				fx->SetTechnique(alphaBlended_ ? "MountImageAlphaBlended" : "MountImage");
-				fx->SetTexture("texBgImage", backgroundTexture_);
-				fx->SetVector("g_vScreenSize", &screenSize);
+				fx->SetTechnique(alphaBlended_ ? EFF_TC_MOUNTIMAGE_ALPHABLEND : EFF_TC_MOUNTIMAGE);				
+				fx->SetVector(EFF_VS_SCREEN_SIZE, &screenSize);
 				fx->Begin(&passes, 0);
 				fx->BeginPass(0);
 
@@ -330,10 +335,9 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 			{
 				const auto& io = ImGui::GetIO();
 
-				fx->SetTechnique("Cursor");
-				fx->SetTexture("texBgImage", backgroundTexture_);
-				D3DXVECTOR4 spriteDimensions(io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f);
-				fx->SetVector("g_vSpriteDimensions", &spriteDimensions);
+				fx->SetTechnique(EFF_TC_CURSOR);				
+				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f };
+				fx->SetVector(EFF_VS_SPRITE_DIM, &spriteDimensions);
 
 				fx->Begin(&passes, 0);
 				fx->BeginPass(0);
@@ -341,6 +345,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, ID3DXEffect* fx, UnitQuad* quad)
 				fx->EndPass();
 				fx->End();
 			}
+
+			fx->SceneEnd();
 		}
 	}
 }
@@ -504,7 +510,7 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
 
 	currentTriggerTime_ = TimeInMilliseconds();
 	
-	inkSpot_ = D3DXVECTOR3(frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * float(M_PI));
+	inkSpot_ = { frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * float(M_PI) };
 
 	UpdateHover();
 }

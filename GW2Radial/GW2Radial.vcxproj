@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -46,15 +46,15 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)minhook\include\;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>d3d9</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)minhook\include\;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)minhook\include\;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>d3d9</TargetName>
   </PropertyGroup>
@@ -73,7 +73,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
-      <AdditionalDependencies>Wininet.lib;d3dx9.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y $(TargetPath) "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.dll"
@@ -103,7 +103,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
-      <AdditionalDependencies>Wininet.lib;d3dx9.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y $(TargetPath) "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.dll"
@@ -115,17 +115,20 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="imgui\examples\imgui_impl_dx9.cpp" />
     <ClCompile Include="imgui\examples\imgui_impl_win32.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="src\ConfigurationFile.cpp" />
     <ClCompile Include="src\Core.cpp" />
+    <ClCompile Include="src\DDSTextureLoader.cpp" />
     <ClCompile Include="src\Direct3D9Hooks.cpp" />
     <ClCompile Include="src\Direct3DVirtualFunctionTable.c" />
+    <ClCompile Include="src\Effect.cpp" />
+    <ClCompile Include="src\Effect_dx12.cpp" />
     <ClCompile Include="src\ImGuiExtensions.cpp" />
     <ClCompile Include="src\ImGuiPopup.cpp" />
+    <ClCompile Include="src\imgui_impl_dx9_custom.cpp" />
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Keybind.cpp" />
     <ClCompile Include="src\Main.cpp" />
@@ -154,8 +157,12 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClInclude Include="include\ConfigurationFile.h" />
     <ClInclude Include="include\ConfigurationOption.h" />
     <ClInclude Include="include\Core.h" />
+    <ClInclude Include="include\dds.h" />
+    <ClInclude Include="include\DDSTextureLoader.h" />
     <ClInclude Include="include\Direct3D9Hooks.h" />
     <ClInclude Include="include\Direct3DVirtualFunctionTable.h" />
+    <ClInclude Include="include\Effect.h" />
+    <ClInclude Include="include\Effect_dx12.h" />
     <ClInclude Include="include\ImGuiExtensions.h" />
     <ClInclude Include="include\ImGuiPopup.h" />
     <ClInclude Include="include\Input.h" />
@@ -175,6 +182,7 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClInclude Include="include\Utility.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />
     <ClInclude Include="xxhash\xxhash.h" />
   </ItemGroup>
@@ -184,6 +192,9 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </CopyFileToFolders>
+    <None Include="art\finals\rcdata1.bin" />
+    <None Include="int\Shader_ps.cso" />
+    <None Include="int\Shader_vs.cso" />
     <None Include="Main.def" />
     <None Include="rt_rcdat.bin" />
   </ItemGroup>
@@ -196,6 +207,18 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="shaders\Shader_ps.hlsl">
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
+      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\Shader_vs.hlsl">
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
+      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
     <Text Include="shaders\perlin.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </EntryPointName>
@@ -215,6 +238,36 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">2.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">2.0</ShaderModel>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="art\Finals\arrow_marker.dds" />
+    <Image Include="art\Finals\Background.dds" />
+    <Image Include="art\Finals\Beetle.dds" />
+    <Image Include="art\Finals\chair.dds" />
+    <Image Include="art\Finals\circle_marker.dds" />
+    <Image Include="art\Finals\clear_markers.dds" />
+    <Image Include="art\Finals\Griffon.dds" />
+    <Image Include="art\Finals\hand.dds" />
+    <Image Include="art\Finals\heart_marker.dds" />
+    <Image Include="art\Finals\InkSplatter.dds" />
+    <Image Include="art\Finals\Jackal.dds" />
+    <Image Include="art\Finals\music.dds" />
+    <Image Include="art\Finals\Raptor.dds" />
+    <Image Include="art\Finals\Skimmer.dds" />
+    <Image Include="art\Finals\spiral_marker.dds" />
+    <Image Include="art\Finals\Springer.dds" />
+    <Image Include="art\Finals\square_marker.dds" />
+    <Image Include="art\Finals\star_marker.dds" />
+    <Image Include="art\Finals\tonic.dds" />
+    <Image Include="art\Finals\travel.dds" />
+    <Image Include="art\Finals\triangle_marker.dds" />
+    <Image Include="art\Finals\Warclaw.dds" />
+    <Image Include="art\Finals\x_marker.dds" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="art\Fonts\SourceSansPro-Black.ttf" />
+    <Font Include="art\Fonts\SourceSansPro-Italic.ttf" />
+    <Font Include="art\Fonts\SourceSansPro-Regular.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
