@@ -1,6 +1,6 @@
 # GW2 Radial
 
-An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) addon to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/WarpedInsistentIrishterrier.mp4) to select a mount, novelty item and more, on the fly, for *Guild Wars 2: Path of Fire*.
+An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) addon to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/WarpedInsistentIrishterrier.mp4) to select a mount, novelty item and more, on the fly, for *Guild Wars 2: Path of Fire*. This addon is compatible with the Windows client only; it will not work with the Mac client.
 
 ## Installation
 - Download and extract the archive ``GW2Radial.zip`` found in the [latest release](https://github.com/Friendly0Fire/GW2Radial/releases/latest).
