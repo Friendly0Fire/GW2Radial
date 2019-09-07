@@ -132,7 +132,7 @@ gw2al_api_ret gw2addon_load(gw2al_core_vtable* core_api)
 	d3d9_wrap.enable_event = (pD3D9_wrapper_enable_event)gAPI->query_function(gAPI->hash_name((wchar_t*)D3D9_WRAPPER_ENABLE_EVENT_FNAME));
 
 	d3d9_wrap.enable_event(METH_OBJ_CreateDevice, WRAP_CB_PRE_POST);
-	d3d9_wrap.enable_event(METH_DEV_Present, WRAP_CB_POST);
+	d3d9_wrap.enable_event(METH_DEV_Present, WRAP_CB_PRE);
 	d3d9_wrap.enable_event(METH_DEV_Reset, WRAP_CB_PRE_POST);
 	d3d9_wrap.enable_event(METH_DEV_CreateVertexShader, WRAP_CB_POST);
 	d3d9_wrap.enable_event(METH_DEV_CreatePixelShader, WRAP_CB_POST);
