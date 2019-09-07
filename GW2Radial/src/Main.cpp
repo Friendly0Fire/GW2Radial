@@ -15,15 +15,23 @@ gw2al_addon_dsc gAddonDeps[] = {
 		1,
 		0
 	},
+	{
+		L"d3d9_wrapper",
+		L"Wrapper for d3d9 API that includes hooking and custom d3d9 loading",
+		1,
+		0,
+		2,
+		0
+	},
 	{0,0,0,0,0,0}
 };
 
 gw2al_addon_dsc gAddonDsc = {
 	L"gw2radial",
-	L"Radial menu for GW2",
-	0,
-	0,
-	0,
+	L"Radial menu overlay to select mount, novelty and more on fly",
+	1,
+	2,
+	1,
 	gAddonDeps
 };
 
