@@ -5,6 +5,7 @@
 #include <d3d9.h>
 #include <functional>
 #include <Singleton.h>
+#include "gw2al_api.h"
 
 namespace GW2Radial
 {
@@ -48,7 +49,7 @@ public:
 		postCreateDeviceCallback_ = postCreateDeviceCallback;
 	}
 	
-
+	void DevPostRelease(IDirect3DDevice9 *sThis, ULONG refs);
 	void DevPrePresent(IDirect3DDevice9 *sThis);
 	void DevPreReset();
 	void DevPostReset(IDirect3DDevice9 *sThis, D3DPRESENT_PARAMETERS *pPresentationParameters, HRESULT hr);
@@ -58,6 +59,8 @@ public:
 	void DevPostSetPixelShader(IDirect3DDevice9 *sThis, IDirect3DPixelShader9 *pShader);
 	void ObjPreCreateDevice(HWND hFocusWindow);
 	void ObjPostCreateDevice(IDirect3DDevice9 *pDevice, D3DPRESENT_PARAMETERS *pPresentationParameters);
+
+	void InitHooks(gw2al_core_vtable* gAPI);
 
 protected:	
 	const XXH64_hash_t preUiVertexShaderHash_ = 0x1fe3c6cd77e6e9f0;
