@@ -1,5 +1,6 @@
 LIBRARY
 
 EXPORTS
-        Direct3DCreate9
-        Direct3DCreate9Ex
+	gw2addon_get_description
+	gw2addon_load
+	gw2addon_unload

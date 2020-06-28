@@ -49,14 +49,16 @@
     <IncludePath>$(ProjectDir)minhook\include\;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
-    <TargetName>d3d9</TargetName>
+    <TargetName>gw2addon_gw2radial</TargetName>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(ProjectDir)minhook\include\;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
-    <TargetName>d3d9</TargetName>
+    <TargetName>gw2addon_gw2radial</TargetName>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -123,7 +125,6 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClCompile Include="src\Core.cpp" />
     <ClCompile Include="src\DDSTextureLoader.cpp" />
     <ClCompile Include="src\Direct3D9Hooks.cpp" />
-    <ClCompile Include="src\Direct3DVirtualFunctionTable.c" />
     <ClCompile Include="src\Effect.cpp" />
     <ClCompile Include="src\Effect_dx12.cpp" />
     <ClCompile Include="src\ImGuiExtensions.cpp" />
@@ -160,9 +161,10 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
     <ClInclude Include="include\dds.h" />
     <ClInclude Include="include\DDSTextureLoader.h" />
     <ClInclude Include="include\Direct3D9Hooks.h" />
-    <ClInclude Include="include\Direct3DVirtualFunctionTable.h" />
     <ClInclude Include="include\Effect.h" />
     <ClInclude Include="include\Effect_dx12.h" />
+    <ClInclude Include="include\gw2al_api.h" />
+    <ClInclude Include="include\gw2al_d3d9_wrapper.h" />
     <ClInclude Include="include\ImGuiExtensions.h" />
     <ClInclude Include="include\ImGuiPopup.h" />
     <ClInclude Include="include\Input.h" />
@@ -200,11 +202,6 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="minhook\build\VC15\libMinHook.vcxproj">
-      <Project>{f142a341-5ee0-442d-a15f-98ae9b48dbae}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\Shader_ps.hlsl">

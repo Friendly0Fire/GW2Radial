@@ -61,9 +61,6 @@
     <ClCompile Include="src\Direct3D9Hooks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Direct3DVirtualFunctionTable.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -174,9 +171,6 @@
     <ClInclude Include="include\Utility.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Direct3DVirtualFunctionTable.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\Resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
@@ -230,6 +224,12 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\gw2al_api.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\gw2al_d3d9_wrapper.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
