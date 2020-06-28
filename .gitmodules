@@ -13,3 +13,9 @@
 [submodule "GW2Radial/cpp-semver"]
 	path = GW2Radial/cpp-semver
 	url = https://github.com/easz/cpp-semver.git
+[submodule "GW2Radial/loader-core"]
+	path = GW2Radial/loader-core
+	url = https://github.com/gw2-addon-loader/loader-core.git
+[submodule "GW2Radial/d3d9_wrapper"]
+	path = GW2Radial/d3d9_wrapper
+	url = https://github.com/gw2-addon-loader/d3d9_wrapper.git
