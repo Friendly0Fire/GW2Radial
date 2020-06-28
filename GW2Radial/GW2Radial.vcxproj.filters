@@ -23,6 +23,9 @@
     <Filter Include="Assets">
       <UniqueIdentifier>{8aecf9fe-356d-4cc7-bf13-297bcef89f0f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Addon Loader">
+      <UniqueIdentifier>{8e9a2f2e-98d0-4f9f-bd9e-71a04511ed25}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui_demo.cpp">
@@ -225,11 +228,11 @@
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\gw2al_api.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h">
+      <Filter>Addon Loader</Filter>
     </ClInclude>
-    <ClInclude Include="include\gw2al_d3d9_wrapper.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="loader-core\include\gw2al_api.h">
+      <Filter>Addon Loader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
