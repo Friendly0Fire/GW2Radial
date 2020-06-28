@@ -1,6 +1,7 @@
 #pragma once
 #include <Main.h>
 #include <Singleton.h>
+#include <Mount.h>
 
 #define PARSE_FLAG_BOOL(name, offset) inline bool name() const { return (uiState() & (1 << offset)) != 0; }
 
@@ -22,6 +23,8 @@ public:
 	PARSE_FLAG_BOOL(isInCompetitiveMode, 4);
 	PARSE_FLAG_BOOL(textboxHasFocus, 5);
 	PARSE_FLAG_BOOL(isInCombat, 6);
+
+	MountType currentMount() const;
 
 protected:
 	uint32_t uiState() const;

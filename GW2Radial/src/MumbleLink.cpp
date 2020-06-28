@@ -93,6 +93,43 @@ uint32_t MumbleLink::uiState() const {
 	return context()->uiState;
 }
 
+MountType MumbleLink::currentMount() const {
+	if (!linkedMemory_)
+		return MountType::NONE;
+
+	enum class AnetMountType : uint32_t {
+		None,
+		Jackal,
+		Griffon,
+		Springer,
+		Skimmer,
+		Raptor,
+		RollerBeetle,
+		Warclaw,
+		Dragon,
+	};
+
+	switch ((AnetMountType)context()->mountIndex) {
+	default:
+	case AnetMountType::None:
+		return MountType::NONE;
+	case AnetMountType::Jackal:
+		return MountType::JACKAL;
+	case AnetMountType::Griffon:
+		return MountType::GRIFFON;
+	case AnetMountType::Springer:
+		return MountType::SPRINGER;
+	case AnetMountType::Raptor:
+		return MountType::RAPTOR;
+	case AnetMountType::RollerBeetle:
+		return MountType::BEETLE;
+	case AnetMountType::Warclaw:
+		return MountType::WARCLAW;
+	case AnetMountType::Dragon:
+		return MountType::SKYSCALE;
+	}
+}
+
 const MumbleContext* MumbleLink::context() const {
 	if(!linkedMemory_)
 		return nullptr;
