@@ -4,9 +4,6 @@
 [submodule "GW2Radial/simpleini"]
 	path = GW2Radial/simpleini
 	url = https://github.com/brofield/simpleini.git
-[submodule "GW2Radial/minhook"]
-	path = GW2Radial/minhook
-	url = https://github.com/Friendly0Fire/minhook.git
 [submodule "GW2Radial/xxhash"]
 	path = GW2Radial/xxhash
 	url = https://github.com/Cyan4973/xxHash.git
