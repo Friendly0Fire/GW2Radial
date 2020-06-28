@@ -30,18 +30,28 @@ struct LinkedMem
 	wchar_t description[2048];
 };
 
-struct MumbleContext
-{
+struct MumbleContext {
 	std::byte serverAddress[28]; // contains sockaddr_in or sockaddr_in6
-    unsigned mapId;
-    unsigned mapType;
-    unsigned shardId;
-    unsigned instance;
-    unsigned buildId;
+	uint32_t mapId;
+	uint32_t mapType;
+	uint32_t shardId;
+	uint32_t instance;
+	uint32_t buildId;
+	// Additional data beyond the 48 bytes Mumble uses for identification
+	uint32_t uiState; // Bitmask: Bit 1 = IsMapOpen, Bit 2 = IsCompassTopRight, Bit 3 = DoesCompassHaveRotationEnabled, Bit 4 = Game has focus, Bit 5 = Is in Competitive game mode, Bit 6 = Textbox has focus, Bit 7 = Is in Combat
+	uint16_t compassWidth; // pixels
+	uint16_t compassHeight; // pixels
+	float compassRotation; // radians
+	float playerX; // continentCoords
+	float playerY; // continentCoords
+	float mapCenterX; // continentCoords
+	float mapCenterY; // continentCoords
+	float mapScale;
+	uint32_t processId;
+	uint8_t mountIndex;
 };
 
-MumbleLink::MumbleLink()
-{
+MumbleLink::MumbleLink() {
 	fileMapping_ = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(LinkedMem), L"MumbleLink");
 	if(!fileMapping_)
 		return;
@@ -54,8 +64,7 @@ MumbleLink::MumbleLink()
 	}
 }
 
-MumbleLink::~MumbleLink()
-{
+MumbleLink::~MumbleLink() {
 	if(linkedMemory_)
 	{
 		UnmapViewOfFile(linkedMemory_);
@@ -68,9 +77,8 @@ MumbleLink::~MumbleLink()
 	}
 }
 
-bool MumbleLink::isWvW() const
-{
-	if(!linkedMemory_)
+bool MumbleLink::isInWvW() const {
+	if (!linkedMemory_)
 		return false;
 
 	auto mt = context()->mapType;
@@ -78,8 +86,14 @@ bool MumbleLink::isWvW() const
 	return mt == 18 || (mt >= 9 && mt <= 15 && mt != 13);
 }
 
-const MumbleContext* MumbleLink::context() const
-{
+uint32_t MumbleLink::uiState() const {
+	if (!linkedMemory_)
+		return 0;
+
+	return context()->uiState;
+}
+
+const MumbleContext* MumbleLink::context() const {
 	if(!linkedMemory_)
 		return nullptr;
 

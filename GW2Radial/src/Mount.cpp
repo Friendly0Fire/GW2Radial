@@ -15,7 +15,7 @@ bool Mount::isActive() const
 		return false;
 
 	if(elementId_ != uint(MountType::WARCLAW))
-		return !MumbleLink::i()->isWvW();
+		return !MumbleLink::i()->isInWvW();
 	
 	return true;
 }
