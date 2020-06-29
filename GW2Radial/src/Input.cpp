@@ -427,10 +427,7 @@ void Input::SendQueuedInputs()
 		return;
 
 	if (qi.cursorPos)
-	{
-		auto [wParam, lParam] = CreateMouseEventParams(qi.cursorPos);
-		PostMessage(Core::i()->gameWindow(), id_H_MOUSEMOVE_, wParam, lParam);
-	}
+		SetCursorPos(qi.cursorPos->x, qi.cursorPos->y);
 
 	PostMessage(Core::i()->gameWindow(), qi.msg, qi.wParam, qi.lParam);
 

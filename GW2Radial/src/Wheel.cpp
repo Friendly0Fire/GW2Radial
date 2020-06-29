@@ -27,7 +27,8 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_, true),
 	  showOverGameUIOption_("Show on top of game UI", "show_over_ui", "wheel_" + nickname_, true),
 	  noHoldOption_("Activate first hovered option without holding down", "no_hold", "wheel_" + nickname_, false),
-	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_)
+	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
+	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true)
 {
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
 	inkTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), inkResourceId);
@@ -197,6 +198,7 @@ void Wheel::DrawMenu()
 	
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorAfterKeybindOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
 
 	ImGui::Separator();
@@ -490,8 +492,10 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
 {
 	auto& io = ImGui::GetIO();
 
-	if (resetCursorPositionBeforeKeyPress_)
+	if (resetCursorPositionBeforeKeyPress_ || resetCursorAfterKeybindOption_.value())
 		cursorResetPosition_ = { static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y) };
+	else
+		cursorResetPosition_.reset();
 
 	// Mount overlay is turned on
 	if (isMountOverlayLocked)

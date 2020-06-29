@@ -87,6 +87,7 @@ protected:
 	ConfigurationOption<bool> showOverGameUIOption_;
 	ConfigurationOption<bool> noHoldOption_;
 	ConfigurationOption<int> behaviorOnReleaseBeforeDelay_;
+	ConfigurationOption<bool> resetCursorAfterKeybindOption_;
 
 	std::optional<Point> cursorResetPosition_;
 	fVector2 currentPosition_;
