@@ -50,7 +50,6 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
-    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -58,7 +57,6 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
-    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -78,8 +76,12 @@
       <AdditionalDependencies>Wininet.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y $(TargetPath) "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.dll"
-copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.pdb"</Command>
+      <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (
+  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2addon_gw2radial.dll"
+  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2addon_gw2radial.pdb"
+) else (
+  echo No target defined, skipping copy. To setup automatic copy, define environment variable GW2RADIAL_TARGET_DIR to your GW2 root install directory.
+)</Command>
     </PostBuildEvent>
     <FxCompile>
       <ObjectFileOutput>$(ProjectDir)int\%(Filename).cso</ObjectFileOutput>
@@ -108,8 +110,12 @@ copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_cha
       <AdditionalDependencies>Wininet.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y $(TargetPath) "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.dll"
-copy /Y $(OutDir)$(TargetName).pdb "C:\Program Files\Guild Wars 2\bin64\d3d9_chainload.pdb"</Command>
+      <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (
+  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2addon_gw2radial.dll"
+  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2addon_gw2radial.pdb"
+) else (
+  echo No target defined, skipping copy. To setup automatic copy, define environment variable GW2RADIAL_TARGET_DIR to your GW2 root install directory.
+)</Command>
     </PostBuildEvent>
     <FxCompile>
       <ObjectFileOutput>$(ProjectDir)int\%(Filename).cso</ObjectFileOutput>
