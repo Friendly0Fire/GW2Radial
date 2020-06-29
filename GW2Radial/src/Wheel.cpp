@@ -35,7 +35,7 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 	
 	mouseMoveCallback_ = [this]() { return OnMouseMove(); };
 	Input::i()->AddMouseMoveCallback(&mouseMoveCallback_);
-	inputChangeCallback_ = [this](bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, keys, changedKeys); };
+	inputChangeCallback_ = [this](bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, scs, changedKeys); };
 	Input::i()->AddInputChangeCallback(&inputChangeCallback_);
 
 	SettingsMenu::i()->AddImplementer(this);
@@ -416,17 +416,17 @@ bool Wheel::OnMouseMove()
 	return isVisible_ && lockCameraWhenOverlayedOption_.value();
 }
 
-InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys)
+InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys)
 {
 	const bool previousVisibility = isVisible_;
 
-	bool mountOverlay = keybind_.matchesPartial(keys);
-	bool mountOverlayLocked = centralKeybind_.matchesPartial(keys);
+	bool mountOverlay = keybind_.matchesPartial(scs);
+	bool mountOverlayLocked = centralKeybind_.matchesPartial(scs);
 	
 	if(mountOverlay)
-		mountOverlay &= !keybind_.conflicts(keys);
+		mountOverlay &= !keybind_.conflicts(scs);
 	if(mountOverlayLocked)
-		mountOverlayLocked &= !centralKeybind_.conflicts(keys);
+		mountOverlayLocked &= !centralKeybind_.conflicts(scs);
 
 	isVisible_ = mountOverlayLocked || mountOverlay;
 	
@@ -446,26 +446,26 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 		{
 			// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
 			bool keyLifted = false;
-			auto fullKeybind = keys;
+			auto fullKeybind = scs;
 
 			// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
-			fullKeybind.erase(VK_LBUTTON);
+			fullKeybind.erase(ScanCode::LBUTTON);
 
 			for (const auto& ek : changedKeys)
 			{
-				if(ek.vk == VK_LBUTTON)
+				if(ek.sc == ScanCode::LBUTTON)
 					continue;
 
 				if (!ek.down)
 				{
-					fullKeybind.insert(ek.vk);
+					fullKeybind.insert(ek.sc);
 					keyLifted = true;
 				}
 			}
 
 
-			keybind_.keys(fullKeybind);
-			centralKeybind_.keys(fullKeybind);
+			keybind_.scanCodes(fullKeybind);
+			centralKeybind_.scanCodes(fullKeybind);
 
 			if(keyLifted)
 			{
@@ -475,7 +475,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<uint>& keys, con
 
 			for (auto& we : wheelElements_)
 			{
-				we->keybind().keys(fullKeybind);	
+				we->keybind().scanCodes(fullKeybind);
 				if(keyLifted)
 					we->keybind().isBeingModified(false);	
 			}
@@ -548,7 +548,7 @@ void Wheel::DeactivateWheel()
 
 	// Mount overlay is turned off, send the keybind
 	if (currentHovered_)
-		Input::i()->SendKeybind(currentHovered_->keybind().keys(), cursorResetPosition_);
+		Input::i()->SendKeybind(currentHovered_->keybind().scanCodes(), cursorResetPosition_);
 
 	previousUsed_ = currentHovered_;
 	currentHovered_ = nullptr;

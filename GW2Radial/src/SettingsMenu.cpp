@@ -8,9 +8,9 @@ namespace GW2Radial
 DEFINE_SINGLETON(SettingsMenu);
 
 SettingsMenu::SettingsMenu()
-	: showKeybind_("show_settings", "Show settings", { VK_SHIFT, VK_MENU, 'M' }, false)
+	: showKeybind_("show_settings", "Show settings", { ScanCode::SHIFT, ScanCode::ALT, ScanCode::M }, false)
 {
-	inputChangeCallback_ = [this](bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, keys, changedKeys); };
+	inputChangeCallback_ = [this](bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, scs, changedKeys); };
 	Input::i()->AddInputChangeCallback(&inputChangeCallback_);
 }
 void SettingsMenu::Draw()
@@ -74,9 +74,9 @@ void SettingsMenu::Draw()
 	}
 }
 
-InputResponse SettingsMenu::OnInputChange(bool /*changed*/, const std::set<uint>& keys, const std::list<EventKey>& /*changedKeys*/)
+InputResponse SettingsMenu::OnInputChange(bool /*changed*/, const std::set<ScanCode>& scs, const std::list<EventKey>& /*changedKeys*/)
 {
-	const bool isMenuKeybind = showKeybind_.matchesNoLeftRight(keys);
+	const bool isMenuKeybind = showKeybind_.matchesNoLeftRight(scs);
 	if(isMenuKeybind)
 		isVisible_ = true;
 

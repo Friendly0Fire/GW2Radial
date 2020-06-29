@@ -26,7 +26,14 @@ std::wstring utf8_decode(const std::string &str)
     return wstrTo;
 }
 
-std::wstring GetScanCodeName(unsigned int scanCode) {
+std::wstring GetScanCodeName(uint scanCode) {
+	if (scanCode >= 2 && scanCode <= 10) {
+		wchar_t c = scanCode - 1 + 0x30;
+		return std::wstring(1, c);
+	}
+	if (scanCode == 11)
+		return L"0";
+
 	wchar_t keyName[50];
 	if (GetKeyNameTextW(scanCode << 16, keyName, sizeof(keyName)) != 0)
 		return keyName;
@@ -34,9 +41,9 @@ std::wstring GetScanCodeName(unsigned int scanCode) {
 	return L"[Error]";
 }
 
-std::wstring GetKeyName(unsigned int virtualKey)
+std::wstring GetKeyName(uint virtualKey)
 {
-	unsigned int scanCode = MapVirtualKeyW(virtualKey, MAPVK_VK_TO_VSC);
+	uint scanCode = MapVirtualKeyW(virtualKey, MAPVK_VK_TO_VSC);
 
 	switch (virtualKey)
 	{

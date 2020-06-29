@@ -23,8 +23,6 @@ void MiscTab::DrawMenu()
 {
 	if(auto uc = UpdateCheck::iNoInit(); uc)
 		ImGuiConfigurationWrapper(ImGui::Checkbox, uc->checkEnabled_);
-	if(auto i = Input::iNoInit(); i)
-		ImGuiConfigurationWrapper(ImGui::Checkbox, i->distinguishLeftRight_);
 
 #if 0
 	ImGui::Separator();
