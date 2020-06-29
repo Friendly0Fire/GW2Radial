@@ -11,6 +11,7 @@ std::string utf8_encode(const std::wstring &wstr);
 std::wstring utf8_decode(const std::string &str);
 
 std::wstring GetKeyName(unsigned int virtualKey);
+std::wstring GetScanCodeName(unsigned int scanCode);
 
 void SplitFilename(const tstring & str, tstring * folder, tstring * file);
 
@@ -60,13 +61,21 @@ inline float frand()
 	return float(rand()) / RAND_MAX;
 }
 
-inline void FormattedOutputDebugString(const char* fmt, ...)
-{
+inline void FormattedOutputDebugString(const char* fmt, ...) {
 	char buffer[4096];
 	va_list args;
 	va_start(args, fmt);
 	vsprintf_s(buffer, fmt, args);
 	OutputDebugStringA(buffer);
+	va_end(args);
+}
+
+inline void FormattedOutputDebugString(const wchar_t* fmt, ...) {
+	wchar_t buffer[4096];
+	va_list args;
+	va_start(args, fmt);
+	vswprintf_s(buffer, fmt, args);
+	OutputDebugStringW(buffer);
 	va_end(args);
 }
 

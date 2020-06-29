@@ -26,6 +26,14 @@ std::wstring utf8_decode(const std::string &str)
     return wstrTo;
 }
 
+std::wstring GetScanCodeName(unsigned int scanCode) {
+	wchar_t keyName[50];
+	if (GetKeyNameTextW(scanCode << 16, keyName, sizeof(keyName)) != 0)
+		return keyName;
+
+	return L"[Error]";
+}
+
 std::wstring GetKeyName(unsigned int virtualKey)
 {
 	unsigned int scanCode = MapVirtualKeyW(virtualKey, MAPVK_VK_TO_VSC);
@@ -66,15 +74,6 @@ std::wstring GetKeyName(unsigned int virtualKey)
 		return L"F23";
 	case VK_F24:
 		return L"F24";
-	// because MapVirtualKey strips the extended bit for some keys
-	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // arrow keys
-	case VK_PRIOR: case VK_NEXT: // page up and page down
-	case VK_END: case VK_HOME:
-	case VK_INSERT: case VK_DELETE:
-	case VK_DIVIDE: // numpad slash
-	case VK_NUMLOCK:
-		scanCode |= 0x100; // set extended bit
-		break;
 	case VK_LCONTROL:
 		return L"LCTRL";
 	case VK_RCONTROL:
@@ -87,15 +86,20 @@ std::wstring GetKeyName(unsigned int virtualKey)
 		return L"LALT";
 	case VK_RMENU:
 		return L"RALT";
+	// because MapVirtualKey strips the extended bit for some keys
+	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // arrow keys
+	case VK_PRIOR: case VK_NEXT: // page up and page down
+	case VK_END: case VK_HOME:
+	case VK_INSERT: case VK_DELETE:
+	case VK_DIVIDE: // numpad slash
+	case VK_NUMLOCK:
+		scanCode |= 0x100; // set extended bit
+		break;
 	default:
 		break;
 	}
 
-	wchar_t keyName[50];
-	if (GetKeyNameTextW(scanCode << 16, keyName, sizeof(keyName)) != 0)
-		return keyName;
-	
-	return L"[Error]";
+	return GetScanCodeName(scanCode);
 }
 
 void SplitFilename(const tstring& str, tstring* folder, tstring* file)
