@@ -104,6 +104,7 @@ protected:
 	uint id_H_MOUSEMOVE_;
 	// ReSharper restore CppInconsistentNaming
 
+
 	std::set<ScanCode> DownKeys;
 	std::list<DelayedInput> QueuedInputs;
 	

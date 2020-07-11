@@ -87,10 +87,16 @@ void Core::OnFocusLost()
 	Input::i()->OnFocusLost();
 }
 
+void Core::OnFocus() {
+	Keybind::ForceRefreshDisplayStrings();
+}
+
 LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (msg == WM_KILLFOCUS)
 		i()->OnFocusLost();
+	else if(msg == WM_SETFOCUS)
+		i()->OnFocus();
 	else if(Input::i()->OnInput(msg, wParam, lParam))
 		return 0;
 

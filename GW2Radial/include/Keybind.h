@@ -44,6 +44,8 @@ public:
 	}
 	bool matchesNoLeftRight(const std::set<ScanCode>& scanCodes) const;
 
+	static void ForceRefreshDisplayStrings();
+
 protected:
 	void UpdateDisplayString();
 	void ApplyKeys();
@@ -56,6 +58,7 @@ protected:
 	bool saveToConfig_ = true;
 	bool isConflicted_ = false;
 
+	static std::vector<Keybind*> keybinds_;
 	static std::unordered_map<Keybind*, std::set<ScanCode>> scMaps_;
 };
 

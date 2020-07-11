@@ -6,11 +6,13 @@
 
 namespace GW2Radial
 {
+std::vector<Keybind*> Keybind::keybinds_;
 std::unordered_map<Keybind*, std::set<ScanCode>> Keybind::scMaps_;
 
 Keybind::Keybind(std::string nickname, std::string displayName, const std::set<ScanCode>& scs, bool saveToConfig) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName)), saveToConfig_(saveToConfig)
 {
+	keybinds_.push_back(this);
 	this->scanCodes(scs);
 	isBeingModified_ = false;
 }
@@ -18,6 +20,7 @@ Keybind::Keybind(std::string nickname, std::string displayName, const std::set<S
 Keybind::Keybind(std::string nickname, std::string displayName) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName))
 {
+	keybinds_.push_back(this);
 	const auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds", nickname_.c_str());
 	if(keys) this->scanCodes(keys);
 	isBeingModified_ = false;
@@ -25,6 +28,7 @@ Keybind::Keybind(std::string nickname, std::string displayName) :
 
 Keybind::~Keybind()
 {
+	keybinds_.erase(std::find(keybinds_.begin(), keybinds_.end(), this));
 	scMaps_.erase(this);
 }
 
@@ -139,6 +143,11 @@ void Keybind::UpdateDisplayString()
 	std::wstring keybind = std::accumulate(std::next(scanCodes_.begin()), scanCodes_.end(), GetScanCodeName(*scanCodes_.begin()), [](std::wstring a, ScanCode b) { return std::move(a) + L" + " + GetScanCodeName(b); });
 
 	strcpy_s(keysDisplayString_.data(), keysDisplayString_.size(), utf8_encode(keybind).c_str());
+}
+
+void Keybind::ForceRefreshDisplayStrings() {
+	for (auto& kb : keybinds_)
+		kb->UpdateDisplayString();
 }
 
 }
