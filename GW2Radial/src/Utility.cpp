@@ -34,6 +34,19 @@ std::wstring GetScanCodeName(uint scanCode) {
 	if (scanCode == 11)
 		return L"0";
 
+	if (IsUniversalModifier(ScanCode(scanCode))) {
+		switch (scanCode) {
+		case ScanCode_t(ScanCode::SHIFT):
+			return L"SHIFT";
+		case ScanCode_t(ScanCode::CONTROL):
+			return L"CONTROL";
+		case ScanCode_t(ScanCode::ALT):
+			return L"ALT";
+		case ScanCode_t(ScanCode::META):
+			return L"META";
+		}
+	}
+
 	wchar_t keyName[50];
 	if (GetKeyNameTextW(scanCode << 16, keyName, sizeof(keyName)) != 0)
 		return keyName;

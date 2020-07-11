@@ -116,22 +116,22 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 		case WM_LBUTTONDOWN:
 			eventDown = true;
 		case WM_LBUTTONUP:
-			eventKeys.push_back({ VK_LBUTTON, eventDown });
+			eventKeys.push_back({ ScanCode::LBUTTON, eventDown });
 			break;
 		case WM_MBUTTONDOWN:
 			eventDown = true;
 		case WM_MBUTTONUP:
-			eventKeys.push_back({ VK_MBUTTON, eventDown });
+			eventKeys.push_back({ ScanCode::MBUTTON, eventDown });
 			break;
 		case WM_RBUTTONDOWN:
 			eventDown = true;
 		case WM_RBUTTONUP:
-			eventKeys.push_back({ VK_RBUTTON, eventDown });
+			eventKeys.push_back({ ScanCode::RBUTTON, eventDown });
 			break;
 		case WM_XBUTTONDOWN:
 			eventDown = true;
 		case WM_XBUTTONUP:
-			eventKeys.push_back({ uint(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2), eventDown });
+			eventKeys.push_back({ uint(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? ScanCode::X1BUTTON : ScanCode::X2BUTTON), eventDown });
 			break;
 		}
 	}
@@ -158,24 +158,6 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 	if(!eventKeys.empty())
 		for(auto& cb : inputChangeCallbacks_)
 			response |= (*cb)(downKeysChanged, DownKeys, eventKeys);
-
-#if 0
-	if (input_key_down || input_key_up)
-	{
-		std::string keybind = "";
-		for (const auto& k : DownKeys)
-		{
-			keybind += GetKeyName(k) + std::string(" + ");
-		}
-		keybind = keybind.substr(0, keybind.size() - 2) + "\n";
-
-		OutputDebugStringA(("Current keys down: " + keybind).c_str());
-
-		char buf[1024];
-		sprintf_s(buf, "msg=%u wParam=%u lParam=%u\n", msg, (uint)wParam, (uint)lParam);
-		OutputDebugStringA(buf);
-	}
-#endif
 
 	ImGui_ImplWin32_WndProcHandler(Core::i()->gameWindow(), msg, wParam, lParam);
 	if (msg == WM_MOUSEMOVE)
@@ -309,16 +291,21 @@ Input::DelayedInput Input::TransformScanCode(ScanCode sc, bool down, mstime t, c
 	DelayedInput i { };
 	i.t = t;
 	i.cursorPos = cursorPos;
-	if (IsScanCodeMouse(sc))
+	if (IsMouse(sc))
 	{
 		std::tie(i.wParam, i.lParamValue) = CreateMouseEventParams(cursorPos);
 	}
 	else
 	{
-		i.wParam = MapVirtualKey(uint(sc), MAPVK_VSC_TO_VK_EX);
-		i.lParamKey.repeatCount = 1;
+		bool isUniversal = IsUniversalModifier(sc);
+		if (isUniversal)
+			sc = sc & ~ScanCode::UNIVERSAL_MODIFIER_FLAG;
+
+		i.wParam = MapVirtualKey(uint(sc), isUniversal ? MAPVK_VSC_TO_VK : MAPVK_VSC_TO_VK_EX);
+		assert(i.wParam != 0);
+		i.lParamKey.repeatCount = 0;
 		i.lParamKey.scanCode = uint(sc);
-		i.lParamKey.extendedFlag;
+		i.lParamKey.extendedFlag = IsExtendedKey(sc) ? 1 : 0;
 		i.lParamKey.contextCode = 0;
 		i.lParamKey.previousKeyState = down ? 0 : 1;
 		i.lParamKey.transitionState = down ? 0 : 1;
@@ -338,7 +325,7 @@ Input::DelayedInput Input::TransformScanCode(ScanCode sc, bool down, mstime t, c
 		case ScanCode::X1BUTTON:
 		case ScanCode::X2BUTTON:
 			i.msg = down ? id_H_XBUTTONDOWN_ : id_H_XBUTTONUP_;
-			i.wParam |= (WPARAM)(sc == ScanCode::X1BUTTON ? XBUTTON1 : XBUTTON2) << 16;
+			i.wParam |= (WPARAM)(IsSame(sc, ScanCode::X1BUTTON) ? XBUTTON1 : XBUTTON2) << 16;
 			break;
 		case ScanCode::ALTLEFT:
 		case ScanCode::ALTRIGHT:
@@ -409,13 +396,26 @@ void Input::SendKeybind(const std::set<ScanCode> &scs, const std::optional<Point
 
 	mstime currentTime = TimeInMilliseconds() + 10;
 
+	// GW2 only distinguishes left/right modifiers when not used with other keys
+	bool useUniversalModifiers = false;
+	for (const auto& sc : scsSorted)
+	{
+		if (!IsModifier(sc)) {
+			useUniversalModifiers = true;
+			break;
+		}
+	}
+
 	for (const auto &sc : scsSorted)
 	{
 		if (DownKeys.count(sc))
 			continue;
 
-		DelayedInput i = TransformScanCode(sc, true, currentTime, cursorPos);
-		QueuedInputs.push_back(i);
+		auto sc2 = useUniversalModifiers ? MakeUniversal(sc) : sc;
+
+		DelayedInput i = TransformScanCode(sc2, true, currentTime, cursorPos);
+		if(i.wParam != 0)
+			QueuedInputs.push_back(i);
 		currentTime += 20;
 	}
 
@@ -427,7 +427,8 @@ void Input::SendKeybind(const std::set<ScanCode> &scs, const std::optional<Point
 			continue;
 
 		DelayedInput i = TransformScanCode(sc, false, currentTime, cursorPos);
-		QueuedInputs.push_back(i);
+		if (i.wParam != 0)
+			QueuedInputs.push_back(i);
 		currentTime += 20;
 	}
 }

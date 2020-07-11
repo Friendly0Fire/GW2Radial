@@ -111,20 +111,21 @@ bool Keybind::conflicts(const std::set<ScanCode>& scanCodes) const
 
 bool Keybind::matchesNoLeftRight(const std::set<ScanCode>& scanCodes) const
 {
-	auto k2 = scanCodes;
-	const auto replace = [&](ScanCode sc, ScanCode replacement)
+	const auto universalize = [](const std::set<ScanCode>& src)
 	{
-		if(const auto k = k2.find(sc); k != k2.end())
+		std::set<ScanCode> out;
+		for(const auto& k : src)
 		{
-			k2.erase(k);
-			k2.insert(replacement);
+			if (IsModifier(k))
+				out.insert(MakeUniversal(k));
+			else
+				out.insert(k);
 		}
-	};
-	replace(ScanCode::CONTROLRIGHT, ScanCode::CONTROLLEFT);
-	replace(ScanCode::SHIFTRIGHT, ScanCode::SHIFTLEFT);
-	replace(ScanCode::ALTRIGHT, ScanCode::ALTLEFT);
 
-	return k2 == scanCodes_;
+		return out;
+	};
+
+	return universalize(scanCodes) == universalize(scanCodes_);
 }
 
 void Keybind::UpdateDisplayString()

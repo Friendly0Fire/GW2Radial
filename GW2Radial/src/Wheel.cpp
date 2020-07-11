@@ -453,7 +453,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 
 			for (const auto& ek : changedKeys)
 			{
-				if(ek.sc == ScanCode::LBUTTON)
+				if(IsSame(ek.sc, ScanCode::LBUTTON))
 					continue;
 
 				if (!ek.down)
