@@ -91,6 +91,8 @@ protected:
 	ConfigurationOption<int> behaviorOnReleaseBeforeDelay_;
 	ConfigurationOption<bool> resetCursorAfterKeybindOption_;
 
+	ConfigurationOption<bool> disableKeybindsInCombatOption_;
+
 
 	std::optional<Point> cursorResetPosition_;
 	fVector2 currentPosition_;

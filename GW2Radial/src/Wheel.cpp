@@ -9,6 +9,7 @@
 #include <Input.h>
 #include "../imgui/imgui_internal.h"
 #include <algorithm>
+#include <MumbleLink.h>
 
 namespace GW2Radial
 {
@@ -29,7 +30,8 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  noHoldOption_("Activate first hovered option without holding down", "no_hold", "wheel_" + nickname_, false),
 	  clickSelectOption_("Require click on option to select", "click_select", "wheel_" + nickname_, false),
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
-	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true)
+	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
+	disableKeybindsInCombatOption_("Disable wheel keybinds while in combat", "disable_in_combat", "wheel_" + nickname_, false)
 {
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);
@@ -126,6 +128,7 @@ void Wheel::DrawMenu()
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, disableKeybindsInCombatOption_);
 
 	if(CenterBehavior(centerBehaviorOption_.value()) != CenterBehavior::NOTHING && displayDelayOption_.value() > 0)
 	{
@@ -432,25 +435,29 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 {
 	const bool previousVisibility = isVisible_;
 
-	if (clickSelectOption_.value() && previousVisibility) {
-		isVisible_ = isVisible_ && !scs.contains(ScanCode::LBUTTON);
-	} else {
-		bool mountOverlay = keybind_.matchesPartial(scs);
-		bool mountOverlayLocked = centralKeybind_.matchesPartial(scs);
+	if (disableKeybindsInCombatOption_.value() && MumbleLink::i()->isInCombat())
+		isVisible_ = false;
+	else {
+		if (clickSelectOption_.value() && previousVisibility) {
+			isVisible_ = isVisible_ && !scs.contains(ScanCode::LBUTTON);
+		} else {
+			bool mountOverlay = keybind_.matchesPartial(scs);
+			bool mountOverlayLocked = centralKeybind_.matchesPartial(scs);
 
-		if (mountOverlay)
-			mountOverlay &= !keybind_.conflicts(scs);
-		if (mountOverlayLocked)
-			mountOverlayLocked &= !centralKeybind_.conflicts(scs);
+			if (mountOverlay)
+				mountOverlay &= !keybind_.conflicts(scs);
+			if (mountOverlayLocked)
+				mountOverlayLocked &= !centralKeybind_.conflicts(scs);
 
-		isVisible_ = mountOverlayLocked || mountOverlay;
+			isVisible_ = mountOverlayLocked || mountOverlay;
 
-		// If holding down the button is not necessary, modify behavior
-		if (noHoldOption_.value() && previousVisibility && currentHovered_ == nullptr)
-			isVisible_ = true;
+			// If holding down the button is not necessary, modify behavior
+			if (noHoldOption_.value() && previousVisibility && currentHovered_ == nullptr)
+				isVisible_ = true;
 
-		if (isVisible_ && !previousVisibility)
-			ActivateWheel(mountOverlayLocked);
+			if (isVisible_ && !previousVisibility)
+				ActivateWheel(mountOverlayLocked);
+		}
 	}
 
 	if (!isVisible_ && previousVisibility)
