@@ -181,6 +181,7 @@
     <ClInclude Include="include\MumbleLink.h" />
     <ClInclude Include="include\Novelty.h" />
     <ClInclude Include="include\Resource.h" />
+    <ClInclude Include="include\ScanCode.h" />
     <ClInclude Include="include\SettingsMenu.h" />
     <ClInclude Include="include\Singleton.h" />
     <ClInclude Include="include\Tag.h" />

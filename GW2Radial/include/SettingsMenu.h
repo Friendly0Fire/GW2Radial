@@ -29,7 +29,7 @@ public:
 	void RemoveImplementer(Implementer* impl) { implementers_.remove(impl); if(currentTab_ == impl) currentTab_ = nullptr; }
 
 protected:
-	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);
+	InputResponse OnInputChange(bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys);
 
 	std::list<Implementer*> implementers_;
 	Implementer* currentTab_ = nullptr;

@@ -10,10 +10,25 @@ IMGUI_IMPL_API LRESULT  ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPAR
 namespace GW2Radial
 {
 
+std::wstring GetScanCodeName(ScanCode scanCode) { return GetScanCodeName(static_cast<uint>(scanCode)); }
+
+ScanCode GetScanCode(KeyLParam lParam) {
+	if (lParam.extendedFlag) {
+		if (lParam.scanCode != 0x45)
+			lParam.scanCode |= 0xE000;
+	} else {
+		if (lParam.scanCode == 0x45)
+			lParam.scanCode = 0xE11D45;
+		else if (lParam.scanCode == 0x54)
+			lParam.scanCode = 0xE037;
+	}
+
+	return ScanCode(lParam.scanCode);
+}
+
 DEFINE_SINGLETON(Input);
 
 Input::Input()
-	: distinguishLeftRight_("Distinguish between left and right Shift/Ctrl/Alt", "distinguish_lr", "Core", false)
 {
 	id_H_LBUTTONDOWN_ = RegisterWindowMessage(TEXT("H_LBUTTONDOWN"));
 	id_H_LBUTTONUP_   = RegisterWindowMessage(TEXT("H_LBUTTONUP"));
@@ -84,37 +99,39 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 		case WM_SYSKEYUP:
 		case WM_KEYUP:
 		{
-			const uint key = distinguishLeftRight_.value() ? uint(MapLeftRightKeys(wParam, lParam)) : uint(wParam);
+			auto& keylParam = KeyLParam::Get(lParam);
+			const ScanCode sc = GetScanCode(keylParam);
+
 			if ((msg == WM_SYSKEYDOWN || msg == WM_SYSKEYUP) && wParam != VK_F10)
 			{
-				if (((lParam >> 29) & 1) == 1)
-					eventKeys.push_back({ key, true });
+				if (keylParam.contextCode == 1)
+					eventKeys.push_back({ sc, true });
 				else
-					eventKeys.push_back({ key, false });
+					eventKeys.push_back({ sc, false });
 			}
-
-			eventKeys.push_back({ key, eventDown });
+			
+			eventKeys.push_back({ sc, eventDown });
 			break;
 		}
 		case WM_LBUTTONDOWN:
 			eventDown = true;
 		case WM_LBUTTONUP:
-			eventKeys.push_back({ VK_LBUTTON, eventDown });
+			eventKeys.push_back({ ScanCode::LBUTTON, eventDown });
 			break;
 		case WM_MBUTTONDOWN:
 			eventDown = true;
 		case WM_MBUTTONUP:
-			eventKeys.push_back({ VK_MBUTTON, eventDown });
+			eventKeys.push_back({ ScanCode::MBUTTON, eventDown });
 			break;
 		case WM_RBUTTONDOWN:
 			eventDown = true;
 		case WM_RBUTTONUP:
-			eventKeys.push_back({ VK_RBUTTON, eventDown });
+			eventKeys.push_back({ ScanCode::RBUTTON, eventDown });
 			break;
 		case WM_XBUTTONDOWN:
 			eventDown = true;
 		case WM_XBUTTONUP:
-			eventKeys.push_back({ uint(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2), eventDown });
+			eventKeys.push_back({ uint(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? ScanCode::X1BUTTON : ScanCode::X2BUTTON), eventDown });
 			break;
 		}
 	}
@@ -131,9 +148,9 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 	// Apply key events now
 	for (const auto& k : eventKeys)
 		if (k.down)
-			downKeysChanged |= DownKeys.insert(k.vk).second;
+			downKeysChanged |= DownKeys.insert(k.sc).second;
 		else
-			downKeysChanged |= DownKeys.erase(k.vk) > 0;
+			downKeysChanged |= DownKeys.erase(k.sc) > 0;
 
 
 	InputResponse response = InputResponse::PASS_TO_GAME;
@@ -141,24 +158,6 @@ bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 	if(!eventKeys.empty())
 		for(auto& cb : inputChangeCallbacks_)
 			response |= (*cb)(downKeysChanged, DownKeys, eventKeys);
-
-#if 0
-	if (input_key_down || input_key_up)
-	{
-		std::string keybind = "";
-		for (const auto& k : DownKeys)
-		{
-			keybind += GetKeyName(k) + std::string(" + ");
-		}
-		keybind = keybind.substr(0, keybind.size() - 2) + "\n";
-
-		OutputDebugStringA(("Current keys down: " + keybind).c_str());
-
-		char buf[1024];
-		sprintf_s(buf, "msg=%u wParam=%u lParam=%u\n", msg, (uint)wParam, (uint)lParam);
-		OutputDebugStringA(buf);
-	}
-#endif
 
 	ImGui_ImplWin32_WndProcHandler(Core::i()->gameWindow(), msg, wParam, lParam);
 	if (msg == WM_MOUSEMOVE)
@@ -287,64 +286,54 @@ uint Input::ConvertHookedMessage(uint msg) const
 	return msg;
 }
 
-Input::DelayedInput Input::TransformVKey(uint vk, bool down, mstime t, const std::optional<Point>& cursorPos)
+Input::DelayedInput Input::TransformScanCode(ScanCode sc, bool down, mstime t, const std::optional<Point>& cursorPos)
 {
 	DelayedInput i { };
 	i.t = t;
 	i.cursorPos = cursorPos;
-	if (vk == VK_LBUTTON || vk == VK_MBUTTON || vk == VK_RBUTTON || vk == VK_XBUTTON1 || vk == VK_XBUTTON2)
+	if (IsMouse(sc))
 	{
-		std::tie(i.wParam, i.lParam) = CreateMouseEventParams(cursorPos);
+		std::tie(i.wParam, i.lParamValue) = CreateMouseEventParams(cursorPos);
 	}
 	else
 	{
-		i.wParam = vk;
-		i.lParam = 1;
-		i.lParam += (MapVirtualKeyEx(vk, MAPVK_VK_TO_VSC, 0) & 0xFF) << 16;
-		if (!down)
-			i.lParam += (1 << 30) + (1 << 31);
+		bool isUniversal = IsUniversalModifier(sc);
+		if (isUniversal)
+			sc = sc & ~ScanCode::UNIVERSAL_MODIFIER_FLAG;
+
+		i.wParam = MapVirtualKey(uint(sc), isUniversal ? MAPVK_VSC_TO_VK : MAPVK_VSC_TO_VK_EX);
+		assert(i.wParam != 0);
+		i.lParamKey.repeatCount = 0;
+		i.lParamKey.scanCode = uint(sc);
+		i.lParamKey.extendedFlag = IsExtendedKey(sc) ? 1 : 0;
+		i.lParamKey.contextCode = 0;
+		i.lParamKey.previousKeyState = down ? 0 : 1;
+		i.lParamKey.transitionState = down ? 0 : 1;
 	}
 
-	switch (vk)
+	switch (sc)
 	{
-		case VK_LBUTTON:
+		case ScanCode::LBUTTON:
 			i.msg = down ? id_H_LBUTTONDOWN_ : id_H_LBUTTONUP_;
 			break;
-		case VK_MBUTTON:
+		case ScanCode::MBUTTON:
 			i.msg = down ? id_H_MBUTTONDOWN_ : id_H_MBUTTONUP_;
 			break;
-		case VK_RBUTTON:
+		case ScanCode::RBUTTON:
 			i.msg = down ? id_H_RBUTTONDOWN_ : id_H_RBUTTONUP_;
 			break;
-		case VK_XBUTTON1:
-		case VK_XBUTTON2:
+		case ScanCode::X1BUTTON:
+		case ScanCode::X2BUTTON:
 			i.msg = down ? id_H_XBUTTONDOWN_ : id_H_XBUTTONUP_;
-			i.wParam |= (WPARAM)(vk == VK_XBUTTON1 ? XBUTTON1 : XBUTTON2) << 16;
+			i.wParam |= (WPARAM)(IsSame(sc, ScanCode::X1BUTTON) ? XBUTTON1 : XBUTTON2) << 16;
 			break;
-		case VK_LMENU:
-		case VK_RMENU:
-		case VK_F10:
+		case ScanCode::ALTLEFT:
+		case ScanCode::ALTRIGHT:
+		case ScanCode::F10:
 			i.msg = down ? id_H_SYSKEYDOWN_ : id_H_SYSKEYUP_;
-
-			// Set the correct transition state: 1 for KEYUP and 0 for KEYDOWN
-			if (!down)
-				i.lParam |= 1 << 31;
-
 			break;
-		case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // Arrow keys
-		case VK_PRIOR: case VK_NEXT: // Page up and page down
-		case VK_END: case VK_HOME:
-		case VK_INSERT: case VK_DELETE:
-		case VK_DIVIDE: // Numpad slash
-		case VK_NUMLOCK:
-			i.lParam |= 1 << 24; // Set extended bit
 		default:
 			i.msg = down ? id_H_KEYDOWN_ : id_H_KEYUP_;
-
-			// Set the correct transition state: 1 for KEYUP and 0 for KEYDOWN
-			if (!down)
-				i.lParam |= 1 << 31;
-
 			break;
 	}
 
@@ -354,19 +343,19 @@ Input::DelayedInput Input::TransformVKey(uint vk, bool down, mstime t, const std
 std::tuple<WPARAM, LPARAM> Input::CreateMouseEventParams(const std::optional<Point>& cursorPos) const
 {
 	WPARAM wParam = 0;
-	if (DownKeys.count(VK_CONTROL) || DownKeys.count(VK_LCONTROL) || DownKeys.count(VK_RCONTROL))
+	if (DownKeys.count(ScanCode::CONTROLLEFT) || DownKeys.count(ScanCode::CONTROLRIGHT))
 		wParam += MK_CONTROL;
-	if (DownKeys.count(VK_SHIFT) || DownKeys.count(VK_LSHIFT) || DownKeys.count(VK_RSHIFT))
+	if (DownKeys.count(ScanCode::SHIFTLEFT) || DownKeys.count(ScanCode::SHIFTRIGHT))
 		wParam += MK_SHIFT;
-	if (DownKeys.count(VK_LBUTTON))
+	if (DownKeys.count(ScanCode::LBUTTON))
 		wParam += MK_LBUTTON;
-	if (DownKeys.count(VK_RBUTTON))
+	if (DownKeys.count(ScanCode::RBUTTON))
 		wParam += MK_RBUTTON;
-	if (DownKeys.count(VK_MBUTTON))
+	if (DownKeys.count(ScanCode::MBUTTON))
 		wParam += MK_MBUTTON;
-	if (DownKeys.count(VK_XBUTTON1))
+	if (DownKeys.count(ScanCode::X1BUTTON))
 		wParam += MK_XBUTTON1;
-	if (DownKeys.count(VK_XBUTTON2))
+	if (DownKeys.count(ScanCode::X2BUTTON))
 		wParam += MK_XBUTTON2;
 
 	const auto& io = ImGui::GetIO();
@@ -375,41 +364,71 @@ std::tuple<WPARAM, LPARAM> Input::CreateMouseEventParams(const std::optional<Poi
 	return { wParam, lParam };
 }
 
-void Input::SendKeybind(const std::set<uint> &vkeys, const std::optional<Point>& cursorPos)
+void Input::SendKeybind(const std::set<ScanCode> &scs, const std::optional<Point>& cursorPos)
 {
-	if (vkeys.empty())
+	if (scs.empty())
 		return;
 
-	std::list<uint> vkeysSorted(vkeys.begin(), vkeys.end());
-	vkeysSorted.sort([](uint &a, uint &b)
+	std::list<ScanCode> scsSorted(scs.begin(), scs.end());
+
+	if (scsSorted.size() > 1) {
+		auto removeGeneric = [&](ScanCode g, ScanCode r) {
+			if (const auto it = std::find(scsSorted.begin(), scsSorted.end(), g); it != scsSorted.end()) {
+				scsSorted.erase(it);
+				scsSorted.push_back(r);
+			}
+		};
+		removeGeneric(ScanCode::SHIFT, ScanCode::SHIFTLEFT);
+		removeGeneric(ScanCode::CONTROL, ScanCode::CONTROLLEFT);
+		removeGeneric(ScanCode::ALT, ScanCode::ALTLEFT);
+		removeGeneric(ScanCode::META, ScanCode::METALEFT);
+	}
+
 	{
-		if (std::set<uint>{ VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU }.count(a))
-			return true;
-		else
-			return a < b;
-	});
+		std::set<ScanCode> modifiers{ ScanCode::CONTROLLEFT, ScanCode::CONTROLRIGHT, ScanCode::SHIFTLEFT, ScanCode::SHIFTRIGHT, ScanCode::ALTLEFT, ScanCode::ALTRIGHT };
+		scsSorted.sort([&modifiers](ScanCode& a, ScanCode& b) {
+			if (modifiers.count(a))
+				return true;
+			else
+				return a < b;
+			});
+	}
 
 	mstime currentTime = TimeInMilliseconds() + 10;
 
-	for (const auto &vk : vkeysSorted)
+	// GW2 only distinguishes left/right modifiers when not used with other keys
+	bool useUniversalModifiers = false;
+	for (const auto& sc : scsSorted)
 	{
-		if (DownKeys.count(vk))
+		if (!IsModifier(sc)) {
+			useUniversalModifiers = true;
+			break;
+		}
+	}
+
+	for (const auto &sc : scsSorted)
+	{
+		if (DownKeys.count(sc))
 			continue;
 
-		DelayedInput i = TransformVKey(vk, true, currentTime, cursorPos);
-		QueuedInputs.push_back(i);
+		auto sc2 = useUniversalModifiers ? MakeUniversal(sc) : sc;
+
+		DelayedInput i = TransformScanCode(sc2, true, currentTime, cursorPos);
+		if(i.wParam != 0)
+			QueuedInputs.push_back(i);
 		currentTime += 20;
 	}
 
 	currentTime += 50;
 
-	for (const auto &vk : reverse(vkeysSorted))
+	for (const auto &sc : reverse(scsSorted))
 	{
-		if (DownKeys.count(vk))
+		if (DownKeys.count(sc))
 			continue;
 
-		DelayedInput i = TransformVKey(vk, false, currentTime, cursorPos);
-		QueuedInputs.push_back(i);
+		DelayedInput i = TransformScanCode(sc, false, currentTime, cursorPos);
+		if (i.wParam != 0)
+			QueuedInputs.push_back(i);
 		currentTime += 20;
 	}
 }
@@ -429,7 +448,7 @@ void Input::SendQueuedInputs()
 	if (qi.cursorPos)
 		SetCursorPos(qi.cursorPos->x, qi.cursorPos->y);
 
-	PostMessage(Core::i()->gameWindow(), qi.msg, qi.wParam, qi.lParam);
+	PostMessage(Core::i()->gameWindow(), qi.msg, qi.wParam, qi.lParamValue);
 
 	QueuedInputs.pop_front();
 }

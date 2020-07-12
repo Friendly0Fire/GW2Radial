@@ -33,6 +33,7 @@ public:
 protected:
 	void InternalInit();
 	void OnFocusLost();
+	void OnFocus();
 
 	void OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters);
 	void OnDeviceUnset();

@@ -58,7 +58,7 @@ protected:
 	WheelElement* GetFavorite(int favoriteId);
 	std::vector<WheelElement*> GetActiveElements();
 	bool OnMouseMove();
-	InputResponse OnInputChange(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys);
+	InputResponse OnInputChange(bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys);
 	void ActivateWheel(bool isMountOverlayLocked);
 	void DeactivateWheel();
 

@@ -1,6 +1,7 @@
 #include <ImGuiExtensions.h>
 #include <Core.h>
 #include "../imgui/imgui_internal.h"
+#include <Input.h>
 
 ImVec2 operator*(const ImVec2& a, const ImVec2& b)
 {
@@ -86,7 +87,7 @@ void ImGuiKeybindInput(GW2Radial::Keybind& setting)
 	else if (setting.isBeingModified() && ImGui::Button(("Clear" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
 	{
 		setting.isBeingModified(false);
-		setting.keys(std::set<uint>());
+		setting.scanCodes(std::set<GW2Radial::ScanCode>());
 	}
 
 	ImGui::SameLine();

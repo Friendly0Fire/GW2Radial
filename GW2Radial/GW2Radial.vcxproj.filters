@@ -234,6 +234,9 @@
     <ClInclude Include="loader-core\include\gw2al_api.h">
       <Filter>Addon Loader</Filter>
     </ClInclude>
+    <ClInclude Include="include\ScanCode.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="rt_rcdat.bin">

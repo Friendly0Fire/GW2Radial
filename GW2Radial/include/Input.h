@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <optional>
 #include "ConfigurationOption.h"
+#include <ScanCode.h>
 
 namespace GW2Radial
 {
@@ -19,9 +20,17 @@ enum class InputResponse : uint
 	PREVENT_ALL = 2 // Prevent all input from reaching the game
 };
 
+inline InputResponse operator|(InputResponse a, InputResponse b) {
+    return InputResponse(std::max(uint(a), uint(b)));
+}
+
+inline InputResponse operator|=(InputResponse& a, InputResponse b) {
+    return (a = a | b);
+}
+
 struct EventKey
 {
-	uint vk : 31;
+    ScanCode sc : 31;
 	bool down : 1;
 };
 
@@ -31,21 +40,11 @@ struct Point
 	int y;
 };
 
-inline InputResponse operator|(InputResponse a, InputResponse b)
-{
-	return InputResponse(std::max(uint(a), uint(b)));
-}
-
-inline InputResponse operator|=(InputResponse& a, InputResponse b)
-{
-	return (a = a | b);
-}
-
 class Input : public Singleton<Input>
 {
 public:
 	using MouseMoveCallback = std::function<bool()>;
-	using InputChangeCallback = std::function<InputResponse(bool changed, const std::set<uint>& keys, const std::list<EventKey>& changedKeys)>;
+	using InputChangeCallback = std::function<InputResponse(bool changed, const std::set<ScanCode>& sc, const std::list<EventKey>& changedKeys)>;
 	Input();
 
 	uint id_H_LBUTTONDOWN() const { return id_H_LBUTTONDOWN_; }
@@ -68,21 +67,24 @@ public:
 	void AddInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.push_back(cb); }
 	void RemoveMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.remove(cb); }
 	void RemoveInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.remove(cb); }
-	void SendKeybind(const std::set<uint> &vkeys, std::optional<Point> const& cursorPos = { });
+	void SendKeybind(const std::set<ScanCode> &sc, std::optional<Point> const& cursorPos = { });
 
 protected:
 	struct DelayedInput
 	{
 		uint msg;
 		WPARAM wParam;
-		LPARAM lParam;
+        union {
+            KeyLParam lParamKey;
+            LPARAM lParamValue;
+        };
 
 		mstime t;
 		std::optional<Point> cursorPos;
 	};
 
 	uint ConvertHookedMessage(uint msg) const;
-	DelayedInput TransformVKey(uint vk, bool down, mstime t, const std::optional<Point>& cursorPos);
+	DelayedInput TransformScanCode(ScanCode sc, bool down, mstime t, const std::optional<Point>& cursorPos);
 	std::tuple<WPARAM, LPARAM> CreateMouseEventParams(const std::optional<Point>& cursorPos) const;
 	void SendQueuedInputs();
 
@@ -102,13 +104,12 @@ protected:
 	uint id_H_MOUSEMOVE_;
 	// ReSharper restore CppInconsistentNaming
 
-	std::set<uint> DownKeys;
+
+	std::set<ScanCode> DownKeys;
 	std::list<DelayedInput> QueuedInputs;
 	
 	std::list<MouseMoveCallback*> mouseMoveCallbacks_;
 	std::list<InputChangeCallback*> inputChangeCallbacks_;
-	
-	ConfigurationOption<bool> distinguishLeftRight_;
 
 	friend class MiscTab;
 };

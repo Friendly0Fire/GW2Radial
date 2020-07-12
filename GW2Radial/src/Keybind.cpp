@@ -6,44 +6,48 @@
 
 namespace GW2Radial
 {
-std::unordered_map<Keybind*, std::set<uint>> Keybind::keyMaps_;
+std::vector<Keybind*> Keybind::keybinds_;
+std::unordered_map<Keybind*, std::set<ScanCode>> Keybind::scMaps_;
 
-Keybind::Keybind(std::string nickname, std::string displayName, const std::set<uint>& keys, bool saveToConfig) :
+Keybind::Keybind(std::string nickname, std::string displayName, const std::set<ScanCode>& scs, bool saveToConfig) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName)), saveToConfig_(saveToConfig)
 {
-	this->keys(keys);
+	keybinds_.push_back(this);
+	this->scanCodes(scs);
 	isBeingModified_ = false;
 }
 
 Keybind::Keybind(std::string nickname, std::string displayName) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName))
 {
+	keybinds_.push_back(this);
 	const auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds", nickname_.c_str());
-	if(keys) this->keys(keys);
+	if(keys) this->scanCodes(keys);
 	isBeingModified_ = false;
 }
 
 Keybind::~Keybind()
 {
-	keyMaps_.erase(this);
+	keybinds_.erase(std::find(keybinds_.begin(), keybinds_.end(), this));
+	scMaps_.erase(this);
 }
 
-void Keybind::keys(const std::set<uint>& keys)
+void Keybind::scanCodes(const std::set<ScanCode>& scs)
 {
 	if(!isBeingModified_)
 		return;
 
-	keys_ = keys;
+	scanCodes_ = scs;
 
 	ApplyKeys();
 }
 
-void Keybind::keys(const char * keys)
+void Keybind::scanCodes(const char* keys)
 {
 	if(!isBeingModified_)
 		return;
 
-	keys_.clear();
+	scanCodes_.clear();
 
 	if (strnlen_s(keys, 256) > 0)
 	{
@@ -55,7 +59,7 @@ void Keybind::keys(const char * keys)
 			std::string substr;
 			std::getline(ss, substr, ',');
 			const auto val = std::stoi(substr);
-			keys_.insert(static_cast<uint>(val));
+			scanCodes_.insert(static_cast<ScanCode>(val));
 		}
 	}
 
@@ -71,10 +75,10 @@ void Keybind::ApplyKeys()
 	if(saveToConfig_)
 	{
 		std::string settingValue;
-		for (const auto& k : keys_)
-			settingValue += std::to_string(k) + ", ";
+		for (const auto& k : scanCodes_)
+			settingValue += std::to_string(uint(k)) + ", ";
 
-		if(!keys_.empty())
+		if(!scanCodes_.empty())
 			settingValue = settingValue.substr(0, settingValue.size() - 2);
 
 		auto cfg = ConfigurationFile::i();
@@ -85,62 +89,65 @@ void Keybind::ApplyKeys()
 
 void Keybind::CheckForConflict(bool recurse)
 {
-	keyMaps_[this] = keys_;
+	scMaps_[this] = scanCodes_;
 	
 	isConflicted_ = false;
-	for(auto& elem : keyMaps_)
+	for(auto& elem : scMaps_)
 	{
-		if(elem.first != this && !keys_.empty() && elem.second == keys_)
+		if(elem.first != this && !scanCodes_.empty() && elem.second == scanCodes_)
 			isConflicted_ = true;
 		
 		if(recurse) elem.first->CheckForConflict(false);
 	}
 }
 
-bool Keybind::conflicts(const std::set<uint>& pressedKeys) const
+bool Keybind::conflicts(const std::set<ScanCode>& scanCodes) const
 {
-	for(auto& elem : keyMaps_)
+	for(auto& elem : scMaps_)
 	{
-		if(elem.first != this && keys_.size() < elem.second.size()
-			&& std::includes(pressedKeys.begin(), pressedKeys.end(), elem.second.begin(), elem.second.end()))
+		if(elem.first != this && scanCodes_.size() < elem.second.size()
+			&& std::includes(scanCodes.begin(), scanCodes.end(), elem.second.begin(), elem.second.end()))
 			return true;
 	}
 
 	return false;
 }
 
-bool Keybind::matchesNoLeftRight(const std::set<uint>& pressedKeys) const
+bool Keybind::matchesNoLeftRight(const std::set<ScanCode>& scanCodes) const
 {
-	auto k2 = pressedKeys;
-	const auto rep = [&](uint vk, uint vkr)
+	const auto universalize = [](const std::set<ScanCode>& src)
 	{
-		if(const auto k = k2.find(vk); k != k2.end())
+		std::set<ScanCode> out;
+		for(const auto& k : src)
 		{
-			k2.erase(k);
-			k2.insert(vkr);
+			if (IsModifier(k))
+				out.insert(MakeUniversal(k));
+			else
+				out.insert(k);
 		}
-	};
-	rep(VK_LCONTROL, VK_CONTROL);
-	rep(VK_RCONTROL, VK_CONTROL);
-	rep(VK_LSHIFT, VK_SHIFT);
-	rep(VK_RSHIFT, VK_SHIFT);
-	rep(VK_LMENU, VK_MENU);
-	rep(VK_RMENU, VK_MENU);
 
-	return k2 == keys_;
+		return out;
+	};
+
+	return universalize(scanCodes) == universalize(scanCodes_);
 }
 
 void Keybind::UpdateDisplayString()
 {
-	if(keys_.empty())
+	if(scanCodes_.empty())
 	{
 		keysDisplayString_[0] = '\0';
 		return;
 	}
 
-	std::wstring keybind = std::accumulate(std::next(keys_.begin()), keys_.end(), GetKeyName(*keys_.begin()), [](std::wstring a, uint b) { return std::move(a) + L" + " + GetKeyName(b); });
+	std::wstring keybind = std::accumulate(std::next(scanCodes_.begin()), scanCodes_.end(), GetScanCodeName(*scanCodes_.begin()), [](std::wstring a, ScanCode b) { return std::move(a) + L" + " + GetScanCodeName(b); });
 
 	strcpy_s(keysDisplayString_.data(), keysDisplayString_.size(), utf8_encode(keybind).c_str());
+}
+
+void Keybind::ForceRefreshDisplayStrings() {
+	for (auto& kb : keybinds_)
+		kb->UpdateDisplayString();
 }
 
 }
