@@ -23,6 +23,7 @@ bool Mount::isActive() const
 template<>
 void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 {
+	worksOnlyOutOfCombat_ = true;
 	doBypassWheel_ = [this](WheelElement*& we) {
 		we = sortedWheelElements_.front();
 		return MumbleLink::i()->isMounted();

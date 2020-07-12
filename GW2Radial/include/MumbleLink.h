@@ -26,6 +26,7 @@ public:
 
 	MountType currentMount() const;
 	bool isMounted() const;
+	bool isInMap() const;
 
 protected:
 	uint32_t uiState() const;

@@ -77,6 +77,13 @@ MumbleLink::~MumbleLink() {
 	}
 }
 
+bool MumbleLink::isInMap() const {
+	if (!linkedMemory_)
+		return false;
+
+	return context()->mapId != 0;
+}
+
 bool MumbleLink::isInWvW() const {
 	if (!linkedMemory_)
 		return false;

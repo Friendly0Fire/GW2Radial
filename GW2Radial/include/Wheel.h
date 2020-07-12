@@ -46,6 +46,7 @@ public:
 	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); Sort(); }
 	void Draw(IDirect3DDevice9* dev, Effect* fx, class UnitQuad* quad);
 	void OnFocusLost();
+	void OnUpdate();
 
 	bool drawOverUI() const { return showOverGameUIOption_.value(); }
 
@@ -75,6 +76,10 @@ protected:
 	Keybind keybind_, centralKeybind_;
 	bool waitingForBypassComplete_ = false;
 
+	bool worksOnlyOutOfCombat_ = false;
+	WheelElement* outOfCombatDelayed_ = nullptr;
+	mstime outOfCombatDelayedTime_ = 0;
+
 	ConfigurationOption<int> centerBehaviorOption_;
 	ConfigurationOption<int> centerFavoriteOption_;
 	ConfigurationOption<int> delayFavoriteOption_;
@@ -94,6 +99,7 @@ protected:
 	ConfigurationOption<bool> resetCursorAfterKeybindOption_;
 
 	ConfigurationOption<bool> disableKeybindsInCombatOption_;
+	ConfigurationOption<int> maximumOutOfCombatWaitOption_;
 
 	std::optional<Point> cursorResetPosition_;
 	fVector2 currentPosition_;

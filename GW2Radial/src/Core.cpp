@@ -234,6 +234,9 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 	Input::i()->OnUpdate();
 	ConfigurationFile::i()->OnUpdate();
 
+	for (auto& wheel : wheels_)
+		wheel->OnUpdate();
+
 	UpdateCheck::i()->CheckForUpdates();
 
 	if (firstFrame_)

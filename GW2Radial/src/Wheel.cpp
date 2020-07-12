@@ -31,7 +31,8 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  clickSelectOption_("Require click on option to select", "click_select", "wheel_" + nickname_, false),
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
-	disableKeybindsInCombatOption_("Disable wheel keybinds while in combat", "disable_in_combat", "wheel_" + nickname_, false)
+	disableKeybindsInCombatOption_("Disable wheel keybinds while in combat", "disable_in_combat", "wheel_" + nickname_, false),
+	maximumOutOfCombatWaitOption_("Maximum seconds to wait for out of combat before sending input", "max_wait_ooc", "wheel_" + nickname_, 30)
 {
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);
@@ -129,6 +130,10 @@ void Wheel::DrawMenu()
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, disableKeybindsInCombatOption_);
+
+	ImGui::PushItemWidth(0.2f * ImGui::GetWindowContentRegionWidth());
+	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumOutOfCombatWaitOption_, 1, 10, ImGuiInputTextFlags_CallbackAlways);
+	ImGui::PopItemWidth();
 
 	if(CenterBehavior(centerBehaviorOption_.value()) != CenterBehavior::NOTHING && displayDelayOption_.value() > 0)
 	{
@@ -230,6 +235,17 @@ void Wheel::DrawMenu()
 
 	ImGui::EndGroup();
 	ImGui::PopID();
+}
+
+void Wheel::OnUpdate() {
+	if (outOfCombatDelayed_) {
+		const auto currentTime = TimeInMilliseconds();
+		if (currentTime <= outOfCombatDelayedTime_ + maximumOutOfCombatWaitOption_.value() * 1000ull && !MumbleLink::i()->isInCombat() && MumbleLink::i()->gameHasFocus() && MumbleLink::i()->isInMap()) {
+			Input::i()->SendKeybind(outOfCombatDelayed_->keybind().scanCodes(), std::nullopt);
+			outOfCombatDelayed_ = nullptr;
+			outOfCombatDelayedTime_ = 0;
+		}
+	}
 }
 
 void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
@@ -582,8 +598,14 @@ void Wheel::DeactivateWheel()
 		currentHovered_ = GetCenterHoveredElement();
 
 	// Mount overlay is turned off, send the keybind
-	if (currentHovered_)
-		Input::i()->SendKeybind(currentHovered_->keybind().scanCodes(), cursorResetPosition_);
+	if (currentHovered_) {
+		if (worksOnlyOutOfCombat_ && MumbleLink::i()->isInCombat()) {
+			Input::i()->SendKeybind(std::set<ScanCode>(), cursorResetPosition_);
+			outOfCombatDelayed_ = currentHovered_;
+			outOfCombatDelayedTime_ = TimeInMilliseconds();
+		} else
+			Input::i()->SendKeybind(currentHovered_->keybind().scanCodes(), cursorResetPosition_);
+	}
 
 	previousUsed_ = currentHovered_;
 	currentHovered_ = nullptr;
