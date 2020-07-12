@@ -21,8 +21,12 @@ Keybind::Keybind(std::string nickname, std::string displayName) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName))
 {
 	keybinds_.push_back(this);
-	const auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds", nickname_.c_str());
+	auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds.2", nickname_.c_str());
 	if(keys) this->scanCodes(keys);
+	else {
+		keys = ConfigurationFile::i()->ini().GetValue("Keybinds", nickname_.c_str());
+		if(keys) this->scanCodes(keys, true);
+	}
 	isBeingModified_ = false;
 }
 
@@ -42,7 +46,7 @@ void Keybind::scanCodes(const std::set<ScanCode>& scs)
 	ApplyKeys();
 }
 
-void Keybind::scanCodes(const char* keys)
+void Keybind::scanCodes(const char* keys, bool vKey)
 {
 	if(!isBeingModified_)
 		return;
@@ -58,7 +62,9 @@ void Keybind::scanCodes(const char* keys)
 		{
 			std::string substr;
 			std::getline(ss, substr, ',');
-			const auto val = std::stoi(substr);
+			auto val = std::stoi(substr);
+			if (vKey)
+				val = MapVirtualKeyA(val, MAPVK_VK_TO_VSC);
 			scanCodes_.insert(static_cast<ScanCode>(val));
 		}
 	}

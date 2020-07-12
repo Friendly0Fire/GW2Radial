@@ -17,7 +17,7 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
 	  keybind_(nickname_, "Show on mouse"), centralKeybind_(nickname_ + "_cl", "Show in center"),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
-	  centerFavoriteOption_("Favorite choice##Center", "center_favorite", "wheel_" + nickname_),
+	  centerFavoriteOption_("Favorite choice##Center", "center_favorite.2", "wheel_" + nickname_),
 	  delayFavoriteOption_("Favorite choice##Delay", "delay_favorite", "wheel_" + nickname_),
 	  scaleOption_("Scale", "scale", "wheel_" + nickname_, 1.f),
 	  centerScaleOption_("Center scale", "center_scale", "wheel_" + nickname_, 0.2f),

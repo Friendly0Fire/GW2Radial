@@ -18,7 +18,7 @@ public:
 
 	const std::set<ScanCode>& scanCodes() const { return scanCodes_; }
 	void scanCodes(const std::set<ScanCode>& scs);
-	void scanCodes(const char* keys);
+	void scanCodes(const char* keys, bool vKey = false);
 
 	const std::string& displayName() const { return displayName_; }
 	void displayName(const std::string& n) { displayName_ = n; }
