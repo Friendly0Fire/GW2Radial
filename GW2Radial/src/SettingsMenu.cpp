@@ -77,8 +77,10 @@ void SettingsMenu::Draw()
 InputResponse SettingsMenu::OnInputChange(bool /*changed*/, const std::set<ScanCode>& scs, const std::list<EventKey>& /*changedKeys*/)
 {
 	const bool isMenuKeybind = showKeybind_.matchesNoLeftRight(scs);
-	if(isMenuKeybind)
+	if (isMenuKeybind) {
 		isVisible_ = true;
+		Keybind::ForceRefreshDisplayStrings();
+	}
 
 	return isMenuKeybind ? InputResponse::PREVENT_ALL : InputResponse::PASS_TO_GAME;
 }
