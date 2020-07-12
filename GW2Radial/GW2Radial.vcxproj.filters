@@ -5,46 +5,49 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{f701ac46-ef15-4068-89e5-1b38d8235142}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="simpleini">
-      <UniqueIdentifier>{ab29f84d-7d8d-4801-90ac-68afdfed33e1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="xxHash">
-      <UniqueIdentifier>{ab14615f-806d-4036-a018-1c5e2c2d467a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{8ca3937f-5abb-4da6-a977-a0b326981260}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{cad8217e-51ec-44e9-9e81-95b3f68e501c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Assets">
-      <UniqueIdentifier>{8aecf9fe-356d-4cc7-bf13-297bcef89f0f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Addon Loader">
-      <UniqueIdentifier>{8e9a2f2e-98d0-4f9f-bd9e-71a04511ed25}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{d8088ee0-74e1-4aac-ac8f-91aecfedfc28}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{01e91929-46f3-49cd-aa62-18460fc48da0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\imgui">
+      <UniqueIdentifier>{f701ac46-ef15-4068-89e5-1b38d8235142}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Addon Loader">
+      <UniqueIdentifier>{8e9a2f2e-98d0-4f9f-bd9e-71a04511ed25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\simpleini">
+      <UniqueIdentifier>{ab29f84d-7d8d-4801-90ac-68afdfed33e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\xxHash">
+      <UniqueIdentifier>{ab14615f-806d-4036-a018-1c5e2c2d467a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Assets">
+      <UniqueIdentifier>{8aecf9fe-356d-4cc7-bf13-297bcef89f0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Shaders">
+      <UniqueIdentifier>{8ca3937f-5abb-4da6-a977-a0b326981260}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui_demo.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="imgui\imgui_draw.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="imgui\imgui.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="imgui\examples\imgui_impl_win32.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="xxhash\xxhash.c">
-      <Filter>xxHash</Filter>
+      <Filter>External\xxHash</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGuiExtensions.cpp">
       <Filter>Source Files</Filter>
@@ -110,7 +113,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\imgui_impl_dx9_custom.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\Effect_dx12.cpp">
       <Filter>Source Files</Filter>
@@ -118,43 +121,43 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="imgui\stb_rect_pack.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="imgui\stb_textedit.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="imgui\stb_truetype.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imconfig.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imgui.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="simpleini\SimpleIni.h">
-      <Filter>simpleini</Filter>
+      <Filter>External\simpleini</Filter>
     </ClInclude>
     <ClInclude Include="imgui\examples\imgui_impl_dx9.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="imgui\examples\imgui_impl_win32.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="xxhash\xxhash.h">
-      <Filter>xxHash</Filter>
+      <Filter>External\xxHash</Filter>
     </ClInclude>
     <ClInclude Include="include\Resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h">
-      <Filter>Addon Loader</Filter>
+      <Filter>External\Addon Loader</Filter>
     </ClInclude>
     <ClInclude Include="loader-core\include\gw2al_api.h">
-      <Filter>Addon Loader</Filter>
+      <Filter>External\Addon Loader</Filter>
     </ClInclude>
     <ClInclude Include="include\ConfigurationFile.h">
       <Filter>Header Files</Filter>
@@ -249,10 +252,10 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="int\Shader_vs.cso">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </None>
     <None Include="int\Shader_ps.cso">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -262,10 +265,10 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\Shader_ps.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\Shader_vs.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -275,92 +278,92 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="art\Finals\arrow_marker.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\Background.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\Beetle.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\chair.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\circle_marker.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\clear_markers.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\Griffon.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\hand.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\heart_marker.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\Jackal.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\music.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\Raptor.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\Skimmer.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\spiral_marker.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\Springer.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\square_marker.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\star_marker.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\tonic.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\travel.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\triangle_marker.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\Warclaw.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\x_marker.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\Skyscale.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
     <Image Include="art\Finals\WipeMask.dds">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="art\Fonts\SourceSansPro-Black.ttf">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Font>
     <Font Include="art\Fonts\SourceSansPro-Italic.ttf">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Font>
     <Font Include="art\Fonts\SourceSansPro-Regular.ttf">
-      <Filter>Assets</Filter>
+      <Filter>Resource Files\Assets</Filter>
     </Font>
   </ItemGroup>
   <ItemGroup>
     <Text Include="shaders\perlin.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Resource Files\Shaders</Filter>
     </Text>
   </ItemGroup>
 </Project>
