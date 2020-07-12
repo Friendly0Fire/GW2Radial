@@ -88,7 +88,7 @@ void Keybind::ApplyKeys()
 			settingValue = settingValue.substr(0, settingValue.size() - 2);
 
 		auto cfg = ConfigurationFile::i();
-		cfg->ini().SetValue("keybinds", nickname_.c_str(), settingValue.c_str());
+		cfg->ini().SetValue("Keybinds.2", nickname_.c_str(), settingValue.c_str());
 		cfg->Save();
 	}
 }
