@@ -61,6 +61,7 @@ protected:
 	InputResponse OnInputChange(bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys);
 	void ActivateWheel(bool isMountOverlayLocked);
 	void DeactivateWheel();
+	std::function<bool(WheelElement*&)> doBypassWheel_ = [](auto) { return false; };
 
 	std::string nickname_, displayName_;
 	bool alphaBlended_ = false;
@@ -72,7 +73,7 @@ protected:
 	bool isVisible_ = false;
 	uint minElementSortingPriority_ = 0;
 	Keybind keybind_, centralKeybind_;
-	bool waitingForDismount_ = false;
+	bool waitingForBypassComplete_ = false;
 
 	ConfigurationOption<int> centerBehaviorOption_;
 	ConfigurationOption<int> centerFavoriteOption_;

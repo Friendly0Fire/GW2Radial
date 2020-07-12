@@ -447,15 +447,16 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 		if (mountOverlayLocked)
 			mountOverlayLocked &= !centralKeybind_.conflicts(scs);
 
-		if ((mountOverlayLocked || mountOverlay) && MumbleLink::i()->isMounted() && !waitingForDismount_) {
+		WheelElement* bypassElement = nullptr;
+		if ((mountOverlayLocked || mountOverlay) && doBypassWheel_(bypassElement) && !waitingForBypassComplete_) {
 			isVisible_ = false;
-			waitingForDismount_ = true;
-			Input::i()->SendKeybind(sortedWheelElements_.front()->keybind().scanCodes(), std::nullopt);
+			waitingForBypassComplete_ = true;
+			Input::i()->SendKeybind(bypassElement->keybind().scanCodes(), std::nullopt);
 		}
 
-		if (waitingForDismount_) {
+		if (waitingForBypassComplete_) {
 			if (!mountOverlay && !mountOverlayLocked)
-				waitingForDismount_ = false;
+				waitingForBypassComplete_ = false;
 		} else if (clickSelectOption_.value() && previousVisibility) {
 			isVisible_ = isVisible_ && !scs.contains(ScanCode::LBUTTON);
 		} else {
