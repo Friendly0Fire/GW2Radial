@@ -448,6 +448,9 @@ void Input::SendQueuedInputs()
 	if (qi.cursorPos)
 		SetCursorPos(qi.cursorPos->x, qi.cursorPos->y);
 
+#ifdef _DEBUG
+	FormattedOutputDebugString(L"Sending keybind 0x%x...\n", qi.wParam);
+#endif
 	PostMessage(Core::i()->gameWindow(), qi.msg, qi.wParam, qi.lParamValue);
 
 	QueuedInputs.pop_front();

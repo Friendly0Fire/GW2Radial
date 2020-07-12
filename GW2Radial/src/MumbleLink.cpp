@@ -130,6 +130,13 @@ MountType MumbleLink::currentMount() const {
 	}
 }
 
+bool MumbleLink::isMounted() const {
+	if (!linkedMemory_)
+		return false;
+
+	return context()->mountIndex != 0;
+}
+
 const MumbleContext* MumbleLink::context() const {
 	if(!linkedMemory_)
 		return nullptr;

@@ -438,17 +438,27 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 	if (disableKeybindsInCombatOption_.value() && MumbleLink::i()->isInCombat())
 		isVisible_ = false;
 	else {
-		if (clickSelectOption_.value() && previousVisibility) {
+
+		bool mountOverlay = keybind_.matchesPartial(scs);
+		bool mountOverlayLocked = centralKeybind_.matchesPartial(scs);
+
+		if (mountOverlay)
+			mountOverlay &= !keybind_.conflicts(scs);
+		if (mountOverlayLocked)
+			mountOverlayLocked &= !centralKeybind_.conflicts(scs);
+
+		if ((mountOverlayLocked || mountOverlay) && MumbleLink::i()->isMounted() && !waitingForDismount_) {
+			isVisible_ = false;
+			waitingForDismount_ = true;
+			Input::i()->SendKeybind(sortedWheelElements_.front()->keybind().scanCodes(), std::nullopt);
+		}
+
+		if (waitingForDismount_) {
+			if (!mountOverlay && !mountOverlayLocked)
+				waitingForDismount_ = false;
+		} else if (clickSelectOption_.value() && previousVisibility) {
 			isVisible_ = isVisible_ && !scs.contains(ScanCode::LBUTTON);
 		} else {
-			bool mountOverlay = keybind_.matchesPartial(scs);
-			bool mountOverlayLocked = centralKeybind_.matchesPartial(scs);
-
-			if (mountOverlay)
-				mountOverlay &= !keybind_.conflicts(scs);
-			if (mountOverlayLocked)
-				mountOverlayLocked &= !centralKeybind_.conflicts(scs);
-
 			isVisible_ = mountOverlayLocked || mountOverlay;
 
 			// If holding down the button is not necessary, modify behavior

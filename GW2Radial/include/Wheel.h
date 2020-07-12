@@ -72,6 +72,7 @@ protected:
 	bool isVisible_ = false;
 	uint minElementSortingPriority_ = 0;
 	Keybind keybind_, centralKeybind_;
+	bool waitingForDismount_ = false;
 
 	ConfigurationOption<int> centerBehaviorOption_;
 	ConfigurationOption<int> centerFavoriteOption_;
@@ -92,7 +93,6 @@ protected:
 	ConfigurationOption<bool> resetCursorAfterKeybindOption_;
 
 	ConfigurationOption<bool> disableKeybindsInCombatOption_;
-
 
 	std::optional<Point> cursorResetPosition_;
 	fVector2 currentPosition_;

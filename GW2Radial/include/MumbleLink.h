@@ -25,6 +25,7 @@ public:
 	PARSE_FLAG_BOOL(isInCombat, 6);
 
 	MountType currentMount() const;
+	bool isMounted() const;
 
 protected:
 	uint32_t uiState() const;
