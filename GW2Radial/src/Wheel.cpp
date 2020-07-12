@@ -27,6 +27,7 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  lockCameraWhenOverlayedOption_("Lock camera when overlay is displayed", "lock_camera", "wheel_" + nickname_, true),
 	  showOverGameUIOption_("Show on top of game UI", "show_over_ui", "wheel_" + nickname_, true),
 	  noHoldOption_("Activate first hovered option without holding down", "no_hold", "wheel_" + nickname_, false),
+	  clickSelectOption_("Require click on option to select", "click_select", "wheel_" + nickname_, false),
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true)
 {
@@ -124,6 +125,7 @@ void Wheel::DrawMenu()
 	ImGui::PopItemWidth();
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
 
 	if(CenterBehavior(centerBehaviorOption_.value()) != CenterBehavior::NOTHING && displayDelayOption_.value() > 0)
 	{
@@ -430,23 +432,28 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 {
 	const bool previousVisibility = isVisible_;
 
-	bool mountOverlay = keybind_.matchesPartial(scs);
-	bool mountOverlayLocked = centralKeybind_.matchesPartial(scs);
-	
-	if(mountOverlay)
-		mountOverlay &= !keybind_.conflicts(scs);
-	if(mountOverlayLocked)
-		mountOverlayLocked &= !centralKeybind_.conflicts(scs);
+	if (clickSelectOption_.value() && previousVisibility) {
+		isVisible_ = isVisible_ && !scs.contains(ScanCode::LBUTTON);
+	} else {
+		bool mountOverlay = keybind_.matchesPartial(scs);
+		bool mountOverlayLocked = centralKeybind_.matchesPartial(scs);
 
-	isVisible_ = mountOverlayLocked || mountOverlay;
-	
-	// If holding down the button is not necessary, modify behavior
-	if(noHoldOption_.value() && previousVisibility && currentHovered_ == nullptr)
-		isVisible_ = true;
+		if (mountOverlay)
+			mountOverlay &= !keybind_.conflicts(scs);
+		if (mountOverlayLocked)
+			mountOverlayLocked &= !centralKeybind_.conflicts(scs);
 
-	if (isVisible_ && !previousVisibility)
-		ActivateWheel(mountOverlayLocked);
-	else if (!isVisible_ && previousVisibility)
+		isVisible_ = mountOverlayLocked || mountOverlay;
+
+		// If holding down the button is not necessary, modify behavior
+		if (noHoldOption_.value() && previousVisibility && currentHovered_ == nullptr)
+			isVisible_ = true;
+
+		if (isVisible_ && !previousVisibility)
+			ActivateWheel(mountOverlayLocked);
+	}
+
+	if (!isVisible_ && previousVisibility)
 		DeactivateWheel();
 	
 	{
