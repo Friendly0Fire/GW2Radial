@@ -56,7 +56,7 @@ protected:
 	void Sort();
 	WheelElement* GetCenterHoveredElement();
 	WheelElement* GetFavorite(int favoriteId);
-	std::vector<WheelElement*> GetActiveElements();
+	std::vector<WheelElement*> GetActiveElements(bool sorted = true);
 	bool OnMouseMove();
 	InputResponse OnInputChange(bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys);
 	void ActivateWheel(bool isMountOverlayLocked);
@@ -68,6 +68,7 @@ protected:
 	bool resetCursorPositionToCenter_ = false;
 
 	std::vector<std::unique_ptr<WheelElement>> wheelElements_;
+	std::vector<WheelElement*> sortedWheelElements_;
 	bool isVisible_ = false;
 	uint minElementSortingPriority_ = 0;
 	Keybind keybind_, centralKeybind_;

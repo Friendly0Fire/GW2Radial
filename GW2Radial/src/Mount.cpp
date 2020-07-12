@@ -40,10 +40,10 @@ std::array<float, 4> Mount::color()
 		return { 108 / 255.f, 128 / 255.f, 213 / 255.f, 1 };
 	case MountType::JACKAL:
 		return { 120 / 255.f, 183 / 255.f, 197 / 255.f, 1 };
-	case MountType::BEETLE:
-		return { 199 / 255.f, 131 / 255.f, 68 / 255.f, 1 };
 	case MountType::GRIFFON:
 		return { 136 / 255.f, 123 / 255.f, 195 / 255.f, 1 };
+	case MountType::BEETLE:
+		return { 199 / 255.f, 131 / 255.f, 68 / 255.f, 1 };
     case MountType::WARCLAW:
         return { 181 / 255.f, 255 / 255.f, 244 / 255.f, 1 };
     case MountType::SKYSCALE:

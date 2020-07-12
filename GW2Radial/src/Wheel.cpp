@@ -205,18 +205,18 @@ void Wheel::DrawMenu()
 	ImGuiSpacing();
 	ImGui::Text("Visibility and order (clockwise from the top):");
 
-	for(auto it = wheelElements_.begin(); it != wheelElements_.end(); ++it)
+	for(auto it = sortedWheelElements_.begin(); it != sortedWheelElements_.end(); ++it)
 	{
-		const auto extremum = it == wheelElements_.begin() ? 1 : it == std::prev(wheelElements_.end()) ? -1 : 0;
+		const auto extremum = it == sortedWheelElements_.begin() ? 1 : it == std::prev(sortedWheelElements_.end()) ? -1 : 0;
 		auto& e = *it;
 		if(const auto dir = e->DrawPriority(extremum); dir != 0)
 		{
-			if(dir == 1 && e == wheelElements_.front() ||
-				dir == -1 && e == wheelElements_.back())
+			if(dir == 1 && e == sortedWheelElements_.front() ||
+				dir == -1 && e == sortedWheelElements_.back())
 				continue;
 
 			auto& eOther = dir == 1 ? *std::prev(it) : *std::next(it);
-			e.swap(eOther);
+			std::swap(e, eOther);
 			const auto tempPriority = eOther->sortingPriority();
 			eOther->sortingPriority(e->sortingPriority());
 			e->sortingPriority(tempPriority);
@@ -291,10 +291,13 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 						hoveredFadeIns.push_back(previousUsed_->hoverFadeIn(currentTime, this));
 					break;
 				case CenterBehavior::FAVORITE:
-					for(const auto& e : wheelElements_)
-						if(e->sortingPriority() == minElementSortingPriority_ + uint(centerFavoriteOption_.value()))
-							hoveredFadeIns.push_back(e->hoverFadeIn(currentTime, this));
-					break;
+				{
+					auto fav = centerFavoriteOption_.value();
+					if (fav >= 0 && fav < wheelElements_.size()) {
+						hoveredFadeIns.push_back(wheelElements_[fav]->hoverFadeIn(currentTime, this));
+						break;
+					}
+				}
 				default:
 					hoveredFadeIns.push_back(0.f);
 					break;
@@ -362,9 +365,12 @@ void Wheel::OnFocusLost()
 
 void Wheel::Sort()
 {
-	std::sort(wheelElements_.begin(), wheelElements_.end(),
-		[](const std::unique_ptr<WheelElement>& a, const std::unique_ptr<WheelElement>& b) { return a->sortingPriority() < b->sortingPriority(); });
-	minElementSortingPriority_ = wheelElements_.front()->sortingPriority();
+	sortedWheelElements_.resize(wheelElements_.size());
+	std::transform(wheelElements_.begin(), wheelElements_.end(), sortedWheelElements_.begin(), [](auto& p) { return p.get(); });
+
+	std::sort(sortedWheelElements_.begin(), sortedWheelElements_.end(),
+		[](const WheelElement* a, const WheelElement* b) { return a->sortingPriority() < b->sortingPriority(); });
+	minElementSortingPriority_ = sortedWheelElements_.front()->sortingPriority();
 }
 
 WheelElement* Wheel::GetCenterHoveredElement()
@@ -385,19 +391,26 @@ WheelElement* Wheel::GetCenterHoveredElement()
 
 WheelElement* Wheel::GetFavorite(int favoriteId)
 {
-	for(const auto& e : wheelElements_)
-		if(e->sortingPriority() == minElementSortingPriority_ + uint(favoriteId))
-			return e.get();
+	if (favoriteId < 0 || favoriteId >= wheelElements_.size())
+		return nullptr;
 
-	return nullptr;
+	auto elem = wheelElements_[favoriteId].get();
+
+	return elem->isBound() ? elem : nullptr;
 }
 
-std::vector<WheelElement*> Wheel::GetActiveElements()
+std::vector<WheelElement*> Wheel::GetActiveElements(bool sorted)
 {
 	std::vector<WheelElement*> elems;
-	for(auto& we : wheelElements_)
-		if(we->isActive())
-			elems.push_back(we.get());
+	if (sorted) {
+		for (auto& we : sortedWheelElements_)
+			if (we->isActive())
+				elems.push_back(we);
+	} else {
+		for (auto& we : wheelElements_)
+			if (we->isActive())
+				elems.push_back(we.get());
+	}
 
 	return elems;
 }

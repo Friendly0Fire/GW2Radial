@@ -12,8 +12,8 @@ enum class MountType : uint
 	SPRINGER = IDR_MOUNT2,
 	SKIMMER = IDR_MOUNT3,
 	JACKAL = IDR_MOUNT4,
-	BEETLE = IDR_MOUNT5,
-	GRIFFON = IDR_MOUNT6,
+	GRIFFON = IDR_MOUNT5,
+	BEETLE = IDR_MOUNT6,
 	WARCLAW = IDR_MOUNT7,
     SKYSCALE = IDR_MOUNT8,
 
@@ -42,10 +42,10 @@ protected:
 			return "Skimmer";
 		case MountType::JACKAL:
 			return "Jackal";
-		case MountType::BEETLE:
-			return "Roller Beetle";
 		case MountType::GRIFFON:
 			return "Griffon";
+		case MountType::BEETLE:
+			return "Roller Beetle";
         case MountType::WARCLAW:
             return "Warclaw";
         case MountType::SKYSCALE:
@@ -66,10 +66,10 @@ protected:
 			return "skimmer";
 		case MountType::JACKAL:
 			return "jackal";
-		case MountType::BEETLE:
-			return "beetle";
 		case MountType::GRIFFON:
 			return "griffon";
+		case MountType::BEETLE:
+			return "beetle";
 		case MountType::WARCLAW:
 			return "warclaw";
         case MountType::SKYSCALE:
