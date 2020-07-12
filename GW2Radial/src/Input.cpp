@@ -366,8 +366,16 @@ std::tuple<WPARAM, LPARAM> Input::CreateMouseEventParams(const std::optional<Poi
 
 void Input::SendKeybind(const std::set<ScanCode> &scs, const std::optional<Point>& cursorPos)
 {
-	if (scs.empty())
+	if (scs.empty()) {
+		if (cursorPos.has_value()) {
+			DelayedInput i { };
+			i.t = TimeInMilliseconds() + 10;
+			std::tie(i.wParam, i.lParamValue) = CreateMouseEventParams(cursorPos);
+			i.msg = id_H_MOUSEMOVE_;
+			QueuedInputs.push_back(i);
+		}
 		return;
+	}
 
 	std::list<ScanCode> scsSorted(scs.begin(), scs.end());
 
@@ -382,16 +390,14 @@ void Input::SendKeybind(const std::set<ScanCode> &scs, const std::optional<Point
 		removeGeneric(ScanCode::CONTROL, ScanCode::CONTROLLEFT);
 		removeGeneric(ScanCode::ALT, ScanCode::ALTLEFT);
 		removeGeneric(ScanCode::META, ScanCode::METALEFT);
-	}
 
-	{
-		std::set<ScanCode> modifiers{ ScanCode::CONTROLLEFT, ScanCode::CONTROLRIGHT, ScanCode::SHIFTLEFT, ScanCode::SHIFTRIGHT, ScanCode::ALTLEFT, ScanCode::ALTRIGHT };
+		std::set<ScanCode> modifiers { ScanCode::CONTROLLEFT, ScanCode::CONTROLRIGHT, ScanCode::SHIFTLEFT, ScanCode::SHIFTRIGHT, ScanCode::ALTLEFT, ScanCode::ALTRIGHT };
 		scsSorted.sort([&modifiers](ScanCode& a, ScanCode& b) {
 			if (modifiers.count(a))
 				return true;
 			else
 				return a < b;
-			});
+		});
 	}
 
 	mstime currentTime = TimeInMilliseconds() + 10;
@@ -445,13 +451,17 @@ void Input::SendQueuedInputs()
 	if (currentTime < qi.t)
 		return;
 
-	if (qi.cursorPos)
+	if (qi.cursorPos) {
+		FormattedOutputDebugString(L"Moving cursor to (%d, %d)...\n", qi.cursorPos->x, qi.cursorPos->y);
 		SetCursorPos(qi.cursorPos->x, qi.cursorPos->y);
+	}
 
+	if (qi.msg != id_H_MOUSEMOVE_) {
 #ifdef _DEBUG
-	FormattedOutputDebugString(L"Sending keybind 0x%x...\n", qi.wParam);
+		FormattedOutputDebugString(L"Sending keybind 0x%x...\n", qi.wParam);
 #endif
-	PostMessage(Core::i()->gameWindow(), qi.msg, qi.wParam, qi.lParamValue);
+		PostMessage(Core::i()->gameWindow(), qi.msg, qi.wParam, qi.lParamValue);
+	}
 
 	QueuedInputs.pop_front();
 }
