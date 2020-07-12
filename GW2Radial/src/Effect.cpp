@@ -1,6 +1,12 @@
 #include "Effect.h"
 #include "Utility.h"
 #include <UnitQuad.h>
+#include <assert.h>
+
+#ifdef HOT_RELOAD_SHADERS
+#include <fstream>
+#include <d3dcompiler.h>
+#endif
 
 namespace GW2Radial {
 
@@ -21,16 +27,67 @@ Effect::~Effect()
 	COM_RELEASE(sb);
 }
 
+void Effect::CompileShader(std::wstring filename, bool isPixelShader, std::vector<byte>& data) {
+#ifdef HOT_RELOAD_SHADERS
+	filename = SHADERS_DIR + filename;
+	ID3DBlob* blob = nullptr;
+	while (blob == nullptr) {
+		blob = nullptr;
+		ID3DBlob* errors = nullptr;
+		auto hr = D3DCompileFromFile(filename.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", isPixelShader ? "ps_3_0" : "vs_3_0", D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &blob, &errors);
+
+		if (FAILED(hr)) {
+			FormattedOutputDebugString(L"Compilation failed: %x\n", hr);
+
+			if (errors) {
+				auto errorsText = (const char*)errors->GetBufferPointer();
+				auto errorsTextLength = errors->GetBufferSize();
+
+				OutputDebugStringA("Compilation errors:\n");
+				OutputDebugStringA(errorsText);
+
+				errors->Release();
+			}
+
+			if (blob)
+				blob->Release();
+			blob = nullptr;
+
+			// Break to fix errors
+			assert(false);
+		}
+	}
+
+	data.resize(blob->GetBufferSize() + 1);
+	std::copy((byte*)blob->GetBufferPointer(), (byte*)blob->GetBufferPointer() + blob->GetBufferSize(), data.data());
+	data.back() = 0;
+
+	blob->Release();
+#endif
+}
+
 int Effect::Load()
 {
-	void* code;	
+#ifdef HOT_RELOAD_SHADERS
+	std::vector<byte> data;
+
+	COM_RELEASE(ps);
+	CompileShader(L"Shader_ps.hlsl", true, data);
+	assert(SUCCEEDED(dev->CreatePixelShader((DWORD*)data.data(), &ps)));
+
+	COM_RELEASE(vs);
+	CompileShader(L"Shader_vs.hlsl", false, data);
+	assert(SUCCEEDED(dev->CreateVertexShader((DWORD*)data.data(), &vs)));
+#else
+	void* code;
 	size_t sz;
 
-	if (LoadFontResource(IDR_SHADER_PS, code, sz))
+	if (LoadResource(IDR_SHADER_PS, code, sz))
 		dev->CreatePixelShader((DWORD*)code, &ps);
 
-	if (LoadFontResource(IDR_SHADER_VS, code, sz))
+	if (LoadResource(IDR_SHADER_VS, code, sz))
 		dev->CreateVertexShader((DWORD*)code, &vs);
+#endif
 
 	return (ps && vs);
 }

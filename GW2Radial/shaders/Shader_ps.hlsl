@@ -19,7 +19,7 @@ sampler2D texElementImageSampler : register ( s2 );
 // Timer for miscellaneous, low importance animations
 float g_fAnimationTimer : register ( c0 );
 // [0..1] ratio of fade in when opening/dismissing the wheel
-float2 g_fWheelFadeIn : register ( c1 );
+float g_fWheelFadeIn : register ( c1 );
 // [0..1] ratio of the central gap's radius over the total wheel's radius
 float g_fCenterScale : register ( c2 );
 // Total number of elements, cannot be larger than MAX_ELEMENT_COUNT
@@ -57,8 +57,12 @@ float rescale(float value, float2 bounds)
 
 float GetWipeValue(in float2 uv, in float3 data, in float offset)
 {
-	float3 wipe = tex2D(texWipeMaskImageSampler, uv + float2(offset, 0)).rgb;
-	return wipe.g;
+	uv -= 0.5f;
+	uv /= 0.75f + pow(offset, 0.3f);
+	uv += (rotate(0.5f, data.z) * pow(offset, 0.1f) - 0.5f) * 0.25f;
+
+	float3 wipe = tex2D(texWipeMaskImageSampler, uv + 0.5f).rgb;
+	return lerp(wipe.b, 1.f, pow(offset, 0.6f));
 }
 
 float g_fHoverFadeIns_lookup(int idx)
@@ -68,9 +72,7 @@ float g_fHoverFadeIns_lookup(int idx)
 
 float4 BgImage_PS(PS_INPUT In)
 {
-	float2 wheelFadeIn = GetWipeValue(In.UV, g_vWipeMaskData, g_fWheelFadeIn.y);
-	wheelFadeIn *= smoothstep(0.f, 0.05f, g_fWheelFadeIn.x);
-	wheelFadeIn = lerp(wheelFadeIn, 1.f, rescale(g_fWheelFadeIn.y, float2(0.8f, 1.f)));
+	float wheelFadeIn = GetWipeValue(In.UV, g_vWipeMaskData, g_fWheelFadeIn.x);
 
 	// Multiply by -3 rather than 2 to mirror and scale down
 	float2 coords = -3 * (In.UV - 0.5f);
@@ -87,6 +89,8 @@ float4 BgImage_PS(PS_INPUT In)
         localMountId -= g_iElementCount;
 	float hoverFadeIn = g_fHoverFadeIns_lookup(localMountId);
     bool isLocalMountHovered = hoverFadeIn > 0.f;
+
+	hoverFadeIn = min(hoverFadeIn, g_fWheelFadeIn.x);
     
 	// Percentage along the mount's angular span: 0 is one edge, 1 is the other
 	// Must also compensate since the spans are centered, but we want to start at one edge
@@ -95,7 +99,8 @@ float4 BgImage_PS(PS_INPUT In)
 	// Generate a pseudorandom background
 	float2 smoothrandom = float2(snoise(3 * In.UV * cos(0.1f * g_fAnimationTimer) + g_fAnimationTimer * 0.37f), snoise(5 * In.UV * sin(0.13f * g_fAnimationTimer) + g_fAnimationTimer * 0.48f));
 	float4 color = tex2D(texBgImageSampler, In.UV);
-	color.rgb *= 1.5f * lerp(0.9f, 1.3f, saturate((4 + smoothrandom.x + smoothrandom.y) / 8));
+	color.a = 1.f;
+	color.rgb *= 2 * lerp(0.9f, 1.3f, saturate((4 + smoothrandom.x + smoothrandom.y) / 8));
 	// Compute luma value for desaturation effects
 	float luma = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
 
@@ -134,12 +139,12 @@ float4 BgImage_PS(PS_INPUT In)
 	// Also brighten when the dead zone is hovered and has an action assigned to it
 	if (g_fHoverFadeIns_lookup(g_iElementCount) > 0.f)
 	{
-		color.rgb *= lerp(lerp(0.5f, 1.f, g_fHoverFadeIns_lookup(g_iElementCount)), 1.f, center_mask);
+		color.rgb *= lerp(lerp(1.f, 1.5f, g_fHoverFadeIns_lookup(g_iElementCount)), 1.f, center_mask);
 		center_mask = lerp(center_mask, 1 - luma * 0.2f, g_fHoverFadeIns_lookup(g_iElementCount));
 	}
 
 	// Combine all masks, ensuring that the edge and center masks never increase brightness when combined and that the border mask never darkens the circle
-	return color * saturate(edge_mask * center_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * wheelFadeIn.xxxy;
+	return color * saturate(edge_mask * center_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * wheelFadeIn * float4(1, 1, 1, 1.2f);
 }
 
 float4 MountImage_PS(PS_INPUT In, float imageIsMask)

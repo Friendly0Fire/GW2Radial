@@ -277,7 +277,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				baseSpriteDimensions.z = scaleOption_.value() * 0.5f * screenSize.y * screenSize.z;
 				baseSpriteDimensions.w = scaleOption_.value() * 0.5f;
 				
-				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / float(animationTimeOption_.value()));
+				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / float(animationTimeOption_.value() * 0.5f));
 				
 				std::vector<float> hoveredFadeIns;
 				std::transform(activeElements.begin(), activeElements.end(), std::back_inserter(hoveredFadeIns),
@@ -302,14 +302,12 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 					break;
 				}
 
-				fVector2 vfWheelFadeIn = { fadeTimer, 2 * fadeTimer };
-
 				fx->SetTechnique(EFF_TC_BGIMAGE);
 				fx->SetTexture(EFF_TS_BG, backgroundTexture_);
 				fx->SetTexture(EFF_TS_WIPE_MASK, wipeMaskTexture_);
 				fx->SetValue(EFF_VS_WIPE_MASK_DATA, &wipeMaskData_, sizeof(wipeMaskData_));
 				fx->SetVector(EFF_VS_SPRITE_DIM, &baseSpriteDimensions);
-				fx->SetValue(EFF_VS_WHEEL_FADEIN, &vfWheelFadeIn, sizeof(fVector2));
+				fx->SetFloat(EFF_VS_WHEEL_FADEIN, fadeTimer);
 				fx->SetFloat(EFF_VS_ANIM_TIMER, fmod(currentTime / 1010.f, 55000.f));
 				fx->SetFloat(EFF_VS_CENTER_SCALE, centerScaleOption_.value());
 				fx->SetFloat(EFF_VS_ELEMENT_COUNT, float(activeElements.size()));

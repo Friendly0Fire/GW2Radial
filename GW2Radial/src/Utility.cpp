@@ -158,7 +158,7 @@ int GetShaderFuncLength(const DWORD *pFunction)
 	return l;
 }
 
-bool LoadFontResource(UINT resId, void*& dataPtr, size_t& dataSize)
+bool LoadResource(UINT resId, void*& dataPtr, size_t& dataSize)
 {
 	auto res = FindResource(Core::i()->dllModule(), MAKEINTRESOURCE(resId), RT_RCDATA);
 	if(res)
@@ -186,7 +186,7 @@ CreateTextureFromResource(
 	size_t dataSz;
 	   
 	
-	if (!LoadFontResource(uResource, dataPtr, dataSz))
+	if (!LoadResource(uResource, dataPtr, dataSz))
 		return 0;
 
 	IDirect3DBaseTexture9* ret = NULL;

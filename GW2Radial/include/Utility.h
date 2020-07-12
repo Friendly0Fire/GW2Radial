@@ -37,7 +37,7 @@ auto end(reversion_wrapper<T> w) { return std::rend(w.iterable); }
 template <typename T>
 reversion_wrapper<T> reverse(T&& iterable) { return { iterable }; }
 
-bool LoadFontResource(UINT resId, void*& dataPtr, size_t& dataSize);
+bool LoadResource(UINT resId, void*& dataPtr, size_t& dataSize);
 
 // ReSharper restore CppInconsistentNaming
 

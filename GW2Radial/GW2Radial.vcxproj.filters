@@ -26,6 +26,9 @@
     <Filter Include="Addon Loader">
       <UniqueIdentifier>{8e9a2f2e-98d0-4f9f-bd9e-71a04511ed25}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{d8088ee0-74e1-4aac-ac8f-91aecfedfc28}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui_demo.cpp">
@@ -144,86 +147,8 @@
     <ClInclude Include="xxhash\xxhash.h">
       <Filter>xxHash</Filter>
     </ClInclude>
-    <ClInclude Include="include\Main.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ImGuiExtensions.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\WheelElement.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Mount.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Keybind.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ConfigurationFile.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Direct3D9Hooks.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ConfigurationOption.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\UnitQuad.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Utility.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\Resource.h">
       <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Input.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Singleton.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Wheel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Core.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\SettingsMenu.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Novelty.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\UpdateCheck.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Tag.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ImGuiPopup.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Marker.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\MumbleLink.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\MiscTab.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\dds.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\DDSTextureLoader.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Effect.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Effect_dx12.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h">
       <Filter>Addon Loader</Filter>
@@ -231,8 +156,86 @@
     <ClInclude Include="loader-core\include\gw2al_api.h">
       <Filter>Addon Loader</Filter>
     </ClInclude>
+    <ClInclude Include="include\ConfigurationFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ConfigurationOption.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Direct3D9Hooks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DDSTextureLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Effect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Effect_dx12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ImGuiExtensions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ImGuiPopup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Keybind.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Marker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MiscTab.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Mount.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MumbleLink.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Novelty.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="include\ScanCode.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SettingsMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Singleton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tag.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UnitQuad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UpdateCheck.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Utility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Wheel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\WheelElement.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

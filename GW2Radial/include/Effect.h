@@ -58,6 +58,8 @@ public:
 	void SetVarToSlot(EffectVarSlot slot, float* mem, int sz);
 
 protected:
+	void CompileShader(std::wstring filename, bool isPixelShader, std::vector<byte>& data);
+
 	IDirect3DDevice9* dev;
 	IDirect3DPixelShader9* ps;
 	IDirect3DVertexShader9* vs;

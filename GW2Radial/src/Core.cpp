@@ -88,6 +88,7 @@ void Core::OnFocusLost()
 }
 
 void Core::OnFocus() {
+	mainEffect_->Load();
 	Keybind::ForceRefreshDisplayStrings();
 }
 
@@ -127,11 +128,11 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 
 	void *fontPtr, *fontBlackPtr, *fontItalicPtr;
 	size_t fontSize, fontBlackSize, fontItalicSize;
-	if(LoadFontResource(IDR_FONT, fontPtr, fontSize))
+	if(LoadResource(IDR_FONT, fontPtr, fontSize))
 		font_ = imio.Fonts->AddFontFromMemoryTTF(fontPtr, int(fontSize), 25.f, &fontCfg);
-	if(LoadFontResource(IDR_FONT_BLACK, fontBlackPtr, fontBlackSize))
+	if(LoadResource(IDR_FONT_BLACK, fontBlackPtr, fontBlackSize))
 		fontBlack_ = imio.Fonts->AddFontFromMemoryTTF(fontBlackPtr, int(fontBlackSize), 35.f, &fontCfg);
-	if(LoadFontResource(IDR_FONT_ITALIC, fontItalicPtr, fontItalicSize))
+	if(LoadResource(IDR_FONT_ITALIC, fontItalicPtr, fontItalicSize))
 		fontItalic_ = imio.Fonts->AddFontFromMemoryTTF(fontItalicPtr, int(fontItalicSize), 25.f, &fontCfg);
 
 	if(font_)
