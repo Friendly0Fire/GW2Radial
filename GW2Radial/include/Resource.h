@@ -3,7 +3,7 @@
 #define IDR_SHADER_PS		105
 
 #define IDR_BG			200
-#define IDR_INK			201
+#define IDR_WIPEMASK	201
 
 #define IDR_MOUNTS		211
 #define IDR_MOUNT1		211

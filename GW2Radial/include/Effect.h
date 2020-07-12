@@ -12,7 +12,7 @@ typedef enum EffectTechnique {
 } EffectTechnique;
 
 typedef enum EffectVarSlot {
-	EFF_VS_INK_SPOT = 0,
+	EFF_VS_WIPE_MASK_DATA = 0,
 	EFF_VS_ELEMENT_COUNT = 1,
 	EFF_VS_CENTER_SCALE,
 	EFF_VS_ANIM_TIMER,
@@ -27,7 +27,7 @@ typedef enum EffectVarSlot {
 
 typedef enum EffectTextureSlot {
 	EFF_TS_BG = 0,
-	EFF_TS_INK = 1,
+	EFF_TS_WIPE_MASK = 1,
 	EFF_TS_ELEMENTIMG
 } EffectTextureSlot;
 

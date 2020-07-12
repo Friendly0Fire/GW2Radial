@@ -100,8 +100,8 @@ void Effect::SceneBegin(void* drawBuf)
 	dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 	dev->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 
-	dev->SetSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_MIRROR);
-	dev->SetSamplerState(1, D3DSAMP_ADDRESSV, D3DTADDRESS_MIRROR);
+	dev->SetSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	dev->SetSamplerState(1, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 	dev->SetSamplerState(1, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 	dev->SetSamplerState(1, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 	dev->SetSamplerState(1, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
@@ -148,7 +148,7 @@ void Effect::End()
 void Effect::SetVarToSlot(EffectVarSlot slot, float* mem, int sz)
 {
 	static int tgtType[] = {
-		1,//EFF_VS_INK_SPOT,
+		1,//EFF_VS_WIPE_MASK_DATA,
 		1,//EFF_VS_ELEMENT_COUNT,
 		1,//EFF_VS_CENTER_SCALE,
 		1,//EFF_VS_ANIM_TIMER,
@@ -162,7 +162,7 @@ void Effect::SetVarToSlot(EffectVarSlot slot, float* mem, int sz)
 	};
 
 	static int tgtReg[] = {
-		4,//EFF_VS_INK_SPOT,
+		4,//EFF_VS_WIPE_MASK_DATA,
 		3,//EFF_VS_ELEMENT_COUNT,
 		2,//EFF_VS_CENTER_SCALE,
 		0,//EFF_VS_ANIM_TIMER,

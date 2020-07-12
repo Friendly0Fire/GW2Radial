@@ -13,7 +13,7 @@
 namespace GW2Radial
 {
 
-Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, IDirect3DDevice9 * dev)
+Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, IDirect3DDevice9 * dev)
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
 	  keybind_(nickname_, "Show on mouse"), centralKeybind_(nickname_ + "_cl", "Show in center"),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
@@ -31,7 +31,7 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true)
 {
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
-	inkTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), inkResourceId);
+	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);
 	
 	mouseMoveCallback_ = [this]() { return OnMouseMove(); };
 	Input::i()->AddMouseMoveCallback(&mouseMoveCallback_);
@@ -44,7 +44,7 @@ Wheel::Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::s
 Wheel::~Wheel()
 {
 	COM_RELEASE(backgroundTexture_);
-	COM_RELEASE(inkTexture_);
+	COM_RELEASE(wipeMaskTexture_);
 
 	if(auto i = Input::iNoInit(); i)
 	{
@@ -277,8 +277,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				baseSpriteDimensions.z = scaleOption_.value() * 0.5f * screenSize.y * screenSize.z;
 				baseSpriteDimensions.w = scaleOption_.value() * 0.5f;
 				
-				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / float(animationTimeOption_.value() * 0.45f));
-				const float inkTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / float(animationTimeOption_.value()));
+				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / float(animationTimeOption_.value()));
 				
 				std::vector<float> hoveredFadeIns;
 				std::transform(activeElements.begin(), activeElements.end(), std::back_inserter(hoveredFadeIns),
@@ -303,12 +302,12 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 					break;
 				}
 
-				fVector2 vfWheelFadeIn = { fadeTimer, inkTimer };
+				fVector2 vfWheelFadeIn = { fadeTimer, 2 * fadeTimer };
 
 				fx->SetTechnique(EFF_TC_BGIMAGE);
 				fx->SetTexture(EFF_TS_BG, backgroundTexture_);
-				fx->SetTexture(EFF_TS_INK, inkTexture_);
-				fx->SetValue(EFF_VS_INK_SPOT, &inkSpot_, sizeof(inkSpot_));
+				fx->SetTexture(EFF_TS_WIPE_MASK, wipeMaskTexture_);
+				fx->SetValue(EFF_VS_WIPE_MASK_DATA, &wipeMaskData_, sizeof(wipeMaskData_));
 				fx->SetVector(EFF_VS_SPRITE_DIM, &baseSpriteDimensions);
 				fx->SetValue(EFF_VS_WHEEL_FADEIN, &vfWheelFadeIn, sizeof(fVector2));
 				fx->SetFloat(EFF_VS_ANIM_TIMER, fmod(currentTime / 1010.f, 55000.f));
@@ -527,7 +526,7 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
 
 	currentTriggerTime_ = TimeInMilliseconds();
 	
-	inkSpot_ = { frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * float(M_PI) };
+	wipeMaskData_ = { frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * float(M_PI) };
 
 	UpdateHover();
 }

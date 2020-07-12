@@ -27,7 +27,7 @@ public:
 		DIRECTION = 3
 	};
 
-	Wheel(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
+	Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
 	virtual ~Wheel();
 
 	template<typename T>
@@ -98,12 +98,12 @@ protected:
 	WheelElement* previousUsed_ = nullptr;
 	
 	IDirect3DTexture9* backgroundTexture_ = nullptr;
-	IDirect3DTexture9* inkTexture_ = nullptr;
+	IDirect3DTexture9* wipeMaskTexture_ = nullptr;
 	
 	Input::MouseMoveCallback mouseMoveCallback_;
 	Input::InputChangeCallback inputChangeCallback_;
 
-	fVector3 inkSpot_;
+	fVector3 wipeMaskData_;
 
 	const char* GetTabName() const override { return displayName_.c_str(); }
 	void DrawMenu() override;

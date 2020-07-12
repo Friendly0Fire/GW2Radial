@@ -191,7 +191,6 @@
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
     <ClInclude Include="loader-core\include\gw2al_api.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />
     <ClInclude Include="xxhash\xxhash.h" />
   </ItemGroup>
@@ -232,16 +231,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
       <FileType>Document</FileType>
     </Text>
-    <FxCompile Include="shaders\Shader.fx">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Effect</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">2.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">2.0</ShaderModel>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="art\Finals\arrow_marker.dds" />
@@ -253,7 +242,6 @@
     <Image Include="art\Finals\Griffon.dds" />
     <Image Include="art\Finals\hand.dds" />
     <Image Include="art\Finals\heart_marker.dds" />
-    <Image Include="art\Finals\InkSplatter.dds" />
     <Image Include="art\Finals\Jackal.dds" />
     <Image Include="art\Finals\music.dds" />
     <Image Include="art\Finals\Raptor.dds" />
@@ -267,6 +255,7 @@
     <Image Include="art\Finals\travel.dds" />
     <Image Include="art\Finals\triangle_marker.dds" />
     <Image Include="art\Finals\Warclaw.dds" />
+    <Image Include="art\Finals\WipeMask.dds" />
     <Image Include="art\Finals\x_marker.dds" />
   </ItemGroup>
   <ItemGroup>

@@ -225,9 +225,6 @@
     <ClInclude Include="include\Effect_dx12.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
     <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h">
       <Filter>Addon Loader</Filter>
     </ClInclude>
@@ -261,9 +258,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\Shader.fx">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="shaders\Shader_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -302,9 +296,6 @@
       <Filter>Assets</Filter>
     </Image>
     <Image Include="art\Finals\heart_marker.dds">
-      <Filter>Assets</Filter>
-    </Image>
-    <Image Include="art\Finals\InkSplatter.dds">
       <Filter>Assets</Filter>
     </Image>
     <Image Include="art\Finals\Jackal.dds">
@@ -347,6 +338,9 @@
       <Filter>Assets</Filter>
     </Image>
     <Image Include="art\Finals\Skyscale.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="art\Finals\WipeMask.dds">
       <Filter>Assets</Filter>
     </Image>
   </ItemGroup>
