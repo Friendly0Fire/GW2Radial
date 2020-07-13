@@ -116,7 +116,7 @@ int Effect_dx12::Load()
 
 void Effect_dx12::SetTechnique(EffectTechnique val)
 {
-	SetFloat(EFF_VS_TECH_ID, val * 1.0f);
+	SetVariable(true, EFF_VS_TECH_ID, val);
 
 	DWORD* pso = *perTechPSO[val];
 
@@ -153,22 +153,6 @@ void Effect_dx12::SceneEnd()
 	//megai2: update dirty flags so we transfer to dx9 mode safely
 	dev->SetRenderState(D3DRS_D912PXY_DRAW, 0x701);
 	dev->SetRenderState(D3DRS_D912PXY_SETUP_PSO, 0);
-}
-
-void Effect_dx12::BeginPass(int whatever)
-{
-}
-
-void Effect_dx12::Begin(uint * pass, int whatever)
-{
-}
-
-void Effect_dx12::EndPass()
-{
-}
-
-void Effect_dx12::End()
-{
 }
 
 }

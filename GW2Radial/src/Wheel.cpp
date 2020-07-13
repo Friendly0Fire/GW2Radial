@@ -273,7 +273,6 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				}
 				resetCursorPositionToCenter_ = false;
 			}
-			uint passes = 0;
 
 			fx->SceneBegin(quad);
 
@@ -326,23 +325,17 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				fx->SetTechnique(EFF_TC_BGIMAGE);
 				fx->SetTexture(EFF_TS_BG, backgroundTexture_);
 				fx->SetTexture(EFF_TS_WIPE_MASK, wipeMaskTexture_);
-				fx->SetValue(EFF_VS_WIPE_MASK_DATA, &wipeMaskData_, sizeof(wipeMaskData_));
-				fx->SetVector(EFF_VS_SPRITE_DIM, &baseSpriteDimensions);
-				fx->SetFloat(EFF_VS_WHEEL_FADEIN, fadeTimer);
-				fx->SetFloat(EFF_VS_ANIM_TIMER, fmod(currentTime / 1010.f, 55000.f));
-				fx->SetFloat(EFF_VS_CENTER_SCALE, centerScaleOption_.value());
-				fx->SetFloat(EFF_VS_ELEMENT_COUNT, float(activeElements.size()));
-				fx->SetFloatArray(EFF_VS_HOVER_FADEINS, hoveredFadeIns.data(), UINT(hoveredFadeIns.size()));
-				fx->Begin(&passes, 0);
-				fx->BeginPass(0);
+				fx->SetVariable(true, EFF_VS_WIPE_MASK_DATA, wipeMaskData_);
+				fx->SetVariable(false, EFF_VS_SPRITE_DIM, baseSpriteDimensions);
+				fx->SetVariable(true, EFF_VS_WHEEL_FADEIN, fadeTimer);
+				fx->SetVariable(true, EFF_VS_ANIM_TIMER, fmod(currentTime / 1010.f, 55000.f));
+				fx->SetVariable(true, EFF_VS_CENTER_SCALE, centerScaleOption_.value());
+				fx->SetVariable(true, EFF_VS_ELEMENT_COUNT, activeElements.size());
+				fx->SetVariableArray(true, EFF_VS_HOVER_FADEINS, (const std::span<float>&)hoveredFadeIns);
+				
 				quad->Draw();
-				fx->EndPass();
-				fx->End();
 
-				fx->SetTechnique(alphaBlended_ ? EFF_TC_MOUNTIMAGE_ALPHABLEND : EFF_TC_MOUNTIMAGE);				
-				fx->SetVector(EFF_VS_SCREEN_SIZE, &screenSize);
-				fx->Begin(&passes, 0);
-				fx->BeginPass(0);
+				fx->SetTechnique(alphaBlended_ ? EFF_TC_MOUNTIMAGE_ALPHABLEND : EFF_TC_MOUNTIMAGE);
 
 				int n = 0;
 				for (auto it : activeElements)
@@ -351,8 +344,6 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 					n++;
 				}
 
-				fx->EndPass();
-				fx->End();
 			}
 
 			{
@@ -360,13 +351,9 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 				fx->SetTechnique(EFF_TC_CURSOR);				
 				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f };
-				fx->SetVector(EFF_VS_SPRITE_DIM, &spriteDimensions);
+				fx->SetVariable(false, EFF_VS_SPRITE_DIM, spriteDimensions);
 
-				fx->Begin(&passes, 0);
-				fx->BeginPass(0);
 				quad->Draw();
-				fx->EndPass();
-				fx->End();
 			}
 
 			fx->SceneEnd();

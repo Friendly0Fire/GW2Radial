@@ -38,7 +38,7 @@ public:
 	virtual bool isActive() const { return isBound() && isShownOption_.value(); }
 
 protected:
-	virtual std::array<float, 4> color() = 0;
+	virtual fVector4 color() = 0;
 	
 	ConfigurationOption<bool> isShownOption_;
 	ConfigurationOption<int> sortingPriorityOption_;

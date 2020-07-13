@@ -33,7 +33,7 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 		AddElement(std::make_unique<Mount>(i, dev));
 }
 
-std::array<float, 4> Mount::color()
+fVector4 Mount::color()
 {
 	auto mt = MountType(elementId_);
 	switch(mt)

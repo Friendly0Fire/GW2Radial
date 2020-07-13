@@ -15,7 +15,7 @@ void Wheel::Setup<Novelty>(IDirect3DDevice9* dev)
 		AddElement(std::make_unique<Novelty>(i, dev));
 }
 
-std::array<float, 4> Novelty::color()
+fVector4 Novelty::color()
 {
 	auto mt = NoveltyType(elementId_);
 	switch(mt)

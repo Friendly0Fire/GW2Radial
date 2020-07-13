@@ -24,11 +24,7 @@ WheelElement::~WheelElement()
 
 int WheelElement::DrawPriority(int extremumIndicator)
 {
-	ImVec4 col;
-	col.x = color()[0];
-	col.y = color()[1];
-	col.z = color()[2];
-	col.w = color()[3];
+	ImVec4 col = ConvertVector(color());
 	ImGui::PushStyleColor(ImGuiCol_Text, col);
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, ("##Displayed" + nickname_).c_str(), isShownOption_);
@@ -109,9 +105,9 @@ void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsC
 	spriteDimensions.w *= elementDiameter;
 	
 	fx->SetTexture(EFF_TS_ELEMENTIMG, appearance_);
-	fx->SetVector(EFF_VS_SPRITE_DIM, &spriteDimensions);
-	fx->SetFloat(EFF_VS_ELEMENT_ID, elementId() * 1.0f);
-	fx->SetValue(EFF_VS_ELEMENT_COLOR, color().data(), sizeof(fVector4));
+	fx->SetVariable(false, EFF_VS_SPRITE_DIM, spriteDimensions);
+	fx->SetVariable(true, EFF_VS_ELEMENT_ID, elementId());
+	fx->SetVariable(true, EFF_VS_ELEMENT_COLOR, color());
 	
 	quad->Draw();
 }

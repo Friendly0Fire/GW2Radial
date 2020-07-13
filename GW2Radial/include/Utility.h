@@ -1,6 +1,7 @@
 #pragma once
 #include <Main.h>
 #include <inttypes.h>
+#include <imgui.h>
 
 namespace GW2Radial
 {
@@ -80,5 +81,40 @@ inline void FormattedOutputDebugString(const wchar_t* fmt, ...) {
 }
 
 IDirect3DTexture9* CreateTextureFromResource(IDirect3DDevice9 * pDev, HMODULE hModule, unsigned uResource);
+
+template<typename T>
+auto ConvertToVector4(const T& val) {
+	const float IntOffset = 0.f;
+	// Fundamental types
+	if constexpr (std::is_floating_point_v<T>) {
+		return fVector4{ float(val), float(val), float(val), float(val) };
+	} else if constexpr (std::is_integral_v<T> || std::is_enum_v<T>) {
+		return fVector4{ float(val) + IntOffset, float(val) + IntOffset, float(val) + IntOffset, float(val) + IntOffset };
+	// Float vectors
+	} else if constexpr (std::is_same_v<T, fVector2>) {
+		return fVector4{ val.x, val.y, val.x, val.y };
+	} else if constexpr (std::is_same_v<T, fVector3>) {
+		return fVector4{ val.x, val.y, val.z, val.x };
+	} else if constexpr (std::is_same_v<T, fVector4>) {
+		return val;
+	// Int vectors
+	} else if constexpr (std::is_same_v<T, iVector2>) {
+		return fVector4{ float(val.x) + IntOffset, float(val.y) + IntOffset, float(val.x) + IntOffset, float(val.y) + IntOffset };
+	} else if constexpr (std::is_same_v<T, iVector3>) {
+		return fVector4{ float(val.x) + IntOffset, float(val.y) + IntOffset, float(val.z) + IntOffset, float(val.x) + IntOffset };
+	} else if constexpr (std::is_same_v<T, iVector4>) {
+		return fVector4{ float(val.x) + IntOffset, float(val.y) + IntOffset, float(val.z) + IntOffset, float(val.w) + IntOffset };
+	} else {
+		return fVector4{ };
+	}
+}
+
+inline ImVec4 ConvertVector(const fVector4& val) {
+	return { val.x, val.y, val.z, val.w };
+}
+
+inline ImVec2 ConvertVector(const fVector2& val) {
+	return { val.x, val.y };
+}
 
 }

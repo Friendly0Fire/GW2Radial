@@ -4,7 +4,7 @@
 namespace GW2Radial
 {
 
-std::map<MarkerType, std::tuple<std::string, std::string, std::array<float, 4>>> data
+std::map<MarkerType, std::tuple<std::string, std::string, fVector4>> data
 {
 	{ MarkerType::ARROW,    { "arrow",      "Arrow",        { 186 / 255.f, 237 / 255.f, 126 / 255.f, 1 } } },
 	{ MarkerType::CIRCLE,   { "circle",     "Circle",       { 107 / 255.f,  24 / 255.f, 181 / 255.f, 1 } } },
@@ -30,7 +30,7 @@ void Wheel::Setup<Marker>(IDirect3DDevice9* dev)
 		AddElement(std::make_unique<Marker>(type.first, dev));
 }
 
-std::array<float, 4> Marker::color()
+fVector4 Marker::color()
 {
 	return std::get<2>(data.at(static_cast<MarkerType>(elementId_)));
 }
@@ -47,7 +47,7 @@ void Wheel::Setup<ObjectMarker>(IDirect3DDevice9* dev)
 		AddElement(std::make_unique<ObjectMarker>(type.first, dev));
 }
 
-std::array<float, 4> ObjectMarker::color()
+fVector4 ObjectMarker::color()
 {
 	return std::get<2>(data.at(static_cast<MarkerType>(elementId_)));
 }

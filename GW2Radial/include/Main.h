@@ -77,22 +77,40 @@ typedef unsigned __int64 mstime;
 #endif
 
 typedef struct fVector4 {
-	FLOAT x;
-	FLOAT y;
-	FLOAT z;
-	FLOAT w;
+	float x;
+	float y;
+	float z;
+	float w;
 } fVector4;
 
 typedef struct fVector3 {
-	FLOAT x;
-	FLOAT y;
-	FLOAT z;	
+	float x;
+	float y;
+	float z;
 } fVector3;
 
 typedef struct fVector2 {
-	FLOAT x;
-	FLOAT y;
+	float x;
+	float y;
 } fVector2;
+
+typedef struct iVector4 {
+	int x;
+	int y;
+	int z;
+	int w;
+} iVector4;
+
+typedef struct iVector3 {
+	int x;
+	int y;
+	int z;
+} iVector3;
+
+typedef struct iVector2 {
+	int x;
+	int y;
+} iVector2;
 
 #include "d3d9.h"
 #include "Effect.h"

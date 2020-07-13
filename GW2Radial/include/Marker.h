@@ -23,7 +23,7 @@ class Marker : public WheelElement
 public:
 	Marker(MarkerType m, IDirect3DDevice9* dev);
 
-	std::array<float, 4> color() override;
+	fVector4 color() override;
 };
 
 class ObjectMarker : public WheelElement
@@ -31,7 +31,7 @@ class ObjectMarker : public WheelElement
 public:
 	ObjectMarker(MarkerType m, IDirect3DDevice9* dev);
 
-	std::array<float, 4> color() override;
+	fVector4 color() override;
 };
 
 }

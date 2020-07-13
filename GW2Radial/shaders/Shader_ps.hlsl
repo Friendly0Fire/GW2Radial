@@ -23,14 +23,14 @@ float g_fWheelFadeIn : register ( c1 );
 // [0..1] ratio of the central gap's radius over the total wheel's radius
 float g_fCenterScale : register ( c2 );
 // Total number of elements, cannot be larger than MAX_ELEMENT_COUNT
-float g_iElementCount : register ( c3 );
+int g_iElementCount : register ( c3 );
 float3 g_vWipeMaskData : register ( c4 );
 // Current element ID
-float g_iElementID : register (c5);
+int g_iElementID : register (c5);
 // Color of the current element
 float4 g_vElementColor : register (c6);
 
-float techId : register (c7);
+int techId : register (c7);
 
 // [0..1] ratio of fade in when hovering over a wheel element, for every element in the wheel
 // MAX_ELEMENT_COUNT-1 is hardcoded to be the center element
@@ -201,11 +201,11 @@ float4 Cursor_PS(PS_INPUT In)
 
 float4 main(PS_INPUT input) : COLOR
 {
-	if (techId > 3)
-		return BgImage_PS(input);		
-	else if (techId > 2)
-		return MountImage_PS(input, 0);		
-	else if (techId > 1)
+	if (techId == 4)
+		return BgImage_PS(input);
+	else if (techId == 3)
+		return MountImage_PS(input, 0);
+	else if (techId == 2)
 		return MountImage_PS(input, 1);
 	else
 		return Cursor_PS(input);

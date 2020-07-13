@@ -62,7 +62,7 @@ protected:
 		}
 	}
 
-	std::array<float, 4> color() override;
+	fVector4 color() override;
 };
 
 }
