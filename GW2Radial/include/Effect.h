@@ -3,6 +3,7 @@
 #include <Main.h>
 #include <Utility.h>
 #include <span>
+#include <map>
 
 namespace GW2Radial {
 
@@ -32,36 +33,41 @@ typedef enum EffectTextureSlot {
 	EFF_TS_ELEMENTIMG
 } EffectTextureSlot;
 
+enum class ShaderType {
+	VERTEX_SHADER = 0,
+	PIXEL_SHADER = 1
+};
+
 class Effect
 {
 public:
-	Effect(IDirect3DDevice9* iDev);
+	Effect(IDirect3DDevice9* dev);
 	~Effect();
 
 	virtual int Load();
 
-	virtual void SetTechnique(EffectTechnique val);
+	virtual void SetShaders(const std::string& entrypointPS, const std::string& entrypointVS);
 
 	template<typename T>
-	void SetVariable(bool ps, uint slot, const T& val) {
+	void SetVariable(ShaderType st, uint slot, const T& val) {
 		if constexpr (std::is_same_v<T, fVector4> || std::is_same_v<T, iVector4>) {
-			SetVariableInternal(ps, slot, val);
+			SetVariableInternal(st, slot, val);
 		} else {
 			auto v = ConvertToVector4(val);
-			SetVariableInternal(ps, slot, v);
+			SetVariableInternal(st, slot, v);
 		}
 	}
 	template<typename T>
-	void SetVariableArray(bool ps, uint slot, const std::span<T>& arr) {
+	void SetVariableArray(ShaderType st, uint slot, const std::span<T>& arr) {
 		if constexpr (std::is_same_v<T, fVector4> || std::is_same_v<T, iVector4>) {
-			SetVariableArrayInternal(ps, slot, arr);
+			SetVariableArrayInternal(st, slot, arr);
 		} else {
 			using vector_t = decltype(ConvertToVector4(arr[0]));
 			std::vector<vector_t> varr(arr.size());
 			std::transform(arr.begin(), arr.end(), varr.begin(), [](const auto& val) {
 				return ConvertToVector4(val);
 			});
-			SetVariableArrayInternal(ps, slot, (const std::span<vector_t>&)varr);
+			SetVariableArrayInternal(st, slot, (const std::span<vector_t>&)varr);
 		}
 	}
 
@@ -70,37 +76,36 @@ public:
 	virtual void SceneBegin();
 	virtual void SceneEnd();
 
-	void SetVarToSlot(EffectVarSlot slot, float* mem, int sz);
-
 protected:
 	template<typename T>
-	void SetVariableInternal(bool ps, uint slot, const T& val) {
+	void SetVariableInternal(ShaderType st, uint slot, const T& val) {
 		static_assert(std::is_same_v<T, fVector4>);
 
-		if (ps)
+		if (st == ShaderType::PIXEL_SHADER)
 			dev->SetPixelShaderConstantF(slot, reinterpret_cast<const float*>(&val), 1);
 		else
 			dev->SetVertexShaderConstantF(slot, reinterpret_cast<const float*>(&val), 1);
 	}
 
 	template<typename T>
-	void SetVariableArrayInternal(bool ps, uint slot, const std::span<T>& arr) {
+	void SetVariableArrayInternal(ShaderType st, uint slot, const std::span<T>& arr) {
 		static_assert(std::is_same_v<T, fVector4>);
 
-		if (ps)
+		if (st == ShaderType::PIXEL_SHADER)
 			dev->SetPixelShaderConstantF(slot, reinterpret_cast<const float*>(arr.data()), uint(arr.size()));
 		else
 			dev->SetVertexShaderConstantF(slot, reinterpret_cast<const float*>(arr.data()), uint(arr.size()));
 	}
 
-	void CompileShader(std::wstring filename, bool isPixelShader, std::vector<byte>& data);
+	void CompileShader(ShaderType st, const std::string& entrypoint, std::vector<byte>& data) const;
 
-	IDirect3DDevice9* dev;
-	IDirect3DPixelShader9* ps;
-	IDirect3DVertexShader9* vs;
+	IDirect3DDevice9* device_;
 
 private:	
-	IDirect3DStateBlock9* sb;
+	IDirect3DStateBlock9* stateBlock_;
+
+	std::map<std::string, IDirect3DPixelShader9*> pixelShaders_;
+	std::map<std::string, IDirect3DVertexShader9*> vertexShaders_;
 };
 
 }

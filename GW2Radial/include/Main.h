@@ -72,10 +72,6 @@ typedef unsigned __int64 mstime;
 #define M_PI 3.14159265359
 #endif
 
-#if defined(_DEBUG) && defined(SHADERS_DIR)
-#define HOT_RELOAD_SHADERS
-#endif
-
 typedef struct fVector4 {
 	float x;
 	float y;

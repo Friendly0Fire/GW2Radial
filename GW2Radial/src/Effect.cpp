@@ -3,6 +3,11 @@
 #include <UnitQuad.h>
 #include <assert.h>
 
+
+#if defined(_DEBUG) && defined(SHADERS_DIR)
+#define HOT_RELOAD_SHADERS
+#endif
+
 #ifdef HOT_RELOAD_SHADERS
 #include <fstream>
 #include <d3dcompiler.h>
@@ -10,37 +15,32 @@
 
 namespace GW2Radial {
 
-Effect::Effect(IDirect3DDevice9 * iDev)
+Effect::Effect(IDirect3DDevice9 * dev) : device_(dev)
 {
-	dev = iDev;
-
-	iDev->CreateStateBlock(D3DSBT_ALL, &sb);
-
-	ps = NULL;
-	vs = NULL;
+	device_->CreateStateBlock(D3DSBT_ALL, &stateBlock_);
 }
 
 Effect::~Effect()
 {
-	COM_RELEASE(ps);
-	COM_RELEASE(vs);
-	COM_RELEASE(sb);
+	for (auto& ps : pixelShaders_)
+		ps.second->Release();
+	for (auto& vs : vertexShaders_)
+		vs.second->Release();
 }
 
-void Effect::CompileShader(std::wstring filename, bool isPixelShader, std::vector<byte>& data) {
-#ifdef HOT_RELOAD_SHADERS
-	filename = SHADERS_DIR + filename;
+void Effect::CompileShader(const ShaderType st, const std::string& entrypoint, std::vector<byte>& data) const {
+	const std::wstring filename = st == ShaderType::PIXEL_SHADER ? SHADERS_DIR L"Shader_ps.hlsl" : SHADERS_DIR L"Shader_vs.hlsl";
+
 	ID3DBlob* blob = nullptr;
 	while (blob == nullptr) {
-		blob = nullptr;
 		ID3DBlob* errors = nullptr;
-		auto hr = D3DCompileFromFile(filename.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", isPixelShader ? "ps_3_0" : "vs_3_0", D3DCOMPILE_IEEE_STRICTNESS, 0, &blob, &errors);
+        const auto hr = D3DCompileFromFile(filename.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entrypoint.c_str(), st == ShaderType::PIXEL_SHADER ? "ps_3_0" : "vs_3_0", D3DCOMPILE_IEEE_STRICTNESS, 0, &blob, &errors);
 
 		if (FAILED(hr)) {
 			FormattedOutputDebugString(L"Compilation failed: %x\n", hr);
 
 			if (errors) {
-				auto errorsText = (const char*)errors->GetBufferPointer();
+                const char* errorsText = static_cast<const char*>(errors->GetBufferPointer());
 				auto errorsTextLength = errors->GetBufferSize();
 
 				OutputDebugStringA("Compilation errors:\n");
@@ -59,43 +59,41 @@ void Effect::CompileShader(std::wstring filename, bool isPixelShader, std::vecto
 	}
 
 	data.resize(blob->GetBufferSize() + 1);
-	std::copy((byte*)blob->GetBufferPointer(), (byte*)blob->GetBufferPointer() + blob->GetBufferSize(), data.data());
+	std::copy(static_cast<byte*>(blob->GetBufferPointer()), static_cast<byte*>(blob->GetBufferPointer()) + blob->GetBufferSize(), data.data());
 	data.back() = 0;
 
 	blob->Release();
-#endif
 }
 
-int Effect::Load()
+void Effect::SetShaders(const std::string& entrypointPS, const std::string& entrypointVS)
 {
-#ifdef HOT_RELOAD_SHADERS
-	std::vector<byte> data;
+	auto itPs = pixelShaders_.find(entrypointPS);
+	if (itPs == pixelShaders_.end())
+	{
+		IDirect3DPixelShader9* ps;
 
-	COM_RELEASE(ps);
-	CompileShader(L"Shader_ps.hlsl", true, data);
-	assert(SUCCEEDED(dev->CreatePixelShader((DWORD*)data.data(), &ps)));
+		std::vector<byte> data;
+		CompileShader(ShaderType::PIXEL_SHADER, entrypointPS, data);
+		if(SUCCEEDED(device_->CreatePixelShader(reinterpret_cast<DWORD*>(data.data()), &ps)))
+			itPs = pixelShaders_.insert({ entrypointPS, ps }).first;
+	}
 
-	COM_RELEASE(vs);
-	CompileShader(L"Shader_vs.hlsl", false, data);
-	assert(SUCCEEDED(dev->CreateVertexShader((DWORD*)data.data(), &vs)));
-#else
-	void* code;
-	size_t sz;
+	auto itVs = vertexShaders_.find(entrypointPS);
+	if (itVs == vertexShaders_.end()) {
+		IDirect3DVertexShader9* vs;
 
-	if (LoadResource(IDR_SHADER_PS, code, sz))
-		dev->CreatePixelShader((DWORD*)code, &ps);
+		std::vector<byte> data;
+		CompileShader(ShaderType::VERTEX_SHADER, entrypointVS, data);
+		if (SUCCEEDED(device_->CreateVertexShader(reinterpret_cast<DWORD*>(data.data()), &vs)))
+			itVs = vertexShaders_.insert({ entrypointVS, vs }).first;
+	}
 
-	if (LoadResource(IDR_SHADER_VS, code, sz))
-		dev->CreateVertexShader((DWORD*)code, &vs);
-#endif
+	assert(itPs != pixelShaders_.end() && itVs != vertexShaders_.end());
 
-	return (ps && vs);
-}
+	device_->SetPixelShader(itPs->second);
+	device_->SetVertexShader(itVs->second);
 
-void Effect::SetTechnique(EffectTechnique val)
-{
-	SetVariable(true, EFF_VS_TECH_ID, val);
-
+#ifdef FIXME
 	switch (val)
 	{
 		case EFF_TC_BGIMAGE:
@@ -112,49 +110,47 @@ void Effect::SetTechnique(EffectTechnique val)
 			dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 			break;
 	}
+#endif
 }
 
 void Effect::SetTexture(EffectTextureSlot slot, IDirect3DTexture9 * val)
 {
-	dev->SetTexture(slot, val);
+	device_->SetTexture(slot, val);
 }
 
 void Effect::SceneBegin()
 {
-	sb->Capture();
+	stateBlock_->Capture();
 
-	dev->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	device_->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+	device_->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 
-	dev->SetSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(1, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(1, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(1, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(1, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	device_->SetSamplerState(1, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+	device_->SetSamplerState(1, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(1, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(1, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 
-	dev->SetSamplerState(2, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(2, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(2, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	device_->SetSamplerState(2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+	device_->SetSamplerState(2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(2, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 
-	dev->SetRenderState(D3DRS_ZENABLE, 0);
-	dev->SetRenderState(D3DRS_ZWRITEENABLE, 0);
-	dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-	dev->SetRenderState(D3DRS_ALPHATESTENABLE, 0);
-	dev->SetRenderState(D3DRS_ALPHABLENDENABLE, 1);
-	dev->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-
-	dev->SetPixelShader(ps);
-	dev->SetVertexShader(vs);
+	device_->SetRenderState(D3DRS_ZENABLE, 0);
+	device_->SetRenderState(D3DRS_ZWRITEENABLE, 0);
+	device_->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+	device_->SetRenderState(D3DRS_ALPHATESTENABLE, 0);
+	device_->SetRenderState(D3DRS_ALPHABLENDENABLE, 1);
+	device_->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
 }
 
 void Effect::SceneEnd()
 {
-	sb->Apply();
+	stateBlock_->Apply();
 }
 
 }
