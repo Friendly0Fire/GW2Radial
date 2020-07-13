@@ -274,7 +274,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				resetCursorPositionToCenter_ = false;
 			}
 
-			fx->SceneBegin(quad);
+			fx->SceneBegin();
+			quad->Bind();
 
 			// Setup viewport
 			D3DVIEWPORT9 vp;
@@ -285,8 +286,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			vp.MaxZ = 1.0f;
 			dev->SetViewport(&vp);
 
-			fVector4 screenSize = { float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight };			
-			
+			fVector4 screenSize = { float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight };
 
 			auto activeElements = GetActiveElements();
 			if (!activeElements.empty())

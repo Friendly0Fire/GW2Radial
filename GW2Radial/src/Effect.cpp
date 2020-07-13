@@ -119,12 +119,9 @@ void Effect::SetTexture(EffectTextureSlot slot, IDirect3DTexture9 * val)
 	dev->SetTexture(slot, val);
 }
 
-void Effect::SceneBegin(void* drawBuf)
+void Effect::SceneBegin()
 {
 	sb->Capture();
-
-	//megai2: FIXME set UnitQuad* type to method parameter and make it compile
-	((UnitQuad*)drawBuf)->Bind();
 
 	dev->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
 	dev->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);

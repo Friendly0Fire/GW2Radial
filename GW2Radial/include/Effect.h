@@ -67,7 +67,7 @@ public:
 
 	virtual void SetTexture(EffectTextureSlot slot, IDirect3DTexture9* val);
 
-	virtual void SceneBegin(void* drawBuf);
+	virtual void SceneBegin();
 	virtual void SceneEnd();
 
 	void SetVarToSlot(EffectVarSlot slot, float* mem, int sz);

@@ -15,7 +15,7 @@ public:
 
 	void SetTexture(EffectTextureSlot slot, IDirect3DTexture9* val);
 
-	void SceneBegin(void* drawBuf);
+	void SceneBegin();
 	void SceneEnd();
 
 private:

@@ -132,7 +132,7 @@ void Effect_dx12::SetTexture(EffectTextureSlot slot, IDirect3DTexture9 * val)
 	dev->GetRenderState(D3DRS_D912PXY_GPU_WRITE, &tsTexId[0]);	
 }
 
-void Effect_dx12::SceneBegin(void * drawBuf)
+void Effect_dx12::SceneBegin()
 {
 	//megai2: mark draw start so we can see that app is issuing some not default dx9 api approach
 	dev->SetRenderState(D3DRS_D912PXY_DRAW, 0);
@@ -143,9 +143,6 @@ void Effect_dx12::SceneBegin(void * drawBuf)
 
 	//prepare to write texture id for draws
 	dev->SetRenderState(D3DRS_D912PXY_GPU_WRITE, D912PXY_ENCODE_GPU_WRITE_DSC(1, D912PXY_GPU_WRITE_OFFSET_TEXBIND));
-
-	//megai2: FIXME set UnitQuad* type to method parameter and make it compile
-	((UnitQuad*)drawBuf)->Bind();
 }
 
 void Effect_dx12::SceneEnd()
