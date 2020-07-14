@@ -24,7 +24,8 @@ struct ShaderState
 class Effect
 {
 public:
-	Effect(IDirect3DDevice9* dev);
+    Effect(IDirect3DDevice9* dev);
+    virtual ~Effect() = default;
 
 	virtual void SetShader(ShaderType st, const std::wstring& filename, const std::string& entrypoint = "main");
 
@@ -88,6 +89,9 @@ protected:
 
 	void SetDefaultSamplerStates(uint slot) const;
 	void SetDefaultRenderStates() const;
+	
+	virtual void ApplyPixelShader(IDirect3DPixelShader9* ps);
+	virtual void ApplyVertexShader(IDirect3DVertexShader9* vs);
 
 	IDirect3DDevice9* device_;
 
@@ -95,9 +99,6 @@ protected:
 
 	std::map<std::string, ComPtr<IDirect3DPixelShader9>> pixelShaders_;
 	std::map<std::string, ComPtr<IDirect3DVertexShader9>> vertexShaders_;
-	
-	IDirect3DPixelShader9* currentPS_ = nullptr;
-	IDirect3DVertexShader9* currentVS_ = nullptr;
 
 	ZipArchive::Ptr shadersZip_;
 	std::unique_ptr<ID3DInclude> shaderIncludeManager_;

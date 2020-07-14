@@ -142,6 +142,15 @@ Effect::Effect(IDirect3DDevice9 * dev) : device_(dev)
 		return vs;
 	}
 }
+	
+void Effect::ApplyPixelShader(IDirect3DPixelShader9* ps)
+{
+	device_->SetPixelShader(ps);
+}
+void Effect::ApplyVertexShader(IDirect3DVertexShader9* vs)
+{
+	device_->SetVertexShader(vs);
+}
 
 void Effect::SetShader(const ShaderType st, const std::wstring& filename, const std::string& entrypoint)
 {
@@ -157,8 +166,7 @@ void Effect::SetShader(const ShaderType st, const std::wstring& filename, const 
 	    }
 		
 	    assert(itPs != pixelShaders_.end());
-		currentPS_ = itPs->second.Get();
-	    device_->SetPixelShader(itPs->second.Get());
+	    ApplyPixelShader(itPs->second.Get());
 	} else {
 	    auto itVs = vertexShaders_.find(key);
 	    if (itVs == vertexShaders_.end())
@@ -168,8 +176,7 @@ void Effect::SetShader(const ShaderType st, const std::wstring& filename, const 
 	    }
 		
 	    assert(itVs != vertexShaders_.end());
-		currentVS_ = itVs->second.Get();
-	    device_->SetVertexShader(itVs->second.Get());
+	    ApplyVertexShader(itVs->second.Get());
 	}
 }
 
@@ -230,9 +237,6 @@ void Effect::End()
 void Effect::Clear()
 {
 #ifdef HOT_RELOAD_SHADERS
-    currentPS_ = nullptr;
-	currentVS_ = nullptr;
-
 	pixelShaders_.clear();
 	vertexShaders_.clear();
 #endif

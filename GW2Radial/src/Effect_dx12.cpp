@@ -25,6 +25,16 @@
 
 namespace GW2Radial {
 	
+	
+void Effect_dx12::ApplyPixelShader(IDirect3DPixelShader9* ps)
+{
+	currentPS_ = ps;
+}
+void Effect_dx12::ApplyVertexShader(IDirect3DVertexShader9* vs)
+{
+	currentVS_ = vs;
+}
+	
 void Effect_dx12::SetRenderStates(std::initializer_list<ShaderState> states)
 {
 	renderStates_ = states;
@@ -82,9 +92,12 @@ void Effect_dx12::Begin()
         texture = { 0 };
 
 	currentVertexDecl_ = nullptr;
+    currentPS_ = nullptr;
+	currentVS_ = nullptr;
 
 	maxSamplerSlot_ = 0;
 	maxTextureSlot_ = 0;
+
 }
 
 void Effect_dx12::ApplyStates()
@@ -103,6 +116,9 @@ void Effect_dx12::ApplyStates()
 	auto it = cachedPSOs_.find(psoHash);
 	if(it == cachedPSOs_.end())
 	{
+		device_->SetVertexShader(currentVS_);
+		device_->SetPixelShader(currentPS_);
+
 		SetDefaultRenderStates();
 
 	    for(const auto& s : renderStates_)
@@ -143,6 +159,8 @@ void Effect_dx12::Clear()
         texture = { 0 };
 
 	currentVertexDecl_ = nullptr;
+    currentPS_ = nullptr;
+	currentVS_ = nullptr;
 #endif
 }
 

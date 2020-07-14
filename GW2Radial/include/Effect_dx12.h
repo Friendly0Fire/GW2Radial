@@ -26,7 +26,12 @@ public:
 	void Clear() override;
 
 private:
+	void ApplyPixelShader(IDirect3DPixelShader9* ps) override;
+	void ApplyVertexShader(IDirect3DVertexShader9* vs) override;
+
 	IDirect3DVertexDeclaration9* currentVertexDecl_ = nullptr;
+	IDirect3DPixelShader9* currentPS_ = nullptr;
+	IDirect3DVertexShader9* currentVS_ = nullptr;
 
 	std::map<uint, PSOTag> cachedPSOs_;
 	std::map<uint, SamplerId> cachedSamplers_;
