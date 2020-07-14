@@ -19,3 +19,6 @@
 [submodule "GW2Radial/d3d9_wrapper"]
 	path = GW2Radial/d3d9_wrapper
 	url = https://github.com/gw2-addon-loader/d3d9_wrapper.git
+[submodule "GW2Radial/ziplib"]
+	path = GW2Radial/ziplib
+	url = https://bitbucket.org/wbenny/ziplib.git
