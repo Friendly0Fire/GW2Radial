@@ -188,7 +188,7 @@ void Effect::SetRenderStates(std::initializer_list<ShaderState> states)
 	for(const auto& s : states)
 		device_->SetRenderState(static_cast<D3DRENDERSTATETYPE>(s.stateId), s.stateValue);
 }
-	
+
 void Effect::SetSamplerStates(uint slot, std::initializer_list<ShaderState> states)
 {
 	SetDefaultSamplerStates(slot);

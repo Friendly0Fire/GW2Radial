@@ -333,8 +333,6 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				    using namespace ShaderRegister::ShaderPS;
 				    using namespace ShaderRegister::ShaderVS;
 					
-				    fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_);
-				    fx->SetTexture(sampler2D_texWipeMaskImageSampler, wipeMaskTexture_);
 				    fx->SetVariable(ShaderType::PIXEL_SHADER, float3_fWipeMaskData, wipeMaskData_);
 				    fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, baseSpriteDimensions);
 				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, fadeTimer);
@@ -345,6 +343,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 					
 					fx->SetSamplerStates(sampler2D_texMainSampler, {});
 					fx->SetSamplerStates(sampler2D_texWipeMaskImageSampler, {});
+				    fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_);
+				    fx->SetTexture(sampler2D_texWipeMaskImageSampler, wipeMaskTexture_);
 				}
 
 				fx->ApplyStates();

@@ -12,7 +12,7 @@ struct TextureId { DWORD id = 0; };
 class Effect_dx12 : public Effect
 {
 public:
-	using Effect::Effect;
+    Effect_dx12(IDirect3DDevice9* dev);
 
 	void SetTexture(uint slot, IDirect3DTexture9* val) override;
 	void SetRenderStates(std::initializer_list<ShaderState> states) override;

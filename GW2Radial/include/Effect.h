@@ -24,6 +24,7 @@ struct ShaderState
 class Effect
 {
 public:
+	Effect() = default;
     Effect(IDirect3DDevice9* dev);
     virtual ~Effect() = default;
 
@@ -93,7 +94,7 @@ protected:
 	virtual void ApplyPixelShader(IDirect3DPixelShader9* ps);
 	virtual void ApplyVertexShader(IDirect3DVertexShader9* vs);
 
-	IDirect3DDevice9* device_;
+	IDirect3DDevice9* device_ = nullptr;
 
 	IDirect3DStateBlock9* stateBlock_;
 
