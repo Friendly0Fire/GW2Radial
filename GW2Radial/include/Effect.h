@@ -86,7 +86,8 @@ protected:
 	[[nodiscard]] std::string LoadShaderFile(const std::wstring& filename);
 	[[nodiscard]] std::variant<IDirect3DPixelShader9*, IDirect3DVertexShader9*> CompileShader(const std::wstring& filename, ShaderType st, const std::string& entrypoint);
 
-	void SetDefaults();
+	void SetDefaultSamplerStates(uint slot) const;
+	void SetDefaultRenderStates() const;
 
 	IDirect3DDevice9* device_;
 

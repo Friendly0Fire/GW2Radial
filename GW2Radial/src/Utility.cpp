@@ -205,4 +205,16 @@ std::string ReadFile(std::istream& is)
 
     return str;
 }
+
+uint RoundUpToMultipleOf(uint numToRound, uint multiple)
+{
+    if (multiple == 0)
+        return numToRound;
+
+    uint remainder = numToRound % multiple;
+    if (remainder == 0)
+        return numToRound;
+
+    return numToRound + multiple - remainder;
+}
 }

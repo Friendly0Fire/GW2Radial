@@ -31,10 +31,12 @@ private:
 	std::map<uint, PSOTag> cachedPSOs_;
 	std::map<uint, SamplerId> cachedSamplers_;
 	
-	SamplerId samplers_[4];
-	TextureId textures_[4];
+	std::vector<SamplerId> samplers_;
+	std::vector<TextureId> textures_;
+	uint maxSamplerSlot_ = 0;
+	uint maxTextureSlot_ = 0;
 
-	uint rsHash_;
+	std::vector<ShaderState> renderStates_;
 };
 
 };

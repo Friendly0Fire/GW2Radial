@@ -5,10 +5,6 @@
 #include <UnitQuad.h>
 #include "Utility.h"
 
-#if defined(_DEBUG) && defined(SHADERS_DIR)
-#define HOT_RELOAD_SHADERS
-#endif
-
 #ifdef HOT_RELOAD_SHADERS
 #include <d3dcompiler.h>
 #endif
@@ -180,12 +176,16 @@ void Effect::SetShader(const ShaderType st, const std::wstring& filename, const 
 	
 void Effect::SetRenderStates(std::initializer_list<ShaderState> states)
 {
+	SetDefaultRenderStates();
+
 	for(const auto& s : states)
 		device_->SetRenderState(static_cast<D3DRENDERSTATETYPE>(s.stateId), s.stateValue);
 }
 	
 void Effect::SetSamplerStates(uint slot, std::initializer_list<ShaderState> states)
 {
+	SetDefaultSamplerStates(slot);
+
 	for(const auto& s : states)
 		device_->SetSamplerState(slot, static_cast<D3DSAMPLERSTATETYPE>(s.stateId), s.stateValue);
 }
@@ -199,23 +199,20 @@ void Effect::Begin()
 {
 	// Save current device state to reapply at the end
 	stateBlock_->Capture();
-
-	
 }
 
-void Effect::SetDefaults()
+void Effect::SetDefaultSamplerStates(uint slot) const
 {
-    // Reset samplers to sane defaults
-	for(uint i = 0; i < 3; i++)
-	{
-	    device_->SetSamplerState(i, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	    device_->SetSamplerState(i, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-	    device_->SetSamplerState(i, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	    device_->SetSamplerState(i, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	    device_->SetSamplerState(i, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-	}
+	device_->SetSamplerState(slot, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	device_->SetSamplerState(slot, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+	device_->SetSamplerState(slot, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(slot, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	device_->SetSamplerState(slot, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+}
 
-	// Reset render states to most common overlay-style defaults
+void Effect::SetDefaultRenderStates() const
+{
+    // Reset render states to most common overlay-style defaults
 	device_->SetRenderState(D3DRS_ZENABLE, false);
 	device_->SetRenderState(D3DRS_ZWRITEENABLE, false);
 	device_->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);

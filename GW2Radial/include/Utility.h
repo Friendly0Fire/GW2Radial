@@ -119,4 +119,6 @@ inline ImVec2 ConvertVector(const fVector2& val) {
 }
 
 std::string ReadFile(std::istream& is);
+
+uint RoundUpToMultipleOf(uint numToRound, uint multiple);
 }
