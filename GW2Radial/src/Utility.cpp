@@ -4,6 +4,7 @@
 #include <Core.h>
 #include <winuser.h>
 #include "DDSTextureLoader.h"
+#include <iostream>
 
 namespace GW2Radial
 {
@@ -158,22 +159,22 @@ int GetShaderFuncLength(const DWORD *pFunction)
 	return l;
 }
 
-bool LoadResource(UINT resId, void*& dataPtr, size_t& dataSize)
+std::span<byte> LoadResource(UINT resId)
 {
-	auto res = FindResource(Core::i()->dllModule(), MAKEINTRESOURCE(resId), RT_RCDATA);
+    const auto res = FindResource(Core::i()->dllModule(), MAKEINTRESOURCE(resId), RT_RCDATA);
 	if(res)
 	{
-		auto handle = LoadResource(Core::i()->dllModule(), res);
+        const auto handle = LoadResource(Core::i()->dllModule(), res);
 		if(handle)
 		{
-			dataSize = SizeofResource(Core::i()->dllModule(), res);
-			dataPtr = LockResource(handle);
+			size_t sz = SizeofResource(Core::i()->dllModule(), res);
+			void* ptr = LockResource(handle);
 
-			return true;
+			return std::span<byte>((byte*)ptr, sz);
 		}
 	}
 
-	return false;
+	return std::span<byte>();
 }
 
 IDirect3DTexture9 *
@@ -182,18 +183,26 @@ CreateTextureFromResource(
 	HMODULE hModule,
 	unsigned uResource)
 {
-	void* dataPtr;
-	size_t dataSz;
-	   
-	
-	if (!LoadResource(uResource, dataPtr, dataSz))
-		return 0;
+    const auto resourceSpan = LoadResource(uResource);
+	if(resourceSpan.data() == nullptr)
+		return nullptr;
 
-	IDirect3DBaseTexture9* ret = NULL;
+	IDirect3DBaseTexture9* ret = nullptr;
 
-	CreateDDSTextureFromMemory(pDev, dataPtr, dataSz, &ret);
+	CreateDDSTextureFromMemory(pDev, resourceSpan.data(), resourceSpan.size_bytes(), &ret);
 
-	return (IDirect3DTexture9*)ret;
+	return static_cast<IDirect3DTexture9*>(ret);
 }
 
+std::string ReadFile(std::istream& is)
+{
+    is.seekg(0, std::istream::end);
+    const size_t sz = is.tellg();
+    is.seekg(0, std::istream::beg);
+
+    std::string str(sz + 1, '\0');
+    is.read(str.data(), str.size());
+
+    return str;
+}
 }

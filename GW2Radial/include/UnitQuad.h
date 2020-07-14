@@ -28,7 +28,7 @@ public:
 
 	static const D3DVERTEXELEMENT9* def();
 
-	void Bind(uint stream = 0, uint offset = 0) const;
+	void Bind(Effect* fx, uint stream = 0, uint offset = 0) const;
 	void Draw(uint triCount = 2, uint startVert = 0) const;
 
 private:

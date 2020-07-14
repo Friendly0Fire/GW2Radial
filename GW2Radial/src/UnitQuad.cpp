@@ -75,7 +75,7 @@ const D3DVERTEXELEMENT9 * UnitQuad::def()
 	return ScreenVertexDefinition;
 }
 
-void UnitQuad::Bind(uint stream, uint offset) const
+void UnitQuad::Bind(Effect* fx, uint stream, uint offset) const
 {
 	if (!device_ || !vertexDeclaration_ || !buffer_)
 		return;
@@ -84,6 +84,8 @@ void UnitQuad::Bind(uint stream, uint offset) const
 
 	device_->SetStreamSource(stream, buffer_, offset, stride());
 	device_->SetIndices(ind_buffer_);
+
+	fx->OnBind(vertexDeclaration_);
 }
 
 void UnitQuad::Draw(uint triCount, uint startVert) const

@@ -1,52 +1,32 @@
 #pragma once
 
+#include <d3dcompiler.h>
 #include <Main.h>
 #include <Utility.h>
 #include <span>
 #include <map>
+#include <variant>
+#include <ZipArchive.h>
 
 namespace GW2Radial {
-
-typedef enum EffectTechnique {
-	EFF_TC_BGIMAGE = 4,
-	EFF_TC_MOUNTIMAGE_ALPHABLEND = 3,
-	EFF_TC_MOUNTIMAGE = 2,
-	EFF_TC_CURSOR = 1
-} EffectTechnique;
-
-typedef enum EffectVarSlot {
-	EFF_VS_SPRITE_DIM = 0,
-	EFF_VS_ANIM_TIMER = 0,
-	EFF_VS_WHEEL_FADEIN = 1,
-	EFF_VS_CENTER_SCALE = 2,
-	EFF_VS_ELEMENT_COUNT = 3,
-	EFF_VS_WIPE_MASK_DATA = 4,
-	EFF_VS_ELEMENT_ID = 5,
-	EFF_VS_ELEMENT_COLOR = 6,
-	EFF_VS_TECH_ID = 7,
-	EFF_VS_HOVER_FADEINS = 8,
-} EffectVarSlot;
-
-typedef enum EffectTextureSlot {
-	EFF_TS_BG = 0,
-	EFF_TS_WIPE_MASK = 1,
-	EFF_TS_ELEMENTIMG
-} EffectTextureSlot;
 
 enum class ShaderType {
 	VERTEX_SHADER = 0,
 	PIXEL_SHADER = 1
 };
 
+struct ShaderState
+{
+    uint stateId;
+	uint stateValue;
+};
+
 class Effect
 {
 public:
 	Effect(IDirect3DDevice9* dev);
-	~Effect();
 
-	virtual int Load();
-
-	virtual void SetShaders(const std::string& entrypointPS, const std::string& entrypointVS);
+	virtual void SetShader(ShaderType st, const std::wstring& filename, const std::string& entrypoint = "main");
 
 	template<typename T>
 	void SetVariable(ShaderType st, uint slot, const T& val) {
@@ -67,14 +47,20 @@ public:
 			std::transform(arr.begin(), arr.end(), varr.begin(), [](const auto& val) {
 				return ConvertToVector4(val);
 			});
-			SetVariableArrayInternal(st, slot, (const std::span<vector_t>&)varr);
+			SetVariableArrayInternal(st, slot, static_cast<const std::span<vector_t>&>(varr));
 		}
 	}
 
-	virtual void SetTexture(EffectTextureSlot slot, IDirect3DTexture9* val);
+	virtual void SetTexture(uint slot, IDirect3DTexture9* val);
+	virtual void SetRenderStates(std::initializer_list<ShaderState> states);
+	virtual void SetSamplerStates(uint slot, std::initializer_list<ShaderState> states);
+	virtual void ApplyStates() {}
 
-	virtual void SceneBegin();
-	virtual void SceneEnd();
+	virtual void Begin();
+	virtual void OnBind(IDirect3DVertexDeclaration9* vd) {}
+	virtual void End();
+
+	virtual void Clear();
 
 protected:
 	template<typename T>
@@ -82,9 +68,9 @@ protected:
 		static_assert(std::is_same_v<T, fVector4>);
 
 		if (st == ShaderType::PIXEL_SHADER)
-			dev->SetPixelShaderConstantF(slot, reinterpret_cast<const float*>(&val), 1);
+			device_->SetPixelShaderConstantF(slot, reinterpret_cast<const float*>(&val), 1);
 		else
-			dev->SetVertexShaderConstantF(slot, reinterpret_cast<const float*>(&val), 1);
+			device_->SetVertexShaderConstantF(slot, reinterpret_cast<const float*>(&val), 1);
 	}
 
 	template<typename T>
@@ -92,20 +78,32 @@ protected:
 		static_assert(std::is_same_v<T, fVector4>);
 
 		if (st == ShaderType::PIXEL_SHADER)
-			dev->SetPixelShaderConstantF(slot, reinterpret_cast<const float*>(arr.data()), uint(arr.size()));
+			device_->SetPixelShaderConstantF(slot, reinterpret_cast<const float*>(arr.data()), uint(arr.size()));
 		else
-			dev->SetVertexShaderConstantF(slot, reinterpret_cast<const float*>(arr.data()), uint(arr.size()));
+			device_->SetVertexShaderConstantF(slot, reinterpret_cast<const float*>(arr.data()), uint(arr.size()));
 	}
 
-	void CompileShader(ShaderType st, const std::string& entrypoint, std::vector<byte>& data) const;
+	[[nodiscard]] std::string LoadShaderFile(const std::wstring& filename);
+	[[nodiscard]] std::variant<IDirect3DPixelShader9*, IDirect3DVertexShader9*> CompileShader(const std::wstring& filename, ShaderType st, const std::string& entrypoint);
+
+	void SetDefaults();
 
 	IDirect3DDevice9* device_;
 
-private:	
 	IDirect3DStateBlock9* stateBlock_;
 
-	std::map<std::string, IDirect3DPixelShader9*> pixelShaders_;
-	std::map<std::string, IDirect3DVertexShader9*> vertexShaders_;
+	std::map<std::string, ComPtr<IDirect3DPixelShader9>> pixelShaders_;
+	std::map<std::string, ComPtr<IDirect3DVertexShader9>> vertexShaders_;
+	
+	IDirect3DPixelShader9* currentPS_ = nullptr;
+	IDirect3DVertexShader9* currentVS_ = nullptr;
+
+	ZipArchive::Ptr shadersZip_;
+	std::unique_ptr<ID3DInclude> shaderIncludeManager_;
+	// This is used because unique_ptr would break with the standard include being a bad pointer
+	ID3DInclude* shaderIncludeManagerPtr_ = D3D_COMPILE_STANDARD_FILE_INCLUDE;
+
+	friend class ShaderInclude;
 };
 
 }

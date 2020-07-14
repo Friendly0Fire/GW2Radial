@@ -3,6 +3,7 @@
 #include <UnitQuad.h>
 #include <Utility.h>
 #include <Wheel.h>
+#include "../shaders/registers.h"
 
 namespace GW2Radial
 {
@@ -104,11 +105,16 @@ void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsC
 	spriteDimensions.z *= elementDiameter;
 	spriteDimensions.w *= elementDiameter;
 	
-	fx->SetTexture(EFF_TS_ELEMENTIMG, appearance_);
-	fx->SetVariable(false, EFF_VS_SPRITE_DIM, spriteDimensions);
-	fx->SetVariable(true, EFF_VS_ELEMENT_ID, elementId());
-	fx->SetVariable(true, EFF_VS_ELEMENT_COLOR, color());
+	{
+		using namespace ShaderRegister::ShaderPS;
+		using namespace ShaderRegister::ShaderVS;
+        fx->SetTexture(sampler2D_texMainSampler, appearance_);
+        fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, spriteDimensions);
+        fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementID, elementId());
+        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fElementColor, color());
+	}
 	
+	fx->ApplyStates();
 	quad->Draw();
 }
 

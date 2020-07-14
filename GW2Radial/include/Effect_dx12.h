@@ -3,30 +3,38 @@
 
 namespace GW2Radial {
 
+struct PSOTag_ {};
+using PSOTag = PSOTag_*;
+
+struct SamplerId { DWORD id = 0; };
+struct TextureId { DWORD id = 0; };
+
 class Effect_dx12 : public Effect
 {
 public:
-	Effect_dx12(IDirect3DDevice9* iDev);
-	~Effect_dx12();
+	using Effect::Effect;
 
-	int Load();
+	void SetTexture(uint slot, IDirect3DTexture9* val) override;
+	void SetRenderStates(std::initializer_list<ShaderState> states) override;
+	void SetSamplerStates(uint slot, std::initializer_list<ShaderState> states) override;
+	void ApplyStates() override;
 
-	void SetTechnique(EffectTechnique val);
+	void Begin() override;
+	void OnBind(IDirect3DVertexDeclaration9* vd) override;
+	void End() override;
 
-	void SetTexture(EffectTextureSlot slot, IDirect3DTexture9* val);
-
-	void SceneBegin();
-	void SceneEnd();
+	void Clear() override;
 
 private:
-	static void* PSO_bgImg;
-	static void* PSO_mountAlpha;
-	static void* PSO_cursor;
+	IDirect3DVertexDeclaration9* currentVertexDecl_ = nullptr;
 
-	DWORD tsSamplers[4] = { 0,0,0,0 };
-	DWORD tsTexId[4] = { 0,0,0,0 };
+	std::map<uint, PSOTag> cachedPSOs_;
+	std::map<uint, SamplerId> cachedSamplers_;
+	
+	SamplerId samplers_[4];
+	TextureId textures_[4];
 
-	DWORD** perTechPSO[5];
+	uint rsHash_;
 };
 
 };

@@ -2,6 +2,7 @@
 #include <Main.h>
 #include <inttypes.h>
 #include <imgui.h>
+#include <istream>
 
 namespace GW2Radial
 {
@@ -38,7 +39,7 @@ auto end(reversion_wrapper<T> w) { return std::rend(w.iterable); }
 template <typename T>
 reversion_wrapper<T> reverse(T&& iterable) { return { iterable }; }
 
-bool LoadResource(UINT resId, void*& dataPtr, size_t& dataSize);
+std::span<byte> LoadResource(UINT resId);
 
 // ReSharper restore CppInconsistentNaming
 
@@ -117,4 +118,5 @@ inline ImVec2 ConvertVector(const fVector2& val) {
 	return { val.x, val.y };
 }
 
+std::string ReadFile(std::istream& is);
 }

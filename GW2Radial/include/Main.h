@@ -46,15 +46,22 @@
 #define NOMCX // - Modem Configuration Extensions
 #include <windows.h>
 
+#undef min
+#undef max
+
 #include <vector>
 #include <string>
 #include <memory>
+#include <span>
+#include <wrl.h>
 
 #include <Resource.h>
 
 #define COM_RELEASE(x) { if((x)) { (x)->Release(); (x) = nullptr; } }
 #define NULL_COALESCE(a, b) ((a) != nullptr ? (a) : (b))
 #define SQUARE(x) ((x) * (x))
+
+using Microsoft::WRL::ComPtr;
 
 typedef unsigned char uchar;
 typedef unsigned int uint;

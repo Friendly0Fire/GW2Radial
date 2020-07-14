@@ -240,6 +240,9 @@
     <ClInclude Include="include\WheelElement.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="shaders\registers.h">
+      <Filter>Resource Files\Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="rt_rcdat.bin">
@@ -262,14 +265,6 @@
     <ResourceCompile Include="Resource.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="shaders\Shader_ps.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\Shader_vs.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\readme.md">
@@ -362,8 +357,14 @@
     </Font>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="shaders\perlin.hlsl">
+    <FxCompile Include="shaders\Shader_ps.hlsl">
       <Filter>Resource Files\Shaders</Filter>
-    </Text>
+    </FxCompile>
+    <FxCompile Include="shaders\Shader_vs.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\perlin.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

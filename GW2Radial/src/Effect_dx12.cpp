@@ -1,5 +1,6 @@
 #include <Effect_dx12.h>
 #include <UnitQuad.h>
+#include <xxhash/xxhash.h>
 
 //D3D9 API extenders =======================
 
@@ -23,133 +24,114 @@
 //========
 
 namespace GW2Radial {
-
-void* Effect_dx12::PSO_bgImg = 0;
-void* Effect_dx12::PSO_cursor = 0;
-void* Effect_dx12::PSO_mountAlpha = 0;
-
-Effect_dx12::Effect_dx12(IDirect3DDevice9 * iDev) : Effect(iDev)
+	
+void Effect_dx12::SetRenderStates(std::initializer_list<ShaderState> states)
 {
+	rsHash_ = 0;
+	for(const auto& s : states)
+	{
+		device_->SetRenderState(static_cast<D3DRENDERSTATETYPE>(s.stateId), s.stateValue);
+	    rsHash_ = XXH32(&s, sizeof(ShaderState), rsHash_);
+	}
+}
+	
+void Effect_dx12::SetSamplerStates(uint slot, std::initializer_list<ShaderState> states)
+{
+	uint hash = 0;
+	for(const auto& s : states)
+	{
+		device_->SetSamplerState(0, static_cast<D3DSAMPLERSTATETYPE>(s.stateId), s.stateValue);
+	    hash = XXH32(&s, sizeof(ShaderState), hash);
+	}
+	
+	auto it = cachedSamplers_.find(hash);
+	if(it == cachedSamplers_.end())
+	{
+		SamplerId samp;
+	    assert(SUCCEEDED(device_->GetRenderState(D3DRS_D912PXY_SAMPLER_ID, &samp.id)));
+		it = cachedSamplers_.insert({ hash, samp }).first;
+	}
 
+	samplers_[slot] = it->second;
 }
 
-Effect_dx12::~Effect_dx12()
+void Effect_dx12::SetTexture(uint slot, IDirect3DTexture9* val)
 {
-
+	// megai2: this will get us texture id
+	textures_[slot] = { val->GetPriority() };
 }
 
-int Effect_dx12::Load()
+void Effect_dx12::OnBind(IDirect3DVertexDeclaration9* vd)
 {
-	if (!Effect::Load())
-		return 0;
-
-	//megai2: prepare pso for drawing
-	IDirect3DVertexDeclaration9* vdcl = NULL;
-	dev->CreateVertexDeclaration(UnitQuad::def(), &vdcl);
-
-	dev->SetPixelShader(ps);
-	dev->SetVertexShader(vs);
-	dev->SetVertexDeclaration(vdcl);
-
-	dev->SetRenderState(D3DRS_ZENABLE, 0);
-	dev->SetRenderState(D3DRS_ZWRITEENABLE, 0);
-	dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-	dev->SetRenderState(D3DRS_ALPHATESTENABLE, 0);
-	dev->SetRenderState(D3DRS_ALPHABLENDENABLE, 1);
-	dev->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-
-	dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-
-	PSO_bgImg = 0;
-	if (dev->GetRenderState(D3DRS_D912PXY_ENQUEUE_PSO_COMPILE, (DWORD*)&PSO_bgImg) < 0)
-		return 0;
-
-	dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-
-	PSO_mountAlpha = 0;
-	if (dev->GetRenderState(D3DRS_D912PXY_ENQUEUE_PSO_COMPILE, (DWORD*)&PSO_mountAlpha) < 0)
-		return 0;
-			
-	dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-	dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-
-	PSO_cursor = 0;
-	if (dev->GetRenderState(D3DRS_D912PXY_ENQUEUE_PSO_COMPILE, (DWORD*)&PSO_cursor) < 0)
-		return 0;
-
-	vdcl->Release();
-
-	//megai2: set and save desired sampler
-	dev->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-
-	dev->GetRenderState(D3DRS_D912PXY_SAMPLER_ID, &tsSamplers[0]);
-
-	dev->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-
-	dev->GetRenderState(D3DRS_D912PXY_SAMPLER_ID, &tsSamplers[1]);
-
-	dev->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-	dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	dev->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-
-	dev->GetRenderState(D3DRS_D912PXY_SAMPLER_ID, &tsSamplers[2]);
-
-	perTechPSO[EFF_TC_BGIMAGE] = (DWORD**)&PSO_bgImg;
-	perTechPSO[EFF_TC_MOUNTIMAGE] = (DWORD**)&PSO_bgImg;
-	perTechPSO[EFF_TC_CURSOR] = (DWORD**)&PSO_cursor;
-	perTechPSO[EFF_TC_MOUNTIMAGE_ALPHABLEND] = (DWORD**)&PSO_mountAlpha;
-	   
-	return true;
+    currentVertexDecl_ = vd;
 }
 
-void Effect_dx12::SetTechnique(EffectTechnique val)
+
+void Effect_dx12::Begin()
 {
-	SetVariable(true, EFF_VS_TECH_ID, val);
+	// megai2: mark draw start so we can see that app is issuing some not default dx9 api approach
+	device_->SetRenderState(D3DRS_D912PXY_DRAW, 0);
 
-	DWORD* pso = *perTechPSO[val];
+	for(uint i = 0; i < std::size(samplers_); i++)
+	{
+	    textures_[i] = { 0 };
+	    samplers_[i] = { 0 };
+	}
 
-	if (pso)
-		dev->GetRenderState(D3DRS_D912PXY_SETUP_PSO, pso);
+	currentVertexDecl_ = nullptr;
+	
+	SetDefaults();
 }
 
-void Effect_dx12::SetTexture(EffectTextureSlot slot, IDirect3DTexture9 * val)
+void Effect_dx12::ApplyStates()
 {
-	//megai2: this will get us texture id 
-	tsTexId[slot] = val->GetPriority();
+	uint64_t hashData[] = {
+	    reinterpret_cast<uint64_t>(currentVertexDecl_),
+	    reinterpret_cast<uint64_t>(currentPS_),
+	    reinterpret_cast<uint64_t>(currentVS_)
+	};
+	uint psoHash = XXH32(hashData, sizeof(hashData), rsHash_);
 
-	dev->GetRenderState(D3DRS_D912PXY_GPU_WRITE, &tsTexId[0]);	
+	auto it = cachedPSOs_.find(psoHash);
+	if(it == cachedPSOs_.end())
+	{
+		PSOTag pso = nullptr;
+		assert(SUCCEEDED(device_->GetRenderState(D3DRS_D912PXY_ENQUEUE_PSO_COMPILE, reinterpret_cast<DWORD*>(&pso))));
+		it = cachedPSOs_.insert({ psoHash, pso }).first;
+	}
+	
+	device_->GetRenderState(D3DRS_D912PXY_SETUP_PSO, reinterpret_cast<DWORD*>(it->second));
+	
+	device_->SetRenderState(D3DRS_D912PXY_GPU_WRITE, D912PXY_ENCODE_GPU_WRITE_DSC(1, D912PXY_GPU_WRITE_OFFSET_SAMPLER));
+	device_->GetRenderState(D3DRS_D912PXY_GPU_WRITE, &samplers_[0].id);
+	
+	device_->SetRenderState(D3DRS_D912PXY_GPU_WRITE, D912PXY_ENCODE_GPU_WRITE_DSC(1, D912PXY_GPU_WRITE_OFFSET_TEXBIND));
+	device_->GetRenderState(D3DRS_D912PXY_GPU_WRITE, &textures_[0].id);
 }
 
-void Effect_dx12::SceneBegin()
+
+void Effect_dx12::End()
 {
-	//megai2: mark draw start so we can see that app is issuing some not default dx9 api approach
-	dev->SetRenderState(D3DRS_D912PXY_DRAW, 0);
-
-	//setup saved sampler by writing directly into gpu buffer
-	dev->SetRenderState(D3DRS_D912PXY_GPU_WRITE, D912PXY_ENCODE_GPU_WRITE_DSC(1, D912PXY_GPU_WRITE_OFFSET_SAMPLER));
-	dev->GetRenderState(D3DRS_D912PXY_GPU_WRITE, &tsSamplers[0]);
-
-	//prepare to write texture id for draws
-	dev->SetRenderState(D3DRS_D912PXY_GPU_WRITE, D912PXY_ENCODE_GPU_WRITE_DSC(1, D912PXY_GPU_WRITE_OFFSET_TEXBIND));
+	// megai2: update dirty flags so we transfer to dx9 mode safely
+	device_->SetRenderState(D3DRS_D912PXY_DRAW, 0x701);
+	device_->SetRenderState(D3DRS_D912PXY_SETUP_PSO, 0);
 }
 
-void Effect_dx12::SceneEnd()
+void Effect_dx12::Clear()
 {
-	//megai2: update dirty flags so we transfer to dx9 mode safely
-	dev->SetRenderState(D3DRS_D912PXY_DRAW, 0x701);
-	dev->SetRenderState(D3DRS_D912PXY_SETUP_PSO, 0);
+    Effect::Clear();
+
+	cachedPSOs_.clear();
+	cachedSamplers_.clear();
+
+	for(uint i = 0; i < std::size(samplers_); i++)
+	{
+	    textures_[i] = { 0 };
+	    samplers_[i] = { 0 };
+	}
+
+	currentVertexDecl_ = nullptr;
 }
+
 
 }

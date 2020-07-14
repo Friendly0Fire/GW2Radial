@@ -88,7 +88,7 @@ void Core::OnFocusLost()
 }
 
 void Core::OnFocus() {
-	mainEffect_->Load();
+	mainEffect_->Clear();
 	Keybind::ForceRefreshDisplayStrings();
 }
 
@@ -126,14 +126,12 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 	auto fontCfg = ImFontConfig();
 	fontCfg.FontDataOwnedByAtlas = false;
 
-	void *fontPtr, *fontBlackPtr, *fontItalicPtr;
-	size_t fontSize, fontBlackSize, fontItalicSize;
-	if(LoadResource(IDR_FONT, fontPtr, fontSize))
-		font_ = imio.Fonts->AddFontFromMemoryTTF(fontPtr, int(fontSize), 25.f, &fontCfg);
-	if(LoadResource(IDR_FONT_BLACK, fontBlackPtr, fontBlackSize))
-		fontBlack_ = imio.Fonts->AddFontFromMemoryTTF(fontBlackPtr, int(fontBlackSize), 35.f, &fontCfg);
-	if(LoadResource(IDR_FONT_ITALIC, fontItalicPtr, fontItalicSize))
-		fontItalic_ = imio.Fonts->AddFontFromMemoryTTF(fontItalicPtr, int(fontItalicSize), 25.f, &fontCfg);
+	if(const auto data = LoadResource(IDR_FONT); data.data())
+		font_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 25.f, &fontCfg);
+	if(const auto data = LoadResource(IDR_FONT_BLACK); data.data())
+		fontBlack_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 35.f, &fontCfg);
+	if(const auto data = LoadResource(IDR_FONT_ITALIC); data.data())
+		fontItalic_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 25.f, &fontCfg);
 
 	if(font_)
 		imio.FontDefault = font_;
@@ -175,9 +173,6 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 		mainEffect_ = new Effect_dx12(device);
 	else 
 		mainEffect_ = new Effect(device);
-
-	if (!mainEffect_->Load())
-		abort();
 
 	UpdateCheck::i()->CheckForUpdates();
 	MiscTab::i();

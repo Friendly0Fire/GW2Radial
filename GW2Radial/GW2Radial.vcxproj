@@ -46,14 +46,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)minhook\include\;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)ZipLib\Source\ZipLib;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)minhook\include\;$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)ZipLib\Source\ZipLib;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
@@ -87,6 +87,12 @@
       <ObjectFileOutput>$(ProjectDir)int\%(Filename).cso</ObjectFileOutput>
       <ShaderModel>3.0</ShaderModel>
     </FxCompile>
+    <PreBuildEvent>
+      <Command>mkdir "$(ProjectDir)int"
+del "$(ProjectDir)int\Shaders.zip"
+cd "$(ProjectDir)shaders"
+zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -121,6 +127,10 @@
       <ObjectFileOutput>$(ProjectDir)int\%(Filename).cso</ObjectFileOutput>
       <ShaderModel>3.0</ShaderModel>
     </FxCompile>
+    <PreBuildEvent>
+      <Command>mkdir "$(ProjectDir)int"
+tar.exe -c -f "$(ProjectDir)int\Shaders.zip" -C "$(ProjectDir)shaders" *.hlsl</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="imgui\examples\imgui_impl_win32.cpp" />
@@ -191,6 +201,7 @@
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
     <ClInclude Include="loader-core\include\gw2al_api.h" />
+    <ClInclude Include="shaders\registers.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />
     <ClInclude Include="xxhash\xxhash.h" />
   </ItemGroup>
@@ -219,6 +230,9 @@
       </EntryPointName>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </EntryPointName>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="shaders\Shader_vs.hlsl">
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
@@ -229,8 +243,11 @@
       </EntryPointName>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </EntryPointName>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <Text Include="shaders\perlin.hlsl">
+    <FxCompile Include="shaders\perlin.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Library</ShaderType>
@@ -238,7 +255,9 @@
       </EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
       <FileType>Document</FileType>
-    </Text>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="art\Finals\arrow_marker.dds" />
@@ -270,6 +289,11 @@
     <Font Include="art\Fonts\SourceSansPro-Black.ttf" />
     <Font Include="art\Fonts\SourceSansPro-Italic.ttf" />
     <Font Include="art\Fonts\SourceSansPro-Regular.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="ziplib\Source\ZipLib\ZipLib.vcxproj">
+      <Project>{5c9fd859-ddf9-4510-8397-b329b0ae8c48}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

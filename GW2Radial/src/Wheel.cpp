@@ -10,6 +10,7 @@
 #include "../imgui/imgui_internal.h"
 #include <algorithm>
 #include <MumbleLink.h>
+#include "../shaders/registers.h"
 
 namespace GW2Radial
 {
@@ -274,8 +275,9 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				resetCursorPositionToCenter_ = false;
 			}
 
-			fx->SceneBegin();
-			quad->Bind();
+			fx->Begin();
+			quad->Bind(fx);
+			fx->SetShader(ShaderType::VERTEX_SHADER, L"Shader_vs.hlsl", "ScreenQuad_VS");
 
 			// Setup viewport
 			D3DVIEWPORT9 vp;
@@ -322,20 +324,39 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 					break;
 				}
 
-				fx->SetTechnique(EFF_TC_BGIMAGE);
-				fx->SetTexture(EFF_TS_BG, backgroundTexture_);
-				fx->SetTexture(EFF_TS_WIPE_MASK, wipeMaskTexture_);
-				fx->SetVariable(true, EFF_VS_WIPE_MASK_DATA, wipeMaskData_);
-				fx->SetVariable(false, EFF_VS_SPRITE_DIM, baseSpriteDimensions);
-				fx->SetVariable(true, EFF_VS_WHEEL_FADEIN, fadeTimer);
-				fx->SetVariable(true, EFF_VS_ANIM_TIMER, fmod(currentTime / 1010.f, 55000.f));
-				fx->SetVariable(true, EFF_VS_CENTER_SCALE, centerScaleOption_.value());
-				fx->SetVariable(true, EFF_VS_ELEMENT_COUNT, activeElements.size());
-				fx->SetVariableArray(true, EFF_VS_HOVER_FADEINS, (const std::span<float>&)hoveredFadeIns);
-				
+				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "BgImage_PS");
+				fx->SetRenderStates({
+					{ D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
+					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
+				});
+				{
+				    using namespace ShaderRegister::ShaderPS;
+				    using namespace ShaderRegister::ShaderVS;
+					
+				    fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_);
+				    fx->SetTexture(sampler2D_texWipeMaskImageSampler, wipeMaskTexture_);
+				    fx->SetVariable(ShaderType::PIXEL_SHADER, float3_fWipeMaskData, wipeMaskData_);
+				    fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, baseSpriteDimensions);
+				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, fadeTimer);
+				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fAnimationTimer, fmod(currentTime / 1010.f, 55000.f));
+				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fCenterScale, centerScaleOption_.value());
+				    fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementCount, activeElements.size());
+				    fx->SetVariableArray(ShaderType::PIXEL_SHADER, array_float4_fHoverFadeIns, (const std::span<float>&)hoveredFadeIns);
+					
+					fx->SetSamplerStates(sampler2D_texMainSampler, {});
+					fx->SetSamplerStates(sampler2D_texWipeMaskImageSampler, {});
+				}
+
+				fx->ApplyStates();
 				quad->Draw();
 
-				fx->SetTechnique(alphaBlended_ ? EFF_TC_MOUNTIMAGE_ALPHABLEND : EFF_TC_MOUNTIMAGE);
+				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", alphaBlended_ ? "MountImageAlphaBlend_PS" : "MountImage_PS");
+
+				if(alphaBlended_)
+					fx->SetRenderStates({
+					    { D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
+					    { D3DRS_SRCBLEND, D3DBLEND_SRCALPHA },
+				    });
 
 				int n = 0;
 				for (auto it : activeElements)
@@ -348,15 +369,21 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 			{
 				const auto& io = ImGui::GetIO();
+				
+				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "Cursor_PS");
+				fx->SetRenderStates({
+					{ D3DRS_DESTBLEND, D3DBLEND_ONE },
+					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
+				});
 
-				fx->SetTechnique(EFF_TC_CURSOR);				
 				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f };
-				fx->SetVariable(false, EFF_VS_SPRITE_DIM, spriteDimensions);
-
+				fx->SetVariable(ShaderType::VERTEX_SHADER, ShaderRegister::ShaderVS::float4_fSpriteDimensions, spriteDimensions);
+				
+				fx->ApplyStates();
 				quad->Draw();
 			}
 
-			fx->SceneEnd();
+			fx->End();
 		}
 	}
 }
