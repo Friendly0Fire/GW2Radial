@@ -1,6 +1,6 @@
 #pragma warning(disable : 4717)
 #define SHADER_PS
-#include "perlin.hlsl"
+#include "noise.hlsl"
 #include "registers.h"
 
 struct PS_INPUT
@@ -70,7 +70,7 @@ float4 BgImage_PS(PS_INPUT In) : COLOR0
     float localCoordPercentage = fmod(coordsPolar.y + 0.5f * singleMountAngle, singleMountAngle) / singleMountAngle;
 	
 	// Generate a pseudorandom background
-	float2 smoothrandom = float2(snoise(3 * In.UV * cos(0.1f * fAnimationTimer) + fAnimationTimer * 0.37f), snoise(5 * In.UV * sin(0.13f * fAnimationTimer) + fAnimationTimer * 0.48f));
+	float2 smoothrandom = float2(srnoise(3 * In.UV * cos(0.1f * fAnimationTimer) + fAnimationTimer * 0.37f), srnoise(5 * In.UV * sin(0.13f * fAnimationTimer) + fAnimationTimer * 0.48f));
 	float4 color = tex2D(texMainSampler, In.UV);
 	color.a = 1.f;
 	color.rgb *= 2 * lerp(0.9f, 1.3f, saturate((4 + smoothrandom.x + smoothrandom.y) / 8));
@@ -154,7 +154,7 @@ float4 MountImageBase(PS_INPUT In, bool imageIsMask) : COLOR0
 		glowMask += 1.f - tex2D(texMainSampler, In.UV + float2(0.01f, -0.01f)).r;
 		glowMask += 1.f - tex2D(texMainSampler, In.UV + float2(-0.01f, -0.01f)).r;
 
-		glow = color.rgb * (glowMask / 4) * hoverFadeIn * 0.5f * (0.5f + 0.5f * snoise(In.UV * 3.18f + 0.15f * float2(cos(fAnimationTimer * 3), sin(fAnimationTimer * 2))));
+		glow = color.rgb * (glowMask / 4) * hoverFadeIn * 0.5f * (0.5f + 0.5f * srnoise(In.UV * 3.18f + 0.15f * float2(cos(fAnimationTimer * 3), sin(fAnimationTimer * 2))));
 	}
 
 	return float4(finalColor * mask + glow, color.a * max(mask, shadow)) * fWheelFadeIn.x;
@@ -172,12 +172,40 @@ float4 MountImageAlphaBlend_PS(PS_INPUT In) : COLOR0
 
 float4 Cursor_PS(PS_INPUT In) : COLOR0
 {
-	float2 smoothrandom = makeSmoothRandom(In.UV, float4(15, 18, 18, 15), float4(2.4, 3.1, 2.9, 4.7));
+	float2 centeredUV = 2 * (In.UV - 0.5f);
+	float2 polar = float2(length(centeredUV), atan2(centeredUV.y, centeredUV.x));
+	polar.y = 2 * (polar.y / PI + 1);
+	float smoothrandom = psrnoise(polar * float2(1.f, 0.5f) - float2(0.5f, 0.05f) * fAnimationTimer, float2(100, 2), fWipeMaskData.z / (2 * PI));
 
-	float4 baseImage = tex2D(texMainSampler, In.UV + smoothrandom * 0.003f);
-	float radius = length(In.UV * 2 - 1);
-	baseImage *= 1.25f * pow(1.f - smoothstep(0.f, 1.f, radius), 4.f);
-	baseImage *= lerp(0.8f, 1.5f, saturate((4 + smoothrandom.x + smoothrandom.y) / 8));
+	float4 color = float4(194/255.f,189/255.f,149/255.f, 1.f);
+	color *= pow(1.f - smoothstep(0.f, 1.f, polar.x), 4.f);
+	color *= 1 - lerp(0.1f, 1.f, smoothstep(0.2f, 0.6f, polar.x)) * smoothrandom;
 
-	return baseImage;
+	return color;
+}
+
+float LogNormal(float x, float sigma)
+{
+	x += 1e-4f;
+	float exponent = log(x) / (2 * sigma);
+    return 1.f / (x * sigma * sqrt(2 * PI)) * exp(-exponent * exponent);
+}
+
+float4 TimerCursor_PS(PS_INPUT In) : COLOR0
+{
+	float2 centeredUV = 2 * (In.UV - 0.5f);
+	float2 polar = float2(length(centeredUV), atan2(centeredUV.y, centeredUV.x));
+	polar.y = 2 * (polar.y / PI + 1); // [0, 4]
+
+	float rotatingPolarY = fmod(2 * fAnimationTimer - polar.y, 4.f);
+
+	const float4 baseColor = float4(194/255.f,189/255.f,149/255.f, 0.f) * 0.75f * fWheelFadeIn;
+	float4 color = baseColor;
+	color *= pow(1.f - smoothstep(0.5f, 1.f, polar.x), 4.f);
+	color *= pow(smoothstep(0.f, 0.5f, polar.x), 4.f);
+	color *= LogNormal(rotatingPolarY, 0.5f) * (1 - smoothstep(3.5f, 4.f, rotatingPolarY));
+
+	color += In.UV.y > 0.95f ? (In.UV.x < fCenterScale ? baseColor : (baseColor * 0.2f + float4(0, 0, 0, 0.6f * fWheelFadeIn))) : 0;
+
+	return color;
 }

@@ -100,6 +100,7 @@ protected:
 
 	ConfigurationOption<bool> disableKeybindsInCombatOption_;
 	ConfigurationOption<int> maximumOutOfCombatWaitOption_;
+	ConfigurationOption<bool> showOutOfCombatTimerOption_;
 
 	std::optional<Point> cursorResetPosition_;
 	fVector2 currentPosition_;

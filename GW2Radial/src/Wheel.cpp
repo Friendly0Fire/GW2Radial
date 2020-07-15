@@ -33,7 +33,8 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
 	disableKeybindsInCombatOption_("Disable wheel keybinds while in combat", "disable_in_combat", "wheel_" + nickname_, false),
-	maximumOutOfCombatWaitOption_("Maximum seconds to wait for out of combat before sending input", "max_wait_ooc", "wheel_" + nickname_, 30)
+	maximumOutOfCombatWaitOption_("Maximum seconds to wait for out of combat before sending input", "max_wait_ooc", "wheel_" + nickname_, 30),
+	showOutOfCombatTimerOption_("Show timer around cursor when waiting to get out of combat", "timer_ooc", "wheel_" + nickname_, true)
 {
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);
@@ -244,20 +245,22 @@ void Wheel::OnUpdate() {
 		if (currentTime <= outOfCombatDelayedTime_ + maximumOutOfCombatWaitOption_.value() * 1000ull && !MumbleLink::i()->isInCombat() && MumbleLink::i()->gameHasFocus() && MumbleLink::i()->isInMap()) {
 			Input::i()->SendKeybind(outOfCombatDelayed_->keybind().scanCodes(), std::nullopt);
 			outOfCombatDelayed_ = nullptr;
-			outOfCombatDelayedTime_ = 0;
+			outOfCombatDelayedTime_ = currentTime;
 		}
 	}
 }
 
 void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 {
+	const int screenWidth = Core::i()->screenWidth();
+	const int screenHeight = Core::i()->screenHeight();
+
+	fVector4 screenSize = { float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight };
+
+	const auto currentTime = TimeInMilliseconds();
+
 	if (isVisible_)
 	{
-		const int screenWidth = Core::i()->screenWidth();
-		const int screenHeight = Core::i()->screenHeight();
-
-		const auto currentTime = TimeInMilliseconds();
-
 		if (currentTime >= currentTriggerTime_ + displayDelayOption_.value())
 		{
 			if(resetCursorPositionToCenter_)
@@ -287,8 +290,6 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			vp.MinZ = 0.0f;
 			vp.MaxZ = 1.0f;
 			dev->SetViewport(&vp);
-
-			fVector4 screenSize = { float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight };
 
 			auto activeElements = GetActiveElements();
 			if (!activeElements.empty())
@@ -376,7 +377,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
 				});
 
-				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.05f  * screenSize.y * screenSize.z, 0.05f };
+				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f  * screenSize.y * screenSize.z, 0.08f };
 				fx->SetVariable(ShaderType::VERTEX_SHADER, ShaderRegister::ShaderVS::float4_fSpriteDimensions, spriteDimensions);
 				
 				fx->ApplyStates();
@@ -385,6 +386,38 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 			fx->End();
 		}
+	} else if(showOutOfCombatTimerOption_.value() && (outOfCombatDelayed_ != nullptr || currentTime - outOfCombatDelayedTime_ < 500)) {
+		float dt = float(currentTime - outOfCombatDelayedTime_) / 1000.f;
+		float timeLeft = 0.f;
+		if(outOfCombatDelayed_ == nullptr) dt = 0.5f - dt;
+		else
+			timeLeft = 1.f - (currentTime - outOfCombatDelayedTime_) / (float(maximumOutOfCombatWaitOption_.value()) * 1000.f);
+	    const auto& io = ImGui::GetIO();
+		
+		fx->Begin();
+		quad->Bind(fx);
+		fx->SetShader(ShaderType::VERTEX_SHADER, L"Shader_vs.hlsl", "ScreenQuad_VS");
+		fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "TimerCursor_PS");
+		fx->SetRenderStates({
+			{ D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
+			{ D3DRS_SRCBLEND, D3DBLEND_ONE },
+		});
+
+		fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f  * screenSize.y * screenSize.z, 0.08f };
+
+		{
+			using namespace ShaderRegister::ShaderPS;
+			using namespace ShaderRegister::ShaderVS;
+		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fAnimationTimer, fmod(currentTime / 1010.f, 55000.f));
+		    fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, spriteDimensions);
+		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, std::min(dt * 2, 1.f));
+		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fCenterScale, timeLeft);
+		}
+		
+		fx->ApplyStates();
+		quad->Draw();
+
+		fx->End();
 	}
 }
 
