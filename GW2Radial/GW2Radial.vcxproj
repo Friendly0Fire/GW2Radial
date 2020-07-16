@@ -141,6 +141,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="src\ConfigurationFile.cpp" />
     <ClCompile Include="src\Core.cpp" />
+    <ClCompile Include="src\CustomWheel.cpp" />
     <ClCompile Include="src\DDSTextureLoader.cpp" />
     <ClCompile Include="src\Direct3D9Hooks.cpp" />
     <ClCompile Include="src\Effect.cpp" />
@@ -177,6 +178,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\ConfigurationFile.h" />
     <ClInclude Include="include\ConfigurationOption.h" />
     <ClInclude Include="include\Core.h" />
+    <ClInclude Include="include\CustomWheel.h" />
     <ClInclude Include="include\dds.h" />
     <ClInclude Include="include\DDSTextureLoader.h" />
     <ClInclude Include="include\Direct3D9Hooks.h" />

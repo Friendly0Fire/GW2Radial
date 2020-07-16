@@ -4,6 +4,7 @@
 #include <Singleton.h>
 #include <Wheel.h>
 #include <UnitQuad.h>
+#include <CustomWheel.h>
 
 namespace GW2Radial
 {
@@ -60,6 +61,7 @@ protected:
 	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr;
 
 	std::vector<std::unique_ptr<Wheel>> wheels_;
+	std::unique_ptr<CustomWheelsManager> customWheels_;
 	
 	std::unique_ptr<ConfigurationOption<bool>> firstMessageShown_;
 	std::unique_ptr<ConfigurationOption<bool>> ignoreRTSS_;

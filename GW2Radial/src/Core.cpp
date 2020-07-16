@@ -19,6 +19,7 @@
 #include <MiscTab.h>
 #include <MumbleLink.h>
 #include <Effect_dx12.h>
+#include <CustomWheel.h>
 
 namespace GW2Radial
 {
@@ -182,6 +183,8 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	wheels_.emplace_back(Wheel::Create<Marker>(IDR_BG, IDR_WIPEMASK, "markers", "Markers", device));
 	wheels_.emplace_back(Wheel::Create<ObjectMarker>(IDR_BG, IDR_WIPEMASK, "object_markers", "Object Markers", device));
 
+	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, device);
+
 	ImGui_ImplDX9_Init(device);
 }
 
@@ -189,6 +192,7 @@ void Core::OnDeviceUnset()
 {
 	ImGui_ImplDX9_InvalidateDeviceObjects();
 	quad_.reset();
+	customWheels_.reset();
 	wheels_.clear();
 	if (mainEffect_)
 	{

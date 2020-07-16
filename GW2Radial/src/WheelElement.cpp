@@ -9,13 +9,15 @@ namespace GW2Radial
 {
 
 WheelElement::WheelElement(uint id, const std::string &nickname, const std::string &category,
-							const std::string &displayName, IDirect3DDevice9* dev)
+							const std::string &displayName, IDirect3DDevice9* dev, IDirect3DTexture9* tex)
 	: nickname_(nickname), displayName_(displayName), elementId_(id),
 	  isShownOption_(displayName + " Visible", nickname + "_visible", category, true),
 	  sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, int(id)),
-	  keybind_(nickname, displayName)
+	  keybind_(nickname, displayName),
+	  appearance_(tex)
 {
-	appearance_ = CreateTextureFromResource(dev, Core::i()->dllModule(), elementId_);
+	if(tex == nullptr)
+	    appearance_ = CreateTextureFromResource(dev, Core::i()->dllModule(), elementId_);
 }
 
 WheelElement::~WheelElement()

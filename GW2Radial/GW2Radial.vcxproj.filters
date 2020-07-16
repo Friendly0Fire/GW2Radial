@@ -118,6 +118,9 @@
     <ClCompile Include="src\Effect_dx12.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\CustomWheel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -242,6 +245,9 @@
     </ClInclude>
     <ClInclude Include="shaders\registers.h">
       <Filter>Resource Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CustomWheel.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

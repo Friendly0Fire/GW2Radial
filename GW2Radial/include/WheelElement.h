@@ -9,7 +9,7 @@ namespace GW2Radial
 class WheelElement
 {
 public:
-	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName, IDirect3DDevice9* dev);
+	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName, IDirect3DDevice9* dev, IDirect3DTexture9* tex = nullptr);
 	virtual ~WheelElement();
 
 	int DrawPriority(int extremumIndicator);
