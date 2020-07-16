@@ -79,6 +79,7 @@ protected:
 	bool worksOnlyOutOfCombat_ = false;
 	WheelElement* outOfCombatDelayed_ = nullptr;
 	mstime outOfCombatDelayedTime_ = 0;
+	uint outOfCombatTestCount_ = 0;
 
 	ConfigurationOption<int> centerBehaviorOption_;
 	ConfigurationOption<int> centerFavoriteOption_;

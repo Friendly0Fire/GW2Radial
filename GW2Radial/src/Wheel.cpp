@@ -243,10 +243,15 @@ void Wheel::OnUpdate() {
 	if (outOfCombatDelayed_) {
 		const auto currentTime = TimeInMilliseconds();
 		if (currentTime <= outOfCombatDelayedTime_ + maximumOutOfCombatWaitOption_.value() * 1000ull && !MumbleLink::i()->isInCombat() && MumbleLink::i()->gameHasFocus() && MumbleLink::i()->isInMap()) {
-			Input::i()->SendKeybind(outOfCombatDelayed_->keybind().scanCodes(), std::nullopt);
-			outOfCombatDelayed_ = nullptr;
-			outOfCombatDelayedTime_ = currentTime;
-		}
+			outOfCombatTestCount_++;
+			if(outOfCombatTestCount_ >= 10)
+			{
+			    Input::i()->SendKeybind(outOfCombatDelayed_->keybind().scanCodes(), std::nullopt);
+			    outOfCombatDelayed_ = nullptr;
+			    outOfCombatDelayedTime_ = currentTime;
+			}
+		} else
+			outOfCombatTestCount_ = 0;
 	}
 }
 
@@ -650,6 +655,7 @@ void Wheel::DeactivateWheel()
 			Input::i()->SendKeybind(std::set<ScanCode>(), cursorResetPosition_);
 			outOfCombatDelayed_ = currentHovered_;
 			outOfCombatDelayedTime_ = TimeInMilliseconds();
+			outOfCombatTestCount_ = 0;
 		} else
 			Input::i()->SendKeybind(currentHovered_->keybind().scanCodes(), cursorResetPosition_);
 	}
