@@ -96,7 +96,7 @@ protected:
 
 	IDirect3DDevice9* device_ = nullptr;
 
-	IDirect3DStateBlock9* stateBlock_;
+	IDirect3DStateBlock9* stateBlock_ = nullptr;
 
 	std::map<std::string, ComPtr<IDirect3DPixelShader9>> pixelShaders_;
 	std::map<std::string, ComPtr<IDirect3DVertexShader9>> vertexShaders_;

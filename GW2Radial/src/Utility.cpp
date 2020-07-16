@@ -50,7 +50,7 @@ std::wstring GetScanCodeName(uint scanCode) {
 	}
 
 	wchar_t keyName[50];
-	if (GetKeyNameTextW(scanCode << 16, keyName, sizeof(keyName)) != 0)
+	if (GetKeyNameTextW(scanCode << 16, keyName, int(std::size(keyName))) != 0)
 		return keyName;
 
 	return L"[Error]";
