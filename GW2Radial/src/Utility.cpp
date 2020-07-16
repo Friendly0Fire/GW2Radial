@@ -5,6 +5,7 @@
 #include <winuser.h>
 #include "DDSTextureLoader.h"
 #include <iostream>
+#include <sstream>
 
 namespace GW2Radial
 {
@@ -196,14 +197,15 @@ CreateTextureFromResource(
 
 std::string ReadFile(std::istream& is)
 {
-    is.seekg(0, std::istream::end);
-    const size_t sz = is.tellg();
-    is.seekg(0, std::istream::beg);
+	std::stringstream ss;
+	for(std::string line; std::getline(is, line); )
+	{
+		if(line.ends_with('\r'))
+			line.resize(line.size() - 1);
+		ss << line << '\n';
+	}
 
-    std::string str(sz + 1, '\0');
-    is.read(str.data(), str.size());
-
-    return str;
+    return ss.str();
 }
 
 uint RoundUpToMultipleOf(uint numToRound, uint multiple)

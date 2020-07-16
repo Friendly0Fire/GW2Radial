@@ -1,7 +1,7 @@
 #pragma once
 
-#include <d3dcompiler.h>
 #include <Main.h>
+#include <d3dcompiler.h>
 #include <Utility.h>
 #include <span>
 #include <map>
@@ -59,7 +59,7 @@ public:
 	virtual void ApplyStates() {}
 
 	virtual void Begin();
-	virtual void OnBind(IDirect3DVertexDeclaration9* vd) {}
+    virtual void OnBind(IDirect3DVertexDeclaration9* vd);
 	virtual void End();
 
 	virtual void Clear();

@@ -307,7 +307,7 @@ namespace GW2Radial
                 sc = sc & ~ScanCode::UNIVERSAL_MODIFIER_FLAG;
 
             i.wParam = MapVirtualKey(uint(sc), isUniversal ? MAPVK_VSC_TO_VK : MAPVK_VSC_TO_VK_EX);
-            assert(i.wParam != 0);
+            GW2_ASSERT(i.wParam != 0);
             i.lParamKey.repeatCount = 0;
             i.lParamKey.scanCode = uint(sc);
             i.lParamKey.extendedFlag = IsExtendedKey(sc) ? 1 : 0;

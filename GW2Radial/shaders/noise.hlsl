@@ -64,7 +64,6 @@ float2 mod289(float2 x) { return x - floor(x * (1.0f / 289.0f)) * 289.0f; }
 float3 mod289(float3 x) { return x - floor(x * (1.0f / 289.0f)) * 289.0f; }
 float4 mod289(float4 x) { return x - floor(x * (1.0f / 289.0f)) * 289.0f; }
 
-
 // Permutation polynomial: (34x^2 + x) math.mod 289
 float  permute(float x)  { return mod289((34.0f * x + 1.0f) * x); }
 float3 permute(float3 x) { return mod289((34.0f * x + 1.0f) * x); }

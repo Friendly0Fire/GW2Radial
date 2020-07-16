@@ -32,8 +32,10 @@ Keybind::Keybind(std::string nickname, std::string displayName) :
 
 Keybind::~Keybind()
 {
-	keybinds_.erase(std::find(keybinds_.begin(), keybinds_.end(), this));
-	scMaps_.erase(this);
+	if(!keybinds_.empty())
+	    keybinds_.erase(std::find(keybinds_.begin(), keybinds_.end(), this));
+	if(!scMaps_.empty())
+	    scMaps_.erase(this);
 }
 
 void Keybind::scanCodes(const std::set<ScanCode>& scs)

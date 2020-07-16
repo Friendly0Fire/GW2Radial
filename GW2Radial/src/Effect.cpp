@@ -1,13 +1,9 @@
 #include "Effect.h"
-#include <assert.h>
 #include <fstream>
 #include <sstream>
 #include <UnitQuad.h>
 #include "Utility.h"
-
-#ifdef HOT_RELOAD_SHADERS
 #include <d3dcompiler.h>
-#endif
 
 namespace GW2Radial {
 
@@ -33,7 +29,7 @@ public:
 			auto str = ReadFile(*contentStream);
 		    file->CloseDecompressionStream();
 			*ppData = str.c_str();
-			*pBytes = str.size();
+			*pBytes = UINT(str.size());
 
 			openFiles_[str.c_str()] = std::move(str);
 		    return S_OK;
@@ -74,12 +70,13 @@ Effect::Effect(IDirect3DDevice9 * dev) : device_(dev)
 	}
 
 	auto file = shadersZip_->GetEntry(utf8_encode(filename));
-    auto* const contentStream = file->GetDecompressionStream();
-	if(contentStream)
-	{
-	    auto fileContents = ReadFile(*contentStream);
-		file->CloseDecompressionStream();
-		return fileContents;
+	if(file) {
+        auto* const contentStream = file->GetDecompressionStream();
+	    if(contentStream) {
+	        auto fileContents = ReadFile(*contentStream);
+		    file->CloseDecompressionStream();
+		    return fileContents;
+	    }
 	}
 
 	return "";
@@ -106,12 +103,12 @@ Effect::Effect(IDirect3DDevice9 * dev) : device_(dev)
 			nullptr,
 			shaderIncludeManagerPtr_,
 			entrypoint.c_str(), st == ShaderType::PIXEL_SHADER ? "ps_3_0" : "vs_3_0", 
-			D3DCOMPILE_IEEE_STRICTNESS, 0,
+			0, 0,
 			&blob, &errors);
 
 		if (FAILED(hr)) {
-#ifdef HOT_RELOAD_SHADERS
-			FormattedOutputDebugString(L"Compilation failed: %x\n", hr);
+#ifdef _DEBUG
+			FormattedOutputDebugString(L"Compilation failed: 0x%X\n", hr);
 
 			if (errors) {
                 const char* errorsText = static_cast<const char*>(errors->GetBufferPointer());
@@ -124,7 +121,7 @@ Effect::Effect(IDirect3DDevice9 * dev) : device_(dev)
 			blob.Reset();
 
 			// Break to fix errors
-			assert(false);
+			GW2_ASSERT(false);
 #else
 			exit(1);
 #endif
@@ -165,7 +162,7 @@ void Effect::SetShader(const ShaderType st, const std::wstring& filename, const 
 			itPs = pixelShaders_.insert({key, ps}).first;
 	    }
 		
-	    assert(itPs != pixelShaders_.end());
+	    GW2_ASSERT(itPs != pixelShaders_.end());
 	    ApplyPixelShader(itPs->second.Get());
 	} else {
 	    auto itVs = vertexShaders_.find(key);
@@ -175,7 +172,7 @@ void Effect::SetShader(const ShaderType st, const std::wstring& filename, const 
 			itVs = vertexShaders_.insert({key, vs}).first;
 	    }
 		
-	    assert(itVs != vertexShaders_.end());
+	    GW2_ASSERT(itVs != vertexShaders_.end());
 	    ApplyVertexShader(itVs->second.Get());
 	}
 }
@@ -206,6 +203,11 @@ void Effect::Begin()
 {
 	// Save current device state to reapply at the end
 	stateBlock_->Capture();
+}
+
+void Effect::OnBind(IDirect3DVertexDeclaration9* vd)
+{
+	device_->SetVertexDeclaration(vd);
 }
 
 void Effect::SetDefaultSamplerStates(uint slot) const

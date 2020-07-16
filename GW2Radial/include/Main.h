@@ -61,6 +61,12 @@
 #define NULL_COALESCE(a, b) ((a) != nullptr ? (a) : (b))
 #define SQUARE(x) ((x) * (x))
 
+#ifdef _DEBUG
+#define GW2_ASSERT(x) { if(x) ; else __debugbreak(); }
+#else
+#define GW2_ASSERT(x) { if(x) ; else if(IsDebuggerPresent()) __debugbreak(); }
+#endif
+
 using Microsoft::WRL::ComPtr;
 
 typedef unsigned char uchar;
@@ -79,7 +85,7 @@ typedef unsigned __int64 mstime;
 #define M_PI 3.14159265359
 #endif
 
-#if defined(_DEBUG) && defined(SHADERS_DIR)
+#ifdef _DEBUG
 #define HOT_RELOAD_SHADERS
 #endif
 

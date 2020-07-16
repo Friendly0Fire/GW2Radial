@@ -28,6 +28,7 @@ public:
 private:
 	void ApplyPixelShader(IDirect3DPixelShader9* ps) override;
 	void ApplyVertexShader(IDirect3DVertexShader9* vs) override;
+	void ResetStates();
 
 	IDirect3DVertexDeclaration9* currentVertexDecl_ = nullptr;
 	IDirect3DPixelShader9* currentPS_ = nullptr;
@@ -38,8 +39,8 @@ private:
 	
 	std::vector<SamplerId> samplers_;
 	std::vector<TextureId> textures_;
-	uint maxSamplerSlot_ = 0;
-	uint maxTextureSlot_ = 0;
+	int maxSamplerSlot_ = -1;
+	int maxTextureSlot_ = -1;
 
 	std::vector<ShaderState> renderStates_;
 };
