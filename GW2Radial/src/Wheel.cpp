@@ -88,7 +88,7 @@ void Wheel::UpdateHover()
 			mouseAngle += float(2 * M_PI);
 
 		const float elementAngle = float(2 * M_PI) / activeElements.size();
-		const int elementId = int((mouseAngle - elementAngle / 2) / elementAngle + 1) % activeElements.size();
+		const int elementId = int((mouseAngle - elementAngle / 2) / elementAngle + 1) % int(activeElements.size());
 
 		currentHovered_ = activeElements[elementId];
 	}
