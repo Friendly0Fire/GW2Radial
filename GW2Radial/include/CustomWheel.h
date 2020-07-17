@@ -34,7 +34,7 @@ namespace GW2Radial
         std::string name;
         fVector4 color;
 
-        IDirect3DTexture9* texture;
+        IDirect3DTexture9* texture = nullptr;
     };
 
     class CustomElement : public WheelElement

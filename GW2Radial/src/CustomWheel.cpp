@@ -10,35 +10,43 @@
 namespace GW2Radial
 {
 
-IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, const std::wstring& text, bool alphaBlended, fVector4 color)
+float CalcText(ImFont* font, const std::wstring& text)
+{
+	cref txt = utf8_encode(text);
+	
+	auto sz = font->CalcTextSizeA(100.f, FLT_MAX, 0.f, txt.c_str());
+
+	return sz.x;
+}
+
+IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, float fontSize, const std::wstring& text, bool alphaBlended, fVector4 color)
 {
 	uint fgColor = alphaBlended ? RGBAto32(color, true) : 0xFF000000;
 	uint bgColor = alphaBlended ? 0 : 0xFFFFFFFF;
 
 	cref txt = utf8_encode(text);
-
-	auto& io = ImGui::GetIO();
-
-	ImGui_ImplDX9_NewFrame();
-
-	const float fontSize = 200.f;
-
+	
 	auto sz = font->CalcTextSizeA(fontSize, FLT_MAX, 0.f, txt.c_str());
+
+	ImVec2 clip(1024.f, fontSize);
+
+	float xOff = (clip.x - sz.x) * 0.5f;
 
 	ImDrawList imDraw(ImGui::GetDrawListSharedData());
 	imDraw.Clear();
-	imDraw.PushClipRect(ImVec2(0.f, 0.f), sz);
+	imDraw.PushClipRect(ImVec2(0.f, 0.f), clip);
 	imDraw.PushTextureID(font->ContainerAtlas->TexID);
-	imDraw.AddText(font, fontSize, ImVec2(0.f, 0.f), fgColor, txt.c_str());
-
+	imDraw.AddText(font, fontSize, ImVec2(xOff, 0.f), fgColor, txt.c_str());
+	
+	auto& io = ImGui::GetIO();
 	auto oldDisplaySize = io.DisplaySize;
-	io.DisplaySize = sz;
+	io.DisplaySize = clip;
 
 	IDirect3DTexture9* tex = nullptr;
-	dev->CreateTexture(uint(sz.x), uint(sz.y), 1,
+	dev->CreateTexture(uint(clip.x), uint(clip.y), 1,
  D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, nullptr);
 
-	dev->BeginScene();
+	auto hr = dev->BeginScene();
 
 	IDirect3DSurface9* surf;
 	tex->GetSurfaceLevel(0, &surf);
@@ -56,8 +64,11 @@ IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, const std::wstr
 	imData.DisplayPos = imDraw.GetClipRectMin();
 	imData.DisplaySize = imDraw.GetClipRectMax();
 	ImGui_ImplDX9_RenderDrawData(&imData);
+	
+	dev->SetRenderTarget(0, nullptr);
 
-	dev->EndScene();
+	if(hr != D3DERR_INVALIDCALL)
+	    dev->EndScene();
 
 	surf->Release();
 
@@ -138,6 +149,8 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	std::list<CSimpleIniA::Entry> sections;
 	ini.GetAllSections(sections);
 	sections.sort(CSimpleIniA::Entry::LoadOrder());
+	std::vector<CustomElementSettings> elements; elements.reserve(sections.size());
+	float maxTextWidth = 0.f;
 	for(cref sec : sections)
 	{
 	    if(_stricmp(sec.pItem, "General") == 0)
@@ -167,14 +180,24 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		ces.color = color;
 		ces.id = baseId++;
 
-		if(elementIcon == element.end())
-			ces.texture = DrawText(device_, font_, utf8_decode(ces.name), alphaBlended, color);
-		else
+		if(elementIcon != element.end())
 			ces.texture = LoadCustomTexture(device_, dataFolder / utf8_decode(elementIcon->second));
+		else
+			maxTextWidth = std::max(maxTextWidth, CalcText(font_, utf8_decode(ces.name)));
 
-	    wheel->AddElement(std::make_unique<CustomElement>(ces, device_));
+		elements.push_back(ces);
 
 		GW2_ASSERT(baseId < customWheelNextId_ + CustomWheelIdStep);
+	}
+
+	float desiredFontSize = 1024.f / maxTextWidth * 100.f;
+
+	for(auto& ces : elements)
+	{
+	    if(ces.texture == nullptr)
+		    ces.texture = DrawText(device_, font_, desiredFontSize, utf8_decode(ces.name), alphaBlended, ces.color);
+
+	    wheel->AddElement(std::make_unique<CustomElement>(ces, device_));
 	}
 
 	customWheelNextId_ += CustomWheelIdStep;
@@ -195,6 +218,8 @@ void CustomWheelsManager::Reload()
 
 		customWheels_.clear();
 	}
+
+	ImGui_ImplDX9_NewFrame();
 
 	cref folderBase = ConfigurationFile::i()->folder() + L"custom\\";
 
