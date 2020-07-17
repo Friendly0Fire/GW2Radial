@@ -122,6 +122,12 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	if(wheelNickname == general.end())
 		return fail(L"Missing field nickname");
 
+	if(std::any_of(customWheels_.begin(), customWheels_.end(), [&](cref w)
+	{
+	    return w->nickname() == wheelNickname->second;
+	}))
+		return fail((L"Nickname " + utf8_decode(std::string(wheelNickname->second)) + L" already exists").c_str());
+
 	auto wheel = std::make_unique<Wheel>(IDR_BG, IDR_WIPEMASK, wheelNickname->second, wheelDisplayName->second, device_);
 
 	bool alphaBlended = !ini.GetBoolValue("General", "icons_are_masks", true);
