@@ -10,6 +10,7 @@ namespace GW2Radial
 DEFINE_SINGLETON(MiscTab);
 
 MiscTab::MiscTab()
+    : reloadOnFocus_("Reload custom wheels on focus", "reload_focus", "General", false)
 {
 	SettingsMenu::i()->AddImplementer(this);
 }
@@ -23,6 +24,8 @@ void MiscTab::DrawMenu()
 {
 	if(auto uc = UpdateCheck::iNoInit(); uc)
 		ImGuiConfigurationWrapper(ImGui::Checkbox, uc->checkEnabled_);
+
+	ImGuiConfigurationWrapper(ImGui::Checkbox, reloadOnFocus_);
 }
 
 }

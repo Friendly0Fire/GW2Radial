@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <filesystem>
 #include <Main.h>
 #include <Wheel.h>
 
@@ -7,8 +8,22 @@ namespace GW2Radial
 {
     class CustomWheelsManager
     {
+        std::vector<std::unique_ptr<Wheel>>& wheels_;
+        std::vector<Wheel*> customWheels_;
+        IDirect3DDevice9* device_;
+        std::vector<std::wstring> failedLoads_;
+        static constexpr uint CustomWheelStartId = 10000;
+        static constexpr uint CustomWheelIdStep = 1000;
+        uint customWheelNextId_ = CustomWheelStartId;
+        ImFont* font_ = nullptr;
+
+        std::unique_ptr<Wheel> BuildWheel(const std::filesystem::path& configPath);
+
     public:
-        CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, IDirect3DDevice9* dev);
+        CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font, IDirect3DDevice9* dev);
+
+        void Draw();
+        void Reload();
     };
 
     struct CustomElementSettings
@@ -19,7 +34,7 @@ namespace GW2Radial
         std::string name;
         fVector4 color;
 
-        std::wstring texturePath;
+        IDirect3DTexture9* texture;
     };
 
     class CustomElement : public WheelElement

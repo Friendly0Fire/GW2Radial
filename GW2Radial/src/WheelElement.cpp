@@ -18,6 +18,10 @@ WheelElement::WheelElement(uint id, const std::string &nickname, const std::stri
 {
 	if(tex == nullptr)
 	    appearance_ = CreateTextureFromResource(dev, Core::i()->dllModule(), elementId_);
+
+	D3DSURFACE_DESC desc;
+	appearance_->GetLevelDesc(0, &desc);
+	aspectRatio_ = float(desc.Height) / float(desc.Width);
 }
 
 WheelElement::~WheelElement()
@@ -106,6 +110,8 @@ void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsC
 
 	spriteDimensions.z *= elementDiameter;
 	spriteDimensions.w *= elementDiameter;
+	
+	spriteDimensions.w *= aspectRatio_;
 	
 	{
 		using namespace ShaderRegister::ShaderPS;

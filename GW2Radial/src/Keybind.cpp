@@ -83,7 +83,7 @@ void Keybind::ApplyKeys()
 	if(saveToConfig_)
 	{
 		std::string settingValue;
-		for (const auto& k : scanCodes_)
+		for (cref k : scanCodes_)
 			settingValue += std::to_string(uint(k)) + ", ";
 
 		if(!scanCodes_.empty())
@@ -126,7 +126,7 @@ bool Keybind::matchesNoLeftRight(const std::set<ScanCode>& scanCodes) const
 	const auto universalize = [](const std::set<ScanCode>& src)
 	{
 		std::set<ScanCode> out;
-		for(const auto& k : src)
+		for(cref k : src)
 		{
 			if (IsModifier(k))
 				out.insert(MakeUniversal(k));

@@ -190,7 +190,7 @@ CreateTextureFromResource(
 
 	IDirect3DBaseTexture9* ret = nullptr;
 
-	CreateDDSTextureFromMemory(pDev, resourceSpan.data(), resourceSpan.size_bytes(), &ret);
+    DirectX::CreateDDSTextureFromMemory(pDev, resourceSpan.data(), resourceSpan.size_bytes(), &ret);
 
 	return static_cast<IDirect3DTexture9*>(ret);
 }

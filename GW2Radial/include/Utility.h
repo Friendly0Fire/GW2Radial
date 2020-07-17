@@ -121,4 +121,29 @@ inline ImVec2 ConvertVector(const fVector2& val) {
 std::string ReadFile(std::istream& is);
 
 uint RoundUpToMultipleOf(uint numToRound, uint multiple);
+
+template<typename Char, typename It>
+It SplitString(const Char* str, const Char* delim, It out)
+{
+	std::basic_string<Char> s(str);
+
+	size_t start = 0;
+    size_t end = 0;
+	while ((end = s.find(delim, start)) != std::string::npos) {
+        *out = s.substr(start, end - start);
+		out = std::next(out);
+		start = end + 1;
+    }
+
+	*out = s.substr(start);
+	out = std::next(out);
+	return out;
+}
+
+inline uint RGBAto32(const fVector4& rgb, bool scale)
+{
+	float s = scale ? 255.f : 1.f;
+    return D3DCOLOR_RGBA(byte(rgb.x * s), byte(rgb.y * s), byte(rgb.z * s), byte(rgb.w * s));
+}
+
 }

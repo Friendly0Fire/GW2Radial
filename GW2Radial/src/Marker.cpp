@@ -26,7 +26,7 @@ void Wheel::Setup<Marker>(IDirect3DDevice9* dev)
 {
 	SetAlphaBlended(true);
 	SetResetCursorPositionBeforeKeyPress(true);
-	for (const auto& type : data)
+	for (cref type : data)
 		AddElement(std::make_unique<Marker>(type.first, dev));
 }
 
@@ -43,7 +43,7 @@ template<>
 void Wheel::Setup<ObjectMarker>(IDirect3DDevice9* dev)
 {
 	SetAlphaBlended(true);
-	for (const auto& type : data)
+	for (cref type : data)
 		AddElement(std::make_unique<ObjectMarker>(type.first, dev));
 }
 

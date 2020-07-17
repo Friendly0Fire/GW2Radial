@@ -49,6 +49,7 @@ protected:
 	IDirect3DTexture9* appearance_ = nullptr;
 	mstime currentHoverTime_ = 0;
 	mstime currentExitTime_ = 0;
+	float aspectRatio_ = 1.f;
 };
 
 }

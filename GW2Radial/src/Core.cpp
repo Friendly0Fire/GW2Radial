@@ -91,6 +91,9 @@ void Core::OnFocusLost()
 void Core::OnFocus() {
 	mainEffect_->Clear();
 	Keybind::ForceRefreshDisplayStrings();
+
+	if(MiscTab::i()->reloadOnFocus())
+	    customWheels_->Reload();
 }
 
 LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -183,9 +186,9 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	wheels_.emplace_back(Wheel::Create<Marker>(IDR_BG, IDR_WIPEMASK, "markers", "Markers", device));
 	wheels_.emplace_back(Wheel::Create<ObjectMarker>(IDR_BG, IDR_WIPEMASK, "object_markers", "Object Markers", device));
 
-	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, device);
-
 	ImGui_ImplDX9_Init(device);
+
+	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, fontBlack_, device);
 }
 
 void Core::OnDeviceUnset()
@@ -258,6 +261,8 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 				wheel->Draw(device, mainEffect_, quad_.get());
 
 		SettingsMenu::i()->Draw();
+
+		customWheels_->Draw();
 
 		if(!firstMessageShown_->value())
 			ImGuiPopup("Welcome to GW2Radial!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2& windowSize)

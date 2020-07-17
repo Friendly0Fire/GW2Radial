@@ -165,6 +165,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClCompile Include="src\Utility.cpp" />
     <ClCompile Include="src\Wheel.cpp" />
     <ClCompile Include="src\WheelElement.cpp" />
+    <ClCompile Include="src\WICTextureLoader.cpp" />
     <ClCompile Include="xxhash\xxhash.c" />
   </ItemGroup>
   <ItemGroup>
@@ -206,6 +207,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\Utility.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
+    <ClInclude Include="include\WICTextureLoader.h" />
     <ClInclude Include="loader-core\include\gw2al_api.h" />
     <ClInclude Include="shaders\registers.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />

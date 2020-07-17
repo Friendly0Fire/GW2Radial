@@ -38,7 +38,7 @@ void SettingsMenu::Draw()
 			inactiveTabColor.w /= 4;
 
 			// Draw buttons simulating tabs
-			for (const auto& i : implementers_)
+			for (cref i : implementers_)
 			{
 				ImGui::SameLine();
 				ImGui::PushStyleColor(ImGuiCol_::ImGuiCol_Button, currentTab_ == i ? currentTabColor : inactiveTabColor);

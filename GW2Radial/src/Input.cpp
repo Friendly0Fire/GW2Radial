@@ -151,7 +151,7 @@ namespace GW2Radial
         bool downKeysChanged = false;
 
         // Apply key events now
-        for (const auto& k : eventKeys)
+        for (cref k : eventKeys)
             if (k.down)
                 downKeysChanged |= DownKeys.insert(k.sc).second;
             else
@@ -199,7 +199,7 @@ namespace GW2Radial
             case WM_MBUTTONDBLCLK:
             case WM_XBUTTONDBLCLK:
                 {
-                    const auto& io2 = ImGui::GetIO();
+                    cref io2 = ImGui::GetIO();
 
                     short mx, my;
                     mx = (short)io2.MousePos.x;
@@ -211,7 +211,7 @@ namespace GW2Radial
         }
 
         // Prevent game from receiving input if ImGui requests capture
-        const auto& io = ImGui::GetIO();
+        cref io = ImGui::GetIO();
         switch (msg)
         {
         case WM_LBUTTONDOWN:
@@ -363,7 +363,7 @@ namespace GW2Radial
         if (DownKeys.count(ScanCode::X2BUTTON))
             wParam += MK_XBUTTON2;
 
-        const auto& io = ImGui::GetIO();
+        cref io = ImGui::GetIO();
 
         LPARAM lParam = MAKELPARAM(cursorPos ? cursorPos->x : (static_cast<int>(io.MousePos.x)), cursorPos ? cursorPos->y : (static_cast<int>(io.MousePos.y)));
         return { wParam, lParam };
@@ -415,7 +415,7 @@ namespace GW2Radial
 
         // GW2 only distinguishes left/right modifiers when not used with other keys
         bool useUniversalModifiers = false;
-        for (const auto& sc : scsSorted)
+        for (cref sc : scsSorted)
         {
             if (!IsModifier(sc))
             {

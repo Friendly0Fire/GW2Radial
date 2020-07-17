@@ -62,9 +62,9 @@
 #define SQUARE(x) ((x) * (x))
 
 #ifdef _DEBUG
-#define GW2_ASSERT(x) { if(x) ; else __debugbreak(); }
+__forceinline void GW2_ASSERT(bool test) { if(test); else __debugbreak(); }
 #else
-#define GW2_ASSERT(x) { if(x) ; else if(IsDebuggerPresent()) __debugbreak(); }
+__forceinline void GW2_ASSERT(bool test) { if(test); else if(IsDebuggerPresent()) __debugbreak(); }
 #endif
 
 using Microsoft::WRL::ComPtr;
@@ -73,6 +73,8 @@ typedef unsigned char uchar;
 typedef unsigned int uint;
 typedef std::basic_string<TCHAR> tstring;
 typedef unsigned __int64 mstime;
+
+#define cref const auto&
 
 #ifndef HID_USAGE_PAGE_GENERIC
 #define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)

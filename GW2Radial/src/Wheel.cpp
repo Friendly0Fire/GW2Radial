@@ -374,7 +374,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			}
 
 			{
-				const auto& io = ImGui::GetIO();
+				cref io = ImGui::GetIO();
 				
 				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "Cursor_PS");
 				fx->SetRenderStates({
@@ -397,7 +397,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		if(outOfCombatDelayed_ == nullptr) dt = 0.5f - dt;
 		else
 			timeLeft = 1.f - (currentTime - outOfCombatDelayedTime_) / (float(maximumOutOfCombatWaitOption_.value()) * 1000.f);
-	    const auto& io = ImGui::GetIO();
+	    cref io = ImGui::GetIO();
 		
 		fx->Begin();
 		quad->Bind(fx);
@@ -544,7 +544,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 	
 	{
 		const auto isAnyElementBeingModified = std::any_of(wheelElements_.begin(), wheelElements_.end(),
-			[](const auto& we) { return we->keybind().isBeingModified(); });
+			[](cref we) { return we->keybind().isBeingModified(); });
 
 		{
 			// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
@@ -554,7 +554,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 			// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
 			fullKeybind.erase(ScanCode::LBUTTON);
 
-			for (const auto& ek : changedKeys)
+			for (cref ek : changedKeys)
 			{
 				if(IsSame(ek.sc, ScanCode::LBUTTON))
 					continue;

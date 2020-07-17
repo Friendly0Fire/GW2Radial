@@ -43,7 +43,7 @@ void Effect_dx12::SetRenderStates(std::initializer_list<ShaderState> states)
 void Effect_dx12::SetSamplerStates(uint slot, std::initializer_list<ShaderState> states)
 {
 	uint hash = 0;
-	for(const auto& s : states)
+	for(cref s : states)
 	    hash = XXH32(&s, sizeof(ShaderState), hash);
 	
 	auto it = cachedSamplers_.find(hash);
@@ -51,7 +51,7 @@ void Effect_dx12::SetSamplerStates(uint slot, std::initializer_list<ShaderState>
 	{
 		SetDefaultSamplerStates(0);
 
-	    for(const auto& s : states)
+	    for(cref s : states)
 		    device_->SetSamplerState(0, static_cast<D3DSAMPLERSTATETYPE>(s.stateId), s.stateValue);
 
 		it = cachedSamplers_.insert({ hash, { 0 } }).first;
@@ -112,7 +112,7 @@ void Effect_dx12::Begin()
 void Effect_dx12::ApplyStates()
 {
 	uint rsHash = 0;
-	for(const auto& s : renderStates_)
+	for(cref s : renderStates_)
 	    rsHash = XXH32(&s, sizeof(ShaderState), rsHash);
 
 	uint64_t hashData[] = {
@@ -131,7 +131,7 @@ void Effect_dx12::ApplyStates()
 
 		SetDefaultRenderStates();
 
-	    for(const auto& s : renderStates_)
+	    for(cref s : renderStates_)
 		    device_->SetRenderState(static_cast<D3DRENDERSTATETYPE>(s.stateId), s.stateValue);
 		
 		it = cachedPSOs_.insert({ psoHash, nullptr }).first;
