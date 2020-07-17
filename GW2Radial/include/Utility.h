@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include <imgui.h>
 #include <istream>
+#include <cwctype>
 
 namespace GW2Radial
 {
@@ -11,9 +12,6 @@ namespace GW2Radial
 std::string utf8_encode(const std::wstring &wstr);
 // Convert an UTF8 string to a wide Unicode String
 std::wstring utf8_decode(const std::string &str);
-
-std::wstring GetKeyName(uint virtualKey);
-std::wstring GetScanCodeName(uint scanCode);
 
 void SplitFilename(const tstring & str, tstring * folder, tstring * file);
 
@@ -144,6 +142,26 @@ inline uint RGBAto32(const fVector4& rgb, bool scale)
 {
 	float s = scale ? 255.f : 1.f;
     return D3DCOLOR_RGBA(byte(rgb.x * s), byte(rgb.y * s), byte(rgb.z * s), byte(rgb.w * s));
+}
+
+template<typename Str>
+Str ToLower(Str in)
+{
+	if constexpr(std::is_same_v<Str, std::string>)
+	    std::transform(in.begin(), in.end(), in.begin(), std::tolower);
+	else
+		std::transform(in.begin(), in.end(), in.begin(), std::towlower);
+	return in;
+}
+
+template<typename Str>
+Str ToUpper(Str in)
+{
+	if constexpr(std::is_same_v<Str, std::string>)
+	    std::transform(in.begin(), in.end(), in.begin(), std::toupper);
+	else
+		std::transform(in.begin(), in.end(), in.begin(), std::towupper);
+	return in;
 }
 
 }

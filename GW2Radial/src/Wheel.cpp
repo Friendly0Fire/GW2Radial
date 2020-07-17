@@ -17,7 +17,7 @@ namespace GW2Radial
 
 Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, IDirect3DDevice9 * dev)
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
-	  keybind_(nickname_, "Show on mouse"), centralKeybind_(nickname_ + "_cl", "Show in center"),
+	  keybind_(nickname_, "Show on mouse", nickname_, true), centralKeybind_(nickname_ + "_cl", "Show in center", nickname_, true),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
 	  centerFavoriteOption_("Favorite choice##Center", "center_favorite.2", "wheel_" + nickname_),
 	  delayFavoriteOption_("Favorite choice##Delay", "delay_favorite", "wheel_" + nickname_),

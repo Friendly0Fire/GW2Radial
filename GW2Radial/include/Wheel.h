@@ -52,6 +52,9 @@ public:
 
 	void SetAlphaBlended(bool enabled) { alphaBlended_ = enabled; }
 	void SetResetCursorPositionBeforeKeyPress(bool enabled) { resetCursorPositionBeforeKeyPress_ = enabled; }
+	
+	const std::string& nickname() const { return nickname_; }
+	const std::string& displayName() const { return displayName_; }
 
 protected:
 	void Sort();

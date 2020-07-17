@@ -35,7 +35,7 @@ IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, const std::wstr
 	io.DisplaySize = sz;
 
 	IDirect3DTexture9* tex = nullptr;
-	dev->CreateTexture(sz.x, sz.y, 1,
+	dev->CreateTexture(uint(sz.x), uint(sz.y), 1,
  D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, nullptr);
 
 	dev->BeginScene();
@@ -114,15 +114,15 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		return fail(L"Invalid INI file");
 
 	cref general = *ini.GetSection("General");
-	cref name = general.find("name");
-	cref nickname = general.find("nickname");
+	cref wheelDisplayName = general.find("display_name");
+	cref wheelNickname = general.find("nickname");
 	
-	if(name == general.end())
-		return fail(L"Missing field name");
-	if(nickname == general.end())
+	if(wheelDisplayName == general.end())
+		return fail(L"Missing field display_name");
+	if(wheelNickname == general.end())
 		return fail(L"Missing field nickname");
 
-	auto wheel = std::make_unique<Wheel>(IDR_BG, IDR_WIPEMASK, nickname->second, name->second, device_);
+	auto wheel = std::make_unique<Wheel>(IDR_BG, IDR_WIPEMASK, wheelNickname->second, wheelDisplayName->second, device_);
 
 	bool alphaBlended = !ini.GetBoolValue("General", "icons_are_masks", true);
 	wheel->SetAlphaBlended(alphaBlended);
@@ -151,12 +151,12 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 
 			size_t i = 0;
 			for(cref c : colorElems)
-				reinterpret_cast<float*>(&color)[i++] = atof(c.c_str()) / 255.f;
+				reinterpret_cast<float*>(&color)[i++] = float(atof(c.c_str()) / 255.f);
 		}
 
 	    CustomElementSettings ces;
-		ces.category = nickname->second;
-		ces.nickname = sec.pItem;
+		ces.category = wheel->nickname();
+		ces.nickname = ToLower(wheel->nickname()) + "_" + ToLower(std::string(sec.pItem));
 		ces.name = elementName == element.end() ? sec.pItem : elementName->second;
 		ces.color = color;
 		ces.id = baseId++;

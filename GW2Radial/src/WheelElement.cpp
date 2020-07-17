@@ -13,7 +13,7 @@ WheelElement::WheelElement(uint id, const std::string &nickname, const std::stri
 	: nickname_(nickname), displayName_(displayName), elementId_(id),
 	  isShownOption_(displayName + " Visible", nickname + "_visible", category, true),
 	  sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, int(id)),
-	  keybind_(nickname, displayName),
+	  keybind_(nickname, displayName, category, false),
 	  appearance_(tex)
 {
 	if(tex == nullptr)

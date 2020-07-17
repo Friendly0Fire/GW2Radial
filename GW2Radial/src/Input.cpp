@@ -12,24 +12,6 @@ IMGUI_IMPL_API LRESULT  ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPAR
 namespace GW2Radial
 {
 
-    std::wstring GetScanCodeName(ScanCode scanCode) { return GetScanCodeName(static_cast<uint>(scanCode)); }
-
-    ScanCode GetScanCode(KeyLParam lParam) {
-        if (lParam.extendedFlag)
-        {
-            if (lParam.scanCode != 0x45)
-                lParam.scanCode |= 0xE000;
-        } else
-        {
-            if (lParam.scanCode == 0x45)
-                lParam.scanCode = 0xE11D45;
-            else if (lParam.scanCode == 0x54)
-                lParam.scanCode = 0xE037;
-        }
-
-        return ScanCode(lParam.scanCode);
-    }
-
     DEFINE_SINGLETON(Input);
 
     Input::Input()

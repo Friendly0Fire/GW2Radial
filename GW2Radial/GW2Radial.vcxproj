@@ -159,6 +159,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClCompile Include="src\Mount.cpp" />
     <ClCompile Include="src\MumbleLink.cpp" />
     <ClCompile Include="src\Novelty.cpp" />
+    <ClCompile Include="src\ScanCode.cpp" />
     <ClCompile Include="src\SettingsMenu.cpp" />
     <ClCompile Include="src\UnitQuad.cpp" />
     <ClCompile Include="src\UpdateCheck.cpp" />

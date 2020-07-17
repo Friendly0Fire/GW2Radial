@@ -204,14 +204,15 @@ enum class ScanCode : uint {
 using ScanCode_t = std::underlying_type_t<ScanCode>;
 }
 
-inline constexpr GW2Radial::ScanCode operator&(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
+constexpr GW2Radial::ScanCode operator&(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
     return GW2Radial::ScanCode(GW2Radial::ScanCode_t(a) & GW2Radial::ScanCode_t(b));
 }
-inline constexpr GW2Radial::ScanCode operator|(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
+
+constexpr GW2Radial::ScanCode operator|(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
     return GW2Radial::ScanCode(GW2Radial::ScanCode_t(a) | GW2Radial::ScanCode_t(b));
 }
 
-inline constexpr GW2Radial::ScanCode operator~(const GW2Radial::ScanCode& a) {
+constexpr GW2Radial::ScanCode operator~(const GW2Radial::ScanCode& a) {
     return GW2Radial::ScanCode(~GW2Radial::ScanCode_t(a));
 }
 
@@ -272,13 +273,13 @@ inline ScanCode MakeUniversal(const ScanCode& a) {
     }
 }
 
-inline constexpr bool IsUniversalModifier(const ScanCode& a) {
+constexpr bool IsUniversalModifier(const ScanCode& a) {
     return (ScanCode_t(a) & ScanCode_t(ScanCode::UNIVERSAL_MODIFIER_FLAG)) != ScanCode_t(ScanCode::NONE);
 }
 
 std::wstring GetScanCodeName(ScanCode scanCode);
 
-inline constexpr bool IsSame(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
+constexpr bool IsSame(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
     if (IsUniversalModifier(a) || IsUniversalModifier(b)) {
         ScanCode_t b2 = ScanCode_t(b);
         switch (a) {
