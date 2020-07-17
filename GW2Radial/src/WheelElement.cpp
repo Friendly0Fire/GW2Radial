@@ -22,6 +22,7 @@ WheelElement::WheelElement(uint id, const std::string &nickname, const std::stri
 	D3DSURFACE_DESC desc;
 	appearance_->GetLevelDesc(0, &desc);
 	aspectRatio_ = float(desc.Height) / float(desc.Width);
+	texWidth_ = float(desc.Width);
 }
 
 WheelElement::~WheelElement()
@@ -112,6 +113,15 @@ void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsC
 	spriteDimensions.w *= elementDiameter;
 	
 	spriteDimensions.w *= aspectRatio_;
+
+	fVector4 adjustedColor = color();
+	adjustedColor.x = Lerp(1, adjustedColor.x, colorizeAmount_);
+	adjustedColor.y = Lerp(1, adjustedColor.y, colorizeAmount_);
+	adjustedColor.z = Lerp(1, adjustedColor.z, colorizeAmount_);
+
+	const float shadowOffsetMultiplier = -0.02f / 1024.f;
+
+	fVector4 shadowData { shadowStrength_, shadowOffsetMultiplier * texWidth_, shadowOffsetMultiplier * texWidth_ * aspectRatio_, 1.f };
 	
 	{
 		using namespace ShaderRegister::ShaderPS;
@@ -119,7 +129,8 @@ void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsC
         fx->SetTexture(sampler2D_texMainSampler, appearance_);
         fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, spriteDimensions);
         fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementID, elementId());
-        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fElementColor, color());
+        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fElementColor, adjustedColor);
+        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fShadowData, shadowData);
 	}
 	
 	fx->ApplyStates();

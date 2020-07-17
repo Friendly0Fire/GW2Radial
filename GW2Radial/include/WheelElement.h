@@ -32,9 +32,15 @@ public:
 
 	float hoverFadeIn(const mstime& currentTime, const Wheel* parent) const;
 	
+	float shadowStrength() const { return shadowStrength_; }
+	void shadowStrength(float ss) { shadowStrength_ = ss; }
+	
+	float colorizeAmount() const { return colorizeAmount_; }
+	void colorizeAmount(float ca) { colorizeAmount_ = ca; }
+	
 	const Keybind& keybind() const { return keybind_; }
 	Keybind& keybind() { return keybind_; }
-	inline bool isBound() const { return keybind_.isSet(); }
+	bool isBound() const { return keybind_.isSet(); }
 	virtual bool isActive() const { return isBound() && isShownOption_.value(); }
 
 protected:
@@ -50,6 +56,9 @@ protected:
 	mstime currentHoverTime_ = 0;
 	mstime currentExitTime_ = 0;
 	float aspectRatio_ = 1.f;
+	float shadowStrength_ = 1.f;
+	float colorizeAmount_ = 1.f;
+	float texWidth_ = 0.f;
 };
 
 }

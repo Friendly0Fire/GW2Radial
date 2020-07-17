@@ -120,23 +120,14 @@ float4 BgImage_PS(PS_INPUT In) : COLOR0
 	return color * saturate(edge_mask * center_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * wheelFadeIn * float4(1, 1, 1, 1.2f);
 }
 
-float4 MountImageBase(PS_INPUT In, bool imageIsMask) : COLOR0
+float4 MountImage_PS(PS_INPUT In) : COLOR0
 {
 	float hoverFadeIn = fHoverFadeIns_lookup(iElementID);
 
-	float mask = 1, shadow = 0;
-	float4 color = 1;
-	if(imageIsMask)
-	{
-		mask = 1.f - tex2D(texMainSampler, In.UV).r;
-		shadow = 1.f - tex2D(texMainSampler, In.UV + 0.01f).r;
-
-		color = fElementColor;
-	}
-	else
-	{
-		color = tex2D(texMainSampler, In.UV);
-	}
+	float shadow = 0;
+	float4 color = tex2D(texMainSampler, In.UV) * fElementColor;
+	if(fShadowData.x > 0.f)
+		shadow = fShadowData.x * (tex2D(texMainSampler, In.UV + fShadowData.yz).a);
 	
 	float3 fLumaDot = float3(0.2126, 0.7152, 0.0722);
 	float luma = dot(color.rgb, fLumaDot);
@@ -157,17 +148,7 @@ float4 MountImageBase(PS_INPUT In, bool imageIsMask) : COLOR0
 		glow = color.rgb * (glowMask / 4) * hoverFadeIn * 0.5f * (0.5f + 0.5f * srnoise(In.UV * 3.18f + 0.15f * float2(cos(fAnimationTimer * 3), sin(fAnimationTimer * 2))));
 	}
 
-	return float4(finalColor * mask + glow, color.a * max(mask, shadow)) * fWheelFadeIn.x;
-}
-
-float4 MountImage_PS(PS_INPUT In) : COLOR0
-{
-	return MountImageBase(In, true);
-}
-
-float4 MountImageAlphaBlend_PS(PS_INPUT In) : COLOR0
-{
-	return MountImageBase(In, false);
+	return float4(finalColor.rgb + glow, max(color.a, shadow)) * fWheelFadeIn.x;
 }
 
 float4 Cursor_PS(PS_INPUT In) : COLOR0

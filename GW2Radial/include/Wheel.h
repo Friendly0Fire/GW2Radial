@@ -50,7 +50,6 @@ public:
 
 	bool drawOverUI() const { return showOverGameUIOption_.value(); }
 
-	void SetAlphaBlended(bool enabled) { alphaBlended_ = enabled; }
 	void SetResetCursorPositionBeforeKeyPress(bool enabled) { resetCursorPositionBeforeKeyPress_ = enabled; }
 	
 	const std::string& nickname() const { return nickname_; }
@@ -68,7 +67,6 @@ protected:
 	std::function<bool(WheelElement*&)> doBypassWheel_ = [](auto) { return false; };
 
 	std::string nickname_, displayName_;
-	bool alphaBlended_ = false;
 	bool resetCursorPositionBeforeKeyPress_ = false;
 	bool resetCursorPositionToCenter_ = false;
 

@@ -356,13 +356,11 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				fx->ApplyStates();
 				quad->Draw();
 
-				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", alphaBlended_ ? "MountImageAlphaBlend_PS" : "MountImage_PS");
-
-				if(alphaBlended_)
-					fx->SetRenderStates({
-					    { D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
-					    { D3DRS_SRCBLEND, D3DBLEND_SRCALPHA },
-				    });
+				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "MountImage_PS");
+				fx->SetRenderStates({
+					{ D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
+					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
+				});
 
 				int n = 0;
 				for (auto it : activeElements)

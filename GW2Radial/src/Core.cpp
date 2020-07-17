@@ -241,6 +241,12 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 	UpdateCheck::i()->CheckForUpdates();
 
+	if(forceReloadWheels_)
+	{
+	    forceReloadWheels_ = false;
+	    customWheels_->Reload();
+	}
+
 	if (firstFrame_)
 	{
 		firstFrame_ = false;

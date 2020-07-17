@@ -2,15 +2,13 @@
 #include <UpdateCheck.h>
 #include <ImGuiExtensions.h>
 #include <imgui/imgui.h>
-#include <Utility.h>
-#include <Input.h>
+#include <Core.h>
 
 namespace GW2Radial
 {
 DEFINE_SINGLETON(MiscTab);
 
 MiscTab::MiscTab()
-    : reloadOnFocus_("Reload custom wheels on focus", "reload_focus", "General", false)
 {
 	SettingsMenu::i()->AddImplementer(this);
 }
@@ -25,7 +23,10 @@ void MiscTab::DrawMenu()
 	if(auto uc = UpdateCheck::iNoInit(); uc)
 		ImGuiConfigurationWrapper(ImGui::Checkbox, uc->checkEnabled_);
 
-	ImGuiConfigurationWrapper(ImGui::Checkbox, reloadOnFocus_);
+	ImGui::Checkbox("Reload custom wheels on focus", &reloadOnFocus_);
+
+	if(ImGui::Button("Reload custom wheels"))
+		Core::i()->ForceReloadWheels();
 }
 
 }

@@ -20,6 +20,8 @@ public:
 	Core() = default;
 	~Core();
 
+	void ForceReloadWheels() { forceReloadWheels_ = true; }
+
 	HWND gameWindow() const { return gameWindow_; }
 	HMODULE dllModule() const { return dllModule_; }
 	WNDPROC baseWndProc() const { return baseWndProc_; }
@@ -54,6 +56,7 @@ protected:
 
 	uint screenWidth_ = 0, screenHeight_ = 0;
 	bool firstFrame_ = true;
+	bool forceReloadWheels_ = false;
 
 	std::unique_ptr<UnitQuad> quad_;
 	Effect* mainEffect_ = nullptr;

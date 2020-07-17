@@ -19,10 +19,10 @@ float CalcText(ImFont* font, const std::wstring& text)
 	return sz.x;
 }
 
-IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, float fontSize, const std::wstring& text, bool alphaBlended, fVector4 color)
+IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, float fontSize, const std::wstring& text)
 {
-	uint fgColor = alphaBlended ? RGBAto32(color, true) : 0xFF000000;
-	uint bgColor = alphaBlended ? 0 : 0xFFFFFFFF;
+	uint fgColor = 0xFFFFFFFF;
+	uint bgColor = 0x00000000;
 
 	cref txt = utf8_encode(text);
 	
@@ -141,9 +141,6 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 
 	auto wheel = std::make_unique<Wheel>(IDR_BG, IDR_WIPEMASK, wheelNickname->second, wheelDisplayName->second, device_);
 
-	bool alphaBlended = !ini.GetBoolValue("General", "icons_are_masks", true);
-	wheel->SetAlphaBlended(alphaBlended);
-
 	uint baseId = customWheelNextId_;
 
 	std::list<CSimpleIniA::Entry> sections;
@@ -161,6 +158,8 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		cref elementName = element.find("name");
 		cref elementColor = element.find("color");
 		cref elementIcon = element.find("icon");
+		cref elementShadow = element.find("shadow_strength");
+		cref elementColorize = element.find("colorize_strength");
 
 		fVector4 color { 1.f, 1.f, 1.f, 1.f };
 		if(elementColor != element.end())
@@ -179,6 +178,8 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		ces.name = elementName == element.end() ? sec.pItem : elementName->second;
 		ces.color = color;
 		ces.id = baseId++;
+		ces.shadow = elementShadow == element.end() ? 1.f : atof(elementShadow->second);
+		ces.colorize = elementColorize == element.end() ? 1.f : atof(elementColorize->second);
 
 		if(elementIcon != element.end())
 			ces.texture = LoadCustomTexture(device_, dataFolder / utf8_decode(elementIcon->second));
@@ -195,7 +196,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	for(auto& ces : elements)
 	{
 	    if(ces.texture == nullptr)
-		    ces.texture = DrawText(device_, font_, desiredFontSize, utf8_decode(ces.name), alphaBlended, ces.color);
+		    ces.texture = DrawText(device_, font_, desiredFontSize, utf8_decode(ces.name));
 
 	    wheel->AddElement(std::make_unique<CustomElement>(ces, device_));
 	}
@@ -243,7 +244,10 @@ void CustomWheelsManager::Reload()
 
 CustomElement::CustomElement(const CustomElementSettings& ces, IDirect3DDevice9* dev)
 	: WheelElement(ces.id, ces.nickname, ces.category, ces.name, dev, ces.texture), color_(ces.color)
-{ }
+{
+    shadowStrength_ = ces.shadow;
+	colorizeAmount_ = ces.colorize;
+}
 
 fVector4 CustomElement::color()
 {

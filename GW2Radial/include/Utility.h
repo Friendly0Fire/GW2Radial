@@ -164,4 +164,10 @@ Str ToUpper(Str in)
 	return in;
 }
 
+template<typename Vec>
+float Luma(const Vec& v)
+{
+    return v.x * 0.2126 + v.y * 0.7152 + v.z * 0.0722;
+}
+
 }

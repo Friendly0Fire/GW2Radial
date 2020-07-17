@@ -33,6 +33,8 @@ namespace GW2Radial
         std::string category;
         std::string name;
         fVector4 color;
+        float shadow;
+        float colorize;
 
         IDirect3DTexture9* texture = nullptr;
     };

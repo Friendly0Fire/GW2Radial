@@ -26,7 +26,8 @@ VALUE_REGISTER(int, iElementCount, 3, c, ShaderPS);
 VALUE_REGISTER(float3, fWipeMaskData, 4, c, ShaderPS);
 VALUE_REGISTER(int, iElementID, 5, c, ShaderPS);
 VALUE_REGISTER(float4, fElementColor, 6, c, ShaderPS);
-VALUE_REGISTER_ARRAY(float4, fHoverFadeIns, WHEEL_MAX_ELEMENT_COUNT, 7, c, ShaderPS);
+VALUE_REGISTER(float4, fShadowData, 7, c, ShaderPS);
+VALUE_REGISTER_ARRAY(float4, fHoverFadeIns, WHEEL_MAX_ELEMENT_COUNT, 8, c, ShaderPS);
 #endif
 
 #if defined(_WINDOWS) || defined(SHADER_VS)
