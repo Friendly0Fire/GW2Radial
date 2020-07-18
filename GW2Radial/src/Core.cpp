@@ -93,7 +93,7 @@ void Core::OnFocus() {
 	Keybind::ForceRefreshDisplayStrings();
 
 	if(MiscTab::i()->reloadOnFocus())
-	    customWheels_->Reload();
+		forceReloadWheels_ = true;
 }
 
 LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -136,6 +136,8 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 		fontBlack_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 35.f, &fontCfg);
 	if(const auto data = LoadResource(IDR_FONT_ITALIC); data.data())
 		fontItalic_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 25.f, &fontCfg);
+	if(const auto data = LoadResource(IDR_FONT_DRAW); data.data())
+		fontDraw_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 100.f, &fontCfg);
 
 	if(font_)
 		imio.FontDefault = font_;
@@ -188,7 +190,7 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 
 	ImGui_ImplDX9_Init(device);
 
-	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, fontBlack_, device);
+	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, fontDraw_, device);
 }
 
 void Core::OnDeviceUnset()
@@ -240,12 +242,6 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		wheel->OnUpdate();
 
 	UpdateCheck::i()->CheckForUpdates();
-
-	if(forceReloadWheels_)
-	{
-	    forceReloadWheels_ = false;
-	    customWheels_->Reload();
-	}
 
 	if (firstFrame_)
 	{
@@ -308,6 +304,12 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 		if (sceneEnded)
 			device->EndScene();
+	}
+	
+	if(forceReloadWheels_)
+	{
+	    forceReloadWheels_ = false;
+	    customWheels_->Reload();
 	}
 }
 

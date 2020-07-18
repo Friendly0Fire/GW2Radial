@@ -61,7 +61,7 @@ protected:
 	std::unique_ptr<UnitQuad> quad_;
 	Effect* mainEffect_ = nullptr;
 
-	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr;
+	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr, *fontDraw_ = nullptr;
 
 	std::vector<std::unique_ptr<Wheel>> wheels_;
 	std::unique_ptr<CustomWheelsManager> customWheels_;

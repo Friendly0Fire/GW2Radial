@@ -203,6 +203,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\SettingsMenu.h" />
     <ClInclude Include="include\Singleton.h" />
     <ClInclude Include="include\Tag.h" />
+    <ClInclude Include="include\TGA.h" />
     <ClInclude Include="include\UnitQuad.h" />
     <ClInclude Include="include\UpdateCheck.h" />
     <ClInclude Include="include\Utility.h" />

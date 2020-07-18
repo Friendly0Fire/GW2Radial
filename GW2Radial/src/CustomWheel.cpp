@@ -3,9 +3,12 @@
 #include "DDSTextureLoader.h"
 #include "WICTextureLoader.h"
 #include <filesystem>
+#include <fstream>
 #include <imgui/examples/imgui_impl_dx9.h>
 
 #include <ImGuiPopup.h>
+
+#include <TGA.h>
 
 namespace GW2Radial
 {
@@ -21,8 +24,8 @@ float CalcText(ImFont* font, const std::wstring& text)
 
 IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, float fontSize, const std::wstring& text)
 {
-	uint fgColor = 0xFFFFFFFF;
-	uint bgColor = 0x00000000;
+	const uint fgColor = 0xFFFFFFFF;
+	const uint bgColor = 0x00000000;
 
 	cref txt = utf8_encode(text);
 	
@@ -67,12 +70,31 @@ IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, float fontSize,
 	
 	dev->SetRenderTarget(0, nullptr);
 
-	if(hr != D3DERR_INVALIDCALL)
-	    dev->EndScene();
+#if 0
+	{
+	    IDirect3DSurface9* surf2;
+	    GW2_ASSERT(SUCCEEDED(dev->CreateOffscreenPlainSurface(uint(clip.x), uint(clip.y), D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &surf2, nullptr)));
+
+	    GW2_ASSERT(SUCCEEDED(dev->GetRenderTargetData(surf, surf2)));
+
+	    D3DLOCKED_RECT rect;
+	    GW2_ASSERT(SUCCEEDED(surf2->LockRect(&rect, nullptr, D3DLOCK_READONLY)));
+	    std::span<byte> rectSpan((byte*)rect.pBits, uint(clip.x) * uint(clip.y) * 4);
+	    cref tgaData = SaveTGA(rectSpan, uint(clip.x), uint(clip.y), 32, rect.Pitch);
+	    std::ofstream of((text + L".tga").c_str(), std::ofstream::binary | std::ofstream::trunc);
+	    of.write((char*)tgaData.data(), tgaData.size());
+
+	    surf2->UnlockRect();
+		surf2->Release();
+	}
+#endif
+
+	io.DisplaySize = oldDisplaySize;
 
 	surf->Release();
 
-	io.DisplaySize = oldDisplaySize;
+	if(hr != D3DERR_INVALIDCALL)
+	    dev->EndScene();
 
 	return tex;
 }
