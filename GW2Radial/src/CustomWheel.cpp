@@ -22,7 +22,15 @@ float CalcText(ImFont* font, const std::wstring& text)
 	return sz.x;
 }
 
-IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, float fontSize, const std::wstring& text)
+IDirect3DTexture9* MakeTextTexture(IDirect3DDevice9* dev, float fontSize)
+{
+	IDirect3DTexture9* tex = nullptr;
+	dev->CreateTexture(1024, uint(fontSize), 1,
+					   D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, nullptr);
+	return tex;
+}
+
+void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float fontSize, const std::wstring& text)
 {
 	const uint fgColor = 0xFFFFFFFF;
 	const uint bgColor = 0x00000000;
@@ -45,14 +53,11 @@ IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, float fontSize,
 	auto oldDisplaySize = io.DisplaySize;
 	io.DisplaySize = clip;
 
-	IDirect3DTexture9* tex = nullptr;
-	dev->CreateTexture(uint(clip.x), uint(clip.y), 1,
- D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, nullptr);
-
-	auto hr = dev->BeginScene();
-
 	IDirect3DSurface9* surf;
 	tex->GetSurfaceLevel(0, &surf);
+
+	IDirect3DSurface9* oldRt;
+	dev->GetRenderTarget(0, &oldRt);
 	dev->SetRenderTarget(0, surf);
 
 	dev->Clear(1, nullptr, D3DCLEAR_TARGET, bgColor, 0.f, 0);
@@ -62,15 +67,17 @@ IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, float fontSize,
 	imData.Valid = true;
 	imData.CmdLists = imDraws;
 	imData.CmdListsCount = 1;
-	imData.TotalIdxCount = imDraw.IdxBuffer.size();
-	imData.TotalVtxCount = imDraw.VtxBuffer.size();
-	imData.DisplayPos = imDraw.GetClipRectMin();
-	imData.DisplaySize = imDraw.GetClipRectMax();
+	imData.TotalIdxCount = imDraw.IdxBuffer.Size;
+	imData.TotalVtxCount = imDraw.VtxBuffer.Size;
+	imData.DisplayPos = ImVec2(0.0f, 0.0f);
+	imData.DisplaySize = io.DisplaySize;
+
 	ImGui_ImplDX9_RenderDrawData(&imData);
 	
-	dev->SetRenderTarget(0, nullptr);
+	dev->SetRenderTarget(0, oldRt);
+	oldRt->Release();
 
-#if 0
+#if 1
 	{
 	    IDirect3DSurface9* surf2;
 	    GW2_ASSERT(SUCCEEDED(dev->CreateOffscreenPlainSurface(uint(clip.x), uint(clip.y), D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &surf2, nullptr)));
@@ -92,11 +99,6 @@ IDirect3DTexture9* DrawText(IDirect3DDevice9* dev, ImFont* font, float fontSize,
 	io.DisplaySize = oldDisplaySize;
 
 	surf->Release();
-
-	if(hr != D3DERR_INVALIDCALL)
-	    dev->EndScene();
-
-	return tex;
 }
 
 IDirect3DTexture9* LoadCustomTexture(IDirect3DDevice9* dev, const std::filesystem::path& path)
@@ -109,14 +111,22 @@ IDirect3DTexture9* LoadCustomTexture(IDirect3DDevice9* dev, const std::filesyste
 	return tex;
 }
 
-CustomWheelsManager::CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font, IDirect3DDevice9* dev)
-    : wheels_(wheels), device_(dev), font_(font)
+CustomWheelsManager::CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
+    : wheels_(wheels), font_(font)
 {
-	Reload();
 }
 
-void CustomWheelsManager::Draw()
+void CustomWheelsManager::Draw(IDirect3DDevice9* dev)
 {
+	if(!loaded_)
+		Reload(dev);
+	else if(!textDraws_.empty())
+	{
+		cref td = textDraws_.front();
+		DrawText(dev, td.tex, font_, td.size, td.text);
+	    textDraws_.pop_front();
+	}
+
 	if(failedLoads_.empty())
 		return;
 
@@ -131,7 +141,7 @@ void CustomWheelsManager::Draw()
 			}, [&]() { failedLoads_.pop_back(); });
 }
 
-std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::path& configPath)
+std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::path& configPath, IDirect3DDevice9* dev)
 {
 	cref dataFolder = configPath.parent_path();
 
@@ -161,7 +171,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	}))
 		return fail((L"Nickname " + utf8_decode(std::string(wheelNickname->second)) + L" already exists").c_str());
 
-	auto wheel = std::make_unique<Wheel>(IDR_BG, IDR_WIPEMASK, wheelNickname->second, wheelDisplayName->second, device_);
+	auto wheel = std::make_unique<Wheel>(IDR_BG, IDR_WIPEMASK, wheelNickname->second, wheelDisplayName->second, dev);
 
 	uint baseId = customWheelNextId_;
 
@@ -200,11 +210,11 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		ces.name = elementName == element.end() ? sec.pItem : elementName->second;
 		ces.color = color;
 		ces.id = baseId++;
-		ces.shadow = elementShadow == element.end() ? 1.f : atof(elementShadow->second);
-		ces.colorize = elementColorize == element.end() ? 1.f : atof(elementColorize->second);
+		ces.shadow = elementShadow == element.end() ? 1.f : float(atof(elementShadow->second));
+		ces.colorize = elementColorize == element.end() ? 1.f : float(atof(elementColorize->second));
 
 		if(elementIcon != element.end())
-			ces.texture = LoadCustomTexture(device_, dataFolder / utf8_decode(elementIcon->second));
+			ces.texture = LoadCustomTexture(dev, dataFolder / utf8_decode(elementIcon->second));
 		else
 			maxTextWidth = std::max(maxTextWidth, CalcText(font_, utf8_decode(ces.name)));
 
@@ -217,10 +227,12 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 
 	for(auto& ces : elements)
 	{
-	    if(ces.texture == nullptr)
-		    ces.texture = DrawText(device_, font_, desiredFontSize, utf8_decode(ces.name));
+	    if(ces.texture == nullptr) {
+		    ces.texture = MakeTextTexture(dev, desiredFontSize);
+			textDraws_.push_back({ desiredFontSize, utf8_decode(ces.name), ces.texture });
+		}
 
-	    wheel->AddElement(std::make_unique<CustomElement>(ces, device_));
+	    wheel->AddElement(std::make_unique<CustomElement>(ces, dev));
 	}
 
 	customWheelNextId_ += CustomWheelIdStep;
@@ -228,9 +240,10 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	return std::move(wheel);
 }
 
-void CustomWheelsManager::Reload()
+void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
 {
 	failedLoads_.clear();
+	textDraws_.clear();
 	customWheelNextId_ = CustomWheelStartId;
 
     if(!customWheels_.empty()) {
@@ -241,8 +254,6 @@ void CustomWheelsManager::Reload()
 
 		customWheels_.clear();
 	}
-
-	ImGui_ImplDX9_NewFrame();
 
 	cref folderBase = ConfigurationFile::i()->folder() + L"custom\\";
 
@@ -255,13 +266,15 @@ void CustomWheelsManager::Reload()
 		if(!std::filesystem::exists(configFile))
 			continue;
 
-		auto wheel = BuildWheel(configFile.wstring());
+		auto wheel = BuildWheel(configFile.wstring(), dev);
 		if(wheel)
 		{
 		    wheels_.push_back(std::move(wheel));
 		    customWheels_.push_back(wheels_.back().get());
 		}
 	}
+
+	loaded_ = true;
 }
 
 CustomElement::CustomElement(const CustomElementSettings& ces, IDirect3DDevice9* dev)

@@ -27,6 +27,10 @@ DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(hr))
+        exit(1);
+
 	MumbleLink::i();
 	i()->dllModule_ = dll;
 	i()->InternalInit();
@@ -38,6 +42,8 @@ void Core::Shutdown()
 
 	// We'll just leak a bunch of things and let the driver/OS take care of it, since we have no clean exit point
 	// and calling FreeLibrary in DllMain causes deadlocks
+	
+	CoUninitialize();
 }
 
 Core::~Core()
@@ -190,7 +196,7 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 
 	ImGui_ImplDX9_Init(device);
 
-	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, fontDraw_, device);
+	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, fontDraw_);
 }
 
 void Core::OnDeviceUnset()
@@ -264,7 +270,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 		SettingsMenu::i()->Draw();
 
-		customWheels_->Draw();
+		customWheels_->Draw(device);
 
 		if(!firstMessageShown_->value())
 			ImGuiPopup("Welcome to GW2Radial!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2& windowSize)
@@ -309,7 +315,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 	if(forceReloadWheels_)
 	{
 	    forceReloadWheels_ = false;
-	    customWheels_->Reload();
+	    customWheels_->MarkReload();
 	}
 }
 

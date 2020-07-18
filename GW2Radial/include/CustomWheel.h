@@ -10,20 +10,30 @@ namespace GW2Radial
     {
         std::vector<std::unique_ptr<Wheel>>& wheels_;
         std::vector<Wheel*> customWheels_;
-        IDirect3DDevice9* device_;
         std::vector<std::wstring> failedLoads_;
         static constexpr uint CustomWheelStartId = 10000;
         static constexpr uint CustomWheelIdStep = 1000;
         uint customWheelNextId_ = CustomWheelStartId;
         ImFont* font_ = nullptr;
+        bool loaded_ = false;
 
-        std::unique_ptr<Wheel> BuildWheel(const std::filesystem::path& configPath);
+        std::unique_ptr<Wheel> BuildWheel(const std::filesystem::path& configPath, IDirect3DDevice9* dev);
+
+        struct QueuedTextDraw
+        {
+            float size;
+            std::wstring text;
+            IDirect3DTexture9* tex;
+        };
+        std::list<QueuedTextDraw> textDraws_;
+
+        void Reload(IDirect3DDevice9* dev);
 
     public:
-        CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font, IDirect3DDevice9* dev);
+        CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font);
 
-        void Draw();
-        void Reload();
+        void Draw(IDirect3DDevice9* dev);
+        void MarkReload() { loaded_ = false; }
     };
 
     struct CustomElementSettings
