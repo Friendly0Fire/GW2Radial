@@ -251,7 +251,7 @@ void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
 		if(!std::filesystem::exists(configFile))
 			continue;
 
-		auto wheel = BuildWheel(configFile.wstring(), dev);
+		auto wheel = BuildWheel(configFile, dev);
 		if(wheel)
 		{
 		    wheels_.push_back(std::move(wheel));
