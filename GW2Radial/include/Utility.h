@@ -170,4 +170,6 @@ float Luma(const Vec& v)
     return v.x * 0.2126 + v.y * 0.7152 + v.z * 0.0722;
 }
 
+void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint bpp, const std::wstring& filename);
+
 }

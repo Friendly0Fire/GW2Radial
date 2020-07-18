@@ -261,6 +261,9 @@
     <ClInclude Include="include\TGA.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\d912pxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="rt_rcdat.bin">

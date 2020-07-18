@@ -183,6 +183,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\ConfigurationOption.h" />
     <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\CustomWheel.h" />
+    <ClInclude Include="include\d912pxy.h" />
     <ClInclude Include="include\dds.h" />
     <ClInclude Include="include\DDSTextureLoader.h" />
     <ClInclude Include="include\Direct3D9Hooks.h" />

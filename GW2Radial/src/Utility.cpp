@@ -4,8 +4,9 @@
 #include <Core.h>
 #include <winuser.h>
 #include "DDSTextureLoader.h"
-#include <iostream>
+#include <fstream>
 #include <sstream>
+#include <TGA.h>
 
 namespace GW2Radial
 {
@@ -122,5 +123,28 @@ uint RoundUpToMultipleOf(uint numToRound, uint multiple)
         return numToRound;
 
     return numToRound + multiple - remainder;
+}
+
+void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint bpp, const std::wstring& filename)
+{
+	D3DSURFACE_DESC desc;
+	surf->GetDesc(&desc);
+
+    IDirect3DSurface9* surf2;
+    GW2_ASSERT(SUCCEEDED(
+        dev->CreateOffscreenPlainSurface(desc.Width, desc.Height, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &surf2, nullptr
+        )));
+	
+    GW2_ASSERT(SUCCEEDED(dev->GetRenderTargetData(surf, surf2)));
+
+    D3DLOCKED_RECT rect;
+    GW2_ASSERT(SUCCEEDED(surf2->LockRect(&rect, nullptr, D3DLOCK_READONLY)));
+    std::span<byte> rectSpan((byte*)rect.pBits, desc.Width * desc.Height * (bpp / 8));
+    cref tgaData = SaveTGA(rectSpan, desc.Width, desc.Height, bpp, rect.Pitch);
+    std::ofstream of((filename + L".tga").c_str(), std::ofstream::binary | std::ofstream::trunc);
+    of.write((char*)tgaData.data(), tgaData.size());
+
+    surf2->UnlockRect();
+    surf2->Release();
 }
 }

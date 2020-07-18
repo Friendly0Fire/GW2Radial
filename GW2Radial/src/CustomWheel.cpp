@@ -8,7 +8,7 @@
 
 #include <ImGuiPopup.h>
 
-#include <TGA.h>
+#include <d912pxy.h>
 
 namespace GW2Radial
 {
@@ -77,25 +77,6 @@ void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float
 	dev->SetRenderTarget(0, oldRt);
 	oldRt->Release();
 
-#if 1
-	{
-	    IDirect3DSurface9* surf2;
-	    GW2_ASSERT(SUCCEEDED(dev->CreateOffscreenPlainSurface(uint(clip.x), uint(clip.y), D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &surf2, nullptr)));
-
-	    GW2_ASSERT(SUCCEEDED(dev->GetRenderTargetData(surf, surf2)));
-
-	    D3DLOCKED_RECT rect;
-	    GW2_ASSERT(SUCCEEDED(surf2->LockRect(&rect, nullptr, D3DLOCK_READONLY)));
-	    std::span<byte> rectSpan((byte*)rect.pBits, uint(clip.x) * uint(clip.y) * 4);
-	    cref tgaData = SaveTGA(rectSpan, uint(clip.x), uint(clip.y), 32, rect.Pitch);
-	    std::ofstream of((text + L".tga").c_str(), std::ofstream::binary | std::ofstream::trunc);
-	    of.write((char*)tgaData.data(), tgaData.size());
-
-	    surf2->UnlockRect();
-		surf2->Release();
-	}
-#endif
-
 	io.DisplaySize = oldDisplaySize;
 
 	surf->Release();
@@ -116,7 +97,7 @@ CustomWheelsManager::CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wh
 {
 }
 
-void CustomWheelsManager::Draw(IDirect3DDevice9* dev)
+void CustomWheelsManager::DrawOffscreen(IDirect3DDevice9* dev)
 {
 	if(!loaded_)
 		Reload(dev);
@@ -126,7 +107,11 @@ void CustomWheelsManager::Draw(IDirect3DDevice9* dev)
 		DrawText(dev, td.tex, font_, td.size, td.text);
 	    textDraws_.pop_front();
 	}
+}
 
+
+void CustomWheelsManager::Draw(IDirect3DDevice9* dev)
+{
 	if(failedLoads_.empty())
 		return;
 

@@ -5,8 +5,8 @@ inline std::vector<byte> SaveTGA(const std::span<byte>& source, uint width, uint
 {
     const uint bytesPerPixel = bpp / 8;
     std::vector<byte> output;
-
-#pragma pack(1)
+    
+#pragma pack(push, 1)
     struct TGAHeader {
         char  idlength;
         char  colourmaptype;
@@ -21,6 +21,7 @@ inline std::vector<byte> SaveTGA(const std::span<byte>& source, uint width, uint
         char  bitsperpixel;
         char  imagedescriptor;
     };
+#pragma pack(pop)
 
     output.resize(sizeof(TGAHeader) + width * height * bytesPerPixel);
     auto* header = reinterpret_cast<TGAHeader*>(output.data());

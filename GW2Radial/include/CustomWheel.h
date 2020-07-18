@@ -31,8 +31,9 @@ namespace GW2Radial
 
     public:
         CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font);
-
+        
         void Draw(IDirect3DDevice9* dev);
+        void DrawOffscreen(IDirect3DDevice9* dev);
         void MarkReload() { loaded_ = false; }
     };
 

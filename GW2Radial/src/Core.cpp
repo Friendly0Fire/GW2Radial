@@ -267,10 +267,10 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		for (auto& wheel : wheels_)
 			if (wheel->drawOverUI() || !frameDrawn)
 				wheel->Draw(device, mainEffect_, quad_.get());
+		
+		customWheels_->Draw(device);
 
 		SettingsMenu::i()->Draw();
-
-		customWheels_->Draw(device);
 
 		if(!firstMessageShown_->value())
 			ImGuiPopup("Welcome to GW2Radial!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2& windowSize)
@@ -306,7 +306,9 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 			}, []() { UpdateCheck::i()->updateDismissed(true); });
 
 		ImGui::Render();
-		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());	
+		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+
+        customWheels_->DrawOffscreen(device);
 
 		if (sceneEnded)
 			device->EndScene();
