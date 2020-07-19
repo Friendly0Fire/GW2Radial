@@ -148,6 +148,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClCompile Include="src\Direct3D9Hooks.cpp" />
     <ClCompile Include="src\Effect.cpp" />
     <ClCompile Include="src\Effect_dx12.cpp" />
+    <ClCompile Include="src\FileSystem.cpp" />
     <ClCompile Include="src\ImGuiExtensions.cpp" />
     <ClCompile Include="src\ImGuiPopup.cpp" />
     <ClCompile Include="src\imgui_impl_dx9_custom.cpp" />
@@ -189,6 +190,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\Direct3D9Hooks.h" />
     <ClInclude Include="include\Effect.h" />
     <ClInclude Include="include\Effect_dx12.h" />
+    <ClInclude Include="include\FileSystem.h" />
     <ClInclude Include="include\ImGuiExtensions.h" />
     <ClInclude Include="include\ImGuiPopup.h" />
     <ClInclude Include="include\Input.h" />

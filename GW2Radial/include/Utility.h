@@ -17,8 +17,6 @@ void SplitFilename(const tstring & str, tstring * folder, tstring * file);
 
 mstime TimeInMilliseconds();
 
-bool FileExists(const TCHAR* path);
-
 int GetShaderFuncLength(const DWORD *pFunction);
 
 // Reverse iteration wrappers for use in range-based for-loops
@@ -115,8 +113,6 @@ inline ImVec4 ConvertVector(const fVector4& val) {
 inline ImVec2 ConvertVector(const fVector2& val) {
 	return { val.x, val.y };
 }
-
-std::string ReadFile(std::istream& is);
 
 uint RoundUpToMultipleOf(uint numToRound, uint multiple);
 

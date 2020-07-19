@@ -1,4 +1,5 @@
 #include <ConfigurationFile.h>
+#include <filesystem>
 #include <Shlobj.h>
 #include <Utility.h>
 #include <tchar.h>
@@ -106,7 +107,7 @@ std::tuple<bool /*exists*/, bool /*writable*/> ConfigurationFile::CheckFolder(co
 	if(SHCreateDirectoryExW(nullptr, folder.c_str(), nullptr) == ERROR_ACCESS_DENIED)
 		writable = false;
 
-	if(!FileExists(filepath.c_str()))
+	if(!std::filesystem::exists(filepath.c_str()))
 		exists = false;
 
 	if(writable)

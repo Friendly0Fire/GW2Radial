@@ -45,14 +45,6 @@ mstime TimeInMilliseconds()
 	return 1000 * iCount / iFreq;
 }
 
-bool FileExists(const TCHAR* path)
-{
-	const auto dwAttrib = GetFileAttributes(path);
-
-	return dwAttrib != INVALID_FILE_ATTRIBUTES &&
-		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
-}
-
 bool ShaderIsEnd(DWORD token)
 {
 	return (token & D3DSI_OPCODE_MASK) == D3DSIO_END;
@@ -98,19 +90,6 @@ CreateTextureFromResource(
     DirectX::CreateDDSTextureFromMemory(pDev, resourceSpan.data(), resourceSpan.size_bytes(), &ret);
 
 	return static_cast<IDirect3DTexture9*>(ret);
-}
-
-std::string ReadFile(std::istream& is)
-{
-	std::stringstream ss;
-	for(std::string line; std::getline(is, line); )
-	{
-		if(line.ends_with('\r'))
-			line.resize(line.size() - 1);
-		ss << line << '\n';
-	}
-
-    return ss.str();
 }
 
 uint RoundUpToMultipleOf(uint numToRound, uint multiple)

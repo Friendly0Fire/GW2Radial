@@ -5,10 +5,8 @@
 #include <filesystem>
 #include <fstream>
 #include <imgui/examples/imgui_impl_dx9.h>
-
 #include <ImGuiPopup.h>
-
-#include <d912pxy.h>
+#include <FileSystem.h>
 
 namespace GW2Radial
 {
@@ -84,11 +82,15 @@ void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float
 
 IDirect3DTexture9* LoadCustomTexture(IDirect3DDevice9* dev, const std::filesystem::path& path)
 {
+	cref data = FileSystem::ReadFile(path);
+	if(data.empty())
+		return nullptr;
+
 	IDirect3DTexture9* tex = nullptr;
 	if(path.extension() == L".dds")
-        GW2_ASSERT(SUCCEEDED(DirectX::CreateDDSTextureFromFile(dev, path.wstring().c_str(), &tex)));
+        GW2_ASSERT(SUCCEEDED(DirectX::CreateDDSTextureFromMemory(dev, data.data(), data.size(), &tex)));
 	else
-        GW2_ASSERT(SUCCEEDED(DirectX::CreateWICTextureFromFile(dev, path.wstring().c_str(), &tex)));
+        GW2_ASSERT(SUCCEEDED(DirectX::CreateWICTextureFromMemory(dev, data.data(), data.size(), &tex)));
 	return tex;
 }
 
@@ -136,8 +138,12 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		return nullptr;
 	};
 
+	cref cfgSource = FileSystem::ReadFile(configPath);
+	if(cfgSource.empty())
+		return nullptr;
+
 	CSimpleIniA ini(true);
-	cref loadResult = ini.LoadFile(configPath.wstring().c_str());
+	cref loadResult = ini.LoadData(reinterpret_cast<const char*>(cfgSource.data()), cfgSource.size());
 	if(loadResult != SI_OK)
 		return fail(L"Invalid INI file");
 
@@ -244,11 +250,11 @@ void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
 
 	for(cref entry : std::filesystem::directory_iterator(folderBase))
 	{
-	    if(!entry.is_directory())
+	    if(!entry.is_directory() && entry.path().extension() != L".zip")
 			continue;
 
 		std::filesystem::path configFile = entry.path() / L"config.ini";
-		if(!std::filesystem::exists(configFile))
+		if(!FileSystem::Exists(configFile))
 			continue;
 
 		auto wheel = BuildWheel(configFile, dev);
