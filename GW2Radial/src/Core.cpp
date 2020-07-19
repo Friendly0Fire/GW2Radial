@@ -1,5 +1,5 @@
 #include <Core.h>
-#include <Direct3D9Hooks.h>
+#include <Direct3D9Loader.h>
 #include <imgui.h>
 #include <examples/imgui_impl_dx9.h>
 #include <examples/imgui_impl_win32.h>
@@ -50,7 +50,7 @@ Core::~Core()
 {
 	ImGui::DestroyContext();
 
-	if(auto i = Direct3D9Hooks::iNoInit(); i != nullptr)
+	if(auto i = Direct3D9Loader::iNoInit(); i != nullptr)
 	{
 		i->preCreateDeviceCallback(nullptr);
 		i->postCreateDeviceCallback(nullptr);
@@ -73,14 +73,14 @@ void Core::InternalInit()
 		LoadLibrary(selfpath);
 	}
 	
-	Direct3D9Hooks::i()->preCreateDeviceCallback([this](HWND hWnd){ PreCreateDevice(hWnd); });
-	Direct3D9Hooks::i()->postCreateDeviceCallback([this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostCreateDevice(d, pp); });
+	Direct3D9Loader::i()->preCreateDeviceCallback([this](HWND hWnd){ PreCreateDevice(hWnd); });
+	Direct3D9Loader::i()->postCreateDeviceCallback([this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostCreateDevice(d, pp); });
 	
-	Direct3D9Hooks::i()->preResetCallback([this](){ PreReset(); });
-	Direct3D9Hooks::i()->postResetCallback([this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); });
+	Direct3D9Loader::i()->preResetCallback([this](){ PreReset(); });
+	Direct3D9Loader::i()->postResetCallback([this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); });
 	
-	Direct3D9Hooks::i()->drawOverCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); });
-	Direct3D9Hooks::i()->drawUnderCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); });
+	Direct3D9Loader::i()->drawOverCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); });
+	Direct3D9Loader::i()->drawUnderCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); });
 	
 	imguiContext_ = ImGui::CreateContext();
 }

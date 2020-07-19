@@ -1,5 +1,6 @@
 #include <Main.h>
 #include <Core.h>
+#include <Direct3D9Loader.h>
 #include <Direct3D9Hooks.h>
 #include "gw2al_api.h"
 
@@ -39,13 +40,23 @@ gw2al_addon_dsc* gw2addon_get_description()
 
 gw2al_api_ret gw2addon_load(gw2al_core_vtable* core_api)
 {
-	GW2Radial::Direct3D9Hooks::i()->InitHooks(core_api);
+	GW2Radial::Direct3D9Loader::i()->InitHooks(core_api);
 	return GW2AL_OK;
 }
 
 gw2al_api_ret gw2addon_unload(int gameExiting)
 {
 	return GW2AL_OK;
+}
+
+IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
+{
+	return GW2Radial::Direct3D9Hooks::i()->Direct3DCreate9(SDKVersion);
+}
+
+HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** d3d9ex)
+{
+	return GW2Radial::Direct3D9Hooks::i()->Direct3DCreate9Ex(SDKVersion, d3d9ex);
 }
 
 bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)

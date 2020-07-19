@@ -22,3 +22,6 @@
 [submodule "GW2Radial/ziplib"]
 	path = GW2Radial/ziplib
 	url = https://bitbucket.org/wbenny/ziplib.git
+[submodule "GW2Radial/minhook"]
+	path = GW2Radial/minhook
+	url = https://github.com/Friendly0Fire/minhook.git
