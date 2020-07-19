@@ -9,7 +9,7 @@
 namespace GW2Radial
 {
 
-class Direct3D9Inject : public Singleton<Direct3D9Inject>
+class Direct3D9Inject : public Singleton<Direct3D9Inject, false>
 {
 public:
 	using DrawCallback = std::function<void(IDirect3DDevice9*, bool, bool)>;

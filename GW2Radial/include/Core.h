@@ -33,6 +33,8 @@ public:
 	ImFont* fontBlack() const { return fontBlack_; }
 	ImFont* fontItalic() const { return fontItalic_; }
 
+	void OnInjectorCreated();
+
 protected:
 	void InternalInit();
 	void OnFocusLost();

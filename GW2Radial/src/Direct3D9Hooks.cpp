@@ -5,8 +5,6 @@
 
 namespace GW2Radial
 {
-DEFINE_SINGLETON(Direct3D9Hooks);
-
 template<typename Function>
 struct Trampoline;
 
@@ -32,7 +30,7 @@ Direct3D9Hooks::Direct3D9Hooks()
 HRESULT Direct3D9Hooks::Present_hook(IDirect3DDevice9 *sThis, const RECT *pSourceRect, const RECT *pDestRect,
                                             HWND hDestWindowOverride, const RGNDATA *pDirtyRegion)
 {
-	drawOverCallback_(sThis, isFrameDrawn_, true);
+	drawOverCallback(sThis, isFrameDrawn_, true);
 	isFrameDrawn_ = false;
 
 	return Present_real(sThis, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
@@ -42,7 +40,7 @@ HRESULT Direct3D9Hooks::PresentEx_hook(IDirect3DDevice9Ex *sThis, const RECT *pS
                                                   const RECT *pDestRect, HWND hDestWindowOverride,
                                                   const RGNDATA *pDirtyRegion, DWORD dwFlags)
 {
-	drawOverCallback_(sThis, isFrameDrawn_, true);
+	drawOverCallback(sThis, isFrameDrawn_, true);
 	isFrameDrawn_ = false;
 
 	return PresentEx_real(sThis, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
@@ -50,12 +48,12 @@ HRESULT Direct3D9Hooks::PresentEx_hook(IDirect3DDevice9Ex *sThis, const RECT *pS
 
 HRESULT Direct3D9Hooks::Reset_hook(IDirect3DDevice9 *sThis, D3DPRESENT_PARAMETERS *pPresentationParameters)
 {
-	preResetCallback_();
+	preResetCallback();
 
 	if (HRESULT hr = Reset_real(sThis, pPresentationParameters); FAILED(hr))
 		return hr;
 
-	postResetCallback_(sThis, pPresentationParameters);
+	postResetCallback(sThis, pPresentationParameters);
 
 	return D3D_OK;
 }
@@ -64,12 +62,12 @@ HRESULT Direct3D9Hooks::ResetEx_hook(IDirect3DDevice9Ex *sThis,
                                                 D3DPRESENT_PARAMETERS *pPresentationParameters,
                                                 D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 {
-	preResetCallback_();
+	preResetCallback();
 
 	if (HRESULT hr = ResetEx_real(sThis, pPresentationParameters, pFullscreenDisplayMode); FAILED(hr))
 		return hr;
 
-	postResetCallback_(sThis, pPresentationParameters);
+	postResetCallback(sThis, pPresentationParameters);
 
 	return D3D_OK;
 }
@@ -80,7 +78,7 @@ ULONG Direct3D9Hooks::Release_hook(IDirect3DDevice9 *sThis)
 
 	if (refcount == 1)
 	{
-		preResetCallback_();
+		preResetCallback();
 		Release_real(sThis);
 	}
 
@@ -115,7 +113,7 @@ HRESULT Direct3D9Hooks::SetVertexShader_hook(IDirect3DDevice9 *sThis, IDirect3DV
 	if (!isInShaderHook_ && pShader && !isFrameDrawn_ && pShader == preUiVertexShader_)
 	{
 		isInShaderHook_ = true;
-		drawUnderCallback_(sThis, isFrameDrawn_, false);
+		drawUnderCallback(sThis, isFrameDrawn_, false);
 		isInShaderHook_ = false;
 		isFrameDrawn_ = true;
 	}
@@ -146,7 +144,7 @@ HRESULT Direct3D9Hooks::SetPixelShader_hook(IDirect3DDevice9 *sThis, IDirect3DPi
 	if (!isInShaderHook_ && pShader && !isFrameDrawn_ && pShader == preUiPixelShader_)
 	{
 		isInShaderHook_ = true;
-		drawUnderCallback_(sThis, isFrameDrawn_, false);
+		drawUnderCallback(sThis, isFrameDrawn_, false);
 		isInShaderHook_ = false;
 		isFrameDrawn_ = true;
 	}
@@ -159,7 +157,7 @@ HRESULT Direct3D9Hooks::CreateDevice_hook(IDirect3D9 *sThis, UINT Adapter, D3DDE
                                                      D3DPRESENT_PARAMETERS *pPresentationParameters,
                                                      IDirect3DDevice9 **ppReturnedDeviceInterface)
 {
-	preCreateDeviceCallback_(hFocusWindow);
+	preCreateDeviceCallback(hFocusWindow);
 
 	//#define TEST_AMD
 	#ifdef TEST_AMD
@@ -211,7 +209,7 @@ HRESULT Direct3D9Hooks::CreateDevice_hook(IDirect3D9 *sThis, UINT Adapter, D3DDE
 
 	MH_EnableHook(MH_ALL_HOOKS);
 
-	postCreateDeviceCallback_(tempDevice, pPresentationParameters);
+	postCreateDeviceCallback(tempDevice, pPresentationParameters);
 
 	return D3D_OK;
 }
@@ -222,7 +220,7 @@ HRESULT Direct3D9Hooks::CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D
                                                        D3DDISPLAYMODEEX *pFullscreenDisplayMode,
                                                        IDirect3DDevice9 **ppReturnedDeviceInterface)
 {
-	preCreateDeviceCallback_(hFocusWindow);
+	preCreateDeviceCallback(hFocusWindow);
 
 	IDirect3DDevice9Ex *tempDevice = nullptr;
 	
@@ -268,7 +266,7 @@ HRESULT Direct3D9Hooks::CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D
 
 	MH_EnableHook(MH_ALL_HOOKS);
 
-	postCreateDeviceCallback_(tempDevice, pPresentationParameters);
+	postCreateDeviceCallback(tempDevice, pPresentationParameters);
 
 	return D3D_OK;
 }

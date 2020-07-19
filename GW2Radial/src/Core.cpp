@@ -50,17 +50,31 @@ Core::~Core()
 {
 	ImGui::DestroyContext();
 
-	if(auto i = Direct3D9Loader::iNoInit(); i != nullptr)
+	if(auto i = Direct3D9Inject::iNoInit(); i != nullptr)
 	{
-		i->preCreateDeviceCallback(nullptr);
-		i->postCreateDeviceCallback(nullptr);
+		i->preCreateDeviceCallback = nullptr;
+		i->postCreateDeviceCallback = nullptr;
 		
-		i->preResetCallback(nullptr);
-		i->postResetCallback(nullptr);
+		i->preResetCallback = nullptr;
+		i->postResetCallback = nullptr;
 		
-		i->drawOverCallback(nullptr);
-		i->drawUnderCallback(nullptr);
+		i->drawOverCallback = nullptr;
+		i->drawUnderCallback = nullptr;
 	}
+}
+
+void Core::OnInjectorCreated()
+{
+	auto* inject = Direct3D9Inject::i();
+	
+	inject->preCreateDeviceCallback = [this](HWND hWnd){ PreCreateDevice(hWnd); };
+	inject->postCreateDeviceCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostCreateDevice(d, pp); };
+	
+	inject->preResetCallback = [this](){ PreReset(); };
+	inject->postResetCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); };
+	
+	inject->drawOverCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); };
+	inject->drawUnderCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); };
 }
 
 void Core::InternalInit()
@@ -72,15 +86,6 @@ void Core::InternalInit()
 		GetModuleFileName(dllModule_, selfpath, MAX_PATH);
 		LoadLibrary(selfpath);
 	}
-	
-	Direct3D9Loader::i()->preCreateDeviceCallback([this](HWND hWnd){ PreCreateDevice(hWnd); });
-	Direct3D9Loader::i()->postCreateDeviceCallback([this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostCreateDevice(d, pp); });
-	
-	Direct3D9Loader::i()->preResetCallback([this](){ PreReset(); });
-	Direct3D9Loader::i()->postResetCallback([this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); });
-	
-	Direct3D9Loader::i()->drawOverCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); });
-	Direct3D9Loader::i()->drawUnderCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); });
 	
 	imguiContext_ = ImGui::CreateContext();
 }

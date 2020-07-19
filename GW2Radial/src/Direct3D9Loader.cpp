@@ -5,30 +5,25 @@
 
 namespace GW2Radial
 {
-DEFINE_SINGLETON(Direct3D9Loader);
-
-Direct3D9Loader::Direct3D9Loader()
-{
-}
 
 void Direct3D9Loader::DevPostRelease(IDirect3DDevice9 * sThis, ULONG refs)
 {
 	if (refs == 1)
 	{
-		preResetCallback_();
+		preResetCallback();
 		sThis->Release();
 	}
 }
 
 void Direct3D9Loader::DevPrePresent(IDirect3DDevice9 *sThis)
 {
-	drawOverCallback_(sThis, isFrameDrawn_, true);
+	drawOverCallback(sThis, isFrameDrawn_, true);
 	isFrameDrawn_ = false;	
 }
 
 void Direct3D9Loader::DevPreReset()
 {
-	preResetCallback_();
+	preResetCallback();
 }
 
 void Direct3D9Loader::DevPostReset(IDirect3DDevice9 *sThis, D3DPRESENT_PARAMETERS *pPresentationParameters, HRESULT hr)
@@ -36,7 +31,7 @@ void Direct3D9Loader::DevPostReset(IDirect3DDevice9 *sThis, D3DPRESENT_PARAMETER
 	if (FAILED(hr))
 		return;
 
-	postResetCallback_(sThis, pPresentationParameters);	
+	postResetCallback(sThis, pPresentationParameters);	
 }
 
 void Direct3D9Loader::DevPostCreateVertexShader(const DWORD *pFunction, IDirect3DVertexShader9 **ppShader)
@@ -55,7 +50,7 @@ void Direct3D9Loader::DevPostSetVertexShader(IDirect3DDevice9 *sThis, IDirect3DV
 	if (!isInShaderHook_ && pShader && !isFrameDrawn_ && pShader == preUiVertexShader_)
 	{
 		isInShaderHook_ = true;
-		drawUnderCallback_(sThis, isFrameDrawn_, false);
+		drawUnderCallback(sThis, isFrameDrawn_, false);
 		isInShaderHook_ = false;
 		isFrameDrawn_ = true;
 	}	
@@ -76,7 +71,7 @@ void Direct3D9Loader::DevPostSetPixelShader(IDirect3DDevice9 *sThis, IDirect3DPi
 	if (!isInShaderHook_ && pShader && !isFrameDrawn_ && pShader == preUiPixelShader_)
 	{
 		isInShaderHook_ = true;
-		drawUnderCallback_(sThis, isFrameDrawn_, false);
+		drawUnderCallback(sThis, isFrameDrawn_, false);
 		isInShaderHook_ = false;
 		isFrameDrawn_ = true;
 	}
@@ -84,12 +79,12 @@ void Direct3D9Loader::DevPostSetPixelShader(IDirect3DDevice9 *sThis, IDirect3DPi
 
 void Direct3D9Loader::ObjPreCreateDevice(HWND hFocusWindow)
 {
-	preCreateDeviceCallback_(hFocusWindow);
+	preCreateDeviceCallback(hFocusWindow);
 }
 
 void Direct3D9Loader::ObjPostCreateDevice(IDirect3DDevice9 *pDevice, D3DPRESENT_PARAMETERS *pPresentationParameters)
 {
-	postCreateDeviceCallback_(pDevice, pPresentationParameters);	
+	postCreateDeviceCallback(pDevice, pPresentationParameters);	
 	pDevice->AddRef();
 }
 
