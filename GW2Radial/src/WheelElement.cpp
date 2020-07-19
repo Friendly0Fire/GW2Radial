@@ -9,13 +9,20 @@ namespace GW2Radial
 {
 
 WheelElement::WheelElement(uint id, const std::string &nickname, const std::string &category,
-							const std::string &displayName, IDirect3DDevice9* dev)
+							const std::string &displayName, IDirect3DDevice9* dev, IDirect3DTexture9* tex)
 	: nickname_(nickname), displayName_(displayName), elementId_(id),
 	  isShownOption_(displayName + " Visible", nickname + "_visible", category, true),
 	  sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, int(id)),
-	  keybind_(nickname, displayName)
+	  keybind_(nickname, displayName, category, false),
+	  appearance_(tex)
 {
-	appearance_ = CreateTextureFromResource(dev, Core::i()->dllModule(), elementId_);
+	if(tex == nullptr)
+	    appearance_ = CreateTextureFromResource(dev, Core::i()->dllModule(), elementId_);
+
+	D3DSURFACE_DESC desc;
+	appearance_->GetLevelDesc(0, &desc);
+	aspectRatio_ = float(desc.Height) / float(desc.Width);
+	texWidth_ = float(desc.Width);
 }
 
 WheelElement::~WheelElement()
@@ -105,13 +112,25 @@ void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsC
 	spriteDimensions.z *= elementDiameter;
 	spriteDimensions.w *= elementDiameter;
 	
+	spriteDimensions.w *= aspectRatio_;
+
+	fVector4 adjustedColor = color();
+	adjustedColor.x = Lerp(1, adjustedColor.x, colorizeAmount_);
+	adjustedColor.y = Lerp(1, adjustedColor.y, colorizeAmount_);
+	adjustedColor.z = Lerp(1, adjustedColor.z, colorizeAmount_);
+
+	const float shadowOffsetMultiplier = -0.02f / 1024.f;
+
+	fVector4 shadowData { shadowStrength_, shadowOffsetMultiplier * texWidth_, shadowOffsetMultiplier * texWidth_ * aspectRatio_, 1.f };
+	
 	{
 		using namespace ShaderRegister::ShaderPS;
 		using namespace ShaderRegister::ShaderVS;
         fx->SetTexture(sampler2D_texMainSampler, appearance_);
         fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, spriteDimensions);
         fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementID, elementId());
-        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fElementColor, color());
+        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fElementColor, adjustedColor);
+        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fShadowData, shadowData);
 	}
 	
 	fx->ApplyStates();

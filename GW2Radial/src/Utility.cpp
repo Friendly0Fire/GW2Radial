@@ -4,8 +4,9 @@
 #include <Core.h>
 #include <winuser.h>
 #include "DDSTextureLoader.h"
-#include <iostream>
+#include <fstream>
 #include <sstream>
+#include <TGA.h>
 
 namespace GW2Radial
 {
@@ -28,102 +29,6 @@ std::wstring utf8_decode(const std::string &str)
     return wstrTo;
 }
 
-std::wstring GetScanCodeName(uint scanCode) {
-	if (scanCode >= 2 && scanCode <= 10) {
-		wchar_t c = scanCode - 1 + 0x30;
-		return std::wstring(1, c);
-	}
-	if (scanCode == 11)
-		return L"0";
-
-	if (IsUniversalModifier(ScanCode(scanCode))) {
-		switch (scanCode) {
-		case ScanCode_t(ScanCode::SHIFT):
-			return L"SHIFT";
-		case ScanCode_t(ScanCode::CONTROL):
-			return L"CONTROL";
-		case ScanCode_t(ScanCode::ALT):
-			return L"ALT";
-		case ScanCode_t(ScanCode::META):
-			return L"META";
-		}
-	}
-
-	wchar_t keyName[50];
-	if (GetKeyNameTextW(scanCode << 16, keyName, int(std::size(keyName))) != 0)
-		return keyName;
-
-	return L"[Error]";
-}
-
-std::wstring GetKeyName(uint virtualKey)
-{
-	uint scanCode = MapVirtualKeyW(virtualKey, MAPVK_VK_TO_VSC);
-
-	switch (virtualKey)
-	{
-	case VK_LBUTTON:
-		return L"M1";
-	case VK_RBUTTON:
-		return L"M2";
-	case VK_MBUTTON:
-		return L"M3";
-	case VK_XBUTTON1:
-		return L"M4";
-	case VK_XBUTTON2:
-		return L"M5";
-	case VK_F13:
-		return L"F13";
-	case VK_F14:
-		return L"F14";
-	case VK_F15:
-		return L"F15";
-	case VK_F16:
-		return L"F16";
-	case VK_F17:
-		return L"F17";
-	case VK_F18:
-		return L"F18";
-	case VK_F19:
-		return L"F19";
-	case VK_F20:
-		return L"F20";
-	case VK_F21:
-		return L"F21";
-	case VK_F22:
-		return L"F22";
-	case VK_F23:
-		return L"F23";
-	case VK_F24:
-		return L"F24";
-	case VK_LCONTROL:
-		return L"LCTRL";
-	case VK_RCONTROL:
-		return L"RCTRL";
-	case VK_LSHIFT:
-		return L"LSHIFT";
-	case VK_RSHIFT:
-		return L"RSHIFT";
-	case VK_LMENU:
-		return L"LALT";
-	case VK_RMENU:
-		return L"RALT";
-	// because MapVirtualKey strips the extended bit for some keys
-	case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN: // arrow keys
-	case VK_PRIOR: case VK_NEXT: // page up and page down
-	case VK_END: case VK_HOME:
-	case VK_INSERT: case VK_DELETE:
-	case VK_DIVIDE: // numpad slash
-	case VK_NUMLOCK:
-		scanCode |= 0x100; // set extended bit
-		break;
-	default:
-		break;
-	}
-
-	return GetScanCodeName(scanCode);
-}
-
 void SplitFilename(const tstring& str, tstring* folder, tstring* file)
 {
 	const auto found = str.find_last_of(TEXT("/\\"));
@@ -138,14 +43,6 @@ mstime TimeInMilliseconds()
 	mstime iFreq;
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&iFreq));
 	return 1000 * iCount / iFreq;
-}
-
-bool FileExists(const TCHAR* path)
-{
-	const auto dwAttrib = GetFileAttributes(path);
-
-	return dwAttrib != INVALID_FILE_ATTRIBUTES &&
-		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 bool ShaderIsEnd(DWORD token)
@@ -190,22 +87,9 @@ CreateTextureFromResource(
 
 	IDirect3DBaseTexture9* ret = nullptr;
 
-	CreateDDSTextureFromMemory(pDev, resourceSpan.data(), resourceSpan.size_bytes(), &ret);
+    DirectX::CreateDDSTextureFromMemory(pDev, resourceSpan.data(), resourceSpan.size_bytes(), &ret);
 
 	return static_cast<IDirect3DTexture9*>(ret);
-}
-
-std::string ReadFile(std::istream& is)
-{
-	std::stringstream ss;
-	for(std::string line; std::getline(is, line); )
-	{
-		if(line.ends_with('\r'))
-			line.resize(line.size() - 1);
-		ss << line << '\n';
-	}
-
-    return ss.str();
 }
 
 uint RoundUpToMultipleOf(uint numToRound, uint multiple)
@@ -218,5 +102,28 @@ uint RoundUpToMultipleOf(uint numToRound, uint multiple)
         return numToRound;
 
     return numToRound + multiple - remainder;
+}
+
+void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint bpp, const std::wstring& filename)
+{
+	D3DSURFACE_DESC desc;
+	surf->GetDesc(&desc);
+
+    IDirect3DSurface9* surf2;
+    GW2_ASSERT(SUCCEEDED(
+        dev->CreateOffscreenPlainSurface(desc.Width, desc.Height, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &surf2, nullptr
+        )));
+	
+    GW2_ASSERT(SUCCEEDED(dev->GetRenderTargetData(surf, surf2)));
+
+    D3DLOCKED_RECT rect;
+    GW2_ASSERT(SUCCEEDED(surf2->LockRect(&rect, nullptr, D3DLOCK_READONLY)));
+    std::span<byte> rectSpan((byte*)rect.pBits, desc.Width * desc.Height * (bpp / 8));
+    cref tgaData = SaveTGA(rectSpan, desc.Width, desc.Height, bpp, rect.Pitch);
+    std::ofstream of((filename + L".tga").c_str(), std::ofstream::binary | std::ofstream::trunc);
+    of.write((char*)tgaData.data(), tgaData.size());
+
+    surf2->UnlockRect();
+    surf2->Release();
 }
 }

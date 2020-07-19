@@ -9,16 +9,16 @@ namespace GW2Radial
 std::vector<Keybind*> Keybind::keybinds_;
 std::unordered_map<Keybind*, std::set<ScanCode>> Keybind::scMaps_;
 
-Keybind::Keybind(std::string nickname, std::string displayName, const std::set<ScanCode>& scs, bool saveToConfig) :
-	nickname_(std::move(nickname)), displayName_(std::move(displayName)), saveToConfig_(saveToConfig)
+Keybind::Keybind(std::string nickname, std::string displayName, std::string category, bool isInput, const std::set<ScanCode>& scs, bool saveToConfig) :
+	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category)), isInput_(isInput), saveToConfig_(saveToConfig)
 {
 	keybinds_.push_back(this);
 	this->scanCodes(scs);
 	isBeingModified_ = false;
 }
 
-Keybind::Keybind(std::string nickname, std::string displayName) :
-	nickname_(std::move(nickname)), displayName_(std::move(displayName))
+Keybind::Keybind(std::string nickname, std::string displayName, std::string category, bool isInput) :
+	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category)), isInput_(isInput)
 {
 	keybinds_.push_back(this);
 	auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds.2", nickname_.c_str());
@@ -83,7 +83,7 @@ void Keybind::ApplyKeys()
 	if(saveToConfig_)
 	{
 		std::string settingValue;
-		for (const auto& k : scanCodes_)
+		for (cref k : scanCodes_)
 			settingValue += std::to_string(uint(k)) + ", ";
 
 		if(!scanCodes_.empty())
@@ -102,7 +102,7 @@ void Keybind::CheckForConflict(bool recurse)
 	isConflicted_ = false;
 	for(auto& elem : scMaps_)
 	{
-		if(elem.first != this && !scanCodes_.empty() && elem.second == scanCodes_)
+		if(elem.first != this && (elem.first->category_ == category_ || elem.first->isInput_ && isInput_) && !scanCodes_.empty() && elem.second == scanCodes_)
 			isConflicted_ = true;
 		
 		if(recurse) elem.first->CheckForConflict(false);
@@ -126,7 +126,7 @@ bool Keybind::matchesNoLeftRight(const std::set<ScanCode>& scanCodes) const
 	const auto universalize = [](const std::set<ScanCode>& src)
 	{
 		std::set<ScanCode> out;
-		for(const auto& k : src)
+		for(cref k : src)
 		{
 			if (IsModifier(k))
 				out.insert(MakeUniversal(k));

@@ -1,27 +1,7 @@
 #include <Effect_dx12.h>
 #include <UnitQuad.h>
 #include <xxhash/xxhash.h>
-
-//D3D9 API extenders =======================
-
-#define D3DRS_ENABLE_D912PXY_API_HACKS (D3DRENDERSTATETYPE)220
-#define D3DRS_D912PXY_ENQUEUE_PSO_COMPILE (D3DRENDERSTATETYPE)221
-#define D3DRS_D912PXY_SETUP_PSO (D3DRENDERSTATETYPE)222
-#define D3DRS_D912PXY_GPU_WRITE (D3DRENDERSTATETYPE)223
-#define D3DRS_D912PXY_DRAW (D3DRENDERSTATETYPE)224
-#define D3DRS_D912PXY_SAMPLER_ID (D3DRENDERSTATETYPE)225
-
-#define D3DDECLMETHOD_PER_VERTEX_CONSTANT 8
-#define D3DUSAGE_D912PXY_FORCE_RT 0x0F000000L
-
-#define D912PXY_ENCODE_GPU_WRITE_DSC(sz, offset) (((sz) & 0xFFFF) | (((offset) & 0xFFFF) << 16))
-
-#define D912PXY_GPU_WRITE_OFFSET_TEXBIND 0
-#define D912PXY_GPU_WRITE_OFFSET_SAMPLER 8 
-#define D912PXY_GPU_WRITE_OFFSET_VS_VARS 16
-#define D912PXY_GPU_WRITE_OFFSET_PS_VARS 16 + 256
-
-//========
+#include <d912pxy.h>
 
 namespace GW2Radial {
 	
@@ -43,7 +23,7 @@ void Effect_dx12::SetRenderStates(std::initializer_list<ShaderState> states)
 void Effect_dx12::SetSamplerStates(uint slot, std::initializer_list<ShaderState> states)
 {
 	uint hash = 0;
-	for(const auto& s : states)
+	for(cref s : states)
 	    hash = XXH32(&s, sizeof(ShaderState), hash);
 	
 	auto it = cachedSamplers_.find(hash);
@@ -51,7 +31,7 @@ void Effect_dx12::SetSamplerStates(uint slot, std::initializer_list<ShaderState>
 	{
 		SetDefaultSamplerStates(0);
 
-	    for(const auto& s : states)
+	    for(cref s : states)
 		    device_->SetSamplerState(0, static_cast<D3DSAMPLERSTATETYPE>(s.stateId), s.stateValue);
 
 		it = cachedSamplers_.insert({ hash, { 0 } }).first;
@@ -112,7 +92,7 @@ void Effect_dx12::Begin()
 void Effect_dx12::ApplyStates()
 {
 	uint rsHash = 0;
-	for(const auto& s : renderStates_)
+	for(cref s : renderStates_)
 	    rsHash = XXH32(&s, sizeof(ShaderState), rsHash);
 
 	uint64_t hashData[] = {
@@ -131,7 +111,7 @@ void Effect_dx12::ApplyStates()
 
 		SetDefaultRenderStates();
 
-	    for(const auto& s : renderStates_)
+	    for(cref s : renderStates_)
 		    device_->SetRenderState(static_cast<D3DRENDERSTATETYPE>(s.stateId), s.stateValue);
 		
 		it = cachedPSOs_.insert({ psoHash, nullptr }).first;

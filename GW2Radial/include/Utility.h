@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include <imgui.h>
 #include <istream>
+#include <cwctype>
 
 namespace GW2Radial
 {
@@ -12,14 +13,9 @@ std::string utf8_encode(const std::wstring &wstr);
 // Convert an UTF8 string to a wide Unicode String
 std::wstring utf8_decode(const std::string &str);
 
-std::wstring GetKeyName(uint virtualKey);
-std::wstring GetScanCodeName(uint scanCode);
-
 void SplitFilename(const tstring & str, tstring * folder, tstring * file);
 
 mstime TimeInMilliseconds();
-
-bool FileExists(const TCHAR* path);
 
 int GetShaderFuncLength(const DWORD *pFunction);
 
@@ -118,7 +114,58 @@ inline ImVec2 ConvertVector(const fVector2& val) {
 	return { val.x, val.y };
 }
 
-std::string ReadFile(std::istream& is);
-
 uint RoundUpToMultipleOf(uint numToRound, uint multiple);
+
+template<typename Char, typename It>
+It SplitString(const Char* str, const Char* delim, It out)
+{
+	std::basic_string<Char> s(str);
+
+	size_t start = 0;
+    size_t end = 0;
+	while ((end = s.find(delim, start)) != std::string::npos) {
+        *out = s.substr(start, end - start);
+		out = std::next(out);
+		start = end + 1;
+    }
+
+	*out = s.substr(start);
+	out = std::next(out);
+	return out;
+}
+
+inline uint RGBAto32(const fVector4& rgb, bool scale)
+{
+	float s = scale ? 255.f : 1.f;
+    return D3DCOLOR_RGBA(byte(rgb.x * s), byte(rgb.y * s), byte(rgb.z * s), byte(rgb.w * s));
+}
+
+template<typename Str>
+Str ToLower(Str in)
+{
+	if constexpr(std::is_same_v<Str, std::string>)
+	    std::transform(in.begin(), in.end(), in.begin(), std::tolower);
+	else
+		std::transform(in.begin(), in.end(), in.begin(), std::towlower);
+	return in;
+}
+
+template<typename Str>
+Str ToUpper(Str in)
+{
+	if constexpr(std::is_same_v<Str, std::string>)
+	    std::transform(in.begin(), in.end(), in.begin(), std::toupper);
+	else
+		std::transform(in.begin(), in.end(), in.begin(), std::towupper);
+	return in;
+}
+
+template<typename Vec>
+float Luma(const Vec& v)
+{
+    return v.x * 0.2126 + v.y * 0.7152 + v.z * 0.0722;
+}
+
+void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint bpp, const std::wstring& filename);
+
 }

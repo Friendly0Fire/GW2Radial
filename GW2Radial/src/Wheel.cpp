@@ -17,7 +17,7 @@ namespace GW2Radial
 
 Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, IDirect3DDevice9 * dev)
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
-	  keybind_(nickname_, "Show on mouse"), centralKeybind_(nickname_ + "_cl", "Show in center"),
+	  keybind_(nickname_, "Show on mouse", nickname_, true), centralKeybind_(nickname_ + "_cl", "Show in center", nickname_, true),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
 	  centerFavoriteOption_("Favorite choice##Center", "center_favorite.2", "wheel_" + nickname_),
 	  delayFavoriteOption_("Favorite choice##Delay", "delay_favorite", "wheel_" + nickname_),
@@ -356,13 +356,11 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				fx->ApplyStates();
 				quad->Draw();
 
-				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", alphaBlended_ ? "MountImageAlphaBlend_PS" : "MountImage_PS");
-
-				if(alphaBlended_)
-					fx->SetRenderStates({
-					    { D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
-					    { D3DRS_SRCBLEND, D3DBLEND_SRCALPHA },
-				    });
+				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "MountImage_PS");
+				fx->SetRenderStates({
+					{ D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
+					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
+				});
 
 				int n = 0;
 				for (auto it : activeElements)
@@ -374,7 +372,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			}
 
 			{
-				const auto& io = ImGui::GetIO();
+				cref io = ImGui::GetIO();
 				
 				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "Cursor_PS");
 				fx->SetRenderStates({
@@ -397,7 +395,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		if(outOfCombatDelayed_ == nullptr) dt = 0.5f - dt;
 		else
 			timeLeft = 1.f - (currentTime - outOfCombatDelayedTime_) / (float(maximumOutOfCombatWaitOption_.value()) * 1000.f);
-	    const auto& io = ImGui::GetIO();
+	    cref io = ImGui::GetIO();
 		
 		fx->Begin();
 		quad->Bind(fx);
@@ -544,7 +542,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 	
 	{
 		const auto isAnyElementBeingModified = std::any_of(wheelElements_.begin(), wheelElements_.end(),
-			[](const auto& we) { return we->keybind().isBeingModified(); });
+			[](cref we) { return we->keybind().isBeingModified(); });
 
 		{
 			// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
@@ -554,7 +552,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 			// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
 			fullKeybind.erase(ScanCode::LBUTTON);
 
-			for (const auto& ek : changedKeys)
+			for (cref ek : changedKeys)
 			{
 				if(IsSame(ek.sc, ScanCode::LBUTTON))
 					continue;

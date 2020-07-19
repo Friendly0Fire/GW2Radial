@@ -5,12 +5,14 @@
 #include "Utility.h"
 #include <d3dcompiler.h>
 
+#include "FileSystem.h"
+
 namespace GW2Radial {
 
 class ShaderInclude final : public ID3DInclude
 {
 	Effect* parent_ = nullptr;
-	std::map<LPCVOID, std::string> openFiles_;
+	std::map<LPCVOID, std::vector<byte>> openFiles_;
 
 public:
     virtual ~ShaderInclude() = default;
@@ -26,12 +28,12 @@ public:
 		auto* const contentStream = file->GetDecompressionStream();
 	    if(contentStream)
 	    {
-			auto str = ReadFile(*contentStream);
+			auto data = FileSystem::ReadFile(*contentStream);
 		    file->CloseDecompressionStream();
-			*ppData = str.c_str();
-			*pBytes = UINT(str.size());
+			*ppData = data.data();
+			*pBytes = UINT(data.size());
 
-			openFiles_[str.c_str()] = std::move(str);
+			openFiles_[data.data()] = std::move(data);
 		    return S_OK;
 	    }
 
@@ -55,7 +57,8 @@ Effect::Effect(IDirect3DDevice9 * dev) : device_(dev)
 #ifdef HOT_RELOAD_SHADERS
 	const std::wstring fullPath = SHADERS_DIR + filename;
 	std::ifstream file(fullPath);
-	return ReadFile(file);
+	auto vec = FileSystem::ReadFile(file);
+	return std::string(reinterpret_cast<char*>(vec.data()), vec.size());
 #else
 	if(!shadersZip_)
 	{
@@ -182,7 +185,7 @@ void Effect::SetRenderStates(std::initializer_list<ShaderState> states)
 {
 	SetDefaultRenderStates();
 
-	for(const auto& s : states)
+	for(cref s : states)
 		device_->SetRenderState(static_cast<D3DRENDERSTATETYPE>(s.stateId), s.stateValue);
 }
 
@@ -190,7 +193,7 @@ void Effect::SetSamplerStates(uint slot, std::initializer_list<ShaderState> stat
 {
 	SetDefaultSamplerStates(slot);
 
-	for(const auto& s : states)
+	for(cref s : states)
 		device_->SetSamplerState(slot, static_cast<D3DSAMPLERSTATETYPE>(s.stateId), s.stateValue);
 }
 

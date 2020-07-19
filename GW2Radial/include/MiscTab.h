@@ -7,6 +7,7 @@ namespace GW2Radial
 
 class MiscTab : public SettingsMenu::Implementer, public Singleton<MiscTab>
 {
+	bool reloadOnFocus_ = false;
 public:
 	MiscTab();
 	~MiscTab();
@@ -14,7 +15,7 @@ public:
 	const char * GetTabName() const override { return "Misc"; }
 	void DrawMenu() override;
 
-	uint vk_ = 0;
+	bool reloadOnFocus() const { return reloadOnFocus_; }
 };
 
 }

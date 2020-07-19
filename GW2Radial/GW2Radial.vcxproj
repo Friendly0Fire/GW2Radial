@@ -143,10 +143,12 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="src\ConfigurationFile.cpp" />
     <ClCompile Include="src\Core.cpp" />
+    <ClCompile Include="src\CustomWheel.cpp" />
     <ClCompile Include="src\DDSTextureLoader.cpp" />
     <ClCompile Include="src\Direct3D9Hooks.cpp" />
     <ClCompile Include="src\Effect.cpp" />
     <ClCompile Include="src\Effect_dx12.cpp" />
+    <ClCompile Include="src\FileSystem.cpp" />
     <ClCompile Include="src\ImGuiExtensions.cpp" />
     <ClCompile Include="src\ImGuiPopup.cpp" />
     <ClCompile Include="src\imgui_impl_dx9_custom.cpp" />
@@ -158,12 +160,14 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClCompile Include="src\Mount.cpp" />
     <ClCompile Include="src\MumbleLink.cpp" />
     <ClCompile Include="src\Novelty.cpp" />
+    <ClCompile Include="src\ScanCode.cpp" />
     <ClCompile Include="src\SettingsMenu.cpp" />
     <ClCompile Include="src\UnitQuad.cpp" />
     <ClCompile Include="src\UpdateCheck.cpp" />
     <ClCompile Include="src\Utility.cpp" />
     <ClCompile Include="src\Wheel.cpp" />
     <ClCompile Include="src\WheelElement.cpp" />
+    <ClCompile Include="src\WICTextureLoader.cpp" />
     <ClCompile Include="xxhash\xxhash.c" />
   </ItemGroup>
   <ItemGroup>
@@ -179,11 +183,14 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\ConfigurationFile.h" />
     <ClInclude Include="include\ConfigurationOption.h" />
     <ClInclude Include="include\Core.h" />
+    <ClInclude Include="include\CustomWheel.h" />
+    <ClInclude Include="include\d912pxy.h" />
     <ClInclude Include="include\dds.h" />
     <ClInclude Include="include\DDSTextureLoader.h" />
     <ClInclude Include="include\Direct3D9Hooks.h" />
     <ClInclude Include="include\Effect.h" />
     <ClInclude Include="include\Effect_dx12.h" />
+    <ClInclude Include="include\FileSystem.h" />
     <ClInclude Include="include\ImGuiExtensions.h" />
     <ClInclude Include="include\ImGuiPopup.h" />
     <ClInclude Include="include\Input.h" />
@@ -199,11 +206,13 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\SettingsMenu.h" />
     <ClInclude Include="include\Singleton.h" />
     <ClInclude Include="include\Tag.h" />
+    <ClInclude Include="include\TGA.h" />
     <ClInclude Include="include\UnitQuad.h" />
     <ClInclude Include="include\UpdateCheck.h" />
     <ClInclude Include="include\Utility.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
+    <ClInclude Include="include\WICTextureLoader.h" />
     <ClInclude Include="loader-core\include\gw2al_api.h" />
     <ClInclude Include="shaders\registers.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />

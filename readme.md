@@ -13,6 +13,9 @@ An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/commen
 - Set each game keybind for the mounts (you must set these first in your game options, under controls, after you've unlocked the mounts). These are used by the plugin to trigger mounting. They should be matching up like so: ![Setting your keybinds](https://i.imgur.com/gvQPQfX.png)
 - Hold the main key to show the overlay, move the mouse in the desired direction, then release the key to trigger mounting/dismounting.
 
+## Custom Radial Menus [New!]
+Please refer to the readme in the `custom_examples` folder for more information on how to create or download new menus.
+
 ## Credits
 - Cerulean Dream for providing me with the initial motivator and inspiration in making his AutoHotkey-based radial menu
 - Ghost for the new mount art found in v0.3+

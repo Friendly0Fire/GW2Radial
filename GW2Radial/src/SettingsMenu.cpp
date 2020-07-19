@@ -8,7 +8,7 @@ namespace GW2Radial
 DEFINE_SINGLETON(SettingsMenu);
 
 SettingsMenu::SettingsMenu()
-	: showKeybind_("show_settings", "Show settings", { ScanCode::SHIFT, ScanCode::ALT, ScanCode::M }, false)
+	: showKeybind_("show_settings", "Show settings", "__core__", true, { ScanCode::SHIFT, ScanCode::ALT, ScanCode::M }, false)
 {
 	inputChangeCallback_ = [this](bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, scs, changedKeys); };
 	Input::i()->AddInputChangeCallback(&inputChangeCallback_);
@@ -38,7 +38,7 @@ void SettingsMenu::Draw()
 			inactiveTabColor.w /= 4;
 
 			// Draw buttons simulating tabs
-			for (const auto& i : implementers_)
+			for (cref i : implementers_)
 			{
 				ImGui::SameLine();
 				ImGui::PushStyleColor(ImGuiCol_::ImGuiCol_Button, currentTab_ == i ? currentTabColor : inactiveTabColor);

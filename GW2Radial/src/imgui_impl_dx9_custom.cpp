@@ -8,6 +8,7 @@
 
 #include <imgui.h>
 #include "../imgui/examples/imgui_impl_dx9.h"
+#include <d912pxy.h>
 
 // DirectX
 #include <d3d9.h>
@@ -40,27 +41,6 @@ static void* g_pPSO = NULL;
 static IDirect3DVertexBuffer9*  g_pVB2 = NULL;
 static DWORD g_d912pxy_texture[4] = { 0,0,0,0 };
 static DWORD g_d912pxy_sampler[4] = { 0,0,0,0 };
-
-//D3D9 API extenders =======================
-
-#define D3DRS_ENABLE_D912PXY_API_HACKS (D3DRENDERSTATETYPE)220
-#define D3DRS_D912PXY_ENQUEUE_PSO_COMPILE (D3DRENDERSTATETYPE)221
-#define D3DRS_D912PXY_SETUP_PSO (D3DRENDERSTATETYPE)222
-#define D3DRS_D912PXY_GPU_WRITE (D3DRENDERSTATETYPE)223
-#define D3DRS_D912PXY_DRAW (D3DRENDERSTATETYPE)224
-#define D3DRS_D912PXY_SAMPLER_ID (D3DRENDERSTATETYPE)225
-
-#define D3DDECLMETHOD_PER_VERTEX_CONSTANT 8
-#define D3DUSAGE_D912PXY_FORCE_RT 0x0F000000L
-
-#define D912PXY_ENCODE_GPU_WRITE_DSC(sz, offset) ((sz & 0xFFFF) | ((offset & 0xFFFF) << 16))
-
-#define D912PXY_GPU_WRITE_OFFSET_TEXBIND 0
-#define D912PXY_GPU_WRITE_OFFSET_SAMPLER 8 
-#define D912PXY_GPU_WRITE_OFFSET_VS_VARS 16
-#define D912PXY_GPU_WRITE_OFFSET_PS_VARS 16 + 256
-
-//========
 
 DWORD g_pVS_function[] = {
 	0xFFFE0300, 0x0014FFFE, 0x42415443, 0x0000001C, 0x00000023, 0xFFFE0300, 0x00000000, 0x00000000, 0x00000100, 0x0000001C,
@@ -298,6 +278,7 @@ static bool ImGui_ImplDX9_Create_d912pxy_objects()
 	g_pd3dDevice->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
 	g_pd3dDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 	g_pd3dDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);	
+	g_pd3dDevice->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_ALPHA | D3DCOLORWRITEENABLE_BLUE | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_RED);
 	
 	if (g_pd3dDevice->GetRenderState(D3DRS_D912PXY_ENQUEUE_PSO_COMPILE, (DWORD*)&g_pPSO) < 0)
 		return false;
@@ -396,6 +377,7 @@ void ImGui_ImplDX9_RenderDrawData(ImDrawData* draw_data)
     // Setup render state: fixed-pipeline, alpha-blending, no face culling, no depth testing
     g_pd3dDevice->SetPixelShader(NULL);
     g_pd3dDevice->SetVertexShader(NULL);
+	g_pd3dDevice->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_ALPHA | D3DCOLORWRITEENABLE_BLUE | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_RED);
     g_pd3dDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
     g_pd3dDevice->SetRenderState(D3DRS_LIGHTING, false);
     g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, false);

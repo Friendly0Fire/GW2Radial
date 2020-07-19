@@ -12,8 +12,8 @@ namespace GW2Radial
 class Keybind
 {
 public:
-	Keybind(std::string nickname, std::string displayName, const std::set<ScanCode>& scs, bool saveToConfig);
-	Keybind(std::string nickname, std::string displayName);
+	Keybind(std::string nickname, std::string displayName, std::string category, bool isInput, const std::set<ScanCode>& scs, bool saveToConfig);
+	Keybind(std::string nickname, std::string displayName, std::string category, bool isInput);
 	~Keybind();
 
 	const std::set<ScanCode>& scanCodes() const { return scanCodes_; }
@@ -51,12 +51,13 @@ protected:
 	void ApplyKeys();
 	void CheckForConflict(bool recurse = true);
 
-	std::string displayName_, nickname_;
+	std::string displayName_, nickname_, category_;
 	std::array<char, 256> keysDisplayString_ { };
 	bool isBeingModified_ = true;
 	std::set<ScanCode> scanCodes_;
 	bool saveToConfig_ = true;
 	bool isConflicted_ = false;
+	bool isInput_ = false;
 
 	static std::vector<Keybind*> keybinds_;
 	static std::unordered_map<Keybind*, std::set<ScanCode>> scMaps_;

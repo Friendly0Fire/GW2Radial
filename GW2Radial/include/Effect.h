@@ -46,7 +46,7 @@ public:
 		} else {
 			using vector_t = decltype(ConvertToVector4(arr[0]));
 			std::vector<vector_t> varr(arr.size());
-			std::transform(arr.begin(), arr.end(), varr.begin(), [](const auto& val) {
+			std::transform(arr.begin(), arr.end(), varr.begin(), [](cref val) {
 				return ConvertToVector4(val);
 			});
 			SetVariableArrayInternal(st, slot, static_cast<const std::span<vector_t>&>(varr));

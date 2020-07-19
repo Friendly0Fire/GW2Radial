@@ -21,6 +21,8 @@ public:
 
 	CSimpleIniA& ini() { return ini_; }
 
+	const std::wstring& folder() const { return folder_; }
+
 protected:
 	static std::tuple<bool /*exists*/, bool /*writable*/> CheckFolder(const std::wstring& folder);
 	static void LoadImGuiSettings(const std::wstring& location);

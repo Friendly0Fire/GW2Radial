@@ -19,6 +19,7 @@
 #include <MiscTab.h>
 #include <MumbleLink.h>
 #include <Effect_dx12.h>
+#include <CustomWheel.h>
 
 namespace GW2Radial
 {
@@ -26,6 +27,10 @@ DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(hr))
+        exit(1);
+
 	MumbleLink::i();
 	i()->dllModule_ = dll;
 	i()->InternalInit();
@@ -37,6 +42,8 @@ void Core::Shutdown()
 
 	// We'll just leak a bunch of things and let the driver/OS take care of it, since we have no clean exit point
 	// and calling FreeLibrary in DllMain causes deadlocks
+	
+	CoUninitialize();
 }
 
 Core::~Core()
@@ -90,6 +97,9 @@ void Core::OnFocusLost()
 void Core::OnFocus() {
 	mainEffect_->Clear();
 	Keybind::ForceRefreshDisplayStrings();
+
+	if(MiscTab::i()->reloadOnFocus())
+		forceReloadWheels_ = true;
 }
 
 LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -132,6 +142,8 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 		fontBlack_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 35.f, &fontCfg);
 	if(const auto data = LoadResource(IDR_FONT_ITALIC); data.data())
 		fontItalic_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 25.f, &fontCfg);
+	if(const auto data = LoadResource(IDR_FONT_DRAW); data.data())
+		fontDraw_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 100.f, &fontCfg);
 
 	if(font_)
 		imio.FontDefault = font_;
@@ -183,12 +195,15 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	wheels_.emplace_back(Wheel::Create<ObjectMarker>(IDR_BG, IDR_WIPEMASK, "object_markers", "Object Markers", device));
 
 	ImGui_ImplDX9_Init(device);
+
+	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, fontDraw_);
 }
 
 void Core::OnDeviceUnset()
 {
 	ImGui_ImplDX9_InvalidateDeviceObjects();
 	quad_.reset();
+	customWheels_.reset();
 	wheels_.clear();
 	if (mainEffect_)
 	{
@@ -252,6 +267,8 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		for (auto& wheel : wheels_)
 			if (wheel->drawOverUI() || !frameDrawn)
 				wheel->Draw(device, mainEffect_, quad_.get());
+		
+		customWheels_->Draw(device);
 
 		SettingsMenu::i()->Draw();
 
@@ -289,10 +306,18 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 			}, []() { UpdateCheck::i()->updateDismissed(true); });
 
 		ImGui::Render();
-		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());	
+		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+
+        customWheels_->DrawOffscreen(device);
 
 		if (sceneEnded)
 			device->EndScene();
+	}
+	
+	if(forceReloadWheels_)
+	{
+	    forceReloadWheels_ = false;
+	    customWheels_->MarkReload();
 	}
 }
 

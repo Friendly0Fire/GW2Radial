@@ -4,6 +4,7 @@
 #include <Singleton.h>
 #include <Wheel.h>
 #include <UnitQuad.h>
+#include <CustomWheel.h>
 
 namespace GW2Radial
 {
@@ -18,6 +19,8 @@ public:
 
 	Core() = default;
 	~Core();
+
+	void ForceReloadWheels() { forceReloadWheels_ = true; }
 
 	HWND gameWindow() const { return gameWindow_; }
 	HMODULE dllModule() const { return dllModule_; }
@@ -53,13 +56,15 @@ protected:
 
 	uint screenWidth_ = 0, screenHeight_ = 0;
 	bool firstFrame_ = true;
+	bool forceReloadWheels_ = false;
 
 	std::unique_ptr<UnitQuad> quad_;
 	Effect* mainEffect_ = nullptr;
 
-	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr;
+	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr, *fontDraw_ = nullptr;
 
 	std::vector<std::unique_ptr<Wheel>> wheels_;
+	std::unique_ptr<CustomWheelsManager> customWheels_;
 	
 	std::unique_ptr<ConfigurationOption<bool>> firstMessageShown_;
 	std::unique_ptr<ConfigurationOption<bool>> ignoreRTSS_;
