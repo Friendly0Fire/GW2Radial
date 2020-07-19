@@ -76,9 +76,9 @@ Effect::Effect(IDirect3DDevice9 * dev) : device_(dev)
 	if(file) {
         auto* const contentStream = file->GetDecompressionStream();
 	    if(contentStream) {
-	        auto fileContents = ReadFile(*contentStream);
+	        auto vec = FileSystem::ReadFile(*contentStream);
 		    file->CloseDecompressionStream();
-		    return fileContents;
+	        return std::string(reinterpret_cast<char*>(vec.data()), vec.size());
 	    }
 	}
 
