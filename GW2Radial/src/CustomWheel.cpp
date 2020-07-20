@@ -247,22 +247,24 @@ void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
 	}
 
 	cref folderBase = ConfigurationFile::i()->folder() + L"custom\\";
-
-	for(cref entry : std::filesystem::directory_iterator(folderBase))
+	if(std::filesystem::exists(folderBase))
 	{
-	    if(!entry.is_directory() && entry.path().extension() != L".zip")
-			continue;
+	    for(cref entry : std::filesystem::directory_iterator(folderBase))
+	    {
+	        if(!entry.is_directory() && entry.path().extension() != L".zip")
+			    continue;
 
-		std::filesystem::path configFile = entry.path() / L"config.ini";
-		if(!FileSystem::Exists(configFile))
-			continue;
+		    std::filesystem::path configFile = entry.path() / L"config.ini";
+		    if(!FileSystem::Exists(configFile))
+			    continue;
 
-		auto wheel = BuildWheel(configFile, dev);
-		if(wheel)
-		{
-		    wheels_.push_back(std::move(wheel));
-		    customWheels_.push_back(wheels_.back().get());
-		}
+		    auto wheel = BuildWheel(configFile, dev);
+		    if(wheel)
+		    {
+		        wheels_.push_back(std::move(wheel));
+		        customWheels_.push_back(wheels_.back().get());
+		    }
+	    }
 	}
 
 	loaded_ = true;
