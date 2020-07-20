@@ -21,15 +21,15 @@ public:
 	typedef IDirect3D9* (WINAPI *Direct3DCreate9_t)(UINT sdkVersion);
 	typedef HRESULT (WINAPI *Direct3DCreate9Ex_t)(UINT sdkVersion, IDirect3D9Ex** output);
 
-	Direct3D9Inject() = default;
-
 	DrawCallback drawUnderCallback, drawOverCallback;
 	PreResetCallback preResetCallback;
 	PostResetCallback postResetCallback;
 	PreCreateDeviceCallback preCreateDeviceCallback;
 	PostCreateDeviceCallback postCreateDeviceCallback;
 
-protected:	
+protected:
+	Direct3D9Inject() = default;
+
 	const XXH64_hash_t preUiVertexShaderHash_ = 0x1fe3c6cd77e6e9f0;
 	const XXH64_hash_t preUiPixelShaderHash_ = 0xccc38027cdd6cd51;
 	IDirect3DVertexShader9* preUiVertexShader_ = nullptr;

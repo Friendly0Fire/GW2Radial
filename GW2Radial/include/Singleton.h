@@ -19,7 +19,7 @@ public:
 	}
 
 	template<typename T2> requires std::derived_from<T2, T>
-	static std::enable_if<AutoInit == false, T*> i(std::unique_ptr<T2>&& i)
+	static T* i(std::unique_ptr<T2>&& i)
 	{
 	    if(!i_)
 			i_ = std::move(i);
@@ -43,5 +43,6 @@ protected:
 };
 
 #define DEFINE_SINGLETON(x) std::unique_ptr<x> Singleton<x>::i_ = nullptr
+#define DEFINE_SINGLETON_NOINIT(x) std::unique_ptr<x> Singleton<x, false>::i_ = nullptr
 
 }

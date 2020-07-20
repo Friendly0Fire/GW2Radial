@@ -2,6 +2,7 @@
 #include <MinHook.h>
 #include <Utility.h>
 #include <tchar.h>
+#include <filesystem>
 
 namespace GW2Radial
 {
@@ -16,7 +17,7 @@ struct Trampoline<Ret(Direct3D9Hooks::*)(Args...)>
 	template<Function f>
 	static auto Eval(Args ...args)
 	{
-		return std::invoke(f, Direct3D9Hooks::i(), args...);
+		return std::invoke(f, GetD3D9Hooks(), args...);
 	}
 };
 
@@ -273,53 +274,38 @@ HRESULT Direct3D9Hooks::CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D
 
 void Direct3D9Hooks::OnD3DCreate()
 {
+	namespace fs = std::filesystem;
+
+	cref basePath = fs::current_path();
+
 	if (!realD3D9Module_)
-	{	
-		TCHAR path[MAX_PATH];
-
-		GetCurrentDirectory(MAX_PATH, path);
-		_tcscat_s(path, TEXT("\\bin64\\d912pxy.dll"));
-
-		if (FileExists(path))
-		{
-			realD3D9Module_ = LoadLibrary(path);
-		}
+	{
+		auto path = basePath / L"bin64" / "912pxy.dll";
+		if (fs::exists(path))
+			realD3D9Module_ = LoadLibrary(path.c_str());
 		else {
+			wchar_t sysPath[MAX_PATH];
+			GetSystemDirectoryW(sysPath, MAX_PATH);
 
-			GetSystemDirectory(path, MAX_PATH);
-			_tcscat_s(path, TEXT("\\d3d9.dll"));
+			path = fs::path(sysPath) / "d3d9.dll";
 
-			realD3D9Module_ = LoadLibrary(path);
+			realD3D9Module_ = LoadLibrary(path.c_str());
 		}
 	}
 
 	if (!chainD3D9Module_)
 	{
-		TCHAR path[MAX_PATH];
-
-		GetCurrentDirectory(MAX_PATH, path);
-		_tcscat_s(path, TEXT("\\d3d9_mchain.dll"));
-
-		if (!FileExists(path))
-		{
-			GetCurrentDirectory(MAX_PATH, path);
-			_tcscat_s(path, TEXT("\\bin64\\d3d9_mchain.dll"));
+		for(cref path : {
+		        basePath / "d3d9_mchain.dll",
+			    basePath / "bin64" / "d3d9_mchain.dll",
+			    basePath / "ReShade64.dll",
+			    basePath / "bin64" / "ReShade64.dll"
+		    }) {
+			if(fs::exists(path)) {
+		        chainD3D9Module_ = LoadLibraryW(path.c_str());
+				break;
+			}
 		}
-
-		if (!FileExists(path))
-		{
-			GetCurrentDirectory(MAX_PATH, path);
-			_tcscat_s(path, TEXT("\\ReShade64.dll"));
-		}
-
-		if (!FileExists(path))
-		{
-			GetCurrentDirectory(MAX_PATH, path);
-			_tcscat_s(path, TEXT("\\bin64\\ReShade64.dll"));
-		}
-
-		if (FileExists(path))
-			chainD3D9Module_ = LoadLibrary(path);
 	}
 }
 

@@ -6,7 +6,7 @@
 
 namespace GW2Radial
 {
-DEFINE_SINGLETON(Direct3D9Inject);
+DEFINE_SINGLETON_NOINIT(Direct3D9Inject);
 }
 
 gw2al_addon_dsc gAddonDeps[] = {

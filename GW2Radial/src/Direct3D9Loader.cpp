@@ -128,65 +128,66 @@ typedef struct d3d9_api_call {
 
 void OnDevPostRelease(D3D9_wrapper_event_data* evd)
 {
-	GW2Radial::Direct3D9Loader::i()->DevPostRelease((IDirect3DDevice9*)*evd->stackPtr, *((ULONG*)evd->ret));
+	GetD3D9Loader()->DevPostRelease((IDirect3DDevice9*)*evd->stackPtr, *((ULONG*)evd->ret));
 }
 
 void OnDevPrePresent(D3D9_wrapper_event_data* evd)
 {
-	GW2Radial::Direct3D9Loader::i()->DevPrePresent((IDirect3DDevice9*)*evd->stackPtr);
+	GetD3D9Loader()->DevPrePresent((IDirect3DDevice9*)*evd->stackPtr);
 }
 
 void OnDevPreReset(D3D9_wrapper_event_data* evd)
 {
-	GW2Radial::Direct3D9Loader::i()->DevPreReset();
+	GetD3D9Loader()->DevPreReset();
 }
 
 void OnDevPostReset(D3D9_wrapper_event_data* evd)
 {
 	d3d9_api_call* dx_api_cp = (d3d9_api_call*)evd->stackPtr;
-	GW2Radial::Direct3D9Loader::i()->DevPostReset(dx_api_cp->dev, dx_api_cp->Reset.pPresentationParameters, *((HRESULT*)evd->ret));
+	GetD3D9Loader()->DevPostReset(dx_api_cp->dev, dx_api_cp->Reset.pPresentationParameters, *((HRESULT*)evd->ret));
 }
 
 void OnDevPostCreateVertexShader(D3D9_wrapper_event_data* evd)
 {
 	d3d9_api_call* dx_api_cp = (d3d9_api_call*)evd->stackPtr;
-	GW2Radial::Direct3D9Loader::i()->DevPostCreateVertexShader(dx_api_cp->CreateShader.pFunction, dx_api_cp->CreateShader.pvShader);
+	GetD3D9Loader()->DevPostCreateVertexShader(dx_api_cp->CreateShader.pFunction, dx_api_cp->CreateShader.pvShader);
 }
 
 void OnDevPostSetVertexShader(D3D9_wrapper_event_data* evd)
 {
 	d3d9_api_call* dx_api_cp = (d3d9_api_call*)evd->stackPtr;
-	GW2Radial::Direct3D9Loader::i()->DevPostSetVertexShader(dx_api_cp->dev, dx_api_cp->SetShader.vs);
+	GetD3D9Loader()->DevPostSetVertexShader(dx_api_cp->dev, dx_api_cp->SetShader.vs);
 }
 
 void OnDevPostCreatePixelShader(D3D9_wrapper_event_data* evd)
 {
 	d3d9_api_call* dx_api_cp = (d3d9_api_call*)evd->stackPtr;
-	GW2Radial::Direct3D9Loader::i()->DevPostCreatePixelShader(dx_api_cp->CreateShader.pFunction, dx_api_cp->CreateShader.ppShader);
+	GetD3D9Loader()->DevPostCreatePixelShader(dx_api_cp->CreateShader.pFunction, dx_api_cp->CreateShader.ppShader);
 }
 
 void OnDevPostSetPixelShader(D3D9_wrapper_event_data* evd)
 {
 	d3d9_api_call* dx_api_cp = (d3d9_api_call*)evd->stackPtr;
-	GW2Radial::Direct3D9Loader::i()->DevPostSetVertexShader(dx_api_cp->dev, dx_api_cp->SetShader.vs);
+	GetD3D9Loader()->DevPostSetVertexShader(dx_api_cp->dev, dx_api_cp->SetShader.vs);
 }
 
 void OnObjPreCreateDevice(D3D9_wrapper_event_data* evd)
 {
 	d3d9_api_call* dx_api_cp = (d3d9_api_call*)evd->stackPtr;
-	GW2Radial::Direct3D9Loader::i()->ObjPreCreateDevice(dx_api_cp->CreateDevice.v3);
+	GetD3D9Loader()->ObjPreCreateDevice(dx_api_cp->CreateDevice.v3);
 }
 
 void OnObjPostCreateDevice(D3D9_wrapper_event_data* evd)
 {
 	d3d9_api_call* dx_api_cp = (d3d9_api_call*)evd->stackPtr;
-	GW2Radial::Direct3D9Loader::i()->ObjPostCreateDevice(*dx_api_cp->CreateDevice.ret, dx_api_cp->CreateDevice.v5);
+	GetD3D9Loader()->ObjPostCreateDevice(*dx_api_cp->CreateDevice.ret, dx_api_cp->CreateDevice.v5);
 }
 
-void Direct3D9Loader::InitHooks(gw2al_core_vtable* gAPI)
+void Direct3D9Loader::Init(gw2al_core_vtable* gAPI)
 {
 	D3D9_wrapper d3d9_wrap;
-	d3d9_wrap.enable_event = (pD3D9_wrapper_enable_event)gAPI->query_function(gAPI->hash_name((wchar_t*)D3D9_WRAPPER_ENABLE_EVENT_FNAME));
+	d3d9_wrap.enable_event = static_cast<pD3D9_wrapper_enable_event>(gAPI->query_function(
+        gAPI->hash_name(static_cast<wchar_t*>(D3D9_WRAPPER_ENABLE_EVENT_FNAME))));
 
 	d3d9_wrap.enable_event(METH_OBJ_CreateDevice, WRAP_CB_PRE_POST);
 	d3d9_wrap.enable_event(METH_DEV_Release, WRAP_CB_POST);
