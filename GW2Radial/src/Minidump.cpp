@@ -88,7 +88,6 @@ LONG WINAPI GW2RadialTopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo)
 	    case STATUS_FLOAT_MULTIPLE_FAULTS:
 	    case STATUS_FLOAT_MULTIPLE_TRAPS:
 	    case STATUS_INTEGER_DIVIDE_BY_ZERO:
-	    case DBG_PRINTEXCEPTION_C:
 		    break;
 	    default:
 	        WriteMiniDump(pExceptionInfo);
