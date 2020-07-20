@@ -134,7 +134,7 @@ void Wheel::DrawMenu()
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, disableKeybindsInCombatOption_);
 
 	ImGui::PushItemWidth(0.2f * ImGui::GetWindowContentRegionWidth());
-	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumOutOfCombatWaitOption_, 1, 10, ImGuiInputTextFlags_CallbackAlways);
+	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumOutOfCombatWaitOption_, 1, 10);
 	ImGui::PopItemWidth();
 
 	if(CenterBehavior(centerBehaviorOption_.value()) != CenterBehavior::NOTHING && displayDelayOption_.value() > 0)
