@@ -242,16 +242,23 @@ void Wheel::DrawMenu()
 void Wheel::OnUpdate() {
 	if (outOfCombatDelayed_) {
 		const auto currentTime = TimeInMilliseconds();
-		if (currentTime <= outOfCombatDelayedTime_ + maximumOutOfCombatWaitOption_.value() * 1000ull && !MumbleLink::i()->isInCombat() && MumbleLink::i()->gameHasFocus() && MumbleLink::i()->isInMap()) {
-			outOfCombatTestCount_++;
-			if(outOfCombatTestCount_ >= 10)
-			{
-			    Input::i()->SendKeybind(outOfCombatDelayed_->keybind().scanCodes(), std::nullopt);
-			    outOfCombatDelayed_ = nullptr;
-			    outOfCombatDelayedTime_ = currentTime;
-			}
-		} else
+		if(currentTime <= outOfCombatDelayedTime_ + maximumOutOfCombatWaitOption_.value() * 1000ull) {
+		    if (!MumbleLink::i()->isInCombat() && MumbleLink::i()->gameHasFocus() && MumbleLink::i()->isInMap()) {
+			    outOfCombatTestCount_++;
+			    if(outOfCombatTestCount_ >= 10)
+			    {
+			        Input::i()->SendKeybind(outOfCombatDelayed_->keybind().scanCodes(), std::nullopt);
+			        outOfCombatDelayed_ = nullptr;
+			        outOfCombatDelayedTime_ = currentTime;
+					outOfCombatTestCount_ = 0;
+			    }
+		    } else
+			    outOfCombatTestCount_ = 0;
+		} else {
+		    outOfCombatDelayed_ = nullptr;
+			outOfCombatDelayedTime_ = currentTime;
 			outOfCombatTestCount_ = 0;
+		}
 	}
 }
 
