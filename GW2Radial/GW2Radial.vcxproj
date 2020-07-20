@@ -158,6 +158,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClCompile Include="src\Keybind.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Marker.cpp" />
+    <ClCompile Include="src\Minidump.cpp" />
     <ClCompile Include="src\MiscTab.cpp" />
     <ClCompile Include="src\Mount.cpp" />
     <ClCompile Include="src\MumbleLink.cpp" />

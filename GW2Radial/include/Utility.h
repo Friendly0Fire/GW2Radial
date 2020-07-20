@@ -64,7 +64,12 @@ inline void FormattedOutputDebugString(const char* fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 	vsprintf_s(buffer, fmt, args);
-	OutputDebugStringA(buffer);
+	if(IsDebuggerPresent())
+	    OutputDebugStringA(buffer);
+	else {
+		GetLogStream() << buffer;
+		GetLogStream().flush();
+	}
 	va_end(args);
 }
 
@@ -73,7 +78,12 @@ inline void FormattedOutputDebugString(const wchar_t* fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 	vswprintf_s(buffer, fmt, args);
-	OutputDebugStringW(buffer);
+	if(IsDebuggerPresent())
+	    OutputDebugStringW(buffer);
+	else {
+		GetLogStream() << utf8_encode(buffer);
+		GetLogStream().flush();
+	}
 	va_end(args);
 }
 

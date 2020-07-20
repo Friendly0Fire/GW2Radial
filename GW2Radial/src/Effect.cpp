@@ -117,8 +117,7 @@ Effect::Effect(IDirect3DDevice9 * dev) : device_(dev)
                 const char* errorsText = static_cast<const char*>(errors->GetBufferPointer());
 				auto errorsTextLength = errors->GetBufferSize();
 
-				OutputDebugStringA("Compilation errors:\n");
-				OutputDebugStringA(errorsText);
+				FormattedOutputDebugString("Compilation errors:\n%s", errorsText);
 			}
 
 			blob.Reset();

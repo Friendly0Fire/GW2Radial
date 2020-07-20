@@ -93,8 +93,6 @@ retry:
       }
    }
 
-	OutputDebugStringW((wchar_t*)lpOutBuffer);
-
    if (lpOutBuffer)
    {
       delete [] lpOutBuffer;

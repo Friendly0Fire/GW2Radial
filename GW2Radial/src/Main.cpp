@@ -73,11 +73,17 @@ HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** d3d9ex)
 	return GW2Radial::GetD3D9Hooks()->Direct3DCreate9Ex(SDKVersion, d3d9ex);
 }
 
+std::ofstream g_logStream;
+
+std::ofstream& GetLogStream() { return g_logStream; }
+
 bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 {
 	switch (fdwReason)
 	{
 	case DLL_PROCESS_ATTACH:
+	    g_logStream = std::ofstream("gw2radial.log");
+
 		GW2Radial::Core::Init(hModule);
 		break;
 	case DLL_PROCESS_DETACH:

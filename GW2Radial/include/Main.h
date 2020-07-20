@@ -54,6 +54,8 @@
 #include <memory>
 #include <span>
 #include <wrl.h>
+#include <d3d9.h>
+#include <fstream>
 
 #include <Resource.h>
 
@@ -127,5 +129,8 @@ typedef struct iVector2 {
 	int y;
 } iVector2;
 
-#include "d3d9.h"
+std::ofstream& GetLogStream();
+
+bool ExceptionHandlerMiniDump(struct _EXCEPTION_POINTERS *pExceptionInfo, const char* function, const char* file, int line);
+
 #include "Effect.h"

@@ -21,12 +21,18 @@
 #include <Effect_dx12.h>
 #include <CustomWheel.h>
 
+LONG WINAPI GW2RadialTopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
+
 namespace GW2Radial
 {
 DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {
+    // Install our own exception handler to automatically log minidumps.
+    AddVectoredExceptionHandler(1, GW2RadialTopLevelFilter);
+	SetUnhandledExceptionFilter(GW2RadialTopLevelFilter);
+
 	MumbleLink::i();
 	i()->dllModule_ = dll;
 	i()->InternalInit();
