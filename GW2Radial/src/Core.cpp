@@ -27,10 +27,6 @@ DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
-        exit(1);
-
 	MumbleLink::i();
 	i()->dllModule_ = dll;
 	i()->InternalInit();
@@ -39,10 +35,6 @@ void Core::Init(HMODULE dll)
 void Core::Shutdown()
 {
 	i_.reset();
-
-	// We'll just leak a bunch of things and let the driver/OS take care of it, since we have no clean exit point
-	// and calling FreeLibrary in DllMain causes deadlocks
-	
 	CoUninitialize();
 }
 
@@ -65,6 +57,10 @@ Core::~Core()
 
 void Core::OnInjectorCreated()
 {
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
+        exit(1);
+
 	auto* inject = Direct3D9Inject::i();
 	
 	inject->preCreateDeviceCallback = [this](HWND hWnd){ PreCreateDevice(hWnd); };
