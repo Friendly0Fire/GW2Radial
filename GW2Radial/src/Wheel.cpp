@@ -33,7 +33,7 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
 	disableKeybindsInCombatOption_("Disable wheel keybinds while in combat", "disable_in_combat", "wheel_" + nickname_, false),
-	maximumOutOfCombatWaitOption_("Maximum seconds to wait for out of combat before sending input", "max_wait_ooc", "wheel_" + nickname_, 30),
+	maximumOutOfCombatWaitOption_("Expiration time (in seconds) of queued mount input while in combat", "max_wait_ooc", "wheel_" + nickname_, 30),
 	showOutOfCombatTimerOption_("Show timer around cursor when waiting to get out of combat", "timer_ooc", "wheel_" + nickname_, true)
 {
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
