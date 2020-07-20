@@ -61,6 +61,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 {
 	GW2Radial::Direct3D9Inject::i(std::make_unique<GW2Radial::Direct3D9Hooks>());
     GW2Radial::Core::i()->OnInjectorCreated();
+
 	return GW2Radial::GetD3D9Hooks()->Direct3DCreate9(SDKVersion);
 }
 

@@ -28,7 +28,7 @@ DEFINE_SINGLETON(Core);
 void Core::Init(HMODULE dll)
 {
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr))
+    if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
         exit(1);
 
 	MumbleLink::i();
