@@ -383,14 +383,7 @@ namespace GW2Radial
             removeGeneric(ScanCode::ALT, ScanCode::ALTLEFT);
             removeGeneric(ScanCode::META, ScanCode::METALEFT);
 
-            std::set<ScanCode> modifiers { ScanCode::CONTROLLEFT, ScanCode::CONTROLRIGHT, ScanCode::SHIFTLEFT, ScanCode::SHIFTRIGHT, ScanCode::ALTLEFT, ScanCode::ALTRIGHT };
-            scsSorted.sort([&modifiers](ScanCode& a, ScanCode& b)
-            {
-                if (modifiers.count(a))
-                    return true;
-                else
-                    return a < b;
-            });
+            scsSorted.sort(ScanCodeCompare());
         }
 
         mstime currentTime = TimeInMilliseconds() + 10;

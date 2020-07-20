@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <Main.h>
+#include <set>
 
 namespace GW2Radial {
 /*
@@ -324,6 +325,32 @@ ScanCode GetScanCode(KeyLParam lParam);
 inline bool IsMouse(ScanCode sc) {
     return (sc & ScanCode::MOUSE_FLAG) != ScanCode::NONE;
 }
+
+struct ScanCodeCompare
+{
+    bool operator()(const ScanCode& a, const ScanCode& b) const
+    {
+        bool aIsModifier = IsModifier(a);
+        bool bIsModifier = IsModifier(b);
+        bool aIsMouse = IsMouse(a);
+        bool bIsMouse = IsMouse(b);
+
+        // Modifiers are always displayed first
+        if(aIsModifier && !bIsModifier)
+            return true;
+        if(!aIsModifier && bIsModifier)
+            return false;
+
+        // Mouse buttons are always displayed last
+        if(aIsMouse && !bIsMouse)
+            return false;
+        if(!aIsMouse && bIsMouse)
+            return true;
+
+        // If two ScanCodes are of the same type, compare numerically
+        return uint(a) < uint(b);
+    }
+};
 
 }
 

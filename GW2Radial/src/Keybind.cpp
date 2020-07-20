@@ -148,7 +148,10 @@ void Keybind::UpdateDisplayString()
 		return;
 	}
 
-	std::wstring keybind = std::accumulate(std::next(scanCodes_.begin()), scanCodes_.end(), GetScanCodeName(*scanCodes_.begin()), [](std::wstring a, ScanCode b) { return std::move(a) + L" + " + GetScanCodeName(b); });
+	std::vector<ScanCode> displayScanCodes(scanCodes_.begin(), scanCodes_.end());
+	std::sort(displayScanCodes.begin(), displayScanCodes.end(), ScanCodeCompare());
+
+	std::wstring keybind = std::accumulate(std::next(displayScanCodes.begin()), displayScanCodes.end(), GetScanCodeName(displayScanCodes.front()), [](std::wstring a, ScanCode b) { return std::move(a) + L" + " + GetScanCodeName(b); });
 
 	strcpy_s(keysDisplayString_.data(), keysDisplayString_.size(), utf8_encode(keybind).c_str());
 }
