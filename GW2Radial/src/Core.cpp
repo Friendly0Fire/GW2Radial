@@ -1,5 +1,5 @@
 #include <Core.h>
-#include <Direct3D9Hooks.h>
+#include <Direct3D9Loader.h>
 #include <imgui.h>
 #include <examples/imgui_impl_dx9.h>
 #include <examples/imgui_impl_win32.h>
@@ -27,10 +27,6 @@ DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr))
-        exit(1);
-
 	MumbleLink::i();
 	i()->dllModule_ = dll;
 	i()->InternalInit();
@@ -39,10 +35,6 @@ void Core::Init(HMODULE dll)
 void Core::Shutdown()
 {
 	i_.reset();
-
-	// We'll just leak a bunch of things and let the driver/OS take care of it, since we have no clean exit point
-	// and calling FreeLibrary in DllMain causes deadlocks
-	
 	CoUninitialize();
 }
 
@@ -50,17 +42,35 @@ Core::~Core()
 {
 	ImGui::DestroyContext();
 
-	if(auto i = Direct3D9Hooks::iNoInit(); i != nullptr)
+	if(auto i = Direct3D9Inject::iNoInit(); i != nullptr)
 	{
-		i->preCreateDeviceCallback(nullptr);
-		i->postCreateDeviceCallback(nullptr);
+		i->preCreateDeviceCallback = nullptr;
+		i->postCreateDeviceCallback = nullptr;
 		
-		i->preResetCallback(nullptr);
-		i->postResetCallback(nullptr);
+		i->preResetCallback = nullptr;
+		i->postResetCallback = nullptr;
 		
-		i->drawOverCallback(nullptr);
-		i->drawUnderCallback(nullptr);
+		i->drawOverCallback = nullptr;
+		i->drawUnderCallback = nullptr;
 	}
+}
+
+void Core::OnInjectorCreated()
+{
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
+        exit(1);
+
+	auto* inject = Direct3D9Inject::i();
+	
+	inject->preCreateDeviceCallback = [this](HWND hWnd){ PreCreateDevice(hWnd); };
+	inject->postCreateDeviceCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostCreateDevice(d, pp); };
+	
+	inject->preResetCallback = [this](){ PreReset(); };
+	inject->postResetCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); };
+	
+	inject->drawOverCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); };
+	inject->drawUnderCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); };
 }
 
 void Core::InternalInit()
@@ -72,15 +82,6 @@ void Core::InternalInit()
 		GetModuleFileName(dllModule_, selfpath, MAX_PATH);
 		LoadLibrary(selfpath);
 	}
-	
-	Direct3D9Hooks::i()->preCreateDeviceCallback([this](HWND hWnd){ PreCreateDevice(hWnd); });
-	Direct3D9Hooks::i()->postCreateDeviceCallback([this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostCreateDevice(d, pp); });
-	
-	Direct3D9Hooks::i()->preResetCallback([this](){ PreReset(); });
-	Direct3D9Hooks::i()->postResetCallback([this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); });
-	
-	Direct3D9Hooks::i()->drawOverCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); });
-	Direct3D9Hooks::i()->drawUnderCallback([this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); });
 	
 	imguiContext_ = ImGui::CreateContext();
 }

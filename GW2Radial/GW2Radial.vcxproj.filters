@@ -67,9 +67,6 @@
     <ClCompile Include="src\Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Direct3D9Hooks.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -130,6 +127,15 @@
     <ClCompile Include="src\FileSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Direct3DVirtualFunctionTable.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Direct3D9Loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Direct3D9Hooks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -181,9 +187,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\dds.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Direct3D9Hooks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\DDSTextureLoader.h">
@@ -268,6 +271,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\FileSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Direct3DVirtualFunctionTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Direct3D9Loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Direct3D9Hooks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Direct3D9Inject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

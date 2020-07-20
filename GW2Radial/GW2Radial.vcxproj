@@ -46,14 +46,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)ZipLib\Source\ZipLib;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)ZipLib\Source\ZipLib;$(ProjectDir)minhook\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)ZipLib\Source\ZipLib;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)ZipLib\Source\ZipLib;$(ProjectDir)minhook\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
@@ -146,6 +146,8 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClCompile Include="src\CustomWheel.cpp" />
     <ClCompile Include="src\DDSTextureLoader.cpp" />
     <ClCompile Include="src\Direct3D9Hooks.cpp" />
+    <ClCompile Include="src\Direct3D9Loader.cpp" />
+    <ClCompile Include="src\Direct3DVirtualFunctionTable.c" />
     <ClCompile Include="src\Effect.cpp" />
     <ClCompile Include="src\Effect_dx12.cpp" />
     <ClCompile Include="src\FileSystem.cpp" />
@@ -188,6 +190,9 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\dds.h" />
     <ClInclude Include="include\DDSTextureLoader.h" />
     <ClInclude Include="include\Direct3D9Hooks.h" />
+    <ClInclude Include="include\Direct3D9Inject.h" />
+    <ClInclude Include="include\Direct3D9Loader.h" />
+    <ClInclude Include="include\Direct3DVirtualFunctionTable.h" />
     <ClInclude Include="include\Effect.h" />
     <ClInclude Include="include\Effect_dx12.h" />
     <ClInclude Include="include\FileSystem.h" />
@@ -304,6 +309,9 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <Font Include="art\Fonts\SourceSansPro-Regular.ttf" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\GW2Radial2\GW2Radial\minhook\build\VC15\libMinHook.vcxproj">
+      <Project>{f142a341-5ee0-442d-a15f-98ae9b48dbae}</Project>
+    </ProjectReference>
     <ProjectReference Include="ziplib\Source\ZipLib\ZipLib.vcxproj">
       <Project>{5c9fd859-ddf9-4510-8397-b329b0ae8c48}</Project>
     </ProjectReference>

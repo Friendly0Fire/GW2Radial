@@ -1,81 +1,83 @@
 #pragma once
 
 #include <Main.h>
-#include <xxhash/xxhash.h>
 #include <d3d9.h>
+#include <Direct3DVirtualFunctionTable.h>
 #include <functional>
-#include <Singleton.h>
-#include "gw2al_api.h"
+
+#include <Direct3D9Inject.h>
 
 namespace GW2Radial
 {
 
-class Direct3D9Hooks : public Singleton<Direct3D9Hooks>
+class Direct3D9Hooks : public Direct3D9Inject
 {
 public:
-	using DrawCallback = std::function<void(IDirect3DDevice9*, bool, bool)>;
-	using PreResetCallback = std::function<void()>;
-	using PostResetCallback = std::function<void(IDirect3DDevice9*, D3DPRESENT_PARAMETERS*)>;
-	using PreCreateDeviceCallback = std::function<void(HWND)>;
-	using PostCreateDeviceCallback = std::function<void(IDirect3DDevice9*, D3DPRESENT_PARAMETERS*)>;
-
-	typedef IDirect3D9* (WINAPI *Direct3DCreate9_t)(UINT sdkVersion);
-	typedef HRESULT (WINAPI *Direct3DCreate9Ex_t)(UINT sdkVersion, IDirect3D9Ex** output);
-	
 	Direct3D9Hooks();
 
+	void OnD3DCreate();
 
-	const DrawCallback & drawUnderCallback() const { return drawUnderCallback_; }
-	void drawUnderCallback(const DrawCallback &drawUnderCallback) { drawUnderCallback_ = drawUnderCallback; }
+	D3DPRESENT_PARAMETERS SetupHookDevice(HWND &hWnd);
+	void DeleteHookDevice(IDirect3DDevice9 *pDev, HWND hWnd);
 
-	const DrawCallback & drawOverCallback() const { return drawOverCallback_; }
-	void drawOverCallback(const DrawCallback &drawOverCallback) { drawOverCallback_ = drawOverCallback; }
+	void LoadOriginalDevicePointers(IDirect3D9 *d3d);
+	void LoadOriginalDevicePointers(IDirect3D9Ex *d3d);
 
-	const PreResetCallback & preResetCallback() const { return preResetCallback_; }
-	void preResetCallback(const PreResetCallback &preResetCallback) { preResetCallback_ = preResetCallback; }
-
-	const PostResetCallback & postResetCallback() const { return postResetCallback_; }
-	void postResetCallback(const PostResetCallback &postResetCallback) { postResetCallback_ = postResetCallback; }
-
-	const PreCreateDeviceCallback & preCreateDeviceCallback() const { return preCreateDeviceCallback_; }
-	void preCreateDeviceCallback(const PreCreateDeviceCallback &preCreateDeviceCallback)
-	{
-		preCreateDeviceCallback_ = preCreateDeviceCallback;
-	}
-
-	const PostCreateDeviceCallback & postCreateDeviceCallback() const { return postCreateDeviceCallback_; }
-	void postCreateDeviceCallback(const PostCreateDeviceCallback &postCreateDeviceCallback)
-	{
-		postCreateDeviceCallback_ = postCreateDeviceCallback;
-	}
+	IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion);
+	HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** output);
 	
-	void DevPostRelease(IDirect3DDevice9 *sThis, ULONG refs);
-	void DevPrePresent(IDirect3DDevice9 *sThis);
-	void DevPreReset();
-	void DevPostReset(IDirect3DDevice9 *sThis, D3DPRESENT_PARAMETERS *pPresentationParameters, HRESULT hr);
-	void DevPostCreateVertexShader(const DWORD *pFunction, IDirect3DVertexShader9 **ppShader);
-	void DevPostSetVertexShader(IDirect3DDevice9 *sThis, IDirect3DVertexShader9 *pShader);
-	void DevPostCreatePixelShader(const DWORD *pFunction, IDirect3DPixelShader9 **ppShader);
-	void DevPostSetPixelShader(IDirect3DDevice9 *sThis, IDirect3DPixelShader9 *pShader);
-	void ObjPreCreateDevice(HWND hFocusWindow);
-	void ObjPostCreateDevice(IDirect3DDevice9 *pDevice, D3DPRESENT_PARAMETERS *pPresentationParameters);
+protected:
+	Present_t Present_real = nullptr;
+	HRESULT WINAPI Present_hook(IDirect3DDevice9 *sThis, CONST RECT *pSourceRect, CONST RECT *pDestRect,
+	                            HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion);
 
-	void InitHooks(gw2al_core_vtable* gAPI);
+	PresentEx_t PresentEx_real = nullptr;
+	HRESULT WINAPI PresentEx_hook(IDirect3DDevice9Ex *sThis, CONST RECT *pSourceRect, CONST RECT *pDestRect,
+	                              HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion, DWORD dwFlags);
 
-protected:	
-	const XXH64_hash_t preUiVertexShaderHash_ = 0x1fe3c6cd77e6e9f0;
-	const XXH64_hash_t preUiPixelShaderHash_ = 0xccc38027cdd6cd51;
-	IDirect3DVertexShader9* preUiVertexShader_ = nullptr;
-	IDirect3DPixelShader9* preUiPixelShader_ = nullptr;
+	Reset_t Reset_real = nullptr;
+	HRESULT WINAPI Reset_hook(IDirect3DDevice9 *sThis, D3DPRESENT_PARAMETERS *pPresentationParameters);
 
-	bool isFrameDrawn_ = false;
-	bool isInShaderHook_ = false;	
+	ResetEx_t ResetEx_real = nullptr;
+	HRESULT WINAPI ResetEx_hook(IDirect3DDevice9Ex *sThis, D3DPRESENT_PARAMETERS *pPresentationParameters,
+	                            D3DDISPLAYMODEEX *pFullscreenDisplayMode);
 
-	DrawCallback drawUnderCallback_, drawOverCallback_;
-	PreResetCallback preResetCallback_;
-	PostResetCallback postResetCallback_;
-	PreCreateDeviceCallback preCreateDeviceCallback_;
-	PostCreateDeviceCallback postCreateDeviceCallback_;
+	Release_t Release_real = nullptr;
+	ULONG WINAPI Release_hook(IDirect3DDevice9 *sThis);
+
+	AddRef_t AddRef_real = nullptr;
+	ULONG WINAPI AddRef_hook(IDirect3DDevice9 *sThis);
+
+	CreateVertexShader_t CreateVertexShader_real = nullptr;
+	HRESULT WINAPI CreateVertexShader_hook(IDirect3DDevice9 *sThis, const DWORD *pFunction, IDirect3DVertexShader9 **ppShader);
+
+	SetVertexShader_t SetVertexShader_real = nullptr;
+	HRESULT WINAPI SetVertexShader_hook(IDirect3DDevice9 *sThis, IDirect3DVertexShader9 *pShader);
+
+	CreatePixelShader_t CreatePixelShader_real = nullptr;
+	HRESULT WINAPI CreatePixelShader_hook(IDirect3DDevice9 *sThis, const DWORD *pFunction, IDirect3DPixelShader9 **ppShader);
+
+	SetPixelShader_t SetPixelShader_real = nullptr;
+	HRESULT WINAPI SetPixelShader_hook(IDirect3DDevice9 *sThis, IDirect3DPixelShader9 *pShader);
+
+	CreateDevice_t CreateDevice_real = nullptr;
+	HRESULT WINAPI CreateDevice_hook(IDirect3D9 *sThis, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow,
+	                                 DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters,
+	                                 IDirect3DDevice9 **ppReturnedDeviceInterface);
+
+	CreateDeviceEx_t CreateDeviceEx_real = nullptr;
+	HRESULT WINAPI CreateDeviceEx_hook(IDirect3D9Ex *sThis, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow,
+	                                   DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters,
+	                                   D3DDISPLAYMODEEX *pFullscreenDisplayMode,
+	                                   IDirect3DDevice9 **ppReturnedDeviceInterface);
+
+	HMODULE realD3D9Module_ = nullptr;
+	HMODULE chainD3D9Module_ = nullptr;
+
+	Direct3DDevice9VirtualFunctionTable_t originalDeviceVfTable_ = { nullptr };
+	Direct3D9VirtualFunctionTable_t direct3D9VirtualFunctionTable_ = { };
+	Direct3DDevice9VirtualFunctionTable_t direct3DDevice9VirtualFunctionTable_ = { };
 };
+inline Direct3D9Hooks* GetD3D9Hooks() { return static_cast<Direct3D9Hooks*>(Direct3D9Inject::i()); }
 
 }
