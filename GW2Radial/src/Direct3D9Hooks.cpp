@@ -280,7 +280,7 @@ void Direct3D9Hooks::OnD3DCreate()
 
 	if (!realD3D9Module_)
 	{
-		auto path = basePath / L"bin64" / "912pxy.dll";
+		auto path = basePath / L"bin64" / "d912pxy.dll";
 		if (fs::exists(path))
 			realD3D9Module_ = LoadLibrary(path.c_str());
 		else {
