@@ -38,7 +38,11 @@ static IDirect3DVertexShader9* g_pVS = NULL;
 static IDirect3DPixelShader9* g_pPS = NULL;
 static IDirect3DVertexDeclaration9* g_pVDecl = NULL;
 static void* g_pPSO = NULL;
-static IDirect3DVertexBuffer9*  g_pVB2 = NULL;
+static IDirect3DVertexBuffer9* g_pVB2 = NULL;
+static IDirect3DVertexBuffer9* g_pVB3 = NULL;
+static IDirect3DVertexBuffer9* g_pVB4 = NULL;
+static IDirect3DIndexBuffer9*  g_pIB2 = NULL;
+static bool g_bDrawnFrame = false;
 static DWORD g_d912pxy_texture[4] = { 0,0,0,0 };
 static DWORD g_d912pxy_sampler[4] = { 0,0,0,0 };
 
@@ -76,29 +80,36 @@ void ImGui_ImplDX9_RenderDrawData_d912pxy(ImDrawData* draw_data)
 	//megai2: if PSO is not compiled yet, ignore all draws
 	if (!g_pPSO)
 		return;
+	
+	auto** pVB = g_bDrawnFrame ? &g_pVB2 : &g_pVB;
+	auto** pIB = g_bDrawnFrame ? &g_pIB2 : &g_pIB;
 
 	// Create and grow buffers if needed
-	if (!g_pVB || g_VertexBufferSize < draw_data->TotalVtxCount)
+	if (!*pVB || g_VertexBufferSize < draw_data->TotalVtxCount)
 	{
-		if (g_pVB) { g_pVB->Release(); g_pVB = NULL; }
+		if (*pVB) { (*pVB)->Release(); *pVB = NULL; }
 		g_VertexBufferSize = draw_data->TotalVtxCount + 5000;
-		if (g_pd3dDevice->CreateVertexBuffer(g_VertexBufferSize * sizeof(ImDrawVert), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &g_pVB, NULL) < 0)
+		if (g_pd3dDevice->CreateVertexBuffer(g_VertexBufferSize * sizeof(ImDrawVert), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, pVB, NULL) < 0)
 			return;
 	}
-	if (!g_pIB || g_IndexBufferSize < draw_data->TotalIdxCount)
+	if (!*pIB || g_IndexBufferSize < draw_data->TotalIdxCount)
 	{
-		if (g_pIB) { g_pIB->Release(); g_pIB = NULL; }
+		if (*pIB) { (*pIB)->Release(); *pIB = NULL; }
 		g_IndexBufferSize = draw_data->TotalIdxCount + 10000;
-		if (g_pd3dDevice->CreateIndexBuffer(g_IndexBufferSize * sizeof(ImDrawIdx), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, sizeof(ImDrawIdx) == 2 ? D3DFMT_INDEX16 : D3DFMT_INDEX32, D3DPOOL_DEFAULT, &g_pIB, NULL) < 0)
+		if (g_pd3dDevice->CreateIndexBuffer(g_IndexBufferSize * sizeof(ImDrawIdx), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, sizeof(ImDrawIdx) == 2 ? D3DFMT_INDEX16 : D3DFMT_INDEX32, D3DPOOL_DEFAULT, pIB, NULL) < 0)
 			return;
 	}
+
+	auto* vb = g_bDrawnFrame ? g_pVB2 : g_pVB;
+	auto* vb2 = g_bDrawnFrame ? g_pVB4 : g_pVB3;
+	auto* ib = g_bDrawnFrame ? g_pIB2 : g_pIB;
 
 	// Copy and convert all vertices into a single contiguous buffer
 	ImDrawVert* vtx_dst;
 	ImDrawIdx* idx_dst;
-	if (g_pVB->Lock(0, (UINT)(draw_data->TotalVtxCount * sizeof(ImDrawVert)), (void**)&vtx_dst, D3DLOCK_DISCARD) < 0)
+	if (vb->Lock(0, (UINT)(draw_data->TotalVtxCount * sizeof(ImDrawVert)), (void**)&vtx_dst, D3DLOCK_DISCARD) < 0)
 		return;
-	if (g_pIB->Lock(0, (UINT)(draw_data->TotalIdxCount * sizeof(ImDrawIdx)), (void**)&idx_dst, D3DLOCK_DISCARD) < 0)
+	if (ib->Lock(0, (UINT)(draw_data->TotalIdxCount * sizeof(ImDrawIdx)), (void**)&idx_dst, D3DLOCK_DISCARD) < 0)
 		return;
 	for (int n = 0; n < draw_data->CmdListsCount; n++)
 	{
@@ -110,8 +121,8 @@ void ImGui_ImplDX9_RenderDrawData_d912pxy(ImDrawData* draw_data)
 		vtx_dst += cmd_list->VtxBuffer.Size;
 		idx_dst += cmd_list->IdxBuffer.Size;
 	}
-	g_pVB->Unlock();
-	g_pIB->Unlock();
+	vb->Unlock();
+	ib->Unlock();
 
 	//megai2: mark draw start so we can see that app is issuing some not default dx9 api approach
 	g_pd3dDevice->SetRenderState(D3DRS_D912PXY_DRAW, 0);
@@ -123,10 +134,10 @@ void ImGui_ImplDX9_RenderDrawData_d912pxy(ImDrawData* draw_data)
 	//prepare to write texture id for draws
 	g_pd3dDevice->SetRenderState(D3DRS_D912PXY_GPU_WRITE, D912PXY_ENCODE_GPU_WRITE_DSC(1, D912PXY_GPU_WRITE_OFFSET_TEXBIND));
 
-	g_pd3dDevice->SetStreamSource(0, g_pVB, 0, sizeof(ImDrawVert));
+	g_pd3dDevice->SetStreamSource(0, vb, 0, sizeof(ImDrawVert));
 	//use additional vertex buffer as shader constant for proj matrix
-	g_pd3dDevice->SetStreamSource(1, g_pVB2, 0, 8);
-	g_pd3dDevice->SetIndices(g_pIB);
+	g_pd3dDevice->SetStreamSource(1, vb2, 0, 8);
+	g_pd3dDevice->SetIndices(ib);
 	
 	// Setup viewport
 	D3DVIEWPORT9 vp;
@@ -158,12 +169,12 @@ void ImGui_ImplDX9_RenderDrawData_d912pxy(ImDrawData* draw_data)
 
 			float* viewRect;
 
-			if (g_pVB2->Lock(0, 0, (void**)&viewRect, 0) < 0)
+			if (vb2->Lock(0, 0, (void**)&viewRect, 0) < 0)
 				return;
 
 			memcpy(viewRect, g_oldDisplaySize, 8);
 
-			g_pVB2->Unlock();
+			vb2->Unlock();
 		}
 	}
 
@@ -206,6 +217,8 @@ void ImGui_ImplDX9_RenderDrawData_d912pxy(ImDrawData* draw_data)
 	//megai2: update dirty flags so we transfer to dx9 mode safely
 	g_pd3dDevice->SetRenderState(D3DRS_D912PXY_DRAW, 0x101);
 	g_pd3dDevice->SetRenderState(D3DRS_D912PXY_SETUP_PSO, 0);
+
+	g_bDrawnFrame = true;
 }
 
 static bool ImGui_ImplDX9_Release_d912pxy_objects()
@@ -214,6 +227,24 @@ static bool ImGui_ImplDX9_Release_d912pxy_objects()
 	{
 		g_pVB2->Release();
 		g_pVB2 = NULL;
+	}
+
+	if (g_pVB3)
+	{
+		g_pVB3->Release();
+		g_pVB3 = NULL;
+	}
+
+	if (g_pVB4)
+	{
+		g_pVB4->Release();
+		g_pVB4 = NULL;
+	}
+
+	if (g_pIB2)
+	{
+		g_pIB2->Release();
+		g_pIB2 = NULL;
 	}
 
 	if (g_pVS)
@@ -265,7 +296,10 @@ static bool ImGui_ImplDX9_Create_d912pxy_objects()
 	if (g_pd3dDevice->CreateVertexDeclaration(&vDclElements[0],&g_pVDecl) < 0)
 		return false;
 
-	if (g_pd3dDevice->CreateVertexBuffer(16, 0, 0, D3DPOOL_DEFAULT, &g_pVB2, 0) < 0)
+	if (g_pd3dDevice->CreateVertexBuffer(16, 0, 0, D3DPOOL_DEFAULT, &g_pVB3, 0) < 0)
+		return false;
+
+	if (g_pd3dDevice->CreateVertexBuffer(16, 0, 0, D3DPOOL_DEFAULT, &g_pVB4, 0) < 0)
 		return false;
 
 	g_pd3dDevice->SetPixelShader(g_pPS);
@@ -526,4 +560,6 @@ void ImGui_ImplDX9_NewFrame()
 {
 	if (!g_FontTexture)
 		ImGui_ImplDX9_CreateDeviceObjects();
+
+	g_bDrawnFrame = false;
 }
