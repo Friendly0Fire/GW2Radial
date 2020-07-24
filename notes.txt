@@ -1,0 +1,15 @@
+// W and H are screen size
+
+// ...HIDPI modifies W and H here...
+
+if W < 1024:
+    H = 1024 * H / W
+    W = 1024
+if H < 768:
+    W = 768 * W / H
+    H = 768
+
+// ...Font scale modifies W and H here...
+
+W = floor(W)
+H = floor(H)
