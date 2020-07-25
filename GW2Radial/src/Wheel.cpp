@@ -129,8 +129,16 @@ void Wheel::DrawMenu()
 
 	ImGui::PopItemWidth();
 
-	ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
-	ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
+	if(clickSelectOption_.value()) {
+		noHoldOption_.value() = false;
+		ImGui::TextDisabled(noHoldOption_.displayName().c_str());
+	} else
+	    ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
+	if(noHoldOption_.value()) {
+		clickSelectOption_.value() = false;
+		ImGui::TextDisabled(clickSelectOption_.displayName().c_str());
+	} else
+	    ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, disableKeybindsInCombatOption_);
 
 	ImGui::PushItemWidth(0.2f * ImGui::GetWindowContentRegionWidth());
@@ -206,7 +214,8 @@ void Wheel::DrawMenu()
 			ImGui::PopItemWidth();
 			ImGuiUnindent();
 		}
-	}
+	} else
+		ImGui::TextDisabled((centerBehaviorOption_.displayName() + ": Disabled").c_str());
 	
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
