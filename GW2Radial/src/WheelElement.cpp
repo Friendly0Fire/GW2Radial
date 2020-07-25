@@ -131,6 +131,7 @@ void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsC
         fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementID, elementId());
         fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fElementColor, adjustedColor);
         fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fShadowData, shadowData);
+		fx->SetVariable(ShaderType::PIXEL_SHADER, bool_bPremultiplyAlpha, premultiplyAlpha_);
 	}
 	
 	fx->ApplyStates();

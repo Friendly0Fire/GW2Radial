@@ -19,6 +19,7 @@ color = <color of the entry in menus, will also be used to colorize the entry on
 icon = <optional, path to an image relative to this folder that will be used in the radial menu>
 shadow_strength = <optional, intensity of the shadow drawn under the icon, defaults to 1 (i.e. 100%)>
 colorize_strength = <optional, amount of tinting towards the provided color that will be applied to the icon, defaults to 1 (i.e. 100%)>
+premultiply_alpha = <optional, if transparency is wrong, set this to false, defaults to true>
 ```
 
 A few notes:

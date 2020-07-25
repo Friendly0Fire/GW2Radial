@@ -48,6 +48,7 @@ namespace GW2Radial
         float colorize;
 
         IDirect3DTexture9* texture = nullptr;
+        bool premultiply;
     };
 
     class CustomElement : public WheelElement

@@ -125,9 +125,13 @@ float4 MountImage_PS(PS_INPUT In) : COLOR0
 	float hoverFadeIn = fHoverFadeIns_lookup(iElementID);
 
 	float shadow = 0;
-	float4 color = tex2D(texMainSampler, In.UV) * fElementColor;
+	float4 color = tex2D(texMainSampler, In.UV);
+	if(bPremultiplyAlpha)
+		color.rgb *= color.a;
+	color *= fElementColor;
+
 	if(fShadowData.x > 0.f)
-		shadow = fShadowData.x * (tex2D(texMainSampler, In.UV + fShadowData.yz).a);
+		shadow = fShadowData.x * tex2D(texMainSampler, In.UV + fShadowData.yz).a;
 	
 	float3 fLumaDot = float3(0.2126, 0.7152, 0.0722);
 	float luma = dot(color.rgb, fLumaDot);

@@ -183,6 +183,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		cref elementIcon = element.find("icon");
 		cref elementShadow = element.find("shadow_strength");
 		cref elementColorize = element.find("colorize_strength");
+		cref elementPremultipliedAlpha = element.find("premultiply_alpha");
 
 		fVector4 color { 1.f, 1.f, 1.f, 1.f };
 		if(elementColor != element.end())
@@ -203,10 +204,13 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		ces.id = baseId++;
 		ces.shadow = elementShadow == element.end() ? 1.f : float(atof(elementShadow->second));
 		ces.colorize = elementColorize == element.end() ? 1.f : float(atof(elementColorize->second));
+		ces.premultiply = false;
 
-		if(elementIcon != element.end())
+		if(elementIcon != element.end()) {
 			ces.texture = LoadCustomTexture(dev, dataFolder / utf8_decode(elementIcon->second));
-		else
+			if(elementPremultipliedAlpha != element.end())
+				ces.premultiply = ini.GetBoolValue(sec.pItem, "premultiply_alpha", true);
+		} else
 			maxTextWidth = std::max(maxTextWidth, CalcText(font_, utf8_decode(ces.name)));
 
 		elements.push_back(ces);
@@ -275,6 +279,7 @@ CustomElement::CustomElement(const CustomElementSettings& ces, IDirect3DDevice9*
 {
     shadowStrength_ = ces.shadow;
 	colorizeAmount_ = ces.colorize;
+	premultiplyAlpha_ = ces.premultiply;
 }
 
 fVector4 CustomElement::color()

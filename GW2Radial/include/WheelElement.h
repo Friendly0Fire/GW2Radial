@@ -59,6 +59,7 @@ protected:
 	float shadowStrength_ = 1.f;
 	float colorizeAmount_ = 1.f;
 	float texWidth_ = 0.f;
+	bool premultiplyAlpha_ = false;
 };
 
 }
