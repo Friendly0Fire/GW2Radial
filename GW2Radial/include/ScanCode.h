@@ -347,6 +347,34 @@ struct ScanCodeCompare
         if(!aIsMouse && bIsMouse)
             return true;
 
+        // Force reorder modifiers for simplicity (a == true implies b == true here)
+        if(aIsModifier) {
+            uint b2 = uint(b);
+            switch(a)
+            {
+            // Control goes first, a is less if b isn't control
+            case ScanCode::CONTROL:
+            case ScanCode::CONTROLLEFT:
+            case ScanCode::CONTROLRIGHT:
+                return (b2 & ScanCode_t(ScanCode::CONTROLLEFT)) == 0 && b2 != ScanCode_t(ScanCode::CONTROLRIGHT);
+                
+            // Alt goes in between, a is less if b is shift
+            case ScanCode::ALT:
+            case ScanCode::ALTLEFT:
+            case ScanCode::ALTRIGHT:
+                return (b2 & ScanCode_t(ScanCode::SHIFTLEFT)) != 0 || b2 == ScanCode_t(ScanCode::SHIFTRIGHT);
+                
+            // Shift goes last, a is never less
+            case ScanCode::SHIFT:
+            case ScanCode::SHIFTLEFT:
+            case ScanCode::SHIFTRIGHT:
+                return false;
+
+            default:
+                break;
+            }
+        }
+
         // If two ScanCodes are of the same type, compare numerically
         return uint(a) < uint(b);
     }
