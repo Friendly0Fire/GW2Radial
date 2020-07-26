@@ -81,14 +81,22 @@ MumbleLink::~MumbleLink() {
 void MumbleLink::OnUpdate()
 {
 	identity_ = {};
-	auto json = nlohmann::json::parse(linkedMemory_->identity, linkedMemory_->identity + 256, nullptr, false);
+	auto identityUtf8 = utf8_encode(linkedMemory_->identity);
+	auto json = nlohmann::json::parse(identityUtf8, nullptr, false);
 
-	identity_.commander = json["commander"];
-	identity_.fov = json["fov"];
-	identity_.uiScale = json["uisz"];
-	identity_.race = json["race"];
-	identity_.specialization = json["spec"];
-	identity_.profession = json["profession"];
+	auto updateIfExists = [&json](auto& value, const char* key)
+	{
+	    auto f = json.find(key);
+		if(f != json.end())
+			value = *f;
+	};
+	
+	updateIfExists(identity_.commander, "commander");
+	updateIfExists(identity_.fov, "fov");
+	updateIfExists(identity_.uiScale, "uisz");
+	updateIfExists(identity_.race, "race");
+	updateIfExists(identity_.specialization, "spec");
+	updateIfExists(identity_.profession, "profession");
 }
 
 bool MumbleLink::isInMap() const {
