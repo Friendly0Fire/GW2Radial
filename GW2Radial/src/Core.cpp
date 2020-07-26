@@ -245,11 +245,42 @@ void Core::DrawUnder(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 	}
 }
 
+void Core::OnUpdate()
+{
+    const auto* mumble = MumbleLink::i();
+
+	uint map = mumble->mapId();
+	if(map != mapId_)
+	{
+	    for (auto& wheel : wheels_)
+		    wheel->OnMapChange(mapId_, map);
+
+	    mapId_ = map;
+	}
+
+	if(_wcsicmp(characterName_.data(), mumble->characterName()) != 0)
+	{
+	    for (auto& wheel : wheels_)
+		    wheel->OnCharacterChange(characterName_.data(), mumble->characterName());
+
+		std::copy(mumble->characterName(), mumble->characterName() + 256, characterName_.begin());
+	}
+}
+
+
 void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 {
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i()->OnUpdate();
-	ConfigurationFile::i()->OnUpdate();
+
+	tickSkip_++;
+	if(tickSkip_ >= TickSkipCount)
+	{
+	    tickSkip_ -= TickSkipCount;
+	    ConfigurationFile::i()->OnUpdate();
+		MumbleLink::i()->OnUpdate();
+	    OnUpdate();
+	}
 
 	for (auto& wheel : wheels_)
 		wheel->OnUpdate();

@@ -47,6 +47,8 @@ public:
 	void Draw(IDirect3DDevice9* dev, Effect* fx, class UnitQuad* quad);
 	void OnFocusLost();
 	void OnUpdate();
+	void OnMapChange(uint prevId, uint newId);
+	void OnCharacterChange(const wchar_t* prevCharacterName, const wchar_t* newCharacterName);
 
 	bool drawOverUI() const { return showOverGameUIOption_.value(); }
 

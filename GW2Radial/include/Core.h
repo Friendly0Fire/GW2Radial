@@ -39,6 +39,7 @@ protected:
 	void InternalInit();
 	void OnFocusLost();
 	void OnFocus();
+	void OnUpdate();
 
 	void OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters);
 	void OnDeviceUnset();
@@ -59,6 +60,10 @@ protected:
 	uint screenWidth_ = 0, screenHeight_ = 0;
 	bool firstFrame_ = true;
 	bool forceReloadWheels_ = false;
+	uint mapId_ = 0;
+	std::array<wchar_t, 256> characterName_;
+	uint tickSkip_ = 0;
+	const uint TickSkipCount = 10;
 
 	std::unique_ptr<UnitQuad> quad_;
 	Effect* mainEffect_ = nullptr;

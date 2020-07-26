@@ -3,7 +3,7 @@
 #include <Singleton.h>
 #include <Mount.h>
 
-#define PARSE_FLAG_BOOL(name, offset) inline bool name() const { return (uiState() & (1 << offset)) != 0; }
+#define PARSE_FLAG_BOOL(name, offset) [[nodiscard]] inline bool name() const { return (uiState() & (1 << offset)) != 0; }
 
 namespace GW2Radial
 {
@@ -13,7 +13,9 @@ public:
 	MumbleLink();
 	~MumbleLink();
 
-	bool isInWvW() const;
+	void OnUpdate();
+
+	[[nodiscard]] bool isInWvW() const;
 
 	// uiState flags
 	PARSE_FLAG_BOOL(isMapOpen, 0);
@@ -24,16 +26,54 @@ public:
 	PARSE_FLAG_BOOL(textboxHasFocus, 5);
 	PARSE_FLAG_BOOL(isInCombat, 6);
 
-	MountType currentMount() const;
-	bool isMounted() const;
-	bool isInMap() const;
+	[[nodiscard]] MountType currentMount() const;
+	[[nodiscard]] bool isMounted() const;
+	[[nodiscard]] bool isInMap() const;
+	[[nodiscard]] uint32_t mapId() const;
+	[[nodiscard]] const wchar_t* characterName() const;
+	
+	[[nodiscard]] uint8_t characterProfession() const {
+	    return identity_.profession;
+    }
+	
+	[[nodiscard]] uint8_t characterSpecialization() const {
+	    return identity_.specialization;
+    }
+
+    [[nodiscard]] uint8_t characterRace() const {
+	    return identity_.race;
+    }
+
+	[[nodiscard]] bool isCommander() const {
+		return identity_.commander;
+	}
+
+	[[nodiscard]] float fov() const {
+		return identity_.fov;
+	}
+
+	[[nodiscard]] uint8_t uiScale() const {
+		return identity_.uiScale;
+	}
 
 protected:
-	uint32_t uiState() const;
+	[[nodiscard]] uint32_t uiState() const;
 
-	const struct MumbleContext* context() const;
+	struct Identity
+	{
+	    uint8_t profession = 0;
+		uint8_t specialization = 0;
+		uint8_t race = 0;
+		bool commander = false;
+		float fov = 0.f;
+		uint8_t uiScale = 0;
+	};
+
+	[[nodiscard]] const struct MumbleContext* context() const;
 	HANDLE fileMapping_ = nullptr;
 	struct LinkedMem* linkedMemory_ = nullptr;
+
+	Identity identity_;
 };
 
 }

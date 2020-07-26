@@ -1,4 +1,5 @@
 #include <MumbleLink.h>
+#include <nlohmann/json.hpp>
 
 namespace GW2Radial
 {
@@ -77,12 +78,41 @@ MumbleLink::~MumbleLink() {
 	}
 }
 
+void MumbleLink::OnUpdate()
+{
+	identity_ = {};
+	auto json = nlohmann::json::parse(linkedMemory_->identity, linkedMemory_->identity + 256, nullptr, false);
+
+	identity_.commander = json["commander"];
+	identity_.fov = json["fov"];
+	identity_.uiScale = json["uisz"];
+	identity_.race = json["race"];
+	identity_.specialization = json["spec"];
+	identity_.profession = json["profession"];
+}
+
 bool MumbleLink::isInMap() const {
 	if (!linkedMemory_)
 		return false;
 
 	return context()->mapId != 0;
 }
+
+uint32_t MumbleLink::mapId() const {
+    if (!linkedMemory_)
+		return 0;
+
+	return context()->mapId;
+}
+
+const wchar_t* MumbleLink::characterName() const
+{
+	if (!linkedMemory_)
+		return nullptr;
+
+	return linkedMemory_->name;
+}
+
 
 bool MumbleLink::isInWvW() const {
 	if (!linkedMemory_)

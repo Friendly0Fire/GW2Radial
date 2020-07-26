@@ -252,7 +252,7 @@ void Wheel::OnUpdate() {
 	if (outOfCombatDelayed_) {
 		const auto currentTime = TimeInMilliseconds();
 		if(currentTime <= outOfCombatDelayedTime_ + maximumOutOfCombatWaitOption_.value() * 1000ull) {
-		    if (!MumbleLink::i()->isInCombat() && MumbleLink::i()->gameHasFocus() && MumbleLink::i()->isInMap()) {
+		    if (!MumbleLink::i()->isInCombat() && MumbleLink::i()->gameHasFocus() && !MumbleLink::i()->isMapOpen()) {
 			    outOfCombatTestCount_++;
 			    if(outOfCombatTestCount_ >= 10)
 			    {
@@ -270,6 +270,21 @@ void Wheel::OnUpdate() {
 		}
 	}
 }
+
+void Wheel::OnMapChange(uint prevId, uint newId)
+{
+	outOfCombatDelayed_ = nullptr;
+	outOfCombatDelayedTime_ = TimeInMilliseconds();
+	outOfCombatTestCount_ = 0;
+}
+
+void Wheel::OnCharacterChange(const wchar_t* prevCharacterName, const wchar_t* newCharacterName)
+{
+	outOfCombatDelayed_ = nullptr;
+	outOfCombatDelayedTime_ = TimeInMilliseconds();
+	outOfCombatTestCount_ = 0;
+}
+
 
 void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 {
@@ -517,7 +532,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 {
 	const bool previousVisibility = isVisible_;
 
-	if (disableKeybindsInCombatOption_.value() && MumbleLink::i()->isInCombat())
+	if (disableKeybindsInCombatOption_.value() && MumbleLink::i()->isInCombat() || MumbleLink::i()->isMapOpen())
 		isVisible_ = false;
 	else {
 
