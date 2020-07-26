@@ -356,13 +356,13 @@ struct ScanCodeCompare
             case ScanCode::CONTROL:
             case ScanCode::CONTROLLEFT:
             case ScanCode::CONTROLRIGHT:
-                return (b2 & ScanCode_t(ScanCode::CONTROLLEFT)) == 0 && b2 != ScanCode_t(ScanCode::CONTROLRIGHT);
+                return b2 != ScanCode_t(ScanCode::CONTROLLEFT) && b2 != ScanCode_t(ScanCode::CONTROLRIGHT) && b2 != ScanCode_t(ScanCode::CONTROL);
                 
             // Alt goes in between, a is less if b is shift
             case ScanCode::ALT:
             case ScanCode::ALTLEFT:
             case ScanCode::ALTRIGHT:
-                return (b2 & ScanCode_t(ScanCode::SHIFTLEFT)) != 0 || b2 == ScanCode_t(ScanCode::SHIFTRIGHT);
+                return b2 == ScanCode_t(ScanCode::SHIFTLEFT) || b2 == ScanCode_t(ScanCode::SHIFTRIGHT) || b2 == ScanCode_t(ScanCode::SHIFT);
                 
             // Shift goes last, a is never less
             case ScanCode::SHIFT:
