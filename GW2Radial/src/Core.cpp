@@ -65,7 +65,7 @@ void Core::OnInjectorCreated()
 {
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
-        exit(1);
+	    CriticalMessageBox(L"Could not initialize COM library: error code 0x%X.", hr);
 
 	auto* inject = Direct3D9Inject::i();
 	
