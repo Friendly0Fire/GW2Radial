@@ -133,4 +133,13 @@ std::ofstream& GetLogStream();
 
 bool ExceptionHandlerMiniDump(struct _EXCEPTION_POINTERS *pExceptionInfo, const char* function, const char* file, int line);
 
+template<typename... Args>
+void CriticalMessageBox(const wchar_t* contents, Args&&... args) {
+	wchar_t buf[2048];
+    swprintf_s(buf, contents, std::forward(args)...);
+
+	MessageBoxW(nullptr, contents, L"GW2Radial Fatal Error", MB_ICONERROR | MB_OK);
+	exit(1);
+}
+
 #include "Effect.h"

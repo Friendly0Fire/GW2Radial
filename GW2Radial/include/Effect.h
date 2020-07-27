@@ -94,6 +94,14 @@ protected:
 	virtual void ApplyPixelShader(IDirect3DPixelShader9* ps);
 	virtual void ApplyVertexShader(IDirect3DVertexShader9* vs);
 
+	void LoadShadersArchive();
+
+    [[nodiscard]] std::string EncodeShaderFilename(const std::wstring& filename) const;
+    [[nodiscard]] ID3DInclude* GetIncludeManager() const;
+	void CheckHotReload();
+
+	bool hotReloadFolderExists_ = false;
+
 	IDirect3DDevice9* device_ = nullptr;
 
 	IDirect3DStateBlock9* stateBlock_ = nullptr;
@@ -103,8 +111,6 @@ protected:
 
 	ZipArchive::Ptr shadersZip_;
 	std::unique_ptr<ID3DInclude> shaderIncludeManager_;
-	// This is used because unique_ptr would break with the standard include being a bad pointer
-	ID3DInclude* shaderIncludeManagerPtr_ = D3D_COMPILE_STANDARD_FILE_INCLUDE;
 
 	friend class ShaderInclude;
 };

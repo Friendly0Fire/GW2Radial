@@ -1,4 +1,42 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/ALIGN_FIRST_ARG_BY_PAREN/@EntryValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/ALIGN_MULTILINE_BINARY_EXPRESSIONS_CHAIN/@EntryValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/ALIGN_MULTILINE_EXPRESSION_BRACES/@EntryValue">True</s:Boolean>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/ALIGN_TERNARY/@EntryValue">ALIGN_ALL</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/ANONYMOUS_METHOD_DECLARATION_BRACES/@EntryValue">END_OF_LINE</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/CASE_BLOCK_BRACES/@EntryValue">END_OF_LINE</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/EMPTY_BLOCK_STYLE/@EntryValue">TOGETHER</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/FUNCTION_DECLARATION_RETURN_TYPE_STYLE/@EntryValue">ON_SINGLE_LINE</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/FUNCTION_DEFINITION_RETURN_TYPE_STYLE/@EntryValue">ON_SINGLE_LINE</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/INDENT_INVOCATION_PARS/@EntryValue">OUTSIDE_AND_INSIDE</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/INDENT_METHOD_DECL_PARS/@EntryValue">OUTSIDE_AND_INSIDE</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/INDENT_STATEMENT_PARS/@EntryValue">OUTSIDE</s:String>
+	
+	
+	
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/INVOCABLE_DECLARATION_BRACES/@EntryValue">END_OF_LINE</s:String>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/LINE_BREAK_BEFORE_COMMA_IN_MEMBER_INITIALIZER_LISTS/@EntryValue">True</s:Boolean>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/NAMESPACE_DECLARATION_BRACES/@EntryValue">END_OF_LINE</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/NAMESPACE_INDENTATION/@EntryValue">None</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/OTHER_BRACES/@EntryValue">END_OF_LINE</s:String>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/OUTDENT_COMMAS/@EntryValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/OUTDENT_DOTS/@EntryValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/PLACE_CATCH_ON_NEW_LINE/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/PLACE_ELSE_ON_NEW_LINE/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/PLACE_WHILE_ON_NEW_LINE/@EntryValue">False</s:Boolean>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/REQUIRES_EXPRESSION_BRACES/@EntryValue">END_OF_LINE</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/SIMPLE_CASE_STATEMENT_STYLE/@EntryValue">LINE_BREAK</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/SIMPLE_EMBEDDED_STATEMENT_STYLE/@EntryValue">LINE_BREAK</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/TOPLEVEL_FUNCTION_DECLARATION_RETURN_TYPE_STYLE/@EntryValue">ON_SINGLE_LINE</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/TOPLEVEL_FUNCTION_DEFINITION_RETURN_TYPE_STYLE/@EntryValue">ON_SINGLE_LINE</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/TYPE_DECLARATION_BRACES/@EntryValue">END_OF_LINE</s:String>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/WRAP_AFTER_DECLARATION_LPAR/@EntryValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/WRAP_AFTER_INVOCATION_LPAR/@EntryValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/WRAP_BEFORE_COLON/@EntryValue">True</s:Boolean>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/WRAP_CTOR_INITIALIZER_STYLE/@EntryValue">CHOP_IF_LONG</s:String>
+	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/WRAP_ENUMERATION_STYLE/@EntryValue">CHOP_ALWAYS</s:String>
+	<s:String x:Key="/Default/CodeStyle/CppIncludeDirective/UseAngleBracketsInsteadOfQuotes/@EntryValue">WhenPossible</s:String>
+	<s:String x:Key="/Default/CodeStyle/CppIncludeDirective/UseRelativePaths/@EntryValue">Never</s:String>
 	<s:String x:Key="/Default/CodeStyle/Naming/CppNaming/Abbreviations/=GW/@EntryIndexedValue">GW</s:String>
 	<s:String x:Key="/Default/CodeStyle/Naming/CppNaming/Abbreviations/=PSO/@EntryIndexedValue">PSO</s:String>
 	<s:String x:Key="/Default/CodeStyle/Naming/CppNaming/Abbreviations/=TGA/@EntryIndexedValue">TGA</s:String>
@@ -19,6 +57,7 @@
 	<s:String x:Key="/Default/CodeStyle/Naming/CppNaming/Rules/=Global_0020constants/@EntryIndexedValue">&lt;NamingElement Priority="15"&gt;&lt;Descriptor Static="Indeterminate" Constexpr="Indeterminate" Const="True" Volatile="Indeterminate" Accessibility="NOT_APPLICABLE"&gt;&lt;type Name="global variable" /&gt;&lt;/Descriptor&gt;&lt;Policy Inspect="True" Prefix="" Suffix="" Style="AaBb" /&gt;&lt;/NamingElement&gt;</s:String>
 	<s:String x:Key="/Default/CodeStyle/Naming/CppNaming/Rules/=Namespaces/@EntryIndexedValue">&lt;NamingElement Priority="16"&gt;&lt;Descriptor Static="Indeterminate" Constexpr="Indeterminate" Const="Indeterminate" Volatile="Indeterminate" Accessibility="NOT_APPLICABLE"&gt;&lt;type Name="namespace" /&gt;&lt;type Name="namespace alias" /&gt;&lt;/Descriptor&gt;&lt;Policy Inspect="True" Prefix="" Suffix="" Style="AaBb" /&gt;&lt;/NamingElement&gt;</s:String>
 	<s:String x:Key="/Default/CodeStyle/Naming/CppNaming/Rules/=Typedefs/@EntryIndexedValue">&lt;NamingElement Priority="17"&gt;&lt;Descriptor Static="Indeterminate" Constexpr="Indeterminate" Const="Indeterminate" Volatile="Indeterminate" Accessibility="NOT_APPLICABLE"&gt;&lt;type Name="type alias" /&gt;&lt;type Name="typedef" /&gt;&lt;/Descriptor&gt;&lt;Policy Inspect="True" Prefix="" Suffix="_t" Style="AaBb" /&gt;&lt;/NamingElement&gt;</s:String>
+	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EFeature_002EServices_002ECpp_002ECodeStyle_002ESettingsUpgrade_002EFunctionReturnStyleSettingsUpgrader/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=entrypoint/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=hlsl/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=luma/@EntryIndexedValue">True</s:Boolean>

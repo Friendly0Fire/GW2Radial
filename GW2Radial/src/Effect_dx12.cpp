@@ -49,6 +49,7 @@ void Effect_dx12::SetSamplerStates(uint slot, std::initializer_list<ShaderState>
 Effect_dx12::Effect_dx12(IDirect3DDevice9* dev)
 {
     device_ = dev;
+	CheckHotReload();
 }
 
 void Effect_dx12::SetTexture(uint slot, IDirect3DTexture9* val)
