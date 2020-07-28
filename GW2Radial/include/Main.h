@@ -136,7 +136,7 @@ bool ExceptionHandlerMiniDump(struct _EXCEPTION_POINTERS *pExceptionInfo, const 
 template<typename... Args>
 void CriticalMessageBox(const wchar_t* contents, Args&&... args) {
 	wchar_t buf[2048];
-    swprintf_s(buf, contents, std::forward(args)...);
+    swprintf_s(buf, contents, std::forward<Args>(args)...);
 
 	MessageBoxW(nullptr, contents, L"GW2Radial Fatal Error", MB_ICONERROR | MB_OK);
 	exit(1);

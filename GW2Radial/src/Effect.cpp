@@ -117,8 +117,8 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
                                              0, 0,
                                              &blob, &errors);
 
-        HandleFailedShaderCompile(hr, blob.Get());
-        blob.Reset();
+        HandleFailedShaderCompile(hr, errors.Get());
+        errors.Reset();
     }
 
     if (st == ShaderType::PIXEL_SHADER) {
