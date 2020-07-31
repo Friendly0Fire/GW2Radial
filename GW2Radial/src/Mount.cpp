@@ -31,7 +31,7 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 		    we = sortedWheelElements_.front();
 			return we != nullptr;
 		}
-		if(mumble->isSwimmingOnSurface() || mumble->isUnderwater()) {
+		if(!conditionallyDelayed_ && (mumble->isSwimmingOnSurface() || mumble->isUnderwater())) {
 		    we = wheelElements_[uint(MountType::SKIMMER) - uint(MountType::FIRST)].get();
 			return we != nullptr && we->isActive();
 		}

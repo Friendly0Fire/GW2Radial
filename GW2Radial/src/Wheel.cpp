@@ -34,7 +34,8 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
 	disableKeybindsInCombatOption_("Disable wheel keybinds while in combat", "disable_in_combat", "wheel_" + nickname_, false),
 	maximumConditionalWaitTimeOption_("Expiration time (in seconds) of queued mount input", "max_wait_cond", "wheel_" + nickname_, 30),
-	showDelayTimerOption_("Show timer around cursor when waiting to send input", "timer_ooc", "wheel_" + nickname_, true)
+	showDelayTimerOption_("Show timer around cursor when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
+    centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false)
 {
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);
@@ -214,6 +215,8 @@ void Wheel::DrawMenu()
 			ImGui::PopItemWidth();
 			ImGuiUnindent();
 		}
+		
+	    ImGuiConfigurationWrapper(&ImGui::Checkbox, centerCancelDelayedInputOption_);
 	} else
 		ImGui::TextDisabled((centerBehaviorOption_.displayName() + ": Disabled").c_str());
 	
@@ -463,6 +466,10 @@ void Wheel::OnFocusLost()
 	currentHovered_ = nullptr;
 	isVisible_ = false;
 	currentTriggerTime_ = 0;
+	
+	conditionallyDelayed_ = nullptr;
+	conditionallyDelayedTime_ = TimeInMilliseconds();
+	conditionallyDelayedTestCount_ = 0;
 }
 
 void Wheel::Sort()
@@ -478,6 +485,9 @@ void Wheel::Sort()
 WheelElement* Wheel::GetCenterHoveredElement()
 {
 	if(noHoldOption_.value())
+		return nullptr;
+
+	if(centerCancelDelayedInputOption_.value() && conditionallyDelayed_)
 		return nullptr;
 
 	switch (CenterBehavior(centerBehaviorOption_.value()))
@@ -659,6 +669,14 @@ void Wheel::DeactivateWheel()
 	isVisible_ = false;
 	resetCursorPositionToCenter_ = false;
 
+	if(currentHovered_ == nullptr && centerCancelDelayedInputOption_.value()) {
+	    conditionallyDelayed_ = nullptr;
+	    conditionallyDelayedTime_ = TimeInMilliseconds();
+	    conditionallyDelayedTestCount_ = 0;
+
+		return;
+	}
+
 	// If keybind release was done before the wheel is visible, check our behavior
 	if(currentTriggerTime_ + displayDelayOption_.value() > TimeInMilliseconds())
 	{
@@ -682,11 +700,11 @@ void Wheel::DeactivateWheel()
 		currentHovered_ = GetCenterHoveredElement();
 
 	// Mount overlay is turned off, send the keybind
-	if (currentHovered_)
+	if (currentHovered_!= nullptr) {
 		SendKeybindOrDelay(currentHovered_, cursorResetPosition_);
-
-	previousUsed_ = currentHovered_;
-	currentHovered_ = nullptr;
+	    previousUsed_ = currentHovered_;
+	    currentHovered_ = nullptr;
+	}
 }
 
 void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) {

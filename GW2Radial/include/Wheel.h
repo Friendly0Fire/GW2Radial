@@ -107,6 +107,7 @@ protected:
 	ConfigurationOption<bool> disableKeybindsInCombatOption_;
 	ConfigurationOption<int> maximumConditionalWaitTimeOption_;
 	ConfigurationOption<bool> showDelayTimerOption_;
+	ConfigurationOption<bool> centerCancelDelayedInputOption_;
 
 	std::optional<Point> cursorResetPosition_;
 	fVector2 currentPosition_;
