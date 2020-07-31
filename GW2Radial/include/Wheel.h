@@ -66,6 +66,7 @@ protected:
 	InputResponse OnInputChange(bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys);
 	void ActivateWheel(bool isMountOverlayLocked);
 	void DeactivateWheel();
+	void SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos);
 	std::function<bool(WheelElement*&)> doBypassWheel_ = [](auto) { return false; };
 
 	std::string nickname_, displayName_;
@@ -79,10 +80,11 @@ protected:
 	Keybind keybind_, centralKeybind_;
 	bool waitingForBypassComplete_ = false;
 
+	bool worksOnlyAboveWater_ = false;
 	bool worksOnlyOutOfCombat_ = false;
-	WheelElement* outOfCombatDelayed_ = nullptr;
-	mstime outOfCombatDelayedTime_ = 0;
-	uint outOfCombatTestCount_ = 0;
+	WheelElement* conditionallyDelayed_ = nullptr;
+	mstime conditionallyDelayedTime_ = 0;
+	uint conditionallyDelayedTestCount_ = 0;
 
 	ConfigurationOption<int> centerBehaviorOption_;
 	ConfigurationOption<int> centerFavoriteOption_;
@@ -103,8 +105,8 @@ protected:
 	ConfigurationOption<bool> resetCursorAfterKeybindOption_;
 
 	ConfigurationOption<bool> disableKeybindsInCombatOption_;
-	ConfigurationOption<int> maximumOutOfCombatWaitOption_;
-	ConfigurationOption<bool> showOutOfCombatTimerOption_;
+	ConfigurationOption<int> maximumConditionalWaitTimeOption_;
+	ConfigurationOption<bool> showDelayTimerOption_;
 
 	std::optional<Point> cursorResetPosition_;
 	fVector2 currentPosition_;

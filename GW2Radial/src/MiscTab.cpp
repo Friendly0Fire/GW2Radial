@@ -3,6 +3,7 @@
 #include <ImGuiExtensions.h>
 #include <imgui/imgui.h>
 #include <Core.h>
+#include <MumbleLink.h>
 
 namespace GW2Radial
 {
@@ -24,6 +25,11 @@ void MiscTab::DrawMenu()
 		ImGuiConfigurationWrapper(ImGui::Checkbox, uc->checkEnabled_);
 
 	ImGui::Checkbox("Reload custom wheels on focus", &reloadOnFocus_);
+
+#ifdef _DEBUG
+	cref pos = MumbleLink::i()->position();
+	ImGui::Text("position = %f, %f, %f", pos.x, pos.y, pos.z);
+#endif
 
 	if(ImGui::Button("Reload custom wheels"))
 		Core::i()->ForceReloadWheels();

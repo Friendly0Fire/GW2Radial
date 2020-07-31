@@ -24,9 +24,19 @@ template<>
 void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 {
 	worksOnlyOutOfCombat_ = true;
+	worksOnlyAboveWater_ = true;
 	doBypassWheel_ = [this](WheelElement*& we) {
-		we = sortedWheelElements_.front();
-		return MumbleLink::i()->isMounted();
+		cref mumble = MumbleLink::i();
+		if(mumble->isMounted()) {
+		    we = sortedWheelElements_.front();
+			return we != nullptr;
+		}
+		if(mumble->isSwimmingOnSurface() || mumble->isUnderwater()) {
+		    we = wheelElements_[uint(MountType::SKIMMER) - uint(MountType::FIRST)].get();
+			return we != nullptr && we->isActive();
+		}
+
+		return false;
 	};
 
 	for(auto i = MountType::FIRST; i <= MountType::LAST; i = MountType(uint(i) + 1))

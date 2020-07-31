@@ -33,8 +33,8 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
 	disableKeybindsInCombatOption_("Disable wheel keybinds while in combat", "disable_in_combat", "wheel_" + nickname_, false),
-	maximumOutOfCombatWaitOption_("Expiration time (in seconds) of queued mount input while in combat", "max_wait_ooc", "wheel_" + nickname_, 30),
-	showOutOfCombatTimerOption_("Show timer around cursor when waiting to get out of combat", "timer_ooc", "wheel_" + nickname_, true)
+	maximumConditionalWaitTimeOption_("Expiration time (in seconds) of queued mount input", "max_wait_cond", "wheel_" + nickname_, 30),
+	showDelayTimerOption_("Show timer around cursor when waiting to send input", "timer_ooc", "wheel_" + nickname_, true)
 {
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);
@@ -142,7 +142,7 @@ void Wheel::DrawMenu()
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, disableKeybindsInCombatOption_);
 
 	ImGui::PushItemWidth(0.2f * ImGui::GetWindowContentRegionWidth());
-	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumOutOfCombatWaitOption_, 1, 10, 0);
+	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumConditionalWaitTimeOption_, 1, 10, 0);
 	ImGui::PopItemWidth();
 
 	if(CenterBehavior(centerBehaviorOption_.value()) != CenterBehavior::NOTHING && displayDelayOption_.value() > 0)
@@ -249,40 +249,43 @@ void Wheel::DrawMenu()
 }
 
 void Wheel::OnUpdate() {
-	if (outOfCombatDelayed_) {
+	if (conditionallyDelayed_) {
 		const auto currentTime = TimeInMilliseconds();
-		if(currentTime <= outOfCombatDelayedTime_ + maximumOutOfCombatWaitOption_.value() * 1000ull) {
-		    if (!MumbleLink::i()->isInCombat() && MumbleLink::i()->gameHasFocus() && !MumbleLink::i()->isMapOpen()) {
-			    outOfCombatTestCount_++;
-			    if(outOfCombatTestCount_ >= 10)
+		if(currentTime <= conditionallyDelayedTime_ + maximumConditionalWaitTimeOption_.value() * 1000ull) {
+			cref mumble = MumbleLink::i();
+		    if (mumble->gameHasFocus() && !mumble->isMapOpen()
+				&& (worksOnlyAboveWater_ && !mumble->isUnderwater() || !worksOnlyAboveWater_)
+				&& (worksOnlyOutOfCombat_ && !mumble->isInCombat() || !worksOnlyOutOfCombat_)) {
+			    conditionallyDelayedTestCount_++;
+			    if(conditionallyDelayedTestCount_ >= 10)
 			    {
-			        Input::i()->SendKeybind(outOfCombatDelayed_->keybind().scanCodes(), std::nullopt);
-			        outOfCombatDelayed_ = nullptr;
-			        outOfCombatDelayedTime_ = currentTime;
-					outOfCombatTestCount_ = 0;
+			        Input::i()->SendKeybind(conditionallyDelayed_->keybind().scanCodes(), std::nullopt);
+			        conditionallyDelayed_ = nullptr;
+			        conditionallyDelayedTime_ = currentTime;
+					conditionallyDelayedTestCount_ = 0;
 			    }
 		    } else
-			    outOfCombatTestCount_ = 0;
+			    conditionallyDelayedTestCount_ = 0;
 		} else {
-		    outOfCombatDelayed_ = nullptr;
-			outOfCombatDelayedTime_ = currentTime;
-			outOfCombatTestCount_ = 0;
+		    conditionallyDelayed_ = nullptr;
+			conditionallyDelayedTime_ = currentTime;
+			conditionallyDelayedTestCount_ = 0;
 		}
 	}
 }
 
 void Wheel::OnMapChange(uint prevId, uint newId)
 {
-	outOfCombatDelayed_ = nullptr;
-	outOfCombatDelayedTime_ = TimeInMilliseconds();
-	outOfCombatTestCount_ = 0;
+	conditionallyDelayed_ = nullptr;
+	conditionallyDelayedTime_ = TimeInMilliseconds();
+	conditionallyDelayedTestCount_ = 0;
 }
 
 void Wheel::OnCharacterChange(const wchar_t* prevCharacterName, const wchar_t* newCharacterName)
 {
-	outOfCombatDelayed_ = nullptr;
-	outOfCombatDelayedTime_ = TimeInMilliseconds();
-	outOfCombatTestCount_ = 0;
+	conditionallyDelayed_ = nullptr;
+	conditionallyDelayedTime_ = TimeInMilliseconds();
+	conditionallyDelayedTestCount_ = 0;
 }
 
 
@@ -420,12 +423,12 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 			fx->End();
 		}
-	} else if(showOutOfCombatTimerOption_.value() && (outOfCombatDelayed_ != nullptr || currentTime - outOfCombatDelayedTime_ < 500)) {
-		float dt = float(currentTime - outOfCombatDelayedTime_) / 1000.f;
+	} else if(showDelayTimerOption_.value() && (conditionallyDelayed_ != nullptr || currentTime - conditionallyDelayedTime_ < 500)) {
+		float dt = float(currentTime - conditionallyDelayedTime_) / 1000.f;
 		float timeLeft = 0.f;
-		if(outOfCombatDelayed_ == nullptr) dt = 0.5f - dt;
+		if(conditionallyDelayed_ == nullptr) dt = 0.5f - dt;
 		else
-			timeLeft = 1.f - (currentTime - outOfCombatDelayedTime_) / (float(maximumOutOfCombatWaitOption_.value()) * 1000.f);
+			timeLeft = 1.f - (currentTime - conditionallyDelayedTime_) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
 	    cref io = ImGui::GetIO();
 		
 		fx->Begin();
@@ -493,7 +496,7 @@ WheelElement* Wheel::GetFavorite(int favoriteId)
 	if (favoriteId < 0 || favoriteId >= wheelElements_.size())
 		return nullptr;
 
-	auto elem = wheelElements_[favoriteId].get();
+	auto* elem = wheelElements_[favoriteId].get();
 
 	return elem->isBound() ? elem : nullptr;
 }
@@ -548,7 +551,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 		if ((mountOverlayLocked || mountOverlay) && doBypassWheel_(bypassElement) && !waitingForBypassComplete_) {
 			isVisible_ = false;
 			waitingForBypassComplete_ = true;
-			Input::i()->SendKeybind(bypassElement->keybind().scanCodes(), std::nullopt);
+			SendKeybindOrDelay(bypassElement, std::nullopt);
 		}
 
 		if (waitingForBypassComplete_) {
@@ -679,18 +682,23 @@ void Wheel::DeactivateWheel()
 		currentHovered_ = GetCenterHoveredElement();
 
 	// Mount overlay is turned off, send the keybind
-	if (currentHovered_) {
-		if (worksOnlyOutOfCombat_ && MumbleLink::i()->isInCombat()) {
-			Input::i()->SendKeybind(std::set<ScanCode>(), cursorResetPosition_);
-			outOfCombatDelayed_ = currentHovered_;
-			outOfCombatDelayedTime_ = TimeInMilliseconds();
-			outOfCombatTestCount_ = 0;
-		} else
-			Input::i()->SendKeybind(currentHovered_->keybind().scanCodes(), cursorResetPosition_);
-	}
+	if (currentHovered_)
+		SendKeybindOrDelay(currentHovered_, cursorResetPosition_);
 
 	previousUsed_ = currentHovered_;
 	currentHovered_ = nullptr;
 }
+
+void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) {
+	if (worksOnlyOutOfCombat_ && MumbleLink::i()->isInCombat()
+		|| worksOnlyAboveWater_ && MumbleLink::i()->isUnderwater()) {
+		Input::i()->SendKeybind(std::set<ScanCode>(), cursorResetPosition_);
+		conditionallyDelayed_ = we;
+		conditionallyDelayedTime_ = TimeInMilliseconds();
+		conditionallyDelayedTestCount_ = 0;
+	} else
+		Input::i()->SendKeybind(we->keybind().scanCodes(), mousePos);
+}
+
 
 }

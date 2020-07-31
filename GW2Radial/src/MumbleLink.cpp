@@ -14,14 +14,14 @@ struct LinkedMem
 	uint32_t uiVersion;
 	uint32_t uiTick;
 #endif
-	float	fAvatarPosition[3];
-	float	fAvatarFront[3];
-	float	fAvatarTop[3];
-	wchar_t	name[256];
-	float	fCameraPosition[3];
-	float	fCameraFront[3];
-	float	fCameraTop[3];
-	wchar_t	identity[256];
+	fVector3	fAvatarPosition;
+	fVector3	fAvatarFront;
+	fVector3	fAvatarTop;
+	wchar_t		name[256];
+	fVector3	fCameraPosition;
+	fVector3	fCameraFront;
+	fVector3	fCameraTop;
+	wchar_t		identity[256];
 #ifdef WIN32
 	UINT32	context_len;
 #else
@@ -121,6 +121,22 @@ const wchar_t* MumbleLink::characterName() const
 	return linkedMemory_->name;
 }
 
+const float MinSurfaceThreshold = -1.15f;
+
+bool MumbleLink::isSwimmingOnSurface() const {
+    if (!linkedMemory_)
+		return false;
+
+    return linkedMemory_->fAvatarPosition.y <= -1.f && linkedMemory_->fAvatarPosition.y >= MinSurfaceThreshold;
+}
+
+bool MumbleLink::isUnderwater() const {
+    if (!linkedMemory_)
+		return false;
+
+    return linkedMemory_->fAvatarPosition.y < MinSurfaceThreshold;
+}
+
 
 bool MumbleLink::isInWvW() const {
 	if (!linkedMemory_)
@@ -136,6 +152,13 @@ uint32_t MumbleLink::uiState() const {
 		return 0;
 
 	return context()->uiState;
+}
+
+fVector3 MumbleLink::position() const {
+	if (!linkedMemory_)
+		return { 0, 0, 0 };
+
+    return linkedMemory_->fAvatarPosition;
 }
 
 MountType MumbleLink::currentMount() const {

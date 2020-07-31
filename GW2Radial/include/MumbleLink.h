@@ -26,11 +26,15 @@ public:
 	PARSE_FLAG_BOOL(textboxHasFocus, 5);
 	PARSE_FLAG_BOOL(isInCombat, 6);
 
+	[[nodiscard]] fVector3 position() const;
+
 	[[nodiscard]] MountType currentMount() const;
 	[[nodiscard]] bool isMounted() const;
 	[[nodiscard]] bool isInMap() const;
 	[[nodiscard]] uint32_t mapId() const;
 	[[nodiscard]] const wchar_t* characterName() const;
+	[[nodiscard]] bool isSwimmingOnSurface() const;
+	[[nodiscard]] bool isUnderwater() const;
 	
 	[[nodiscard]] uint8_t characterProfession() const {
 	    return identity_.profession;
