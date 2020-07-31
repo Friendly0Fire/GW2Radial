@@ -443,7 +443,27 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			{ D3DRS_SRCBLEND, D3DBLEND_ONE },
 		});
 
-		fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f  * screenSize.y * screenSize.z, 0.08f };
+		const float spriteSide = 0.05f;
+
+		float x = screenSize.x * 0.5f + screenSize.y * spriteSide * 0.5f;
+		switch(MumbleLink::i()->uiScale()) {
+		case 0:
+			x += 2560 * 0.131f;
+			break;
+		case 1:
+			x += 2560 * 0.146f;
+			break;
+		case 2:
+			x += 2560 * 0.1625f;
+			break;
+		default:
+		case 3:
+			x += 2560 * 0.1775f;
+			break;
+		}
+		float y = screenSize.y - screenSize.y * (0.025f + 0.017f);
+
+		fVector4 spriteDimensions = { x * screenSize.z, y * screenSize.w, spriteSide * screenSize.y * screenSize.z, spriteSide };
 
 		{
 			using namespace ShaderRegister::ShaderPS;
