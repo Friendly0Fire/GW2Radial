@@ -106,9 +106,9 @@ class d912pxy_renderer
 			lastOffset = 0;
 		}
 
-		int getOffset()
+		int getBindingOffset()
 		{
-			return activeOffset * sizeof(Element);
+			return lastOffset;
 		}
 
 		void onFrameEnd()
@@ -183,9 +183,8 @@ class d912pxy_renderer
 				vstream = createVStream<VStreamType>(size);
 				activeOffset = 0;
 			}
-
-			int writeSize = sizeof(Element) * count;			
-			if (vstream->Lock(getOffset(), writeSize, (void**)elements, D3DLOCK_DISCARD) < 0)
+		
+			if (vstream->Lock(activeOffset * sizeof(Element), sizeof(Element) * count, (void**)elements, D3DLOCK_DISCARD) < 0)
 			{
 				doLocalFatal("vstream lock failed");
 				return;
@@ -343,7 +342,7 @@ public:
 	{
 		// Render command lists
 		int vtx_offset = 0;
-		int idx_offset = 0;
+		int idx_offset = ib.getBindingOffset();
 		for (int n = 0; n < draw_data->CmdListsCount; n++)
 		{
 			const ImDrawList* cmd_list = draw_data->CmdLists[n];
