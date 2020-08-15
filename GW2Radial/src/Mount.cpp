@@ -28,7 +28,7 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 	doBypassWheel_ = [this](WheelElement*& we) {
 		cref mumble = MumbleLink::i();
 		if(mumble->isMounted()) {
-		    we = sortedWheelElements_.front();
+		    we = GetActiveElements().front();
 			return we != nullptr;
 		}
 		if(!conditionallyDelayed_ && (mumble->isSwimmingOnSurface() || mumble->isUnderwater())) {
