@@ -86,12 +86,22 @@ IDirect3DTexture9* LoadCustomTexture(IDirect3DDevice9* dev, const std::filesyste
 	if(data.empty())
 		return nullptr;
 
-	IDirect3DTexture9* tex = nullptr;
-	if(path.extension() == L".dds")
-        GW2_ASSERT(SUCCEEDED(DirectX::CreateDDSTextureFromMemory(dev, data.data(), data.size(), &tex)));
-	else
-        GW2_ASSERT(SUCCEEDED(DirectX::CreateWICTextureFromMemory(dev, data.data(), data.size(), &tex)));
-	return tex;
+	try {
+	    IDirect3DTexture9* tex = nullptr;
+		HRESULT hr = S_OK;
+	    if(path.extension() == L".dds")
+            hr = DirectX::CreateDDSTextureFromMemory(dev, data.data(), data.size(), &tex);
+	    else
+            hr = DirectX::CreateWICTextureFromMemory(dev, data.data(), data.size(), &tex);
+
+		if(!SUCCEEDED(hr))
+		    FormattedMessageBox(L"Could not load custom radial menu image '%s': 0x%x.", path.wstring().c_str(), hr);
+
+	    return tex;
+	} catch(...) {
+		FormattedMessageBox(L"Could not load custom radial menu image '%s'.", path.wstring().c_str());
+	    return nullptr;
+	}
 }
 
 CustomWheelsManager::CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
