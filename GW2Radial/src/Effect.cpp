@@ -93,7 +93,7 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
         FormattedOutputDebugString("Compilation errors:\n%s", errorsText);
 
         // Break to fix errors
-        GW2_ASSERT(false);
+        GW2_ASSERT(errors != nullptr);
     }
 }
 

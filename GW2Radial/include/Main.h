@@ -63,18 +63,33 @@
 #define NULL_COALESCE(a, b) ((a) != nullptr ? (a) : (b))
 #define SQUARE(x) ((x) * (x))
 
-#ifdef _DEBUG
-__forceinline void GW2_ASSERT(bool test) { if(test); else __debugbreak(); }
-#else
-__forceinline void GW2_ASSERT(bool test) { if(test); else if(IsDebuggerPresent()) __debugbreak(); }
-#endif
+template <typename... Args>
+void CriticalMessageBox(const wchar_t* contents, Args&&...args) {
+    wchar_t buf[2048];
+    swprintf_s(buf, contents, std::forward<Args>(args)...);
+
+    MessageBoxW(nullptr, contents, L"GW2Radial Fatal Error", MB_ICONERROR | MB_OK);
+    exit(1);
+}
+
+#define GW2_ASSERT(test) GW2Assert(test, L#test)
+
+__forceinline void GW2Assert(bool test, const wchar_t* testText) {
+    if (test)
+        return;
+
+    if (IsDebuggerPresent())
+        __debugbreak();
+    else
+        CriticalMessageBox(L"Assertion failure: \"%s\"!", testText);
+}
 
 using Microsoft::WRL::ComPtr;
 
-typedef unsigned char uchar;
-typedef unsigned int uint;
+typedef unsigned char            uchar;
+typedef unsigned int             uint;
 typedef std::basic_string<TCHAR> tstring;
-typedef unsigned __int64 mstime;
+typedef unsigned __int64         mstime;
 
 #define cref const auto&
 
@@ -94,52 +109,44 @@ typedef unsigned __int64 mstime;
 #endif
 
 typedef struct fVector4 {
-	float x;
-	float y;
-	float z;
-	float w;
-} fVector4;
+    float x;
+    float y;
+    float z;
+    float w;
+}         fVector4;
 
 typedef struct fVector3 {
-	float x;
-	float y;
-	float z;
-} fVector3;
+    float x;
+    float y;
+    float z;
+}         fVector3;
 
 typedef struct fVector2 {
-	float x;
-	float y;
-} fVector2;
+    float x;
+    float y;
+}         fVector2;
 
 typedef struct iVector4 {
-	int x;
-	int y;
-	int z;
-	int w;
-} iVector4;
+    int x;
+    int y;
+    int z;
+    int w;
+}       iVector4;
 
 typedef struct iVector3 {
-	int x;
-	int y;
-	int z;
-} iVector3;
+    int x;
+    int y;
+    int z;
+}       iVector3;
 
 typedef struct iVector2 {
-	int x;
-	int y;
-} iVector2;
+    int x;
+    int y;
+}       iVector2;
 
 std::ofstream& GetLogStream();
 
-bool ExceptionHandlerMiniDump(struct _EXCEPTION_POINTERS *pExceptionInfo, const char* function, const char* file, int line);
-
-template<typename... Args>
-void CriticalMessageBox(const wchar_t* contents, Args&&... args) {
-	wchar_t buf[2048];
-    swprintf_s(buf, contents, std::forward<Args>(args)...);
-
-	MessageBoxW(nullptr, contents, L"GW2Radial Fatal Error", MB_ICONERROR | MB_OK);
-	exit(1);
-}
+bool ExceptionHandlerMiniDump(
+    struct _EXCEPTION_POINTERS* pExceptionInfo, const char* function, const char* file, int line);
 
 #include "Effect.h"
