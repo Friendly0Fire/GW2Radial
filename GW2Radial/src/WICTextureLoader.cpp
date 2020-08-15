@@ -24,7 +24,7 @@
 
 #include <d3d9types.h>
 
-#include <assert.h>
+#include <cassert>
 #include <algorithm>
 #include <memory>
 

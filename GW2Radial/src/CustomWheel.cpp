@@ -95,11 +95,11 @@ IDirect3DTexture9* LoadCustomTexture(IDirect3DDevice9* dev, const std::filesyste
             hr = DirectX::CreateWICTextureFromMemory(dev, data.data(), data.size(), &tex);
 
 		if(!SUCCEEDED(hr))
-		    FormattedMessageBox(L"Could not load custom radial menu image '%s': 0x%x.", path.wstring().c_str(), hr);
+		    FormattedMessageBox(L"Could not load custom radial menu image '%s': 0x%x.", L"Custom Menu Error", path.wstring().c_str(), hr);
 
 	    return tex;
 	} catch(...) {
-		FormattedMessageBox(L"Could not load custom radial menu image '%s'.", path.wstring().c_str());
+		FormattedMessageBox(L"Could not load custom radial menu image '%s'.", L"Custom Menu Error", path.wstring().c_str());
 	    return nullptr;
 	}
 }
@@ -220,7 +220,9 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 			ces.texture = LoadCustomTexture(dev, dataFolder / utf8_decode(elementIcon->second));
 			if(elementPremultipliedAlpha != element.end())
 				ces.premultiply = ini.GetBoolValue(sec.pItem, "premultiply_alpha", true);
-		} else
+		}
+
+		if(!ces.texture)
 			maxTextWidth = std::max(maxTextWidth, CalcText(font_, utf8_decode(ces.name)));
 
 		elements.push_back(ces);
@@ -247,6 +249,16 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 
 void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
 {
+	{
+	    APTTYPE a;
+	    APTTYPEQUALIFIER b;
+	    if(CoGetApartmentType(&a, &b) == CO_E_NOTINITIALIZED) {
+	        HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+            if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
+	            CriticalMessageBox(L"Could not initialize COM library: error code 0x%X.", hr);
+	    }
+	}
+
 	failedLoads_.clear();
 	textDraws_.clear();
 	customWheelNextId_ = CustomWheelStartId;

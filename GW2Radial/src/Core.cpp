@@ -41,7 +41,6 @@ void Core::Init(HMODULE dll)
 void Core::Shutdown()
 {
 	i_.reset();
-	CoUninitialize();
 }
 
 Core::~Core()
@@ -63,10 +62,6 @@ Core::~Core()
 
 void Core::OnInjectorCreated()
 {
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
-	    CriticalMessageBox(L"Could not initialize COM library: error code 0x%X.", hr);
-
 	auto* inject = Direct3D9Inject::i();
 	
 	inject->preCreateDeviceCallback = [this](HWND hWnd){ PreCreateDevice(hWnd); };

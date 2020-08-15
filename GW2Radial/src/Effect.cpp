@@ -56,25 +56,20 @@ Effect::Effect(IDirect3DDevice9* dev)
 [[nodiscard]] std::string Effect::LoadShaderFile(const std::wstring& filename) {
     LoadShadersArchive();
 
-#ifdef HOT_RELOAD_SHADERS
-    const std::wstring fullPath = SHADERS_DIR + filename;
-    std::ifstream      file(fullPath);
-    auto               vec = FileSystem::ReadFile(file);
-    return std::string(reinterpret_cast<char*>(vec.data()), vec.size());
-#else
-    auto file = shadersZip_->GetEntry(utf8_encode(filename));
-    if (file) {
+    if(hotReloadFolderExists_ && FileSystem::Exists(GetShaderFilename(filename))) {
+        std::ifstream      file(GetShaderFilename(filename));
+        auto               vec = FileSystem::ReadFile(file);
+        return std::string(reinterpret_cast<char*>(vec.data()), vec.size());
+    } else {
+        auto file = shadersZip_->GetEntry(EncodeShaderFilename(filename));
+        GW2_ASSERT(file != nullptr);
         auto* const contentStream = file->GetDecompressionStream();
-        if (contentStream) {
-            auto vec = FileSystem::ReadFile(*contentStream);
-            file->CloseDecompressionStream();
-            return std::string(reinterpret_cast<char*>(vec.data()), vec.size());
-        }
+        GW2_ASSERT(contentStream != nullptr);
+        
+        auto vec = FileSystem::ReadFile(*contentStream);
+        file->CloseDecompressionStream();
+        return std::string(reinterpret_cast<char*>(vec.data()), vec.size());
     }
-
-    return "";
-
-#endif
 }
 
 void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
@@ -155,12 +150,12 @@ void Effect::LoadShadersArchive() {
     shaderIncludeManager_    = std::make_unique<ShaderInclude>(this);
 }
 
-std::string Effect::EncodeShaderFilename(const std::wstring& filename) const {
+std::wstring Effect::GetShaderFilename(const std::wstring& filename) const {
 #ifdef HOT_RELOAD_SHADERS
     if (hotReloadFolderExists_)
-        return utf8_encode(SHADERS_DIR + filename);
+        return SHADERS_DIR + filename;
 #endif
-    return utf8_encode(filename);
+    return filename;
 }
 
 ID3DInclude* Effect::GetIncludeManager() const {

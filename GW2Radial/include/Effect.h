@@ -96,7 +96,10 @@ protected:
 
 	void LoadShadersArchive();
 
-    [[nodiscard]] std::string EncodeShaderFilename(const std::wstring& filename) const;
+	[[nodiscard]] std::wstring GetShaderFilename(const std::wstring& filename) const;
+    [[nodiscard]] std::string EncodeShaderFilename(const std::wstring& filename) const {
+        return utf8_encode(GetShaderFilename(filename));
+    }
     [[nodiscard]] ID3DInclude* GetIncludeManager() const;
 	void CheckHotReload();
 

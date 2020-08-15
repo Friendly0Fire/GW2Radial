@@ -64,16 +64,16 @@
 #define SQUARE(x) ((x) * (x))
 
 template <typename... Args>
-void FormattedMessageBox(const wchar_t* contents, Args&&...args) {
+void FormattedMessageBox(const wchar_t* contents, const wchar_t* title, Args&&...args) {
     wchar_t buf[2048];
     swprintf_s(buf, contents, std::forward<Args>(args)...);
 
-    MessageBoxW(nullptr, contents, L"GW2Radial Fatal Error", MB_ICONERROR | MB_OK);
+    MessageBoxW(nullptr, buf, title, MB_ICONERROR | MB_OK);
 }
 
 template <typename... Args>
 void CriticalMessageBox(const wchar_t* contents, Args&&...args) {
-    FormattedMessageBox(contents, std::forward<Args>(args)...);
+    FormattedMessageBox(contents, L"GW2Radial Fatal Error", std::forward<Args>(args)...);
     exit(1);
 }
 
