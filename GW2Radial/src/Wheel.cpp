@@ -649,6 +649,9 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 		if(isAnyElementBeingModified)
 			return InputResponse::PREVENT_ALL;
 	}
+
+	if(clickSelectOption_.value() && !isVisible_ && previousVisibility)
+		return InputResponse::PREVENT_ALL;
 	
 	return InputResponse::PASS_TO_GAME;
 }
