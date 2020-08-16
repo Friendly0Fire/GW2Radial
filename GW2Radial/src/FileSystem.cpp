@@ -78,6 +78,15 @@ namespace GW2Radial
         return output;
     }
 
+    std::filesystem::path FileSystem::GetSystemPath(const KNOWNFOLDERID& id, DWORD flags) {
+        wchar_t* path = nullptr;
+        SHGetKnownFolderPath(id, flags, nullptr, &path);
+
+        std::filesystem::path p(path);
+        CoTaskMemFree(path);
+        return p;
+    }
+
     std::vector<byte> FileSystem::ReadFile(const fs::path& p)
     {
         if (fs::exists(p))

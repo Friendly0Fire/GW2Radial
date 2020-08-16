@@ -8,6 +8,8 @@
 
 #include <ZipFile.h>
 
+#include <ShlObj.h>
+
 namespace GW2Radial
 {
     class FileSystem : public Singleton<FileSystem>
@@ -22,5 +24,6 @@ namespace GW2Radial
         static bool Exists(const std::filesystem::path& p);
         static std::vector<byte> ReadFile(const std::filesystem::path& p);
         static std::vector<byte> ReadFile(std::istream& is);
+        static std::filesystem::path GetSystemPath(REFKNOWNFOLDERID id, DWORD flags = KF_FLAG_DEFAULT);
     };
 }

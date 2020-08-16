@@ -20,6 +20,7 @@
 #include <MumbleLink.h>
 #include <Effect_dx12.h>
 #include <CustomWheel.h>
+#include <GFXSettings.h>
 
 LONG WINAPI GW2RadialTopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
 
@@ -267,14 +268,21 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 {
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i()->OnUpdate();
-
+	
 	tickSkip_++;
 	if(tickSkip_ >= TickSkipCount)
 	{
 	    tickSkip_ -= TickSkipCount;
-	    ConfigurationFile::i()->OnUpdate();
 		MumbleLink::i()->OnUpdate();
 	    OnUpdate();
+	}
+
+	longTickSkip_++;
+	if(longTickSkip_ >= LongTickSkipCount)
+	{
+	    longTickSkip_ -= LongTickSkipCount;
+	    ConfigurationFile::i()->OnUpdate();
+		GFXSettings::i()->OnUpdate();
 	}
 
 	for (auto& wheel : wheels_)

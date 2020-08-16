@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <Main.h>
 #include <inttypes.h>
 #include <imgui.h>
@@ -150,23 +151,21 @@ inline uint RGBAto32(const fVector4& rgb, bool scale)
     return D3DCOLOR_RGBA(byte(rgb.x * s), byte(rgb.y * s), byte(rgb.z * s), byte(rgb.w * s));
 }
 
-template<typename Str>
-Str ToLower(Str in)
-{
-	if constexpr(std::is_same_v<Str, std::string>)
-	    std::transform(in.begin(), in.end(), in.begin(), std::tolower);
-	else
-		std::transform(in.begin(), in.end(), in.begin(), std::towlower);
+inline std::string ToLower(std::string in) {
+	std::transform(in.begin(), in.end(), in.begin(), std::tolower);
+	return in;
+}
+inline std::wstring ToLower(std::wstring in) {
+	std::transform(in.begin(), in.end(), in.begin(), std::towlower);
 	return in;
 }
 
-template<typename Str>
-Str ToUpper(Str in)
-{
-	if constexpr(std::is_same_v<Str, std::string>)
-	    std::transform(in.begin(), in.end(), in.begin(), std::toupper);
-	else
-		std::transform(in.begin(), in.end(), in.begin(), std::towupper);
+inline std::string ToUpper(std::string in) {
+	std::transform(in.begin(), in.end(), in.begin(), std::toupper);
+	return in;
+}
+inline std::wstring ToUpper(std::wstring in) {
+	std::transform(in.begin(), in.end(), in.begin(), std::towupper);
 	return in;
 }
 

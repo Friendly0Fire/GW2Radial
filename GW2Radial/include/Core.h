@@ -64,6 +64,8 @@ protected:
 	std::array<wchar_t, 256> characterName_;
 	uint tickSkip_ = 0;
 	const uint TickSkipCount = 10;
+	uint longTickSkip_ = 0;
+	const uint LongTickSkipCount = 600;
 
 	std::unique_ptr<UnitQuad> quad_;
 	Effect* mainEffect_ = nullptr;
