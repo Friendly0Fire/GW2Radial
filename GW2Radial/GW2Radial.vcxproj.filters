@@ -139,18 +139,12 @@
     <ClCompile Include="src\Minidump.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="imgui\imgui_widgets.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\stb_rect_pack.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\stb_textedit.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\stb_truetype.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imconfig.h">
@@ -287,6 +281,15 @@
     </ClInclude>
     <ClInclude Include="include\Direct3D9Inject.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_rectpack.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_textedit.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_truetype.h">
+      <Filter>External\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

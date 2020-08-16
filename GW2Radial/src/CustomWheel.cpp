@@ -42,7 +42,7 @@ void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float
 	float xOff = (clip.x - sz.x) * 0.5f;
 
 	ImDrawList imDraw(ImGui::GetDrawListSharedData());
-	imDraw.Clear();
+	imDraw.AddDrawCmd();
 	imDraw.PushClipRect(ImVec2(0.f, 0.f), clip);
 	imDraw.PushTextureID(font->ContainerAtlas->TexID);
 	imDraw.AddText(font, fontSize, ImVec2(xOff, 0.f), fgColor, txt.c_str());
