@@ -25,3 +25,6 @@
 [submodule "GW2Radial/minhook"]
 	path = GW2Radial/minhook
 	url = https://github.com/Friendly0Fire/minhook.git
+[submodule "GW2Radial/tinyxml2"]
+	path = GW2Radial/tinyxml2
+	url = https://github.com/leethomason/tinyxml2.git

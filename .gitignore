@@ -261,3 +261,4 @@ paket-files/
 __pycache__/
 *.pyc
 GW2Radial/int/
+temp/
