@@ -207,7 +207,7 @@ float4 TimerCursor_PS(PS_INPUT In) : COLOR0
 	    float4 iconColor = BaseMountImage(centeredUV * 0.85f + 0.5f, texSecondarySampler, iconShadow);
 
 	    color.rgb *= 1 - max(iconShadow, iconColor.a);
-	    color.rgb += iconColor.rgb;
+	    color.rgb += iconColor.rgb * fWheelFadeIn;
 	}
 
 	return color;

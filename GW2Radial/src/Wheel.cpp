@@ -428,8 +428,9 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		}
 	} else if(showDelayTimerOption_.value() && (conditionallyDelayed_ != nullptr || currentTime - conditionallyDelayedTime_ < 500)) {
 		float dt = float(currentTime - conditionallyDelayedTime_) / 1000.f;
+		float absDt = dt;
 		float timeLeft = 0.f;
-		if(conditionallyDelayed_ == nullptr) dt = 0.5f - dt;
+		if(conditionallyDelayed_ == nullptr) absDt = 0.5f - dt;
 		else
 			timeLeft = 1.f - (currentTime - conditionallyDelayedTime_) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
 	    cref io = ImGui::GetIO();
@@ -443,7 +444,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			{ D3DRS_SRCBLEND, D3DBLEND_ONE },
 		});
 
-		const float spriteSide = 0.05f;
+		float spriteSide = 0.05f;
 
 		float x = screenSize.x * 0.5f + screenSize.y * spriteSide * 0.5f;
 		switch(MumbleLink::i()->uiScale()) {
@@ -463,6 +464,13 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		}
 		float y = screenSize.y - screenSize.y * (0.025f + 0.017f);
 
+		if(dt < 0.3333f && conditionallyDelayed_ != nullptr) {
+			float sizeInterpolant = SmoothStep(dt * 3);
+			spriteSide = std::lerp(spriteSide * 3, spriteSide, sizeInterpolant);
+		    x = std::lerp(0.5f * screenSize.x, x, 0.5f + sizeInterpolant * 0.5f);
+		    y = std::lerp(0.5f * screenSize.y, y, 0.5f + sizeInterpolant * 0.5f);
+		}
+
 		fVector4 spriteDimensions = { x * screenSize.z, y * screenSize.w, spriteSide * screenSize.y * screenSize.z, spriteSide };
 
 		{
@@ -470,7 +478,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			using namespace ShaderRegister::ShaderVS;
 		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fAnimationTimer, fmod(currentTime / 1010.f, 55000.f));
 		    fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, spriteDimensions);
-		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, std::min(dt * 2, 1.f));
+		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, std::min(absDt * 2, 1.f));
 		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fTimeLeft, timeLeft);
 			fx->SetVariable(ShaderType::PIXEL_SHADER, bool_bShowIcon, conditionallyDelayed_ != nullptr);
 			
