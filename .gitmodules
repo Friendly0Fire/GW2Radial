@@ -27,4 +27,4 @@
 	url = https://github.com/Friendly0Fire/minhook.git
 [submodule "GW2Radial/tinyxml2"]
 	path = GW2Radial/tinyxml2
-	url = https://github.com/leethomason/tinyxml2.git
+	url = git@github.com:Friendly0Fire/tinyxml2.git
