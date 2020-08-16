@@ -120,18 +120,25 @@ float4 BgImage_PS(PS_INPUT In) : COLOR0
 	return color * saturate(edge_mask * center_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * wheelFadeIn * float4(1, 1, 1, 1.2f);
 }
 
-float4 MountImage_PS(PS_INPUT In) : COLOR0
-{
-	float hoverFadeIn = fHoverFadeIns_lookup(iElementID);
-
-	float shadow = 0;
-	float4 color = tex2D(texMainSampler, In.UV);
+float4 BaseMountImage(float2 uv, sampler2D samp, out float shadow) {
+    shadow = 0;
+	float4 color = tex2D(samp, uv);
 	if(bPremultiplyAlpha)
 		color.rgb *= color.a;
 	color *= fElementColor;
 
 	if(fShadowData.x > 0.f)
-		shadow = fShadowData.x * tex2D(texMainSampler, In.UV + fShadowData.yz).a;
+		shadow = fShadowData.x * tex2D(samp, uv + fShadowData.yz).a;
+
+	return color;
+}
+
+float4 MountImage_PS(PS_INPUT In) : COLOR0
+{
+	float hoverFadeIn = fHoverFadeIns_lookup(iElementID);
+
+	float shadow;
+	float4 color = BaseMountImage(In.UV, texMainSampler, shadow);
 	
 	float3 fLumaDot = float3(0.2126, 0.7152, 0.0722);
 	float luma = dot(color.rgb, fLumaDot);
@@ -180,17 +187,28 @@ float4 TimerCursor_PS(PS_INPUT In) : COLOR0
 {
 	float2 centeredUV = 2 * (In.UV - 0.5f);
 	float2 polar = float2(length(centeredUV), atan2(centeredUV.y, centeredUV.x));
-	polar.y = 2 * (polar.y / PI + 1); // [0, 4]
+	polar.y = fmod(10 - (polar.y / PI + 0.5f) * 0.5f, 1.f); // [0, 1]
+	
+	float2 smoothrandom = float2(srnoise(3 * In.UV * cos(0.5f * fAnimationTimer) + fAnimationTimer * 0.43f), srnoise(3 * In.UV * sin(0.79f * fAnimationTimer) + fAnimationTimer * 0.22f));
+	float4 baseColor = tex2D(texMainSampler, In.UV);
 
-	float rotatingPolarY = fmod(2 * fAnimationTimer - polar.y, 4.f);
+	float4 color = saturate(baseColor * float2(2, 1).xxxy) * fWheelFadeIn;
+	color.rgb *= lerp(0.9f, 1.3f, saturate((4 + smoothrandom.x + smoothrandom.y) / 8));
+	color.rgb *= 1.25f - (1 - smoothstep(0.60f, 0.80f, polar.x));
 
-	const float4 baseColor = float4(194/255.f,189/255.f,149/255.f, 0.f) * 0.75f * fWheelFadeIn;
-	float4 color = baseColor;
-	color *= pow(1.f - smoothstep(0.5f, 1.f, polar.x), 4.f);
-	color *= pow(smoothstep(0.f, 0.5f, polar.x), 4.f);
-	color *= LogNormal(rotatingPolarY, 0.5f) * (1 - smoothstep(3.5f, 4.f, rotatingPolarY));
+	color.rgb *= 1.f - smoothstep(0.80f, 0.90f, polar.x);
+	color.a *= 1.f - smoothstep(0.90f, 1.00f, polar.x);
+	
+	color *= 1.25f - smoothstep(fTimeLeft - 0.01f, fTimeLeft + 0.01f, polar.y);
+	color.rgb *= smoothstep(0.f, 0.02f, abs(fTimeLeft - polar.y));
 
-	color += In.UV.y > 0.95f ? (In.UV.x < fCenterScale ? baseColor : (baseColor * 0.2f + float4(0, 0, 0, 0.6f * fWheelFadeIn))) : 0;
+	if(bShowIcon) {
+	    float iconShadow;
+	    float4 iconColor = BaseMountImage(centeredUV * 0.85f + 0.5f, texSecondarySampler, iconShadow);
+
+	    color.rgb *= 1 - max(iconShadow, iconColor.a);
+	    color.rgb += iconColor.rgb;
+	}
 
 	return color;
 }

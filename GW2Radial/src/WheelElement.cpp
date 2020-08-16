@@ -66,6 +66,29 @@ int WheelElement::DrawPriority(int extremumIndicator)
 	return rv;
 }
 
+void WheelElement::SetShaderState()
+{
+	fVector4 adjustedColor = color();
+	adjustedColor.x = Lerp(1, adjustedColor.x, colorizeAmount_);
+	adjustedColor.y = Lerp(1, adjustedColor.y, colorizeAmount_);
+	adjustedColor.z = Lerp(1, adjustedColor.z, colorizeAmount_);
+
+	const float shadowOffsetMultiplier = -0.02f / 1024.f;
+
+	fVector4 shadowData { shadowStrength_, shadowOffsetMultiplier * texWidth_, shadowOffsetMultiplier * texWidth_ * aspectRatio_, 1.f };
+	
+	auto fx = Core::i()->mainEffect();
+	
+	{
+		using namespace ShaderRegister::ShaderPS;
+		using namespace ShaderRegister::ShaderVS;
+        fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementID, elementId());
+        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fElementColor, adjustedColor);
+        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fShadowData, shadowData);
+	    fx->SetVariable(ShaderType::PIXEL_SHADER, bool_bPremultiplyAlpha, premultiplyAlpha_);
+	}
+}
+
 void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const Wheel* parent)
 {
 	auto fx = Core::i()->mainEffect();
@@ -114,24 +137,13 @@ void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsC
 	
 	spriteDimensions.w *= aspectRatio_;
 
-	fVector4 adjustedColor = color();
-	adjustedColor.x = Lerp(1, adjustedColor.x, colorizeAmount_);
-	adjustedColor.y = Lerp(1, adjustedColor.y, colorizeAmount_);
-	adjustedColor.z = Lerp(1, adjustedColor.z, colorizeAmount_);
-
-	const float shadowOffsetMultiplier = -0.02f / 1024.f;
-
-	fVector4 shadowData { shadowStrength_, shadowOffsetMultiplier * texWidth_, shadowOffsetMultiplier * texWidth_ * aspectRatio_, 1.f };
+	SetShaderState();
 	
 	{
 		using namespace ShaderRegister::ShaderPS;
 		using namespace ShaderRegister::ShaderVS;
         fx->SetTexture(sampler2D_texMainSampler, appearance_);
         fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, spriteDimensions);
-        fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementID, elementId());
-        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fElementColor, adjustedColor);
-        fx->SetVariable(ShaderType::PIXEL_SHADER, float4_fShadowData, shadowData);
-		fx->SetVariable(ShaderType::PIXEL_SHADER, bool_bPremultiplyAlpha, premultiplyAlpha_);
 	}
 	
 	fx->ApplyStates();

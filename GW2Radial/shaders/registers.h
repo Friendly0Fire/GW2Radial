@@ -17,18 +17,21 @@
 
 VALUE_REGISTER(sampler2D, texMainSampler, 0, s, ShaderPS);
 VALUE_REGISTER(sampler2D, texWipeMaskImageSampler, 1, s, ShaderPS);
+VALUE_REGISTER(sampler2D, texSecondarySampler, 1, s, ShaderPS);
 
 #if defined(_WINDOWS) || defined(SHADER_PS)
 VALUE_REGISTER(float, fAnimationTimer, 0, c, ShaderPS);
 VALUE_REGISTER(float, fWheelFadeIn, 1, c, ShaderPS);
 VALUE_REGISTER(float, fCenterScale, 2, c, ShaderPS);
+VALUE_REGISTER(float, fTimeLeft, 2, c, ShaderPS);
 VALUE_REGISTER(int, iElementCount, 3, c, ShaderPS);
 VALUE_REGISTER(float3, fWipeMaskData, 4, c, ShaderPS);
 VALUE_REGISTER(int, iElementID, 5, c, ShaderPS);
 VALUE_REGISTER(float4, fElementColor, 6, c, ShaderPS);
 VALUE_REGISTER(float4, fShadowData, 7, c, ShaderPS);
 VALUE_REGISTER(bool, bPremultiplyAlpha, 8, c, ShaderPS);
-VALUE_REGISTER_ARRAY(float4, fHoverFadeIns, WHEEL_MAX_ELEMENT_COUNT, 9, c, ShaderPS);
+VALUE_REGISTER(bool, bShowIcon, 9, c, ShaderPS);
+VALUE_REGISTER_ARRAY(float4, fHoverFadeIns, WHEEL_MAX_ELEMENT_COUNT, 10, c, ShaderPS);
 #endif
 
 #if defined(_WINDOWS) || defined(SHADER_VS)

@@ -471,7 +471,21 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fAnimationTimer, fmod(currentTime / 1010.f, 55000.f));
 		    fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, spriteDimensions);
 		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, std::min(dt * 2, 1.f));
-		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fCenterScale, timeLeft);
+		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fTimeLeft, timeLeft);
+			fx->SetVariable(ShaderType::PIXEL_SHADER, bool_bShowIcon, conditionallyDelayed_ != nullptr);
+			
+			fx->SetSamplerStates(sampler2D_texMainSampler, {});
+			fx->SetSamplerStates(sampler2D_texSecondarySampler, {
+				{ D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER },
+				{ D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER },
+				{ D3DSAMP_BORDERCOLOR, D3DCOLOR(0) }
+			});
+			fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_);
+
+			if(conditionallyDelayed_) {
+				fx->SetTexture(sampler2D_texSecondarySampler, conditionallyDelayed_->appearance());
+				conditionallyDelayed_->SetShaderState();
+			}
 		}
 		
 		fx->ApplyStates();

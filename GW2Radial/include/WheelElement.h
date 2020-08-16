@@ -14,6 +14,7 @@ public:
 
 	int DrawPriority(int extremumIndicator);
 
+	void SetShaderState();
 	void Draw(int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
 
 	uint elementId() const { return elementId_; }
@@ -42,6 +43,8 @@ public:
 	Keybind& keybind() { return keybind_; }
 	bool isBound() const { return keybind_.isSet(); }
 	virtual bool isActive() const { return isBound() && isShownOption_.value(); }
+
+	IDirect3DTexture9* appearance() const { return appearance_; }
 
 protected:
 	virtual fVector4 color() = 0;
