@@ -173,6 +173,8 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		return fail((L"Nickname " + utf8_decode(std::string(wheelNickname->second)) + L" already exists").c_str());
 
 	auto wheel = std::make_unique<Wheel>(IDR_BG, IDR_WIPEMASK, wheelNickname->second, wheelDisplayName->second, dev);
+	wheel->worksOnlyOutOfCombat_ = ini.GetBoolValue("General", "only_out_of_combat", false);
+	wheel->worksOnlyAboveWater_ = ini.GetBoolValue("General", "only_above_water", false);
 
 	uint baseId = customWheelNextId_;
 

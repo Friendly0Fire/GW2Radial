@@ -8,6 +8,8 @@ To create a new menu, first make a new folder. Its name does not matter. Inside,
 [General]
 nickname = <some name using only alphanumerical characters and underscores>
 display_name = <the same of the radial menu in game>
+only_out_of_combat = <true|false, whether the radial menu works in combat, will queue input otherwise, defaults to false>
+only_above_water = <true|false, whether the radial menu works in water, will queue input otherwise, defaults to false>
 ```
 
 The two entries are self-explanatory. From then on, you can add any number of menu entries as follows:

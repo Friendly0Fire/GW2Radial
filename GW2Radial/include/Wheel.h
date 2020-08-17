@@ -128,6 +128,7 @@ protected:
 	void DrawMenu() override;
 
 	friend class WheelElement;
+	friend class CustomWheelsManager;
 };
 
 }
