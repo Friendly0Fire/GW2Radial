@@ -9,6 +9,7 @@
 #include <Input.h>
 #include "../imgui/imgui_internal.h"
 #include <algorithm>
+#include <GFXSettings.h>
 #include <MumbleLink.h>
 #include "../shaders/registers.h"
 
@@ -444,34 +445,43 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			{ D3DRS_SRCBLEND, D3DBLEND_ONE },
 		});
 
-		float spriteSide = 0.05f;
+		float dpiScale = 1.f;
+		if(GFXSettings::i()->dpiScaling())
+		    dpiScale = float(GetDpiForWindow(Core::i()->gameWindow())) / 96.f;
 
-		float x = screenSize.x * 0.5f + screenSize.y * spriteSide * 0.5f;
-		switch(MumbleLink::i()->uiScale()) {
-		case 0:
-			x += 2560 * 0.131f;
-			break;
-		case 1:
-			x += 2560 * 0.146f;
-			break;
-		case 2:
-			x += 2560 * 0.1625f;
-			break;
-		default:
-		case 3:
-			x += 2560 * 0.1775f;
-			break;
-		}
-		float y = screenSize.y - screenSize.y * (0.025f + 0.017f);
+		float uiScale = float(MumbleLink::i()->uiScale());
 
-		if(dt < 0.3333f && conditionallyDelayed_ != nullptr) {
-			float sizeInterpolant = SmoothStep(dt * 3);
-			spriteSide = std::lerp(spriteSide * 3, spriteSide, sizeInterpolant);
-		    x = std::lerp(0.5f * screenSize.x, x, 0.5f + sizeInterpolant * 0.5f);
-		    y = std::lerp(0.5f * screenSize.y, y, 0.5f + sizeInterpolant * 0.5f);
-		}
+		fVector2 topLeftCorner;
+		topLeftCorner.y = 77.f + 10.f * uiScale;
+		if(uiScale == 0)
+			topLeftCorner.y += 2.f;
 
-		fVector4 spriteDimensions = { x * screenSize.z, y * screenSize.w, spriteSide * screenSize.y * screenSize.z, spriteSide };
+		float bottom = 13.f + 1.f * uiScale;
+		topLeftCorner.x = 450.f / 107.f * topLeftCorner.y;
+		
+		float widthMinScale = std::min(1.f, screenSize.x / 1024.f);
+		float heightMinScale = std::min(1.f, screenSize.y / 768.f);
+
+		float minScale = std::min(widthMinScale, heightMinScale);
+		
+		topLeftCorner.x *= dpiScale * minScale;
+		topLeftCorner.y *= dpiScale * minScale;
+		bottom *= dpiScale * minScale;
+
+		topLeftCorner.x += screenSize.x * 0.5f;
+		topLeftCorner.y = screenSize.y - topLeftCorner.y;
+		bottom = screenSize.y - bottom;
+
+		float spriteSize = bottom - topLeftCorner.y;
+
+		fVector4 spriteDimensions
+	        { topLeftCorner.x * screenSize.z,
+		      topLeftCorner.y * screenSize.w,
+	          spriteSize * screenSize.z,
+	          spriteSize * screenSize.w };
+		
+		spriteDimensions.x += spriteDimensions.z * 0.5f;
+		spriteDimensions.y += spriteDimensions.w * 0.5f;
 
 		{
 			using namespace ShaderRegister::ShaderPS;
