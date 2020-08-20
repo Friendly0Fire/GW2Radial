@@ -60,7 +60,8 @@ std::wstring GetScanCodeName(ScanCode scanCode) {
 	}
 
 	wchar_t keyName[50];
-	if (GetKeyNameTextW(uint(scanCode) << 16, keyName, int(std::size(keyName))) != 0)
+	LONG lParam = (uint(scanCode) & 0xFF) << 16 | (IsExtendedKey(scanCode) ? 1 : 0) << 24;
+	if (GetKeyNameTextW(lParam, keyName, int(std::size(keyName))) != 0)
 		return keyName;
 
 	return L"[Error]";
