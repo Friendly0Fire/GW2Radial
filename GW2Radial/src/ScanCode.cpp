@@ -3,19 +3,20 @@
 namespace GW2Radial
 {
 ScanCode GetScanCode(KeyLParam lParam) {
+    uint scanCode = lParam.scanCode;
     if (lParam.extendedFlag)
     {
-        if (lParam.scanCode != 0x45)
-            lParam.scanCode |= 0xE000;
+        if (scanCode != 0x45)
+            scanCode |= 0xE000;
     } else
     {
-        if (lParam.scanCode == 0x45)
-            lParam.scanCode = 0xE11D45;
-        else if (lParam.scanCode == 0x54)
-            lParam.scanCode = 0xE037;
+        if (scanCode == 0x45)
+            scanCode = 0xE11D45;
+        else if (scanCode == 0x54)
+            scanCode = 0xE037;
     }
 
-    return ScanCode(lParam.scanCode);
+    return ScanCode(scanCode);
 }
 
 std::wstring GetScanCodeName(ScanCode scanCode) {

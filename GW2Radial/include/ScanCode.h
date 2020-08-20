@@ -245,6 +245,19 @@ inline bool IsExtendedKey(const ScanCode& a) {
     case ScanCode::CONTROLRIGHT:
     case ScanCode::ALTRIGHT:
     case ScanCode::METARIGHT:
+    // These are also extended keys: https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-keydown#remarks
+    case ScanCode::INSERT:
+    case ScanCode::DELETE_:
+    case ScanCode::HOME:
+    case ScanCode::END:
+    case ScanCode::PAGEUP:
+    case ScanCode::PAGEDOWN:
+    case ScanCode::ARROWLEFT:
+    case ScanCode::ARROWDOWN:
+    case ScanCode::ARROWUP:
+    case ScanCode::ARROWRIGHT:
+    case ScanCode::NUMPAD_DIVIDE:
+    case ScanCode::NUMPAD_ENTER:
         return true;
     default:
         return false;

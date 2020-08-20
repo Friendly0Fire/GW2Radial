@@ -291,7 +291,7 @@ namespace GW2Radial
             i.wParam = MapVirtualKey(uint(sc), isUniversal ? MAPVK_VSC_TO_VK : MAPVK_VSC_TO_VK_EX);
             GW2_ASSERT(i.wParam != 0);
             i.lParamKey.repeatCount = 0;
-            i.lParamKey.scanCode = uint(sc);
+            i.lParamKey.scanCode = uint(sc) & 0xFF; // Only take the first octet; there's a possibility the value won't fit in the bit field otherwise
             i.lParamKey.extendedFlag = IsExtendedKey(sc) ? 1 : 0;
             i.lParamKey.contextCode = 0;
             i.lParamKey.previousKeyState = down ? 0 : 1;
