@@ -1,3 +1,4 @@
+#include <ActivationKeybind.h>
 #include <ImGuiExtensions.h>
 #include <Core.h>
 #include "../imgui/imgui_internal.h"
@@ -94,7 +95,9 @@ void ImGuiKeybindInput(GW2Radial::Keybind& setting)
 
 	ImGui::PushItemWidth(windowWidth * 0.5f);
 
-	if(setting.isConflicted())
+	auto* activationSetting = dynamic_cast<GW2Radial::ActivationKeybind*>(&setting);
+
+	if(activationSetting && activationSetting->isConflicted())
 	{
 		ImGui::PushStyleColor(ImGuiCol_Text, 0xFF0000FF);
 		ImGui::Text((setting.displayName() + "[!]").c_str());

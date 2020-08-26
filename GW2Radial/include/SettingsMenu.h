@@ -3,7 +3,7 @@
 #include <Main.h>
 #include <Singleton.h>
 #include <list>
-#include <Keybind.h>
+#include <ActivationKeybind.h>
 #include <Input.h>
 
 namespace GW2Radial
@@ -35,7 +35,7 @@ protected:
 	Implementer* currentTab_ = nullptr;
 
 	bool isVisible_ = false;
-	Keybind showKeybind_;
+	ActivationKeybind showKeybind_;
 	
 	Input::InputChangeCallback inputChangeCallback_;
 };

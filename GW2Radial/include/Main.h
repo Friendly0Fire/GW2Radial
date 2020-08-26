@@ -154,4 +154,5 @@ std::ofstream& GetLogStream();
 bool ExceptionHandlerMiniDump(
     struct _EXCEPTION_POINTERS* pExceptionInfo, const char* function, const char* file, int line);
 
-#include "Effect.h"
+#include <Effect.h>
+#include <Enums.h>

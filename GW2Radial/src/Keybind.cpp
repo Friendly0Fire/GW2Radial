@@ -6,21 +6,20 @@
 
 namespace GW2Radial
 {
-std::vector<Keybind*> Keybind::keybinds_;
-std::unordered_map<Keybind*, std::set<ScanCode>> Keybind::scMaps_;
+std::set<Keybind*> Keybind::keybinds_;
 
-Keybind::Keybind(std::string nickname, std::string displayName, std::string category, bool isInput, const std::set<ScanCode>& scs, bool saveToConfig) :
-	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category)), isInput_(isInput), saveToConfig_(saveToConfig)
+Keybind::Keybind(std::string nickname, std::string displayName, std::string category, const std::set<ScanCode>& scs, bool saveToConfig) :
+	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category)), saveToConfig_(saveToConfig)
 {
-	keybinds_.push_back(this);
+	keybinds_.insert(this);
 	this->scanCodes(scs);
 	isBeingModified_ = false;
 }
 
-Keybind::Keybind(std::string nickname, std::string displayName, std::string category, bool isInput) :
-	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category)), isInput_(isInput)
+Keybind::Keybind(std::string nickname, std::string displayName, std::string category) :
+	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category))
 {
-	keybinds_.push_back(this);
+	keybinds_.insert(this);
 	auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds.2", nickname_.c_str());
 	if(keys) this->scanCodes(keys);
 	else {
@@ -32,10 +31,7 @@ Keybind::Keybind(std::string nickname, std::string displayName, std::string cate
 
 Keybind::~Keybind()
 {
-	if(!keybinds_.empty())
-	    keybinds_.erase(std::find(keybinds_.begin(), keybinds_.end(), this));
-	if(!scMaps_.empty())
-	    scMaps_.erase(this);
+	keybinds_.erase(this);
 }
 
 void Keybind::scanCodes(const std::set<ScanCode>& scs)
@@ -77,8 +73,6 @@ void Keybind::scanCodes(const char* keys, bool vKey)
 void Keybind::ApplyKeys()
 {
 	UpdateDisplayString();
-
-	CheckForConflict();
 	
 	if(saveToConfig_)
 	{
@@ -93,32 +87,6 @@ void Keybind::ApplyKeys()
 		cfg->ini().SetValue("Keybinds.2", nickname_.c_str(), settingValue.c_str());
 		cfg->Save();
 	}
-}
-
-void Keybind::CheckForConflict(bool recurse)
-{
-	scMaps_[this] = scanCodes_;
-	
-	isConflicted_ = false;
-	for(auto& elem : scMaps_)
-	{
-		if(elem.first != this && (elem.first->category_ == category_ || elem.first->isInput_ && isInput_) && !scanCodes_.empty() && elem.second == scanCodes_)
-			isConflicted_ = true;
-		
-		if(recurse) elem.first->CheckForConflict(false);
-	}
-}
-
-bool Keybind::conflicts(const std::set<ScanCode>& scanCodes) const
-{
-	for(auto& elem : scMaps_)
-	{
-		if(elem.first != this && scanCodes_.size() < elem.second.size()
-			&& std::includes(scanCodes.begin(), scanCodes.end(), elem.second.begin(), elem.second.end()))
-			return true;
-	}
-
-	return false;
 }
 
 bool Keybind::matchesNoLeftRight(const std::set<ScanCode>& scanCodes) const

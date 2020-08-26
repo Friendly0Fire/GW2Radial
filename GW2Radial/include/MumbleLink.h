@@ -1,15 +1,38 @@
 #pragma once
 #include <Main.h>
 #include <Singleton.h>
-#include <Mount.h>
 
 #define PARSE_FLAG_BOOL(name, offset) [[nodiscard]] inline bool name() const { return (uiState() & (1 << offset)) != 0; }
 
 namespace GW2Radial
 {
 
+struct LinkedMem;
+struct MumbleContext;
+
 class MumbleLink : public Singleton<MumbleLink> {
 public:
+	enum class Profession : uint8_t {
+		NONE = 0,
+	    GUARDIAN = 1,
+		WARRIOR = 2,
+		ENGINEER = 3,
+		RANGER = 4,
+		THIEF = 5,
+		ELEMENTALIST = 6,
+		MESMER = 7,
+		NECROMANCER = 8,
+		REVENANT = 9
+	};
+
+	enum class Race : uint8_t {
+	    ASURA = 0,
+		CHARR = 1,
+		HUMAN = 2,
+		NORN = 3,
+		SYLVARI = 4
+	};
+
 	MumbleLink();
 	~MumbleLink();
 
@@ -36,7 +59,7 @@ public:
 	[[nodiscard]] bool isSwimmingOnSurface() const;
 	[[nodiscard]] bool isUnderwater() const;
 	
-	[[nodiscard]] uint8_t characterProfession() const {
+	[[nodiscard]] Profession characterProfession() const {
 	    return identity_.profession;
     }
 	
@@ -44,7 +67,7 @@ public:
 	    return identity_.specialization;
     }
 
-    [[nodiscard]] uint8_t characterRace() const {
+    [[nodiscard]] Race characterRace() const {
 	    return identity_.race;
     }
 
@@ -65,17 +88,17 @@ protected:
 
 	struct Identity
 	{
-	    uint8_t profession = 0;
+	    Profession profession = Profession::NONE;
 		uint8_t specialization = 0;
-		uint8_t race = 0;
+		Race race = Race::ASURA;
 		bool commander = false;
 		float fov = 0.f;
 		uint8_t uiScale = 0;
 	};
 
-	[[nodiscard]] const struct MumbleContext* context() const;
+	[[nodiscard]] const MumbleContext* context() const;
 	HANDLE fileMapping_ = nullptr;
-	struct LinkedMem* linkedMemory_ = nullptr;
+	LinkedMem* linkedMemory_ = nullptr;
 
 	Identity identity_;
 };

@@ -77,7 +77,7 @@ protected:
 	std::vector<WheelElement*> sortedWheelElements_;
 	bool isVisible_ = false;
 	uint minElementSortingPriority_ = 0;
-	Keybind keybind_, centralKeybind_;
+	ActivationKeybind keybind_, centralKeybind_;
 	bool waitingForBypassComplete_ = false;
 
 	bool worksOnlyAboveWater_ = false;

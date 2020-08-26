@@ -5,20 +5,6 @@
 namespace GW2Radial
 {
 
-enum class NoveltyType : uint
-{
-	NONE = 0xFFFFFFFF,
-	CHAIR = IDR_NOVELTY1,
-	MUSICAL_INSTRUMENT = IDR_NOVELTY2,
-	HELD_ITEM = IDR_NOVELTY3,
-	TRAVEL_TOY = IDR_NOVELTY4,
-	TONIC = IDR_NOVELTY5,
-
-	FIRST = CHAIR,
-	LAST = TONIC
-};
-const unsigned int NoveltyTypeCount = 6;
-
 class Novelty : public WheelElement
 {
 public:

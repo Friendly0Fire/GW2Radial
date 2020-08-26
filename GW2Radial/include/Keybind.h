@@ -2,8 +2,6 @@
 #include <Main.h>
 #include <array>
 #include <set>
-#include <functional>
-#include <unordered_map>
 #include <Input.h>
 
 namespace GW2Radial
@@ -12,55 +10,48 @@ namespace GW2Radial
 class Keybind
 {
 public:
-	Keybind(std::string nickname, std::string displayName, std::string category, bool isInput, const std::set<ScanCode>& scs, bool saveToConfig);
-	Keybind(std::string nickname, std::string displayName, std::string category, bool isInput);
+	Keybind(std::string nickname, std::string displayName, std::string category, const std::set<ScanCode>& scs, bool saveToConfig);
+	Keybind(std::string nickname, std::string displayName, std::string category);
 	~Keybind();
 
-	const std::set<ScanCode>& scanCodes() const { return scanCodes_; }
+	[[nodiscard]] const std::set<ScanCode>& scanCodes() const { return scanCodes_; }
 	void scanCodes(const std::set<ScanCode>& scs);
 	void scanCodes(const char* keys, bool vKey = false);
 
-	const std::string& displayName() const { return displayName_; }
+	[[nodiscard]] const std::string& displayName() const { return displayName_; }
 	void displayName(const std::string& n) { displayName_ = n; }
 
-	const std::string& nickname() const { return nickname_; }
+	[[nodiscard]] const std::string& nickname() const { return nickname_; }
 	void nickname(const std::string& n) { nickname_ = n; }
 
-	bool isSet() const { return !scanCodes_.empty(); }
-	bool isConflicted() const { return isConflicted_; }
+	[[nodiscard]] bool isSet() const { return !scanCodes_.empty(); }
 
-	bool isBeingModified() const { return isBeingModified_; }
+	[[nodiscard]] bool isBeingModified() const { return isBeingModified_; }
 	void isBeingModified(bool ibm) { isBeingModified_ = ibm; }
 
-	const char* keysDisplayString() const { return keysDisplayString_.data(); }
+	[[nodiscard]] const char* keysDisplayString() const { return keysDisplayString_.data(); }
 	std::array<char, 256>& keysDisplayStringArray() { return keysDisplayString_; }
-
-	bool conflicts(const std::set<ScanCode>& scanCodes) const;
 	
-	bool matches(const std::set<ScanCode>& scanCodes) const { return scanCodes == scanCodes_; }
-	bool matchesPartial(const std::set<ScanCode>& scanCodes) const
+	[[nodiscard]] bool matches(const std::set<ScanCode>& scanCodes) const { return scanCodes == scanCodes_; }
+	[[nodiscard]] bool matchesPartial(const std::set<ScanCode>& scanCodes) const
 	{
 		return isSet() && std::includes(scanCodes.begin(), scanCodes.end(), scanCodes_.begin(), scanCodes_.end());
 	}
-	bool matchesNoLeftRight(const std::set<ScanCode>& scanCodes) const;
+	[[nodiscard]] bool matchesNoLeftRight(const std::set<ScanCode>& scanCodes) const;
 
 	static void ForceRefreshDisplayStrings();
 
 protected:
 	void UpdateDisplayString();
-	void ApplyKeys();
-	void CheckForConflict(bool recurse = true);
+	virtual void ApplyKeys();
 
 	std::string displayName_, nickname_, category_;
 	std::array<char, 256> keysDisplayString_ { };
 	bool isBeingModified_ = true;
 	std::set<ScanCode> scanCodes_;
 	bool saveToConfig_ = true;
-	bool isConflicted_ = false;
-	bool isInput_ = false;
 
-	static std::vector<Keybind*> keybinds_;
-	static std::unordered_map<Keybind*, std::set<ScanCode>> scMaps_;
+	static std::set<Keybind*> keybinds_;
 };
 
 }

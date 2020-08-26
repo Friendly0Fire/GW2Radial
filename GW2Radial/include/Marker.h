@@ -5,19 +5,6 @@
 namespace GW2Radial
 {
 
-enum class MarkerType : uint
-{
-	ARROW       = IDR_MARKER1,
-	CIRCLE      = IDR_MARKER2,
-	HEART       = IDR_MARKER3,
-	SQUARE      = IDR_MARKER4,
-	STAR        = IDR_MARKER5,
-	SPIRAL      = IDR_MARKER6,
-	TRIANGLE    = IDR_MARKER7,
-	X           = IDR_MARKER8,
-	CLEAR       = IDR_MARKER9,
-};
-
 class Marker : public WheelElement
 {
 public:

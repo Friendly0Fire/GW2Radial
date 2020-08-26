@@ -5,23 +5,6 @@
 namespace GW2Radial
 {
 
-enum class MountType : uint
-{
-	NONE = 0xFFFFFFFF,
-	RAPTOR = IDR_MOUNT1,
-	SPRINGER = IDR_MOUNT2,
-	SKIMMER = IDR_MOUNT3,
-	JACKAL = IDR_MOUNT4,
-	GRIFFON = IDR_MOUNT5,
-	BEETLE = IDR_MOUNT6,
-	WARCLAW = IDR_MOUNT7,
-    SKYSCALE = IDR_MOUNT8,
-
-	FIRST = RAPTOR,
-	LAST = SKYSCALE
-};
-const unsigned int MountTypeCount = 7;
-
 class Mount : public WheelElement
 {
 public:
