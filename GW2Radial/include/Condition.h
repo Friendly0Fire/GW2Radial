@@ -29,8 +29,12 @@ class IsWvWCondition final : public Condition {
     [[nodiscard]] bool test() const override;
 };
 
+class IsUnderwaterCondition final : public Condition {
+    [[nodiscard]] bool test() const override;
+};
+
 class IsProfessionCondition final : public Condition {
-    uint32_t professionFlags_;
+    uint32_t professionFlags_ = 0;
 
     [[nodiscard]] bool test() const override;
 
@@ -54,12 +58,14 @@ public:
 struct ConditionSet {
     IsInCombatCondition isInCombat;
     IsWvWCondition isWvW;
+    IsUnderwaterCondition isUnderwater;
     IsProfessionCondition isProfession;
     IsCharacterCondition isCharacter;
 
-    Condition* conditions[4] = {
+    Condition* conditions[5] = {
         &isInCombat,
         &isWvW,
+        &isUnderwater,
         &isProfession,
         &isCharacter
     };

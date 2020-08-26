@@ -4,11 +4,15 @@
 namespace GW2Radial {
 
 bool IsInCombatCondition::test() const {
-    return MumbleLink::i()->isInCombat() != negate_;
+    return MumbleLink::i()->isInCombat();
 }
 
 bool IsWvWCondition::test() const {
-    return MumbleLink::i()->isInWvW() != negate_;
+    return MumbleLink::i()->isInWvW();
+}
+
+bool IsUnderwaterCondition::test() const {
+    return MumbleLink::i()->isUnderwater();
 }
 
 bool IsProfessionCondition::test() const {
@@ -55,6 +59,9 @@ bool ConditionSet::conflicts(const ConditionSet& other) const {
         return false;
     
     if(isWvW.enable_ && other.isWvW.enable_ && isWvW.negate_ != other.isWvW.negate_)
+        return false;
+    
+    if(isUnderwater.enable_ && other.isUnderwater.enable_ && isUnderwater.negate_ != other.isUnderwater.negate_)
         return false;
     
     if(isProfession.enable_ && other.isProfession.enable_) {
