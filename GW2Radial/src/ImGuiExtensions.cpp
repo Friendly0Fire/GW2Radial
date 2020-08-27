@@ -104,7 +104,7 @@ float ImGuiHelpTooltipSize() {
 void ImGuiHelpTooltip(const char* desc)
 {
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(-1.f);
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ImGuiHelpTooltipSize() - ImGui::GetScrollX() - ImGui::GetStyle().ScrollbarSize);
     ImGui::TextDisabled("(?)");
     if (ImGui::IsItemHovered())
     {
