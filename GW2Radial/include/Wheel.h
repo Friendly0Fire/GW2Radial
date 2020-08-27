@@ -104,7 +104,6 @@ protected:
 	ConfigurationOption<int> behaviorOnReleaseBeforeDelay_;
 	ConfigurationOption<bool> resetCursorAfterKeybindOption_;
 
-	ConfigurationOption<bool> disableKeybindsInCombatOption_;
 	ConfigurationOption<int> maximumConditionalWaitTimeOption_;
 	ConfigurationOption<bool> showDelayTimerOption_;
 	ConfigurationOption<bool> centerCancelDelayedInputOption_;

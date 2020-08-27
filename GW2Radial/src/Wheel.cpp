@@ -33,7 +33,6 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  clickSelectOption_("Require click on option to select", "click_select", "wheel_" + nickname_, false),
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
-	disableKeybindsInCombatOption_("Disable wheel keybinds while in combat", "disable_in_combat", "wheel_" + nickname_, false),
 	maximumConditionalWaitTimeOption_("Expiration time (in seconds) of queued mount input", "max_wait_cond", "wheel_" + nickname_, 30),
 	showDelayTimerOption_("Show timer around cursor when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
     centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false)
@@ -109,17 +108,20 @@ void Wheel::UpdateHover()
 void Wheel::DrawMenu()
 {
 	ImGui::PushID((nickname_ + "Elements").c_str());
-	ImGui::BeginGroup();
 
-	ImGui::TextUnformatted("Set the following to your in-game keybinds:");
+	ImGuiTitle("In-game Keybinds");
+
+	ImGui::TextUnformatted("Set the following to your in-game keybinds (F11, Control Options).");
 
 	for(auto& we : wheelElements_)
 		ImGuiKeybindInput(we->keybind());
 	
-	ImGui::Separator();
+	ImGuiTitle("Keybinds");
 	
 	ImGuiKeybindInput(keybind_, "Pressing this key combination will open the radial menu at your cursor's current location.");
 	ImGuiKeybindInput(centralKeybind_, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
+	
+	ImGuiTitle("Display Options");
 	
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms");
 	ImGuiHelpTooltip("Amount of time, in milliseconds, for the radial menu to fade in.");
@@ -129,6 +131,10 @@ void Wheel::DrawMenu()
 	ImGuiHelpTooltip("Scale factor for the size of just the central region of the radial menu.");
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
 	ImGuiHelpTooltip("Amount of time, in milliseconds, to wait before displaying the radial menu. The input bound to the central region can still be sent by releasing the key, even before the menu is visible.");
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
+	ImGuiHelpTooltip("Either show the radial menu over or under the game's UI.");
+	
+	ImGuiTitle("Interaction Options");
 
 	if(clickSelectOption_.value()) {
 		noHoldOption_.value() = false;
@@ -140,7 +146,6 @@ void Wheel::DrawMenu()
 		ImGui::TextDisabled(clickSelectOption_.displayName().c_str());
 	} else
 	    ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
-	ImGuiConfigurationWrapper(&ImGui::Checkbox, disableKeybindsInCombatOption_);
 
 	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumConditionalWaitTimeOption_, 1, 10, 0);
 
@@ -203,10 +208,11 @@ void Wheel::DrawMenu()
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorAfterKeybindOption_);
-	ImGuiConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
+	
+	
+	ImGuiTitle("Visibility & Ordering");
 
-	ImGui::Separator();
-	ImGui::Text("Visibility and order (clockwise from the top):");
+	ImGui::Text("Ordering top to bottom is clockwise starting at noon.");
 
 	for(auto it = sortedWheelElements_.begin(); it != sortedWheelElements_.end(); ++it)
 	{
@@ -226,7 +232,6 @@ void Wheel::DrawMenu()
 		}
 	}
 
-	ImGui::EndGroup();
 	ImGui::PopID();
 }
 
@@ -575,7 +580,7 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 {
 	const bool previousVisibility = isVisible_;
 
-	if (disableKeybindsInCombatOption_.value() && MumbleLink::i()->isInCombat() || MumbleLink::i()->isMapOpen())
+	if (MumbleLink::i()->isMapOpen())
 		isVisible_ = false;
 	else {
 

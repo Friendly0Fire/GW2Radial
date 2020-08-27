@@ -26,5 +26,6 @@ void ImGuiConfigurationWrapper(F fct, GW2Radial::ConfigurationOption<T>& value, 
 		value.ForceSave();
 }
 
+void ImGuiTitle(const char * text);
 float ImGuiHelpTooltipSize();
 void ImGuiHelpTooltip(const char* desc);

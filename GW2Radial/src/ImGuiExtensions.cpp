@@ -91,10 +91,12 @@ void ImGuiKeybindInput(GW2Radial::Keybind& setting, const char* tooltip)
 
 void ImGuiTitle(const char * text)
 {
+	ImGui::Dummy({0, ImGui::GetStyle().ItemSpacing.y * 2 });
 	ImGui::PushFont(GW2Radial::Core::i()->fontBlack());
 	ImGui::TextUnformatted(text);
 	ImGui::Separator();
 	ImGui::PopFont();
+	ImGui::Spacing();
 }
 
 float ImGuiHelpTooltipSize() {
