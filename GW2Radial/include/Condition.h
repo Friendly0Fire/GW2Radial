@@ -16,7 +16,7 @@ public:
     Condition& enable(bool enable) { enable_ = enable; return *this; }
 
     virtual ~Condition() = default;
-    [[nodiscard]] bool operator()() const { return enable_ ? true : test() != negate_; }
+    [[nodiscard]] bool operator()() const { return enable_ ? test() != negate_ : true; }
 
     friend struct ConditionSet;
 };
