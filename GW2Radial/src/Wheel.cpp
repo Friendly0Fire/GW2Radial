@@ -117,19 +117,18 @@ void Wheel::DrawMenu()
 		ImGuiKeybindInput(we->keybind());
 	
 	ImGui::Separator();
-	ImGuiSpacing();
 	
-	ImGuiKeybindInput(keybind_);
-	ImGuiKeybindInput(centralKeybind_);
-
-	ImGui::PushItemWidth(0.66f * ImGui::GetWindowContentRegionWidth());
+	ImGuiKeybindInput(keybind_, "Pressing this key combination will open the radial menu at your cursor's current location.");
+	ImGuiKeybindInput(centralKeybind_, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
 	
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms");
+	ImGuiHelpTooltip("Amount of time, in milliseconds, for the radial menu to fade in.");
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.25f, 4.f, "%.2f", 1.f);
+	ImGuiHelpTooltip("Scale factor for the size of the whole radial menu.");
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.05f, 0.25f, "%.2f", 1.f);
+	ImGuiHelpTooltip("Scale factor for the size of just the central region of the radial menu.");
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
-
-	ImGui::PopItemWidth();
+	ImGuiHelpTooltip("Amount of time, in milliseconds, to wait before displaying the radial menu. The input bound to the central region can still be sent by releasing the key, even before the menu is visible.");
 
 	if(clickSelectOption_.value()) {
 		noHoldOption_.value() = false;
@@ -143,16 +142,12 @@ void Wheel::DrawMenu()
 	    ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, disableKeybindsInCombatOption_);
 
-	ImGui::PushItemWidth(0.2f * ImGui::GetWindowContentRegionWidth());
 	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumConditionalWaitTimeOption_, 1, 10, 0);
-	ImGui::PopItemWidth();
 
 	if(CenterBehavior(centerBehaviorOption_.value()) != CenterBehavior::NOTHING && displayDelayOption_.value() > 0)
 	{
 		ImGui::Text((behaviorOnReleaseBeforeDelay_.displayName() + ":").c_str());
-		ImGui::PushItemWidth(0.2f * ImGui::GetWindowContentRegionWidth());
 
-		ImGuiIndent();
 		bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
 		ImGuiConfigurationWrapper(rb, "Nothing##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::NOTHING));
 		ImGui::SameLine();
@@ -161,26 +156,18 @@ void Wheel::DrawMenu()
 		ImGuiConfigurationWrapper(rb, "Favorite##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::FAVORITE));
 		ImGui::SameLine();
 		ImGuiConfigurationWrapper(rb, "As if opened##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::DIRECTION));
-		ImGuiUnindent();
-		
-		ImGui::PopItemWidth();
 
 		if (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()) == BehaviorBeforeDelay::FAVORITE)
 		{
-			ImGuiIndent();
-			
 			const auto textSize = ImGui::CalcTextSize(delayFavoriteOption_.displayName().c_str());
 			const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
-			ImGui::PushItemWidth(itemSize);
-
+			
 			std::vector<const char*> potentialNames(wheelElements_.size());
 				for (uint i = 0; i < wheelElements_.size(); i++)
 					potentialNames[i] = wheelElements_[i]->displayName().c_str();
 
 			bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
 			ImGuiConfigurationWrapper(cmb, delayFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
-			ImGui::PopItemWidth();
-			ImGuiUnindent();
 		}
 	}
 
@@ -188,7 +175,6 @@ void Wheel::DrawMenu()
 	{
 		ImGui::Text((centerBehaviorOption_.displayName() + ":").c_str());
 		ImGui::SameLine();
-		ImGui::PushItemWidth(0.25f * ImGui::GetWindowContentRegionWidth());
 
 		bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
 		ImGuiConfigurationWrapper(rb, "Nothing##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::NOTHING));
@@ -196,25 +182,18 @@ void Wheel::DrawMenu()
 		ImGuiConfigurationWrapper(rb, "Previous##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
 		ImGui::SameLine();
 		ImGuiConfigurationWrapper(rb, "Favorite##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
-		
-		ImGui::PopItemWidth();
 	
 		if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
 		{
-			ImGuiIndent();
-			
 			const auto textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
 			const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
-			ImGui::PushItemWidth(itemSize);
-
+			
 			std::vector<const char*> potentialNames(wheelElements_.size());
 				for (uint i = 0; i < wheelElements_.size(); i++)
 					potentialNames[i] = wheelElements_[i]->displayName().c_str();
 
 			bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
 			ImGuiConfigurationWrapper(cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
-			ImGui::PopItemWidth();
-			ImGuiUnindent();
 		}
 		
 	    ImGuiConfigurationWrapper(&ImGui::Checkbox, centerCancelDelayedInputOption_);
@@ -227,7 +206,6 @@ void Wheel::DrawMenu()
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
 
 	ImGui::Separator();
-	ImGuiSpacing();
 	ImGui::Text("Visibility and order (clockwise from the top):");
 
 	for(auto it = sortedWheelElements_.begin(); it != sortedWheelElements_.end(); ++it)
