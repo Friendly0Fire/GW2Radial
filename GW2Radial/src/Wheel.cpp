@@ -457,6 +457,13 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 		float spriteSize = bottom - topLeftCorner.y;
 
+		if(dt < 0.3333f && conditionallyDelayed_ != nullptr) {
+			float sizeInterpolant = SmoothStep(dt * 3);
+			spriteSize = std::lerp(spriteSize * 3, spriteSize, sizeInterpolant);
+		    topLeftCorner.x = std::lerp(0.5f * screenSize.x, topLeftCorner.x, 0.25f + sizeInterpolant * 0.75f);
+		    topLeftCorner.y = std::lerp(0.5f * screenSize.y, topLeftCorner.y, 0.25f + sizeInterpolant * 0.75f);
+		}
+
 		fVector4 spriteDimensions
 	        { topLeftCorner.x * screenSize.z,
 		      topLeftCorner.y * screenSize.w,
