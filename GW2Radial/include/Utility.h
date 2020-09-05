@@ -138,12 +138,12 @@ It SplitString(const Char* str, const Char* delim, It out)
     size_t end = 0;
 	while ((end = s.find(delim, start)) != std::string::npos) {
         *out = s.substr(start, end - start);
-		out = std::next(out);
+		++out;
 		start = end + 1;
     }
 
 	*out = s.substr(start);
-	out = std::next(out);
+	++out;
 	return out;
 }
 

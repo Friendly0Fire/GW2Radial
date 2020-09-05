@@ -97,6 +97,7 @@ void MumbleLink::OnUpdate()
 	updateIfExists(identity_.race, "race");
 	updateIfExists(identity_.specialization, "spec");
 	updateIfExists(identity_.profession, "profession");
+	updateIfExists(identity_.name, "name");
 }
 
 bool MumbleLink::isInMap() const {
@@ -113,12 +114,12 @@ uint32_t MumbleLink::mapId() const {
 	return context()->mapId;
 }
 
-const wchar_t* MumbleLink::characterName() const
+std::wstring MumbleLink::characterName() const
 {
 	if (!linkedMemory_)
-		return nullptr;
+		return L"";
 
-	return linkedMemory_->name;
+	return utf8_decode(identity_.name);
 }
 
 const float MinSurfaceThreshold = -1.15f;

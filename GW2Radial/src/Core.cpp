@@ -254,12 +254,12 @@ void Core::OnUpdate()
 	    mapId_ = map;
 	}
 
-	if(_wcsicmp(characterName_.data(), mumble->characterName()) != 0)
+	if(characterName_ != mumble->characterName())
 	{
 	    for (auto& wheel : wheels_)
-		    wheel->OnCharacterChange(characterName_.data(), mumble->characterName());
+		    wheel->OnCharacterChange(characterName_, mumble->characterName());
 
-		std::copy(mumble->characterName(), mumble->characterName() + 256, characterName_.begin());
+		characterName_ = mumble->characterName();
 	}
 }
 

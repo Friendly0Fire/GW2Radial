@@ -55,7 +55,7 @@ public:
 	[[nodiscard]] bool isMounted() const;
 	[[nodiscard]] bool isInMap() const;
 	[[nodiscard]] uint32_t mapId() const;
-	[[nodiscard]] const wchar_t* characterName() const;
+	[[nodiscard]] std::wstring characterName() const;
 	[[nodiscard]] bool isSwimmingOnSurface() const;
 	[[nodiscard]] bool isUnderwater() const;
 	
@@ -94,6 +94,7 @@ protected:
 		bool commander = false;
 		float fov = 0.f;
 		uint8_t uiScale = 0;
+		std::string name;
 	};
 
 	[[nodiscard]] const MumbleContext* context() const;

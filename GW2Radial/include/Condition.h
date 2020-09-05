@@ -69,6 +69,7 @@ public:
         ConfigurationFile::i()->ini().SetLongValue(category, ("cond_id_" + nickname()).c_str(), static_cast<long>(professionFlags_));
     }
     void Load(const char* category) override {
+        Condition::Load(category);
         professionFlags_ = static_cast<long>(ConfigurationFile::i()->ini().GetLongValue(category, ("cond_id_" + nickname()).c_str(), 0));
     }
 };
@@ -80,19 +81,20 @@ class IsCharacterCondition final : public Condition {
     [[nodiscard]] std::string nickname() const override { return "character"; }
 
 public:
-    void character(wchar_t* name, bool add);
     [[nodiscard]] const std::list<std::wstring>& characterNames() const { return characterNames_; }
+    [[nodiscard]] std::list<std::wstring>& characterNames() { return characterNames_; }
     [[nodiscard]] bool operator==(const IsCharacterCondition& other) const;
 
     void Save(const char* category) const override {
         Condition::Save(category);
         auto names = utf8_encode(std::accumulate(characterNames_.begin(), characterNames_.end(), std::wstring{}, [](const auto& a, const auto& b) { return a + L", " + b; }));
-        ConfigurationFile::i()->ini().SetValue(category, ("cond_names_" + nickname()).c_str(), names.c_str());
+        ConfigurationFile::i()->ini().SetValue(category, ("cond_names_" + nickname()).c_str(), names.substr(2).c_str());
     }
     void Load(const char* category) override {
+        Condition::Load(category);
         auto names = utf8_decode(ConfigurationFile::i()->ini().GetValue(category, ("cond_names_" + nickname()).c_str(), ""));
         characterNames_.clear();
-        SplitString(names.c_str(), L",", characterNames_.begin());
+        SplitString(names.c_str(), L",", std::back_inserter(characterNames_));
     }
 };
 

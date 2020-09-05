@@ -61,7 +61,7 @@ protected:
 	bool firstFrame_ = true;
 	bool forceReloadWheels_ = false;
 	uint mapId_ = 0;
-	std::array<wchar_t, 256> characterName_;
+	std::wstring characterName_;
 	uint tickSkip_ = 0;
 	const uint TickSkipCount = 10;
 	uint longTickSkip_ = 0;

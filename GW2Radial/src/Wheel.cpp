@@ -153,16 +153,19 @@ void Wheel::DrawMenu()
 
 	if(clickSelectOption_.value()) {
 		noHoldOption_.value() = false;
-		ImGui::TextDisabled(noHoldOption_.displayName().c_str());
-	} else
-	    ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
+		ImGuiDisable();
+	}
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
+	if(clickSelectOption_.value())
+		ImGuiDisableEnd();
+
 	if(noHoldOption_.value()) {
 		clickSelectOption_.value() = false;
-		ImGui::TextDisabled(clickSelectOption_.displayName().c_str());
-	} else
-	    ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
-
-	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumConditionalWaitTimeOption_, 1, 10, 0);
+		ImGuiDisable();
+	}
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
+	if(noHoldOption_.value())
+		ImGuiDisableEnd();
 
 	if(CenterBehavior(centerBehaviorOption_.value()) != CenterBehavior::NOTHING && displayDelayOption_.value() > 0)
 	{
@@ -191,7 +194,9 @@ void Wheel::DrawMenu()
 		}
 	}
 
-	if(!noHoldOption_.value())
+	if(noHoldOption_.value())
+		ImGuiDisable();
+
 	{
 		ImGui::Text((centerBehaviorOption_.displayName() + ":").c_str());
 		ImGui::SameLine();
@@ -215,15 +220,24 @@ void Wheel::DrawMenu()
 			bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
 			ImGuiConfigurationWrapper(cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
 		}
-		
-	    ImGuiConfigurationWrapper(&ImGui::Checkbox, centerCancelDelayedInputOption_);
-	} else
-		ImGui::TextDisabled((centerBehaviorOption_.displayName() + ": Disabled").c_str());
+	}
+
+	if(noHoldOption_.value())
+		ImGuiDisableEnd();
 	
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorAfterKeybindOption_);
 	
+	ImGuiTitle("Queuing Options");
+
+	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumConditionalWaitTimeOption_, 1, 10, 0);
+
+	if(noHoldOption_.value())
+		ImGuiDisable();
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, centerCancelDelayedInputOption_);
+	if(noHoldOption_.value())
+		ImGuiDisableEnd();
 	
 	ImGuiTitle("Visibility & Ordering");
 
@@ -283,7 +297,7 @@ void Wheel::OnMapChange(uint prevId, uint newId)
 	conditionallyDelayedTestCount_ = 0;
 }
 
-void Wheel::OnCharacterChange(const wchar_t* prevCharacterName, const wchar_t* newCharacterName)
+void Wheel::OnCharacterChange(const std::wstring& prevCharacterName, const std::wstring& newCharacterName)
 {
 	conditionallyDelayed_ = nullptr;
 	conditionallyDelayedTime_ = TimeInMilliseconds();

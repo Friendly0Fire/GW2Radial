@@ -117,3 +117,18 @@ void ImGuiHelpTooltip(const char* desc)
         ImGui::EndTooltip();
     }
 }
+
+void ImGuiDisable(float alpha) {
+    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * alpha);
+	auto disabledColor = ImGui::GetColorU32(ImGuiCol_TextDisabled);
+	ImGui::PushStyleColor(ImGuiCol_FrameBg, disabledColor);
+	ImGui::PushStyleColor(ImGuiCol_CheckMark, disabledColor);
+	ImGui::PushStyleColor(ImGuiCol_Text, disabledColor);
+	ImGui::PushStyleColor(ImGuiCol_Button, disabledColor);
+}
+void ImGuiDisableEnd() {
+	ImGui::PopStyleColor(4);
+    ImGui::PopStyleVar();
+    ImGui::PopItemFlag();
+}

@@ -16,7 +16,7 @@ bool IsUnderwaterCondition::test() const {
 }
 
 bool IsProfessionCondition::test() const {
-    return (uint32_t(MumbleLink::i()->characterProfession()) << 1) & professionFlags_;
+    return (professionFlags_ & (1 << uint32_t(MumbleLink::i()->characterProfession()))) != 0;
 }
 
 bool IsProfessionCondition::profession(MumbleLink::Profession id) const {
@@ -36,14 +36,6 @@ bool IsProfessionCondition::operator==(const IsProfessionCondition& other) const
 
 bool IsCharacterCondition::test() const {
     return std::find(characterNames_.begin(), characterNames_.end(), std::wstring(MumbleLink::i()->characterName())) != characterNames_.end();
-}
-
-void IsCharacterCondition::character(wchar_t* name, bool add) {
-    auto it = std::find(characterNames_.begin(), characterNames_.end(), std::wstring(name));
-    if(add && it == characterNames_.end())
-        characterNames_.emplace_back(name);
-    else if(!add && it != characterNames_.end())
-        characterNames_.erase(it);
 }
 
 bool IsCharacterCondition::operator==(const IsCharacterCondition& other) const {
@@ -127,8 +119,10 @@ void ConditionSet::Save() const {
 bool ConditionSet::DrawBaseMenuItem(Condition& c, const char* enableDesc, const char* disableDesc, std::optional<std::function<bool()>> extras) {
     bool dirty = false;
 
+    std::string suffix = std::string("##") + enableDesc;
+
     bool b = c.enable();
-    ImGui::Checkbox(" ", &b);
+    ImGui::Checkbox((" " + suffix).c_str(), &b);
     if(b != c.enable()) {
         c.enable(b);
         dirty = true;
@@ -138,11 +132,11 @@ bool ConditionSet::DrawBaseMenuItem(Condition& c, const char* enableDesc, const 
     if(c.enable()) {
         bool negate = c.negate();
 
-        if(ImGui::RadioButton("is", !c.negate()))
+        if(ImGui::RadioButton(("is" + suffix).c_str(), !c.negate()))
             c.negate(false);
         ImGui::SameLine();
 
-        if(ImGui::RadioButton("isn't", c.negate()))
+        if(ImGui::RadioButton(("isn't" + suffix).c_str(), c.negate()))
             c.negate(true);
         ImGui::SameLine();
 
@@ -164,12 +158,12 @@ bool ConditionSet::DrawBaseMenuItem(Condition& c, const char* enableDesc, const 
 
 void ConditionSet::DrawMenu() {
     bool dirty = false;
-    ImGui::Text("Only enable keybinds if...");
+    ImGui::Text("Only enable keybinds if character...");
     
-    dirty = dirty || DrawBaseMenuItem(isInCombat, "in combat and", "ignore combat state and");
-    dirty = dirty || DrawBaseMenuItem(isWvW, "in WvW and", "ignore WvW state and");
-    dirty = dirty || DrawBaseMenuItem(isUnderwater, "underwater and", "ignore underwater state and");
-    dirty = dirty || DrawBaseMenuItem(isProfession, "one of these professions:", "ignore profession and", [&]() {
+    dirty |= DrawBaseMenuItem(isInCombat, "in combat and", "ignore combat state and");
+    dirty |= DrawBaseMenuItem(isWvW, "in WvW and", "ignore WvW state and");
+    dirty |= DrawBaseMenuItem(isUnderwater, "underwater and", "ignore underwater state and");
+    dirty |= DrawBaseMenuItem(isProfession, "one of these professions:", "ignore profession and", [&]() {
             auto flags = isProfession.professionFlags();
 
             ImGui::Indent();
@@ -190,9 +184,46 @@ void ConditionSet::DrawMenu() {
             chk("Thief", MumbleLink::Profession::THIEF);
             chk("Warrior", MumbleLink::Profession::WARRIOR);
 
+            ImGui::Text("and");
+
             ImGui::Unindent();
 
             return flags != isProfession.professionFlags();
+       });
+    dirty |= DrawBaseMenuItem(isCharacter, "one of these characters:", "ignore character name.", [&]() {
+            
+            bool dirty = false;
+            char buf[255];
+            uint id = 0;
+            
+            ImGui::Indent();
+
+            for (auto it = isCharacter.characterNames().begin(); it != isCharacter.characterNames().end();) {
+                auto c8 = utf8_encode(*it);
+                if(c8.size() >= 255)
+                    c8 = c8.substr(0, 254);
+                std::copy(std::begin(c8), std::end(c8), buf);
+                buf[c8.size()] = '\0';
+                if(ImGui::InputText(("##char" + std::to_string(id++)).c_str(), buf, 255)) {
+                    *it = utf8_decode(buf);
+                    dirty = true;
+                }
+
+                ImGui::SameLine();
+                if(ImGui::Button(("-##char" + std::to_string(id++)).c_str())) {
+                    it = isCharacter.characterNames().erase(it);
+                    dirty = true;
+                } else
+                    ++it;
+            }
+            if(ImGui::Button("+##chars")) {
+                isCharacter.characterNames().emplace_back(L"");
+                dirty = true;
+            }
+
+            ImGui::Unindent();
+
+            return dirty;
        });
 
     if(dirty)

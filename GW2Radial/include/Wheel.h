@@ -48,7 +48,7 @@ public:
 	void OnFocusLost();
 	void OnUpdate();
 	void OnMapChange(uint prevId, uint newId);
-	void OnCharacterChange(const wchar_t* prevCharacterName, const wchar_t* newCharacterName);
+	void OnCharacterChange(const std::wstring& prevCharacterName, const std::wstring& newCharacterName);
 
 	bool drawOverUI() const { return showOverGameUIOption_.value(); }
 
