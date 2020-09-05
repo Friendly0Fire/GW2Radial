@@ -131,6 +131,8 @@ template<typename Char, typename It>
 It SplitString(const Char* str, const Char* delim, It out)
 {
 	std::basic_string<Char> s(str);
+	if(s.empty())
+		return out;
 
 	size_t start = 0;
     size_t end = 0;

@@ -19,6 +19,10 @@ bool IsProfessionCondition::test() const {
     return (uint32_t(MumbleLink::i()->characterProfession()) << 1) & professionFlags_;
 }
 
+bool IsProfessionCondition::profession(MumbleLink::Profession id) const {
+    return (professionFlags_ & (1 << uint32_t(id))) != 0;
+}
+
 void IsProfessionCondition::profession(MumbleLink::Profession id, bool enabled) {
     if(enabled)
         professionFlags_ |= 1 << uint32_t(id);
@@ -46,7 +50,20 @@ bool IsCharacterCondition::operator==(const IsCharacterCondition& other) const {
     return std::equal(characterNames_.begin(), characterNames_.end(), other.characterNames_.begin(), other.characterNames_.end());
 }
 
-bool ConditionSet::operator()() const {
+void ConditionSet::Load() {
+    const char* c = category_.c_str();
+    isInCombat.Load(c);
+    isWvW.Load(c);
+    isUnderwater.Load(c);
+    isProfession.Load(c);
+    isCharacter.Load(c);
+}
+
+ConditionSet::ConditionSet(std::string category) : category_(category) {
+    Load();
+}
+
+bool ConditionSet::passes() const {
     for(const auto* c : conditions)
         if(!(*c)())
             return false;
@@ -54,18 +71,22 @@ bool ConditionSet::operator()() const {
     return true;
 }
 
-bool ConditionSet::conflicts(const ConditionSet& other) const {
-    if(isInCombat.enable_ && other.isInCombat.enable_ && isInCombat.negate_ != other.isInCombat.negate_)
+bool ConditionSet::conflicts(const ConditionSet* otherPtr) const {
+    if(!otherPtr)
+        return true;
+
+    const ConditionSet& other = *otherPtr;
+    if(isInCombat.enable() && other.isInCombat.enable() && isInCombat.negate() != other.isInCombat.negate())
         return false;
     
-    if(isWvW.enable_ && other.isWvW.enable_ && isWvW.negate_ != other.isWvW.negate_)
+    if(isWvW.enable() && other.isWvW.enable() && isWvW.negate() != other.isWvW.negate())
         return false;
     
-    if(isUnderwater.enable_ && other.isUnderwater.enable_ && isUnderwater.negate_ != other.isUnderwater.negate_)
+    if(isUnderwater.enable() && other.isUnderwater.enable() && isUnderwater.negate() != other.isUnderwater.negate())
         return false;
     
-    if(isProfession.enable_ && other.isProfession.enable_) {
-        if(isProfession.negate_ != other.isProfession.negate_) {
+    if(isProfession.enable() && other.isProfession.enable()) {
+        if(isProfession.negate() != other.isProfession.negate()) {
             if((~isProfession.professionFlags() & other.isProfession.professionFlags()) == 0)
                 return false;
         } else {
@@ -74,10 +95,10 @@ bool ConditionSet::conflicts(const ConditionSet& other) const {
         }
     }
     
-    if(isCharacter.enable_ && other.isCharacter.enable_) {
+    if(isCharacter.enable() && other.isCharacter.enable()) {
         auto otherB = other.isCharacter.characterNames().begin();
         auto otherE = other.isCharacter.characterNames().end();
-        bool invert = isCharacter.negate_ != other.isCharacter.negate_;
+        bool invert = isCharacter.negate() != other.isCharacter.negate();
         bool match = false;
         for(const auto& n : isCharacter.characterNames()) {
             auto find = std::find(otherB, otherE, n);
@@ -92,6 +113,90 @@ bool ConditionSet::conflicts(const ConditionSet& other) const {
     }
 
     return true;
+}
+
+void ConditionSet::Save() const {
+    const char* c = category_.c_str();
+    isInCombat.Save(c);
+    isWvW.Save(c);
+    isUnderwater.Save(c);
+    isProfession.Save(c);
+    isCharacter.Save(c);
+}
+
+bool ConditionSet::DrawBaseMenuItem(Condition& c, const char* enableDesc, const char* disableDesc, std::optional<std::function<bool()>> extras) {
+    bool dirty = false;
+
+    bool b = c.enable();
+    ImGui::Checkbox(" ", &b);
+    if(b != c.enable()) {
+        c.enable(b);
+        dirty = true;
+    }
+    ImGui::SameLine();
+
+    if(c.enable()) {
+        bool negate = c.negate();
+
+        if(ImGui::RadioButton("is", !c.negate()))
+            c.negate(false);
+        ImGui::SameLine();
+
+        if(ImGui::RadioButton("isn't", c.negate()))
+            c.negate(true);
+        ImGui::SameLine();
+
+        if(negate != c.negate())
+            dirty = true;
+
+        ImGui::Text(enableDesc);
+
+        if(extras) dirty = dirty || (*extras)();
+    } else {
+        ImGui::TextDisabled(disableDesc);
+    }
+
+    if(dirty)
+        c.Save(category_.c_str());
+
+    return dirty;
+}
+
+void ConditionSet::DrawMenu() {
+    bool dirty = false;
+    ImGui::Text("Only enable keybinds if...");
+    
+    dirty = dirty || DrawBaseMenuItem(isInCombat, "in combat and", "ignore combat state and");
+    dirty = dirty || DrawBaseMenuItem(isWvW, "in WvW and", "ignore WvW state and");
+    dirty = dirty || DrawBaseMenuItem(isUnderwater, "underwater and", "ignore underwater state and");
+    dirty = dirty || DrawBaseMenuItem(isProfession, "one of these professions:", "ignore profession and", [&]() {
+            auto flags = isProfession.professionFlags();
+
+            ImGui::Indent();
+
+            auto chk = [&](const char* name, MumbleLink::Profession id) {
+                bool b = isProfession.profession(id);
+                ImGui::Checkbox(name, &b);
+                isProfession.profession(id, b);
+            };
+            
+            chk("Elementalist", MumbleLink::Profession::ELEMENTALIST);
+            chk("Engineer", MumbleLink::Profession::ENGINEER);
+            chk("Guardian", MumbleLink::Profession::GUARDIAN);
+            chk("Mesmer", MumbleLink::Profession::MESMER);
+            chk("Necromancer", MumbleLink::Profession::NECROMANCER);
+            chk("Ranger", MumbleLink::Profession::RANGER);
+            chk("Revenant", MumbleLink::Profession::REVENANT);
+            chk("Thief", MumbleLink::Profession::THIEF);
+            chk("Warrior", MumbleLink::Profession::WARRIOR);
+
+            ImGui::Unindent();
+
+            return flags != isProfession.professionFlags();
+       });
+
+    if(dirty)
+        ConfigurationFile::i()->Save();
 }
 
 }

@@ -59,6 +59,7 @@ public:
 
 protected:
 	void Sort();
+
 	WheelElement* GetCenterHoveredElement();
 	WheelElement* GetFavorite(int favoriteId);
 	std::vector<WheelElement*> GetActiveElements(bool sorted = true);
@@ -77,6 +78,7 @@ protected:
 	std::vector<WheelElement*> sortedWheelElements_;
 	bool isVisible_ = false;
 	uint minElementSortingPriority_ = 0;
+	ConditionSetPtr conditions_;
 	ActivationKeybind keybind_, centralKeybind_;
 	bool waitingForBypassComplete_ = false;
 
@@ -107,6 +109,7 @@ protected:
 	ConfigurationOption<int> maximumConditionalWaitTimeOption_;
 	ConfigurationOption<bool> showDelayTimerOption_;
 	ConfigurationOption<bool> centerCancelDelayedInputOption_;
+	ConfigurationOption<bool> enableConditionsOption_;
 
 	std::optional<Point> cursorResetPosition_;
 	fVector2 currentPosition_;

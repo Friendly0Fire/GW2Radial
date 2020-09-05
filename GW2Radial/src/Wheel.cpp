@@ -35,8 +35,13 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
 	maximumConditionalWaitTimeOption_("Expiration time (in seconds) of queued mount input", "max_wait_cond", "wheel_" + nickname_, 30),
 	showDelayTimerOption_("Show timer around cursor when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
-    centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false)
+    centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
+    enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false)
 {
+	conditions_ = std::make_unique<ConditionSet>("wheel_" + nickname_);
+	keybind_.conditions(conditions_);
+	centralKeybind_.conditions(conditions_);
+
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);
 	
@@ -120,6 +125,16 @@ void Wheel::DrawMenu()
 	
 	ImGuiKeybindInput(keybind_, "Pressing this key combination will open the radial menu at your cursor's current location.");
 	ImGuiKeybindInput(centralKeybind_, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
+
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, enableConditionsOption_);
+
+	if(conditions_ && enableConditionsOption_.value()) {
+	    ImGui::Indent();
+
+		conditions_->DrawMenu();
+
+		ImGui::Unindent();
+	}
 	
 	ImGuiTitle("Display Options");
 	
