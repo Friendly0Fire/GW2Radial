@@ -7,7 +7,7 @@ To create a new menu, first make a new folder. Its name does not matter. Inside,
 ```ini
 [General]
 nickname = <some name using only alphanumerical characters and underscores>
-display_name = <the same of the radial menu in game>
+display_name = <the name of the radial menu in game>
 only_out_of_combat = <true|false, whether the radial menu works in combat, will queue input otherwise, defaults to false>
 only_above_water = <true|false, whether the radial menu works in water, will queue input otherwise, defaults to false>
 ```

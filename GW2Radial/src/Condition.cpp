@@ -1,6 +1,9 @@
 ﻿#include <Condition.h>
 #include <MumbleLink.h>
 
+#include <utility>
+#include <sstream>
+
 namespace GW2Radial {
 
 bool IsInCombatCondition::test() const {
@@ -16,49 +19,76 @@ bool IsUnderwaterCondition::test() const {
 }
 
 bool IsProfessionCondition::test() const {
-    return (professionFlags_ & (1 << uint32_t(MumbleLink::i()->characterProfession()))) != 0;
-}
-
-bool IsProfessionCondition::profession(MumbleLink::Profession id) const {
-    return (professionFlags_ & (1 << uint32_t(id))) != 0;
-}
-
-void IsProfessionCondition::profession(MumbleLink::Profession id, bool enabled) {
-    if(enabled)
-        professionFlags_ |= 1 << uint32_t(id);
-    else
-        professionFlags_ &= ~(1 << uint32_t(id));
+    return MumbleLink::i()->characterProfession() == profession_;
 }
 
 bool IsProfessionCondition::operator==(const IsProfessionCondition& other) const {
-    return professionFlags_ == other.professionFlags_;
+    return profession_ == other.profession_;
 }
 
 bool IsCharacterCondition::test() const {
-    return std::find(characterNames_.begin(), characterNames_.end(), std::wstring(MumbleLink::i()->characterName())) != characterNames_.end();
+    return characterName_ == std::wstring(MumbleLink::i()->characterName());
 }
 
 bool IsCharacterCondition::operator==(const IsCharacterCondition& other) const {
-    return std::equal(characterNames_.begin(), characterNames_.end(), other.characterNames_.begin(), other.characterNames_.end());
+    return characterName_ == other.characterName_;
+}
+
+template<typename T>
+bool MakeConditionIf(const std::string& type, uint id, std::unique_ptr<Condition>& cond) {
+    if(type == T::nickname()) {
+        cond = std::make_unique<T>(id);
+        return true;
+    }
+
+    return false;
 }
 
 void ConditionSet::Load() {
     const char* c = category_.c_str();
-    isInCombat.Load(c);
-    isWvW.Load(c);
-    isUnderwater.Load(c);
-    isProfession.Load(c);
-    isCharacter.Load(c);
+    const auto& ini = ConfigurationFile::i()->ini();
+
+    const char* set = ini.GetValue(c, "condition_set", "");
+    std::list<std::string> setList;
+    SplitString(set, ",", std::back_inserter(setList));
+    for(const auto& item : setList) {
+        std::vector<std::string> itemElems(3);
+        SplitString(item.c_str(), "/", itemElems.begin());
+
+        uint id = std::stol(itemElems[0]);
+        auto op = static_cast<ConditionOp>(std::stol(itemElems[2]));
+        std::unique_ptr<Condition> cond;
+
+        // Use boolean operator to short-circuit evaluation
+        MakeConditionIf<IsInCombatCondition>(itemElems[1], id, cond)   ||
+        MakeConditionIf<IsWvWCondition>(itemElems[1], id, cond)        ||
+        MakeConditionIf<IsUnderwaterCondition>(itemElems[1], id, cond) ||
+        MakeConditionIf<IsProfessionCondition>(itemElems[1], id, cond) ||
+        MakeConditionIf<IsCharacterCondition>(itemElems[1], id, cond);
+
+        cond->Load(c);
+
+        conditions_.emplace_back(cond, op);
+    }
 }
 
-ConditionSet::ConditionSet(std::string category) : category_(category) {
+ConditionSet::ConditionSet(std::string category) : category_(std::move(category)) {
     Load();
 }
 
 bool ConditionSet::passes() const {
-    for(const auto* c : conditions)
-        if(!(*c)())
-            return false;
+    bool finalResult = false;
+    for(const auto& c : conditions_) {
+        bool result = c.condition->passes();
+        switch(c.prevOp) {
+        case ConditionOp::AND:
+            finalResult = finalResult && result;
+            break;
+        case ConditionOp::OR:
+            finalResult = finalResult || result;
+            break;
+        }
+    }
 
     return true;
 }
@@ -109,11 +139,15 @@ bool ConditionSet::conflicts(const ConditionSet* otherPtr) const {
 
 void ConditionSet::Save() const {
     const char* c = category_.c_str();
-    isInCombat.Save(c);
-    isWvW.Save(c);
-    isUnderwater.Save(c);
-    isProfession.Save(c);
-    isCharacter.Save(c);
+
+    std::stringstream set;
+
+    for(const auto& cond : conditions_) {
+        cond.condition->Save(c);
+        set << cond.condition->id() << "/" << cond.condition->nickname() << "/" << uint(cond.prevOp) << ", ";
+    }
+
+    ConfigurationFile::i()->ini().SetValue(c, "condition_set", set.str().substr(0, set.str().size() - 2).c_str());
 }
 
 bool ConditionSet::DrawBaseMenuItem(Condition& c, const char* enableDesc, const char* disableDesc, std::optional<std::function<bool()>> extras) {

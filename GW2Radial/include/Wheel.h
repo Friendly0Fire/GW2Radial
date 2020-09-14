@@ -126,7 +126,7 @@ protected:
 
 	fVector3 wipeMaskData_;
 
-	const char* GetTabName() const override { return displayName_.c_str(); }
+    [[nodiscard]] const char* GetTabName() const override { return displayName_.c_str(); }
 	void DrawMenu() override;
 
 	friend class WheelElement;
