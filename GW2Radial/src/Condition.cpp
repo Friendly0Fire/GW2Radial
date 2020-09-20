@@ -6,32 +6,18 @@
 
 namespace GW2Radial {
 
-bool IsInCombatCondition::test() const {
-    return MumbleLink::i()->isInCombat();
-}
+void ConditionContext::Populate() {
+    auto mlPtr = MumbleLink::i();
+    if(!mlPtr)
+        return;
 
-bool IsWvWCondition::test() const {
-    return MumbleLink::i()->isInWvW();
-}
-
-bool IsUnderwaterCondition::test() const {
-    return MumbleLink::i()->isUnderwater();
-}
-
-bool IsProfessionCondition::test() const {
-    return MumbleLink::i()->characterProfession() == profession_;
-}
-
-bool IsProfessionCondition::operator==(const IsProfessionCondition& other) const {
-    return profession_ == other.profession_;
-}
-
-bool IsCharacterCondition::test() const {
-    return characterName_ == std::wstring(MumbleLink::i()->characterName());
-}
-
-bool IsCharacterCondition::operator==(const IsCharacterCondition& other) const {
-    return characterName_ == other.characterName_;
+    const auto& ml = *mlPtr;
+    
+    inCombat = ml.isInCombat();
+    inWvW = ml.isInWvW();
+    underwater = ml.isUnderwater();
+    profession = ml.characterProfession();
+    character = std::wstring(ml.characterName());
 }
 
 template<typename T>
@@ -52,23 +38,33 @@ void ConditionSet::Load() {
     std::list<std::string> setList;
     SplitString(set, ",", std::back_inserter(setList));
     for(const auto& item : setList) {
-        std::vector<std::string> itemElems(3);
-        SplitString(item.c_str(), "/", itemElems.begin());
+        if(item.find('/') == std::string::npos) {
+            if(item == "OR")
+                conditions_.emplace_back(ConditionOp::OR);
+            else if(item == "AND")
+                conditions_.emplace_back(ConditionOp::AND);
+            else if(item == "OPEN_PAREN")
+                conditions_.emplace_back(ConditionOp::OPEN_PAREN);
+            else if(item == "CLOSE_PAREN")
+                conditions_.emplace_back(ConditionOp::CLOSE_PAREN);
+        } else {
+            std::vector<std::string> itemElems(2);
+            SplitString(item.c_str(), "/", itemElems.begin());
 
-        uint id = std::stol(itemElems[0]);
-        auto op = static_cast<ConditionOp>(std::stol(itemElems[2]));
-        std::unique_ptr<Condition> cond;
+            uint id = std::stol(itemElems[0]);
+            std::unique_ptr<Condition> cond;
 
-        // Use boolean operator to short-circuit evaluation
-        MakeConditionIf<IsInCombatCondition>(itemElems[1], id, cond)   ||
-        MakeConditionIf<IsWvWCondition>(itemElems[1], id, cond)        ||
-        MakeConditionIf<IsUnderwaterCondition>(itemElems[1], id, cond) ||
-        MakeConditionIf<IsProfessionCondition>(itemElems[1], id, cond) ||
-        MakeConditionIf<IsCharacterCondition>(itemElems[1], id, cond);
+            // Use boolean operator to short-circuit evaluation
+            MakeConditionIf<IsInCombatCondition>(itemElems[1], id, cond)   ||
+            MakeConditionIf<IsWvWCondition>(itemElems[1], id, cond)        ||
+            MakeConditionIf<IsUnderwaterCondition>(itemElems[1], id, cond) ||
+            MakeConditionIf<IsProfessionCondition>(itemElems[1], id, cond) ||
+            MakeConditionIf<IsCharacterCondition>(itemElems[1], id, cond);
 
-        cond->Load(c);
+            cond->Load(c);
 
-        conditions_.emplace_back(cond, op);
+            conditions_.emplace_back(cond);
+        }
     }
 }
 
@@ -76,65 +72,40 @@ ConditionSet::ConditionSet(std::string category) : category_(std::move(category)
     Load();
 }
 
-bool ConditionSet::passes() const {
-    bool finalResult = false;
-    for(const auto& c : conditions_) {
-        bool result = c.condition->passes();
-        switch(c.prevOp) {
-        case ConditionOp::AND:
-            finalResult = finalResult && result;
-            break;
-        case ConditionOp::OR:
-            finalResult = finalResult || result;
-            break;
-        }
-    }
+bool ConditionSet::ConditionIteration(const ConditionContext& cc, std::list<ConditionEntry>::const_iterator& it, std::optional<bool> prevResult) const {
+    const auto& e = *it;
 
-    return true;
+    if(std::holds_alternative<ConditionOp>(e)) {
+        GW2_ASSERT(prevResult.has_value());
+
+        auto op = std::get<ConditionOp>(e);
+        switch(op) {
+        case ConditionOp::OR:
+            return *prevResult || ConditionIteration(cc, ++it);
+        case ConditionOp::AND:
+            return *prevResult && ConditionIteration(cc, ++it);
+        case ConditionOp::OPEN_PAREN:
+            bool subexpression = ConditionIteration(cc, ++it);
+            return ConditionIteration(cc, ++it, subexpression);
+        case ConditionOp::CLOSE_PAREN:
+            return *prevResult;
+        default:
+            return ConditionIteration(cc, ++it, prevResult);
+        }
+    } else {
+        GW2_ASSERT(!prevResult.has_value());
+
+        const Condition& c = std::get<Condition>(e);
+        return ConditionIteration(cc, ++it, c.passes(cc));
+    }
 }
 
-bool ConditionSet::conflicts(const ConditionSet* otherPtr) const {
-    if(!otherPtr)
-        return true;
+bool ConditionSet::passes() const {
+    ConditionContext cc;
+    cc.Populate();
 
-    const ConditionSet& other = *otherPtr;
-    if(isInCombat.enable() && other.isInCombat.enable() && isInCombat.negate() != other.isInCombat.negate())
-        return false;
-    
-    if(isWvW.enable() && other.isWvW.enable() && isWvW.negate() != other.isWvW.negate())
-        return false;
-    
-    if(isUnderwater.enable() && other.isUnderwater.enable() && isUnderwater.negate() != other.isUnderwater.negate())
-        return false;
-    
-    if(isProfession.enable() && other.isProfession.enable()) {
-        if(isProfession.negate() != other.isProfession.negate()) {
-            if((~isProfession.professionFlags() & other.isProfession.professionFlags()) == 0)
-                return false;
-        } else {
-            if((isProfession.professionFlags() & other.isProfession.professionFlags()) == 0)
-                return false;
-        }
-    }
-    
-    if(isCharacter.enable() && other.isCharacter.enable()) {
-        auto otherB = other.isCharacter.characterNames().begin();
-        auto otherE = other.isCharacter.characterNames().end();
-        bool invert = isCharacter.negate() != other.isCharacter.negate();
-        bool match = false;
-        for(const auto& n : isCharacter.characterNames()) {
-            auto find = std::find(otherB, otherE, n);
-            if(invert && find == otherE || !invert && find != otherE) {
-                match = true;
-                break;
-            }
-        }
-
-        if(!match)
-            return false;
-    }
-
-    return true;
+    auto it = conditions_.begin();
+    return ConditionIteration(cc, it);
 }
 
 void ConditionSet::Save() const {
@@ -142,47 +113,52 @@ void ConditionSet::Save() const {
 
     std::stringstream set;
 
-    for(const auto& cond : conditions_) {
-        cond.condition->Save(c);
-        set << cond.condition->id() << "/" << cond.condition->nickname() << "/" << uint(cond.prevOp) << ", ";
+    for(const auto& ce : conditions_) {
+        if(std::holds_alternative<Condition>(ce)) {
+            const auto& cond = std::get<Condition>(ce);
+            cond.Save(c);
+            set << cond.id() << "/" << cond.nickname() << ", ";
+        } else {
+            switch(std::get<ConditionOp>(ce)) {
+            case ConditionOp::OR:
+                set << "OR, ";
+                break;
+            case ConditionOp::AND:
+                set << "AND, ";
+                break;
+            case ConditionOp::OPEN_PAREN:
+                set << "OPEN_PAREN, ";
+                break;
+            case ConditionOp::CLOSE_PAREN:
+                set << "CLOSE_PAREN, ";
+                break;
+            default: ;
+            }
+        }
     }
 
     ConfigurationFile::i()->ini().SetValue(c, "condition_set", set.str().substr(0, set.str().size() - 2).c_str());
 }
 
-bool ConditionSet::DrawBaseMenuItem(Condition& c, const char* enableDesc, const char* disableDesc, std::optional<std::function<bool()>> extras) {
+bool Condition::DrawMenu() const {
     bool dirty = false;
 
-    std::string suffix = std::string("##") + enableDesc;
+    std::string suffix = std::string("##") + nickname() + std::to_string(id());
 
-    bool b = c.enable();
-    ImGui::Checkbox((" " + suffix).c_str(), &b);
-    if(b != c.enable()) {
-        c.enable(b);
-        dirty = true;
-    }
+    if(ImGui::RadioButton(("is" + suffix).c_str(), !c.negate()))
+        c.negate(false);
     ImGui::SameLine();
 
-    if(c.enable()) {
-        bool negate = c.negate();
+    if(ImGui::RadioButton(("isn't" + suffix).c_str(), c.negate()))
+        c.negate(true);
+    ImGui::SameLine();
 
-        if(ImGui::RadioButton(("is" + suffix).c_str(), !c.negate()))
-            c.negate(false);
-        ImGui::SameLine();
+    if(negate != c.negate())
+        dirty = true;
 
-        if(ImGui::RadioButton(("isn't" + suffix).c_str(), c.negate()))
-            c.negate(true);
-        ImGui::SameLine();
+    ImGui::Text(enableDesc);
 
-        if(negate != c.negate())
-            dirty = true;
-
-        ImGui::Text(enableDesc);
-
-        if(extras) dirty = dirty || (*extras)();
-    } else {
-        ImGui::TextDisabled(disableDesc);
-    }
+    if(extras) dirty = dirty || (*extras)();
 
     if(dirty)
         c.Save(category_.c_str());

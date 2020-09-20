@@ -11,11 +11,21 @@
 namespace GW2Radial
 {
 
+struct ConditionContext {
+    bool inCombat;
+    bool inWvW;
+    bool underwater;
+    MumbleLink::Profession profession;
+    std::wstring character;
+
+    void Populate();
+};
+
 class Condition {
 protected:
     uint id_ = 0;
     bool negate_ = false;
-    [[nodiscard]] virtual bool test() const = 0;
+    [[nodiscard]] virtual bool test(const ConditionContext& cc) const = 0;
 
     std::string paramName(const char* param) const {
         return "condition_" + std::to_string(id_) + "_" + nickname() + "_" + param;
@@ -32,7 +42,7 @@ public:
     [[nodiscard]] bool negate() const { return negate_; }
     Condition& negate(bool negate) { negate_ = negate; return *this; }
 
-    [[nodiscard]] bool passes() const { return test() != negate_; }
+    [[nodiscard]] bool passes(const ConditionContext& cc) const { return test(cc) != negate_; }
     
     virtual void Save(const char* category) const {
         ConfigurationFile::i()->ini().SetBoolValue(category, paramName("negate").c_str(), negate_);
@@ -40,26 +50,28 @@ public:
     virtual void Load(const char* category) {
         negate_ = ConfigurationFile::i()->ini().GetBoolValue(category, paramName("negate").c_str(), false);
     }
+    
+    [[nodiscard]] virtual bool DrawMenu() const;
 };
 
 class IsInCombatCondition final : public Condition {
     using Condition::Condition;
 
-    [[nodiscard]] bool test() const override;
+    [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.inCombat; }
     [[nodiscard]] std::string nickname() const override { return "in_combat"; }
 };
 
 class IsWvWCondition final : public Condition {
     using Condition::Condition;
 
-    [[nodiscard]] bool test() const override;
+    [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.inWvW; }
     [[nodiscard]] std::string nickname() const override { return "wvw"; }
 };
 
 class IsUnderwaterCondition final : public Condition {
     using Condition::Condition;
 
-    [[nodiscard]] bool test() const override;
+    [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.underwater; }
     [[nodiscard]] std::string nickname() const override { return "underwater"; }
 };
 
@@ -67,13 +79,15 @@ class IsProfessionCondition final : public Condition {
     using Condition::Condition;
     MumbleLink::Profession profession_;
 
-    [[nodiscard]] bool test() const override;
+    [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.profession == profession_; }
     [[nodiscard]] std::string nickname() const override { return "profession"; }
 
 public:
     [[nodiscard]] MumbleLink::Profession profession() const { return profession_; }
     void profession(MumbleLink::Profession id) { profession_ = id; }
-    [[nodiscard]] bool operator==(const IsProfessionCondition& other) const;
+    [[nodiscard]] bool operator==(const IsProfessionCondition& other) const {
+        return profession_ == other.profession_;
+    }
 
     void Save(const char* category) const override {
         Condition::Save(category);
@@ -89,12 +103,14 @@ class IsCharacterCondition final : public Condition {
     using Condition::Condition;
     std::wstring characterName_;
     
-    [[nodiscard]] bool test() const override;
+    [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.character == characterName_; }
     [[nodiscard]] std::string nickname() const override { return "character"; }
 
 public:
     [[nodiscard]] const std::wstring& characterName() const { return characterName_; }
-    [[nodiscard]] bool operator==(const IsCharacterCondition& other) const;
+    [[nodiscard]] bool operator==(const IsCharacterCondition& other) const {
+        return characterName_ == other.characterName_;
+    }
 
     void Save(const char* category) const override {
         Condition::Save(category);
@@ -107,33 +123,29 @@ public:
 };
 
 enum class ConditionOp {
-    OR = 0,
-    AND = 1,
-    OPEN_PAREN = 2,
-    CLOSE_PAREN = 4
+    NONE = 0,
+
+    OR,
+    AND,
+
+    OPEN_PAREN,
+    CLOSE_PAREN
 };
 
-inline ConditionOp operator|(const ConditionOp& a, const ConditionOp& b) {
-    return ConditionOp(uint(a) | uint(b));
-}
+using ConditionEntry = std::variant<Condition, ConditionOp>;
 
 class ConditionSet {
     std::string category_;
-
-    struct ConditionEntry {
-        std::unique_ptr<Condition> condition;
-        ConditionOp prevOp = ConditionOp::OR;
-    };
 
     std::list<ConditionEntry> conditions_;
 
     void Load();
     bool DrawBaseMenuItem(Condition& c, const char* enableDesc, const char* disableDesc, std::optional<std::function<bool()>> extras = std::nullopt);
+    bool ConditionIteration(const ConditionContext& cc, std::list<ConditionEntry>::const_iterator& it, std::optional<bool> prevResult = std::nullopt) const;
 public:
     explicit ConditionSet(std::string category);
 
     [[nodiscard]] bool passes() const;
-    [[nodiscard]] bool conflicts(const ConditionSet* other) const;
     void Save() const;
     void DrawMenu();
 };
