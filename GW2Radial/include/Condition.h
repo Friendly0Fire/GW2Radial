@@ -31,6 +31,8 @@ protected:
         return "condition_" + std::to_string(id_) + "_" + nickname() + "_" + param;
     }
 
+    [[nodiscard]] virtual bool DrawInnerMenu() = 0;
+
 public:
     explicit Condition(uint id) : id_(id) {}
     virtual ~Condition() = default;
@@ -51,7 +53,7 @@ public:
         negate_ = ConfigurationFile::i()->ini().GetBoolValue(category, paramName("negate").c_str(), false);
     }
     
-    [[nodiscard]] virtual bool DrawMenu() const;
+    [[nodiscard]] virtual bool DrawMenu(const char* category);
 };
 
 class IsInCombatCondition final : public Condition {
@@ -59,6 +61,7 @@ class IsInCombatCondition final : public Condition {
 
     [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.inCombat; }
     [[nodiscard]] std::string nickname() const override { return "in_combat"; }
+    [[nodiscard]] bool DrawInnerMenu() override { ImGui::Text(" in combat"); return false; }
 };
 
 class IsWvWCondition final : public Condition {
@@ -66,6 +69,7 @@ class IsWvWCondition final : public Condition {
 
     [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.inWvW; }
     [[nodiscard]] std::string nickname() const override { return "wvw"; }
+    [[nodiscard]] bool DrawInnerMenu() override { ImGui::Text(" in WvW"); return false; }
 };
 
 class IsUnderwaterCondition final : public Condition {
@@ -73,6 +77,7 @@ class IsUnderwaterCondition final : public Condition {
 
     [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.underwater; }
     [[nodiscard]] std::string nickname() const override { return "underwater"; }
+    [[nodiscard]] bool DrawInnerMenu() override { ImGui::Text(" underwater"); return false; }
 };
 
 class IsProfessionCondition final : public Condition {
@@ -81,6 +86,7 @@ class IsProfessionCondition final : public Condition {
 
     [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.profession == profession_; }
     [[nodiscard]] std::string nickname() const override { return "profession"; }
+    [[nodiscard]] bool DrawInnerMenu() override;
 
 public:
     [[nodiscard]] MumbleLink::Profession profession() const { return profession_; }
@@ -105,6 +111,7 @@ class IsCharacterCondition final : public Condition {
     
     [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.character == characterName_; }
     [[nodiscard]] std::string nickname() const override { return "character"; }
+    [[nodiscard]] bool DrawInnerMenu() override;
 
 public:
     [[nodiscard]] const std::wstring& characterName() const { return characterName_; }
@@ -125,11 +132,11 @@ public:
 enum class ConditionOp {
     NONE = 0,
 
-    OR,
-    AND,
+    OR = 1,
+    AND = 2,
 
-    OPEN_PAREN,
-    CLOSE_PAREN
+    OPEN_PAREN = 3,
+    CLOSE_PAREN = 4
 };
 
 using ConditionEntry = std::variant<Condition, ConditionOp>;
@@ -140,8 +147,10 @@ class ConditionSet {
     std::list<ConditionEntry> conditions_;
 
     void Load();
-    bool DrawBaseMenuItem(Condition& c, const char* enableDesc, const char* disableDesc, std::optional<std::function<bool()>> extras = std::nullopt);
+    
     bool ConditionIteration(const ConditionContext& cc, std::list<ConditionEntry>::const_iterator& it, std::optional<bool> prevResult = std::nullopt) const;
+
+    bool ConditionOperatorMenu(ConditionOp& op, uint id, int& indentCount) const;
 public:
     explicit ConditionSet(std::string category);
 
