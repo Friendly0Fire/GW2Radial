@@ -180,7 +180,7 @@ float Luma(const Vec& v)
 void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint bpp, const std::wstring& filename);
 
 constexpr uint operator "" _len(const char*, size_t len) {
-    return len;
+    return uint(len);
 }
 
 }

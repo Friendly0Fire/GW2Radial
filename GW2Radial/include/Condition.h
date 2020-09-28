@@ -11,6 +11,13 @@
 namespace GW2Radial
 {
 
+enum class MenuResult {
+    NOTHING,
+    DELETE_ITEM,
+    MOVE_UP,
+    MOVE_DOWN
+};
+
 struct ConditionContext {
     bool inCombat;
     bool inWvW;
@@ -53,39 +60,52 @@ public:
         negate_ = ConfigurationFile::i()->ini().GetBoolValue(category, paramName("negate").c_str(), false);
     }
     
-    [[nodiscard]] virtual bool DrawMenu(const char* category);
+    [[nodiscard]] bool DrawMenu(const char* category, MenuResult& mr, bool isFirst, bool isLast);
 };
 
 class IsInCombatCondition final : public Condition {
+public:
     using Condition::Condition;
+    inline static const char* Nickname = "in_combat";
 
+private:
     [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.inCombat; }
-    [[nodiscard]] std::string nickname() const override { return "in_combat"; }
+    [[nodiscard]] std::string nickname() const override { return Nickname; }
     [[nodiscard]] bool DrawInnerMenu() override { ImGui::Text(" in combat"); return false; }
 };
 
 class IsWvWCondition final : public Condition {
+public:
     using Condition::Condition;
+    inline static const char* Nickname = "wvw";
 
+private:
     [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.inWvW; }
-    [[nodiscard]] std::string nickname() const override { return "wvw"; }
+    [[nodiscard]] std::string nickname() const override { return Nickname; }
     [[nodiscard]] bool DrawInnerMenu() override { ImGui::Text(" in WvW"); return false; }
 };
 
 class IsUnderwaterCondition final : public Condition {
+public:
     using Condition::Condition;
+    inline static const char* Nickname = "underwater";
 
+private:
     [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.underwater; }
-    [[nodiscard]] std::string nickname() const override { return "underwater"; }
+    [[nodiscard]] std::string nickname() const override { return Nickname; }
     [[nodiscard]] bool DrawInnerMenu() override { ImGui::Text(" underwater"); return false; }
 };
 
 class IsProfessionCondition final : public Condition {
+public:
     using Condition::Condition;
+    inline static const char* Nickname = "profession";
+
+private:
     MumbleLink::Profession profession_;
 
     [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.profession == profession_; }
-    [[nodiscard]] std::string nickname() const override { return "profession"; }
+    [[nodiscard]] std::string nickname() const override { return Nickname; }
     [[nodiscard]] bool DrawInnerMenu() override;
 
 public:
@@ -106,11 +126,15 @@ public:
 };
 
 class IsCharacterCondition final : public Condition {
+public:
     using Condition::Condition;
+    inline static const char* Nickname = "character";
+
+private:
     std::wstring characterName_;
     
     [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.character == characterName_; }
-    [[nodiscard]] std::string nickname() const override { return "character"; }
+    [[nodiscard]] std::string nickname() const override { return Nickname; }
     [[nodiscard]] bool DrawInnerMenu() override;
 
 public:
@@ -133,24 +157,26 @@ enum class ConditionOp {
     NONE = 0,
 
     OR = 1,
-    AND = 2,
-
-    OPEN_PAREN = 3,
-    CLOSE_PAREN = 4
+    AND = 2
 };
 
-using ConditionEntry = std::variant<Condition, ConditionOp>;
+struct ConditionEntry {
+    ConditionOp prevOp;
+    std::unique_ptr<Condition> condition;
+};
 
 class ConditionSet {
     std::string category_;
 
     std::list<ConditionEntry> conditions_;
 
-    void Load();
-    
-    bool ConditionIteration(const ConditionContext& cc, std::list<ConditionEntry>::const_iterator& it, std::optional<bool> prevResult = std::nullopt) const;
+    int newConditionComboSel_ = 0;
 
-    bool ConditionOperatorMenu(ConditionOp& op, uint id, int& indentCount) const;
+    void Load();
+
+    std::unique_ptr<Condition> CreateCondition(uint id) const;
+
+    bool ConditionOperatorMenu(ConditionOp& op, uint id) const;
 public:
     explicit ConditionSet(std::string category);
 

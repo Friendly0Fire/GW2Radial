@@ -623,11 +623,6 @@ InputResponse Wheel::OnInputChange(bool changed, const std::set<ScanCode>& scs, 
 		bool mountOverlay = keybind_.conditionsFulfilled() && keybind_.matchesPartial(scs);
 		bool mountOverlayLocked = centralKeybind_.conditionsFulfilled() && centralKeybind_.matchesPartial(scs);
 
-		if (mountOverlay)
-			mountOverlay &= !keybind_.conflicts(scs);
-		if (mountOverlayLocked)
-			mountOverlayLocked &= !centralKeybind_.conflicts(scs);
-
 		WheelElement* bypassElement = nullptr;
 		if ((mountOverlayLocked || mountOverlay) && doBypassWheel_(bypassElement) && !waitingForBypassComplete_) {
 			isVisible_ = false;

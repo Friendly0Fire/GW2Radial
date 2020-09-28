@@ -72,16 +72,7 @@ void ImGuiKeybindInput(GW2Radial::Keybind& setting, const char* tooltip)
 
 	ImGui::PushItemWidth(windowWidth * 0.5f);
 
-	auto* activationSetting = dynamic_cast<GW2Radial::ActivationKeybind*>(&setting);
-
-	if(activationSetting && activationSetting->isConflicted())
-	{
-		ImGui::PushStyleColor(ImGuiCol_Text, 0xFF0000FF);
-		ImGui::Text((setting.displayName() + "[!]").c_str());
-		ImGui::PopStyleColor();
-	}
-	else
-		ImGui::Text(setting.displayName().c_str());
+	ImGui::Text(setting.displayName().c_str());
 
 	ImGui::PopItemWidth();
 
