@@ -1,9 +1,11 @@
 #include <Condition.h>
 #include <MumbleLink.h>
+#include <IconFontCppHeaders/IconsFontAwesome5.h>
 
 #include <utility>
 #include <sstream>
 #include <array>
+#include <Core.h>
 #include <ranges>
 
 namespace GW2Radial {
@@ -34,28 +36,37 @@ bool MakeConditionIf(const std::string& type, uint id, std::unique_ptr<Condition
 
 bool IsProfessionCondition::DrawInnerMenu() {
     auto suffix = "##condition_profession_" + std::to_string(id_);
+    ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
 
     int comboVal = static_cast<int>(profession_) - 1;
     const char* items = "Guardian\0Warrior\0Engineer\0Ranger\0Thief\0Elementalist\0Mesmer\0Necromancer\0Revenant\0";
+    
     if(ImGui::Combo(suffix.c_str(), &comboVal, items)) {
         profession_ = static_cast<MumbleLink::Profession>(comboVal + 1);
+        ImGui::PopItemWidth();
         return true;
     }
 
+    ImGui::PopItemWidth();
     return false;
 }
 
 bool IsCharacterCondition::DrawInnerMenu() {
     auto suffix = "##condition_profession_" + std::to_string(id_);
+    ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
 
     auto utf8name = utf8_encode(characterName_);
-    std::array<char, 255> buf;
+    std::array<char, 256> buf;
     std::copy(utf8name.begin(), utf8name.end(), buf.begin());
-    if(ImGui::InputText(suffix.c_str(), buf.data(), buf.size())) {
+    buf[std::min(utf8name.size(), buf.size() - 1)] = '\0';
+
+    if(ImGui::InputText(suffix.c_str(), buf.data(), buf.size() - 1)) {
         characterName_ = utf8_decode(std::string(buf.data()));
+        ImGui::PopItemWidth();
         return true;
     }
-
+    
+    ImGui::PopItemWidth();
     return false;
 }
 
@@ -165,18 +176,28 @@ bool Condition::DrawMenu(const char* category, MenuResult& mr, bool isFirst, boo
 
     ImGui::SameLine();
 
-    if(ImGui::Button(("⮽" + suffix).c_str()))
+	ImGui::PushFont(Core::i()->fontIcon());
+
+    std::u8string suffixu8(reinterpret_cast<const char8_t*>(suffix.c_str()));
+
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() * 0.75f);
+
+    if(ImGui::Button(reinterpret_cast<const char*>((ICON_FA_TIMES + suffixu8).c_str())))
         mr = MenuResult::DELETE_ITEM;
 
     if(!isFirst) {
-        if(ImGui::Button(("⭡" + suffix).c_str()))
+        ImGui::SameLine();
+        if(ImGui::Button(reinterpret_cast<const char*>((ICON_FA_ARROW_UP + suffixu8).c_str())))
             mr = MenuResult::MOVE_UP;
     }
 
     if(!isLast) {
-        if(ImGui::Button(("⭣" + suffix).c_str()))
+        ImGui::SameLine();
+        if(ImGui::Button(reinterpret_cast<const char*>((ICON_FA_ARROW_DOWN + suffixu8).c_str())))
             mr = MenuResult::MOVE_DOWN;
     }
+
+    ImGui::PopFont();
 
     if(dirty)
         Save(category);
@@ -187,11 +208,15 @@ bool Condition::DrawMenu(const char* category, MenuResult& mr, bool isFirst, boo
 bool ConditionSet::ConditionOperatorMenu(ConditionOp& op, uint id) const {
     auto suffix = "##condition_operator_" + std::to_string(id);
 
-    int comboVal = static_cast<int>(op) - 1;
-    if(ImGui::Combo(suffix.c_str(), &comboVal, "OR\0AND\0")) {
+    ImGui::PushItemWidth(0.2f * ImGui::GetWindowWidth());
+
+    int comboVal = std::max(0, static_cast<int>(op) - 1);
+    if(ImGui::Combo(suffix.c_str(), &comboVal, "or if...\0and if...\0")) {
         op = static_cast<ConditionOp>(comboVal + 1);
         return true;
     }
+
+    ImGui::PopItemWidth();
 
     return false;
 }
@@ -216,18 +241,24 @@ std::unique_ptr<Condition> ConditionSet::CreateCondition(uint id) const {
 void ConditionSet::DrawMenu() {
     bool dirty = false;
     ImGui::Text("Only enable keybinds if character...");
+    
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y * 2));
 
     uint id = 0;
 
     for(auto it = conditions_.begin(); it != conditions_.end();) {
-        if(id > 0)
+        if(id > 0) {
             dirty |= ConditionOperatorMenu(it->prevOp, id);
+            ImGui::Spacing();
+        }
 
         bool isFirst = it == conditions_.begin();
         bool isLast = conditions_.size() <= 1 || it == --conditions_.end();
 
         MenuResult mr;
         dirty |= it->condition->DrawMenu(category_.c_str(), mr, isFirst, isLast);
+
+        ImGui::Spacing();
 
         switch(mr) {
         case MenuResult::DELETE_ITEM:
@@ -259,9 +290,13 @@ void ConditionSet::DrawMenu() {
 
         id++;
     }
-
+    
+    ImGui::Spacing(); ImGui::Spacing();
+	ImGui::Separator();
     const char* items = "In combat\0In WvW\0Underwater\0Is profession\0Is character\0";
     ImGui::Combo("##NewConditionCombo", &newConditionComboSel_, items);
+
+    ImGui::SameLine();
 
     if(ImGui::Button("Add Condition")) {
         conditions_.push_back({ ConditionOp::OR, CreateCondition(id) });
@@ -272,6 +307,8 @@ void ConditionSet::DrawMenu() {
         Save();
         ConfigurationFile::i()->Save();
     }
+
+    ImGui::PopStyleVar();
 }
 
 }

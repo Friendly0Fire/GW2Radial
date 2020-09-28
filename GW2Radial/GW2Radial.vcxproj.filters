@@ -424,6 +424,9 @@
     <Font Include="art\Fonts\SourceSansPro-Regular.ttf">
       <Filter>Resource Files\Assets</Filter>
     </Font>
+    <Font Include="art\Fonts\fa-solid-900.ttf">
+      <Filter>Resource Files\Assets</Filter>
+    </Font>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\Shader_ps.hlsl">

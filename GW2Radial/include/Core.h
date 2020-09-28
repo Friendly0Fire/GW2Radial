@@ -32,6 +32,7 @@ public:
 	ImFont* font() const { return font_; }
 	ImFont* fontBlack() const { return fontBlack_; }
 	ImFont* fontItalic() const { return fontItalic_; }
+	ImFont* fontIcon() const { return fontIcon_; }
 
 	void OnInjectorCreated();
 
@@ -70,7 +71,7 @@ protected:
 	std::unique_ptr<UnitQuad> quad_;
 	Effect* mainEffect_ = nullptr;
 
-	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr, *fontDraw_ = nullptr;
+	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr, *fontDraw_ = nullptr, *fontIcon_ = nullptr;
 
 	std::vector<std::unique_ptr<Wheel>> wheels_;
 	std::unique_ptr<CustomWheelsManager> customWheels_;

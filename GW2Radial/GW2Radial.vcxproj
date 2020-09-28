@@ -317,6 +317,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <Image Include="art\Finals\x_marker.dds" />
   </ItemGroup>
   <ItemGroup>
+    <Font Include="art\Fonts\fa-solid-900.ttf" />
     <Font Include="art\Fonts\SourceSansPro-Black.ttf" />
     <Font Include="art\Fonts\SourceSansPro-Italic.ttf" />
     <Font Include="art\Fonts\SourceSansPro-Regular.ttf" />
