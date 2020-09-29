@@ -38,7 +38,7 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
     centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
     enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false)
 {
-	conditions_ = std::make_unique<ConditionSet>("wheel_" + nickname_);
+	conditions_ = std::make_shared<ConditionSet>("wheel_" + nickname_);
 	keybind_.conditions(conditions_);
 	centralKeybind_.conditions(conditions_);
 

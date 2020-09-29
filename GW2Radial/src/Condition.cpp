@@ -104,6 +104,11 @@ void ConditionSet::Load() {
             conditions_.push_back({ op, std::move(cond) });
         }
     }
+
+    if(conditions_.front().prevOp != ConditionOp::NONE) {
+        conditions_.front().prevOp = ConditionOp::NONE;
+        Save();
+    }
 }
 
 ConditionSet::ConditionSet(std::string category) : category_(std::move(category)) {
@@ -250,6 +255,9 @@ void ConditionSet::DrawMenu() {
         if(id > 0) {
             dirty |= ConditionOperatorMenu(it->prevOp, id);
             ImGui::Spacing();
+        } else if(it->prevOp != ConditionOp::NONE) {
+            dirty = true;
+            it->prevOp = ConditionOp::NONE;
         }
 
         bool isFirst = it == conditions_.begin();
