@@ -3,6 +3,8 @@
 #include <UnitQuad.h>
 #include <Utility.h>
 #include <Wheel.h>
+#include <IconFontCppHeaders/IconsFontAwesome5.h>
+
 #include "../shaders/registers.h"
 
 namespace GW2Radial
@@ -43,24 +45,27 @@ int WheelElement::DrawPriority(int extremumIndicator)
 	if(!keybind_.isSet())
 		displayName += " [No keybind]";
 	ImGui::Text(displayName.c_str());
+	if(!isShownOption_.value() || !isActive())
+		ImGui::PopFont();
+
+	ImGui::PushFont(Core::i()->fontIcon());
 	
 	int rv = 0;
 	if(extremumIndicator != 1)
 	{
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(ImGui::GetWindowContentRegionWidth() - 2 * ImGui::GetFrameHeightWithSpacing());
-		if(ImGui::ArrowButton(("##PriorityValueUp" + nickname_).c_str(), ImGuiDir_Up))
+		if(ImGui::Button((reinterpret_cast<const char*>(ICON_FA_ARROW_UP) + std::string("##PriorityValueUp") + nickname_).c_str()))
 			rv = 1;
 	}
 	if(extremumIndicator != -1)
 	{
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(ImGui::GetWindowContentRegionWidth() - ImGui::GetFrameHeightWithSpacing());
-		if(ImGui::ArrowButton(("##PriorityValueDown" + nickname_).c_str(), ImGuiDir_Down))
+		if(ImGui::Button((reinterpret_cast<const char*>(ICON_FA_ARROW_DOWN) + std::string("##PriorityValueDown") + nickname_).c_str()))
 			rv = -1;
 	}
-	if(!isShownOption_.value() || !isActive())
-		ImGui::PopFont();
+	ImGui::PopFont();
 	ImGui::PopStyleColor();
 
 	return rv;

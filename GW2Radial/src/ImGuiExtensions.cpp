@@ -3,6 +3,7 @@
 #include <Core.h>
 #include "../imgui/imgui_internal.h"
 #include <Input.h>
+#include <IconFontCppHeaders/IconsFontAwesome5.h>
 
 ImVec2 operator*(const ImVec2& a, const ImVec2& b)
 {
@@ -91,14 +92,20 @@ void ImGuiTitle(const char * text)
 }
 
 float ImGuiHelpTooltipSize() {
-    return ImGui::CalcTextSize("(?)").x + ImGui::GetStyle().ItemSpacing.x + 1.f;
+	ImGui::PushFont(GW2Radial::Core::i()->fontIcon());
+    auto r = ImGui::CalcTextSize(reinterpret_cast<const char*>(ICON_FA_QUESTION_CIRCLE)).x + ImGui::GetStyle().ItemSpacing.x + 1.f;
+	ImGui::PopFont();
+
+	return r;
 }
 
 void ImGuiHelpTooltip(const char* desc)
 {
 	ImGui::SameLine();
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ImGuiHelpTooltipSize() - ImGui::GetScrollX() - ImGui::GetStyle().ScrollbarSize);
-    ImGui::TextDisabled("(?)");
+	ImGui::PushFont(GW2Radial::Core::i()->fontIcon());
+    ImGui::TextDisabled(reinterpret_cast<const char*>(ICON_FA_QUESTION_CIRCLE));
+	ImGui::PopFont();
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
