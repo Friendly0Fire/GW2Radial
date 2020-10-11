@@ -23,8 +23,11 @@ bool Mount::isActive() const
 template<>
 void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 {
-	worksOnlyOutOfCombat_ = true;
-	worksOnlyAboveWater_ = true;
+	aboveWater_.enabled = true;
+	aboveWater_.canToggleOff = true;
+	outOfCombat_.enabled = true;
+	outOfCombat_.canToggleOff = true;
+
 	doBypassWheel_ = [this](WheelElement*& we) {
 		cref mumble = MumbleLink::i();
 		if(mumble->isMounted()) {

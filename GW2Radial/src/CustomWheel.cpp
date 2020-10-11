@@ -20,9 +20,9 @@ float CalcText(ImFont* font, const std::wstring& text)
 	return sz.x;
 }
 
-IDirect3DTexture9* MakeTextTexture(IDirect3DDevice9* dev, float fontSize)
+ComPtr<IDirect3DTexture9> MakeTextTexture(IDirect3DDevice9* dev, float fontSize)
 {
-	IDirect3DTexture9* tex = nullptr;
+	ComPtr<IDirect3DTexture9> tex = nullptr;
 	dev->CreateTexture(1024, uint(fontSize), 1,
 					   D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, nullptr);
 	return tex;
@@ -51,12 +51,12 @@ void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float
 	auto oldDisplaySize = io.DisplaySize;
 	io.DisplaySize = clip;
 
-	IDirect3DSurface9* surf;
+	ComPtr<IDirect3DSurface9> surf;
 	tex->GetSurfaceLevel(0, &surf);
 
-	IDirect3DSurface9* oldRt;
+	ComPtr<IDirect3DSurface9> oldRt;
 	dev->GetRenderTarget(0, &oldRt);
-	dev->SetRenderTarget(0, surf);
+	dev->SetRenderTarget(0, surf.Get());
 
 	dev->Clear(1, nullptr, D3DCLEAR_TARGET, bgColor, 0.f, 0);
 
@@ -72,22 +72,19 @@ void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float
 
 	ImGui_ImplDX9_RenderDrawData(&imData);
 	
-	dev->SetRenderTarget(0, oldRt);
-	oldRt->Release();
+	dev->SetRenderTarget(0, oldRt.Get());
 
 	io.DisplaySize = oldDisplaySize;
-
-	surf->Release();
 }
 
-IDirect3DTexture9* LoadCustomTexture(IDirect3DDevice9* dev, const std::filesystem::path& path)
+ComPtr<IDirect3DTexture9> LoadCustomTexture(IDirect3DDevice9* dev, const std::filesystem::path& path)
 {
 	cref data = FileSystem::ReadFile(path);
 	if(data.empty())
 		return nullptr;
 
 	try {
-	    IDirect3DTexture9* tex = nullptr;
+	    ComPtr<IDirect3DTexture9> tex;
 		HRESULT hr = S_OK;
 	    if(path.extension() == L".dds")
             hr = DirectX::CreateDDSTextureFromMemory(dev, data.data(), data.size(), &tex);
@@ -116,7 +113,7 @@ void CustomWheelsManager::DrawOffscreen(IDirect3DDevice9* dev)
 	else if(!textDraws_.empty())
 	{
 		cref td = textDraws_.front();
-		DrawText(dev, td.tex, font_, td.size, td.text);
+		DrawText(dev, td.tex.Get(), font_, td.size, td.text);
 	    textDraws_.pop_front();
 	}
 }
@@ -173,8 +170,8 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		return fail((L"Nickname " + utf8_decode(std::string(wheelNickname->second)) + L" already exists").c_str());
 
 	auto wheel = std::make_unique<Wheel>(IDR_BG, IDR_WIPEMASK, wheelNickname->second, wheelDisplayName->second, dev);
-	wheel->worksOnlyOutOfCombat_ = ini.GetBoolValue("General", "only_out_of_combat", false);
-	wheel->worksOnlyAboveWater_ = ini.GetBoolValue("General", "only_above_water", false);
+	wheel->outOfCombat_.enabled = ini.GetBoolValue("General", "only_out_of_combat", false);
+	wheel->aboveWater_.enabled = ini.GetBoolValue("General", "only_above_water", false);
 
 	uint baseId = customWheelNextId_;
 

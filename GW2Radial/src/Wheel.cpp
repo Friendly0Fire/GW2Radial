@@ -41,6 +41,10 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	conditions_ = std::make_shared<ConditionSet>("wheel_" + nickname_);
 	keybind_.conditions(conditions_);
 	centralKeybind_.conditions(conditions_);
+	
+	aboveWater_.test = []() { return !MumbleLink::i()->isUnderwater(); };
+	aboveWater_.toggleOffTest = outOfCombat_.toggleOffTest = []() { return MumbleLink::i()->isMounted(); };
+	outOfCombat_.test = []() { return !MumbleLink::i()->isInCombat(); };
 
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);
@@ -55,9 +59,6 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 
 Wheel::~Wheel()
 {
-	COM_RELEASE(backgroundTexture_);
-	COM_RELEASE(wipeMaskTexture_);
-
 	if(auto i = Input::iNoInit(); i)
 	{
 		i->RemoveMouseMoveCallback(&mouseMoveCallback_);
@@ -270,8 +271,7 @@ void Wheel::OnUpdate() {
 		if(currentTime <= conditionallyDelayedTime_ + maximumConditionalWaitTimeOption_.value() * 1000ull) {
 			cref mumble = MumbleLink::i();
 		    if (mumble->gameHasFocus() && !mumble->isMapOpen()
-				&& (worksOnlyAboveWater_ && !mumble->isUnderwater() || !worksOnlyAboveWater_)
-				&& (worksOnlyOutOfCombat_ && !mumble->isInCombat() || !worksOnlyOutOfCombat_)) {
+				&& aboveWater_.passes() && outOfCombat_.passes()) {
 			    conditionallyDelayedTestCount_++;
 			    if(conditionallyDelayedTestCount_ >= 10)
 			    {
@@ -399,8 +399,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 					
 					fx->SetSamplerStates(sampler2D_texMainSampler, {});
 					fx->SetSamplerStates(sampler2D_texWipeMaskImageSampler, {});
-				    fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_);
-				    fx->SetTexture(sampler2D_texWipeMaskImageSampler, wipeMaskTexture_);
+				    fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_.Get());
+				    fx->SetTexture(sampler2D_texWipeMaskImageSampler, wipeMaskTexture_.Get());
 				}
 
 				fx->ApplyStates();
@@ -517,7 +517,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				{ D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER },
 				{ D3DSAMP_BORDERCOLOR, D3DCOLOR(0) }
 			});
-			fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_);
+			fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_.Get());
 
 			if(conditionallyDelayed_) {
 				fx->SetTexture(sampler2D_texSecondarySampler, conditionallyDelayed_->appearance());
@@ -777,8 +777,7 @@ void Wheel::DeactivateWheel()
 }
 
 void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) {
-	if (worksOnlyOutOfCombat_ && MumbleLink::i()->isInCombat()
-		|| worksOnlyAboveWater_ && MumbleLink::i()->isUnderwater()) {
+	if (aboveWater_.delayed() || outOfCombat_.delayed()) {
 		Input::i()->SendKeybind(std::set<ScanCode>(), cursorResetPosition_);
 		conditionallyDelayed_ = we;
 		conditionallyDelayedTime_ = TimeInMilliseconds();

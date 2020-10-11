@@ -9,8 +9,8 @@ namespace GW2Radial
 class WheelElement
 {
 public:
-	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName, IDirect3DDevice9* dev, IDirect3DTexture9* tex = nullptr);
-	virtual ~WheelElement();
+	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName, IDirect3DDevice9* dev, ComPtr<IDirect3DTexture9> tex = nullptr);
+	virtual ~WheelElement() = default;
 
 	int DrawPriority(int extremumIndicator);
 
@@ -44,7 +44,7 @@ public:
 	bool isBound() const { return keybind_.isSet(); }
 	virtual bool isActive() const { return isBound() && isShownOption_.value(); }
 
-	IDirect3DTexture9* appearance() const { return appearance_; }
+	IDirect3DTexture9* appearance() const { return appearance_.Get(); }
 
 protected:
 	virtual fVector4 color() = 0;
@@ -55,7 +55,7 @@ protected:
 	std::string nickname_, displayName_;
 	uint elementId_;
 	Keybind keybind_;
-	IDirect3DTexture9* appearance_ = nullptr;
+	ComPtr<IDirect3DTexture9> appearance_;
 	mstime currentHoverTime_ = 0;
 	mstime currentExitTime_ = 0;
 	float aspectRatio_ = 1.f;

@@ -11,7 +11,7 @@ namespace GW2Radial
 {
 
 WheelElement::WheelElement(uint id, const std::string &nickname, const std::string &category,
-							const std::string &displayName, IDirect3DDevice9* dev, IDirect3DTexture9* tex)
+							const std::string &displayName, IDirect3DDevice9* dev, ComPtr<IDirect3DTexture9> tex)
 	: nickname_(nickname), displayName_(displayName), elementId_(id),
 	  isShownOption_(displayName + " Visible", nickname + "_visible", category, true),
 	  sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, int(id)),
@@ -25,11 +25,6 @@ WheelElement::WheelElement(uint id, const std::string &nickname, const std::stri
 	appearance_->GetLevelDesc(0, &desc);
 	aspectRatio_ = float(desc.Height) / float(desc.Width);
 	texWidth_ = float(desc.Width);
-}
-
-WheelElement::~WheelElement()
-{
-	COM_RELEASE(appearance_);
 }
 
 int WheelElement::DrawPriority(int extremumIndicator)
@@ -147,7 +142,7 @@ void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsC
 	{
 		using namespace ShaderRegister::ShaderPS;
 		using namespace ShaderRegister::ShaderVS;
-        fx->SetTexture(sampler2D_texMainSampler, appearance_);
+        fx->SetTexture(sampler2D_texMainSampler, appearance_.Get());
         fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, spriteDimensions);
 	}
 	

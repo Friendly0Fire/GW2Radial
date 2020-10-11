@@ -62,9 +62,6 @@ UnitQuad::UnitQuad(IDirect3DDevice9* device)
 
 UnitQuad::~UnitQuad()
 {
-	COM_RELEASE(vertexDeclaration_);
-	COM_RELEASE(buffer_);
-	COM_RELEASE(ind_buffer_);
 }
 
 const D3DVERTEXELEMENT9 * UnitQuad::def()
@@ -77,10 +74,10 @@ void UnitQuad::Bind(Effect* fx, uint stream, uint offset) const
 	if (!device_ || !vertexDeclaration_ || !buffer_)
 		return;
 
-	device_->SetStreamSource(stream, buffer_, offset, stride());
-	device_->SetIndices(ind_buffer_);
+	device_->SetStreamSource(stream, buffer_.Get(), offset, stride());
+	device_->SetIndices(ind_buffer_.Get());
 
-	fx->OnBind(vertexDeclaration_);
+	fx->OnBind(vertexDeclaration_.Get());
 }
 
 void UnitQuad::Draw(uint triCount, uint startVert) const

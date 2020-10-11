@@ -92,7 +92,7 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
     }
 }
 
-[[nodiscard]] std::variant<IDirect3DPixelShader9*, IDirect3DVertexShader9*> Effect::CompileShader(
+[[nodiscard]] std::variant<ComPtr<IDirect3DPixelShader9>, ComPtr<IDirect3DVertexShader9>> Effect::CompileShader(
     const std::wstring& filename, ShaderType st, const std::string& entrypoint) {
     ComPtr<ID3DBlob> blob = nullptr;
     while (blob == nullptr) {
@@ -117,11 +117,11 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
     }
 
     if (st == ShaderType::PIXEL_SHADER) {
-        IDirect3DPixelShader9* ps = nullptr;
+        ComPtr<IDirect3DPixelShader9> ps;
         device_->CreatePixelShader(static_cast<DWORD*>(blob->GetBufferPointer()), &ps);
         return ps;
     } else {
-        IDirect3DVertexShader9* vs = nullptr;
+        ComPtr<IDirect3DVertexShader9> vs;
         device_->CreateVertexShader(static_cast<DWORD*>(blob->GetBufferPointer()), &vs);
         return vs;
     }
@@ -178,8 +178,8 @@ void Effect::SetShader(const ShaderType st, const std::wstring& filename, const 
     if (st == ShaderType::PIXEL_SHADER) {
         auto itPs = pixelShaders_.find(key);
         if (itPs == pixelShaders_.end()) {
-            IDirect3DPixelShader9* ps = std::get<IDirect3DPixelShader9*>(CompileShader(filename, st, entrypoint));
-            itPs                      = pixelShaders_.insert({key, ps}).first;
+            auto ps = std::get<ComPtr<IDirect3DPixelShader9>>(CompileShader(filename, st, entrypoint));
+            itPs    = pixelShaders_.insert({key, ps}).first;
         }
 
         GW2_ASSERT(itPs != pixelShaders_.end());
@@ -187,8 +187,8 @@ void Effect::SetShader(const ShaderType st, const std::wstring& filename, const 
     } else {
         auto itVs = vertexShaders_.find(key);
         if (itVs == vertexShaders_.end()) {
-            IDirect3DVertexShader9* vs = std::get<IDirect3DVertexShader9*>(CompileShader(filename, st, entrypoint));
-            itVs                       = vertexShaders_.insert({key, vs}).first;
+            auto vs = std::get<ComPtr<IDirect3DVertexShader9>>(CompileShader(filename, st, entrypoint));
+            itVs    = vertexShaders_.insert({key, vs}).first;
         }
 
         GW2_ASSERT(itVs != vertexShaders_.end());

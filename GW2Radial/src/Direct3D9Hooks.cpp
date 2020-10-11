@@ -335,7 +335,8 @@ D3DPRESENT_PARAMETERS Direct3D9Hooks::SetupHookDevice(HWND &hWnd)
 
 void Direct3D9Hooks::DeleteHookDevice(IDirect3DDevice9 *pDev, HWND hWnd)
 {
-	COM_RELEASE(pDev);
+	if(pDev)
+		pDev->Release();
 
 	DestroyWindow(hWnd);
 	UnregisterClassA("DXTMP", GetModuleHandleA(NULL));

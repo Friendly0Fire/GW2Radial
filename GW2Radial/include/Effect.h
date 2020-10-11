@@ -86,7 +86,7 @@ protected:
 	}
 
 	[[nodiscard]] std::string LoadShaderFile(const std::wstring& filename);
-	[[nodiscard]] std::variant<IDirect3DPixelShader9*, IDirect3DVertexShader9*> CompileShader(const std::wstring& filename, ShaderType st, const std::string& entrypoint);
+	[[nodiscard]] std::variant<ComPtr<IDirect3DPixelShader9>, ComPtr<IDirect3DVertexShader9>> CompileShader(const std::wstring& filename, ShaderType st, const std::string& entrypoint);
 
 	void SetDefaultSamplerStates(uint slot) const;
 	void SetDefaultRenderStates() const;
@@ -107,7 +107,7 @@ protected:
 
 	IDirect3DDevice9* device_ = nullptr;
 
-	IDirect3DStateBlock9* stateBlock_ = nullptr;
+	ComPtr<IDirect3DStateBlock9> stateBlock_;
 
 	std::map<std::string, ComPtr<IDirect3DPixelShader9>> pixelShaders_;
 	std::map<std::string, ComPtr<IDirect3DVertexShader9>> vertexShaders_;

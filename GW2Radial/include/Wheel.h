@@ -82,8 +82,22 @@ protected:
 	ActivationKeybind keybind_, centralKeybind_;
 	bool waitingForBypassComplete_ = false;
 
-	bool worksOnlyAboveWater_ = false;
-	bool worksOnlyOutOfCombat_ = false;
+	struct DelayTest {
+	    bool enabled = false;
+		bool canToggleOff = false;
+		std::function<bool()> test, toggleOffTest;
+
+		[[nodiscard]] bool delayed() const {
+		    return enabled && test() && (!canToggleOff || !toggleOffTest());
+		}
+
+		[[nodiscard]] bool passes() const {
+		    return enabled && !test() || canToggleOff && toggleOffTest() || !enabled;
+		}
+	};
+
+	DelayTest aboveWater_, outOfCombat_;
+
 	WheelElement* conditionallyDelayed_ = nullptr;
 	mstime conditionallyDelayedTime_ = 0;
 	uint conditionallyDelayedTestCount_ = 0;
@@ -118,8 +132,8 @@ protected:
 	WheelElement* currentHovered_ = nullptr;
 	WheelElement* previousUsed_ = nullptr;
 	
-	IDirect3DTexture9* backgroundTexture_ = nullptr;
-	IDirect3DTexture9* wipeMaskTexture_ = nullptr;
+	ComPtr<IDirect3DTexture9> backgroundTexture_;
+	ComPtr<IDirect3DTexture9> wipeMaskTexture_;
 	
 	Input::MouseMoveCallback mouseMoveCallback_;
 	Input::InputChangeCallback inputChangeCallback_;

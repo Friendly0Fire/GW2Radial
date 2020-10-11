@@ -88,7 +88,7 @@ inline void FormattedOutputDebugString(const wchar_t* fmt, ...) {
 	va_end(args);
 }
 
-IDirect3DTexture9* CreateTextureFromResource(IDirect3DDevice9 * pDev, HMODULE hModule, unsigned uResource);
+ComPtr<IDirect3DTexture9> CreateTextureFromResource(IDirect3DDevice9* pDev, HMODULE hModule, unsigned uResource);
 
 template<typename T>
 auto ConvertToVector4(const T& val) {

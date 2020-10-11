@@ -30,9 +30,9 @@ private:
 	void ApplyVertexShader(IDirect3DVertexShader9* vs) override;
 	void ResetStates();
 
-	IDirect3DVertexDeclaration9* currentVertexDecl_ = nullptr;
-	IDirect3DPixelShader9* currentPS_ = nullptr;
-	IDirect3DVertexShader9* currentVS_ = nullptr;
+	ComPtr<IDirect3DVertexDeclaration9> currentVertexDecl_;
+	ComPtr<IDirect3DPixelShader9> currentPS_;
+	ComPtr<IDirect3DVertexShader9> currentVS_;
 
 	std::map<uint, PSOTag> cachedPSOs_;
 	std::map<uint, SamplerId> cachedSamplers_;

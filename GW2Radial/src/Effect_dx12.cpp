@@ -97,18 +97,18 @@ void Effect_dx12::ApplyStates()
 	    rsHash = XXH32(&s, sizeof(ShaderState), rsHash);
 
 	uint64_t hashData[] = {
-	    reinterpret_cast<uint64_t>(currentVertexDecl_),
-	    reinterpret_cast<uint64_t>(currentPS_),
-	    reinterpret_cast<uint64_t>(currentVS_)
+	    reinterpret_cast<uint64_t>(currentVertexDecl_.Get()),
+	    reinterpret_cast<uint64_t>(currentPS_.Get()),
+	    reinterpret_cast<uint64_t>(currentVS_.Get())
 	};
 	uint psoHash = XXH32(hashData, sizeof(hashData), rsHash);
 
 	auto it = cachedPSOs_.find(psoHash);
 	if(it == cachedPSOs_.end())
 	{
-		device_->SetVertexDeclaration(currentVertexDecl_);
-		device_->SetVertexShader(currentVS_);
-		device_->SetPixelShader(currentPS_);
+		device_->SetVertexDeclaration(currentVertexDecl_.Get());
+		device_->SetVertexShader(currentVS_.Get());
+		device_->SetPixelShader(currentPS_.Get());
 
 		SetDefaultRenderStates();
 

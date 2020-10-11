@@ -75,21 +75,17 @@ std::span<byte> LoadResource(UINT resId)
 	return std::span<byte>();
 }
 
-IDirect3DTexture9 *
-CreateTextureFromResource(
-	IDirect3DDevice9 * pDev,
-	HMODULE hModule,
-	unsigned uResource)
+ComPtr<IDirect3DTexture9> CreateTextureFromResource(IDirect3DDevice9 * pDev, HMODULE hModule, unsigned uResource)
 {
     const auto resourceSpan = LoadResource(uResource);
 	if(resourceSpan.data() == nullptr)
 		return nullptr;
 
-	IDirect3DBaseTexture9* ret = nullptr;
+	ComPtr<IDirect3DTexture9> ret = nullptr;
 
     DirectX::CreateDDSTextureFromMemory(pDev, resourceSpan.data(), resourceSpan.size_bytes(), &ret);
 
-	return static_cast<IDirect3DTexture9*>(ret);
+	return ret;
 }
 
 uint RoundUpToMultipleOf(uint numToRound, uint multiple)
@@ -109,12 +105,12 @@ void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint b
 	D3DSURFACE_DESC desc;
 	surf->GetDesc(&desc);
 
-    IDirect3DSurface9* surf2;
+    ComPtr<IDirect3DSurface9> surf2;
     GW2_ASSERT(SUCCEEDED(
         dev->CreateOffscreenPlainSurface(desc.Width, desc.Height, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &surf2, nullptr
         )));
 	
-    GW2_ASSERT(SUCCEEDED(dev->GetRenderTargetData(surf, surf2)));
+    GW2_ASSERT(SUCCEEDED(dev->GetRenderTargetData(surf, surf2.Get())));
 
     D3DLOCKED_RECT rect;
     GW2_ASSERT(SUCCEEDED(surf2->LockRect(&rect, nullptr, D3DLOCK_READONLY)));
@@ -124,6 +120,5 @@ void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint b
     of.write((char*)tgaData.data(), tgaData.size());
 
     surf2->UnlockRect();
-    surf2->Release();
 }
 }

@@ -33,9 +33,9 @@ public:
 
 private:
 	IDirect3DDevice9* device_ = nullptr;
-	IDirect3DVertexDeclaration9* vertexDeclaration_ = nullptr;
-	IDirect3DVertexBuffer9* buffer_ = nullptr;
-	IDirect3DIndexBuffer9* ind_buffer_ = nullptr;
+	ComPtr<IDirect3DVertexDeclaration9> vertexDeclaration_;
+	ComPtr<IDirect3DVertexBuffer9> buffer_;
+	ComPtr<IDirect3DIndexBuffer9> ind_buffer_;
 };
 
 }

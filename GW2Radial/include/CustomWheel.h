@@ -23,7 +23,7 @@ namespace GW2Radial
         {
             float size;
             std::wstring text;
-            IDirect3DTexture9* tex;
+            ComPtr<IDirect3DTexture9> tex;
         };
         std::list<QueuedTextDraw> textDraws_;
 
@@ -47,7 +47,7 @@ namespace GW2Radial
         float shadow;
         float colorize;
 
-        IDirect3DTexture9* texture = nullptr;
+        ComPtr<IDirect3DTexture9> texture;
         bool premultiply;
     };
 
