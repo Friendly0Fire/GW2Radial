@@ -75,6 +75,9 @@ void ConditionSet::Load() {
     const auto& ini = ConfigurationFile::i()->ini();
 
     const char* set = ini.GetValue(c, "condition_set", "");
+    if(strlen(set) == 0)
+        return;
+
     std::list<std::string> setList;
     SplitString(set, ",", std::back_inserter(setList));
     for(const auto& item : setList) {
@@ -104,6 +107,9 @@ void ConditionSet::Load() {
             conditions_.push_back({ op, std::move(cond) });
         }
     }
+
+    if(conditions_.empty())
+        return;
 
     if(conditions_.front().prevOp != ConditionOp::NONE) {
         conditions_.front().prevOp = ConditionOp::NONE;
