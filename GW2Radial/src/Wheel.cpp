@@ -42,9 +42,9 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	keybind_.conditions(conditions_);
 	centralKeybind_.conditions(conditions_);
 	
-	aboveWater_.test = []() { return !MumbleLink::i()->isUnderwater(); };
+	aboveWater_.test = []() { return MumbleLink::i()->isUnderwater(); };
 	aboveWater_.toggleOffTest = outOfCombat_.toggleOffTest = []() { return MumbleLink::i()->isMounted(); };
-	outOfCombat_.test = []() { return !MumbleLink::i()->isInCombat(); };
+	outOfCombat_.test = []() { return MumbleLink::i()->isInCombat(); };
 
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);

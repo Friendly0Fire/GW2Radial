@@ -88,11 +88,14 @@ protected:
 		std::function<bool()> test, toggleOffTest;
 
 		[[nodiscard]] bool delayed() const {
-		    return enabled && test() && (!canToggleOff || !toggleOffTest());
+		    return !enabled ||
+				test() && (!canToggleOff || !toggleOffTest());
 		}
 
 		[[nodiscard]] bool passes() const {
-		    return enabled && !test() || canToggleOff && toggleOffTest() || !enabled;
+		    return !enabled ||
+				!test() ||
+				canToggleOff && toggleOffTest();
 		}
 	};
 
