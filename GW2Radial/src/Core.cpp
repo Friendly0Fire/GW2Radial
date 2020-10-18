@@ -31,9 +31,14 @@ DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {
-    // Install our own exception handler to automatically log minidumps.
-    AddVectoredExceptionHandler(1, GW2RadialTopLevelFilter);
-	SetUnhandledExceptionFilter(GW2RadialTopLevelFilter);
+#ifndef _DEBUG
+	if(std::filesystem::exists(GetAddonFolder() / L"minidump.txt"))
+#endif
+	{
+        // Install our own exception handler to automatically log minidumps.
+        AddVectoredExceptionHandler(1, GW2RadialTopLevelFilter);
+	    SetUnhandledExceptionFilter(GW2RadialTopLevelFilter);
+	}
 
 	MumbleLink::i();
 	i()->dllModule_ = dll;

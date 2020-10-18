@@ -20,38 +20,26 @@ ConfigurationFile::ConfigurationFile()
 
 void ConfigurationFile::Reload()
 {
-	// Create folders
-	wchar_t exeFullPath[MAX_PATH];
-	GetModuleFileNameW(nullptr, exeFullPath, MAX_PATH);
-	tstring exeFolder;
-	SplitFilename(exeFullPath, &exeFolder, nullptr);
-
-	wchar_t* myDocuments;
-	if(FAILED(SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, nullptr, &myDocuments)))
-		myDocuments = nullptr;
-	
-	const auto programFilesLocation = exeFolder + L"\\addons\\gw2radial\\";
-	const auto myDocumentsLocation = std::wstring(NULL_COALESCE(myDocuments, L"")) + L"\\GUILD WARS 2\\addons\\gw2radial\\";
-	
-	auto [pfExists, pfWritable] = CheckFolder(programFilesLocation);
-	auto [mdExists, mdWritable] = CheckFolder(myDocumentsLocation);
+	auto folders = GetAddonFolders();
+	auto [pfExists, pfWritable] = CheckFolder(folders.programFiles);
+	auto [mdExists, mdWritable] = CheckFolder(folders.myDocuments);
 	
 	ini_.SetUnicode();
 	if(pfExists)
 	{
-		ini_.LoadFile((programFilesLocation + g_configName).c_str());
-		LoadImGuiSettings(programFilesLocation + g_imguiConfigName);
+		ini_.LoadFile((folders.programFiles / g_configName).c_str());
+		LoadImGuiSettings(folders.programFiles / g_imguiConfigName);
 	}
 	else if(mdExists)
 	{
-		ini_.LoadFile((myDocumentsLocation + g_configName).c_str());
-		LoadImGuiSettings(myDocumentsLocation + g_imguiConfigName);
+		ini_.LoadFile((folders.myDocuments / g_configName).c_str());
+		LoadImGuiSettings(folders.myDocuments / g_imguiConfigName);
 	}
 
 	if(pfWritable)
-		folder_ = programFilesLocation;
+		folder_ = folders.programFiles;
 	else
-		folder_ = myDocumentsLocation;
+		folder_ = folders.myDocuments;
 	
 	location_ = folder_ + g_configName;
 	imguiLocation_ = folder_ + g_imguiConfigName;
@@ -98,16 +86,16 @@ void ConfigurationFile::OnUpdate() const
 	SaveImGuiSettings(imguiLocation_);
 }
 
-std::tuple<bool /*exists*/, bool /*writable*/> ConfigurationFile::CheckFolder(const std::wstring& folder)
+std::tuple<bool /*exists*/, bool /*writable*/> ConfigurationFile::CheckFolder(const std::filesystem::path& folder)
 {
-	const auto filepath = folder + g_configName;
+	const auto filepath = folder / g_configName;
 
 	bool exists = true, writable = true;
 
 	if(SHCreateDirectoryExW(nullptr, folder.c_str(), nullptr) == ERROR_ACCESS_DENIED)
 		writable = false;
 
-	if(!std::filesystem::exists(filepath.c_str()))
+	if(!std::filesystem::exists(filepath))
 		exists = false;
 
 	if(writable)

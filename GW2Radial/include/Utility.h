@@ -1,10 +1,12 @@
 #pragma once
 #include <algorithm>
 #include <Main.h>
-#include <inttypes.h>
+#include <cinttypes>
 #include <imgui.h>
 #include <istream>
 #include <cwctype>
+#include <filesystem>
+#include <ShlObj.h>
 
 namespace GW2Radial
 {
@@ -154,20 +156,20 @@ inline uint RGBAto32(const fVector4& rgb, bool scale)
 }
 
 inline std::string ToLower(std::string in) {
-	std::transform(in.begin(), in.end(), in.begin(), std::tolower);
+	std::transform(in.begin(), in.end(), in.begin(), [](const char c) { return std::tolower(c); });
 	return in;
 }
 inline std::wstring ToLower(std::wstring in) {
-	std::transform(in.begin(), in.end(), in.begin(), std::towlower);
+	std::transform(in.begin(), in.end(), in.begin(), [](const wchar_t c) { return std::towlower(c); });
 	return in;
 }
 
 inline std::string ToUpper(std::string in) {
-	std::transform(in.begin(), in.end(), in.begin(), std::toupper);
+	std::transform(in.begin(), in.end(), in.begin(), [](const char c) { return std::toupper(c); });
 	return in;
 }
 inline std::wstring ToUpper(std::wstring in) {
-	std::transform(in.begin(), in.end(), in.begin(), std::towupper);
+	std::transform(in.begin(), in.end(), in.begin(), [](const wchar_t c) { return std::towupper(c); });
 	return in;
 }
 
@@ -181,6 +183,37 @@ void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint b
 
 constexpr uint operator "" _len(const char*, size_t len) {
     return uint(len);
+}
+
+struct AddonFolders {
+    std::filesystem::path programFiles, myDocuments;
+};
+
+inline AddonFolders GetAddonFolders() {
+	wchar_t exeFullPath[MAX_PATH];
+	GetModuleFileNameW(nullptr, exeFullPath, MAX_PATH);
+	std::wstring exeFolder;
+	SplitFilename(exeFullPath, &exeFolder, nullptr);
+
+	wchar_t* myDocuments;
+	if(FAILED(SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, nullptr, &myDocuments)))
+		myDocuments = nullptr;
+	
+	const auto programFilesLocation = exeFolder + L"\\addons\\gw2radial\\";
+	const auto myDocumentsLocation = std::wstring(NULL_COALESCE(myDocuments, L"")) + L"\\GUILD WARS 2\\addons\\gw2radial\\";
+
+	return { programFilesLocation, myDocumentsLocation };
+}
+
+inline std::filesystem::path GetAddonFolder() {
+	auto folders = GetAddonFolders();
+
+	if(std::filesystem::exists(folders.programFiles))
+		return folders.programFiles;
+	else if(std::filesystem::exists(folders.myDocuments))
+		return folders.myDocuments;
+	else
+		return {};
 }
 
 }
