@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <ConfigurationFile.h>
 #include <Main.h>
 #include <MumbleLink.h>
@@ -133,14 +133,14 @@ public:
 private:
     std::wstring characterName_;
     
-    [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.character == characterName_; }
+    [[nodiscard]] bool test(const ConditionContext& cc) const override { return to_case_insensitive(cc.character) == to_case_insensitive(characterName_); }
     [[nodiscard]] std::string nickname() const override { return Nickname; }
     [[nodiscard]] bool DrawInnerMenu() override;
 
 public:
     [[nodiscard]] const std::wstring& characterName() const { return characterName_; }
     [[nodiscard]] bool operator==(const IsCharacterCondition& other) const {
-        return characterName_ == other.characterName_;
+        return to_case_insensitive(characterName_) == to_case_insensitive(other.characterName_);
     }
 
     void Save(const char* category) const override {

@@ -156,20 +156,20 @@ inline uint RGBAto32(const fVector4& rgb, bool scale)
 }
 
 inline std::string ToLower(std::string in) {
-	std::transform(in.begin(), in.end(), in.begin(), [](const char c) { return std::tolower(c); });
+	std::transform(in.begin(), in.end(), in.begin(), [](const char c) { return std::tolower(uint8_t(c)); });
 	return in;
 }
 inline std::wstring ToLower(std::wstring in) {
-	std::transform(in.begin(), in.end(), in.begin(), [](const wchar_t c) { return std::towlower(c); });
+	std::transform(in.begin(), in.end(), in.begin(), [](const wchar_t c) { return std::towlower(uint16_t(c)); });
 	return in;
 }
 
 inline std::string ToUpper(std::string in) {
-	std::transform(in.begin(), in.end(), in.begin(), [](const char c) { return std::toupper(c); });
+	std::transform(in.begin(), in.end(), in.begin(), [](const char c) { return std::toupper(uint8_t(c)); });
 	return in;
 }
 inline std::wstring ToUpper(std::wstring in) {
-	std::transform(in.begin(), in.end(), in.begin(), [](const wchar_t c) { return std::towupper(c); });
+	std::transform(in.begin(), in.end(), in.begin(), [](const wchar_t c) { return std::towupper(uint16_t(c)); });
 	return in;
 }
 
@@ -214,6 +214,48 @@ inline std::filesystem::path GetAddonFolder() {
 		return folders.myDocuments;
 	else
 		return {};
+}
+
+template<typename T>
+T safe_toupper(T c) {
+    if constexpr(std::is_same_v<T, char>)
+	    return std::toupper(uint8_t(c));
+	else
+		return std::towupper(uint16_t(c));
+}
+
+template<typename T>
+struct ci_char_traits : std::char_traits<T> {
+    static bool eq(T c1, T c2) { return safe_toupper(c1) == safe_toupper(c2); }
+    static bool ne(T c1, T c2) { return safe_toupper(c1) != safe_toupper(c2); }
+    static bool lt(T c1, T c2) { return safe_toupper(c1) <  safe_toupper(c2); }
+    static int compare(const T* s1, const T* s2, size_t n) {
+        while(n-- != 0) {
+            if(safe_toupper(*s1) < safe_toupper(*s2)) return -1;
+            if(safe_toupper(*s1) > safe_toupper(*s2)) return 1;
+            ++s1; ++s2;
+        }
+        return 0;
+    }
+    static const T* find(const T* s, int n, char a) {
+        while(n-- > 0 && safe_toupper(*s) != toupper(a)) {
+            ++s;
+        }
+        return s;
+    }
+};
+
+template<typename T>
+concept string_like = requires(T&& t) {
+	requires std::is_pointer_v<decltype(t.data())>;
+	{ t.size() } -> std::convertible_to<size_t>;
+	typename T::value_type;
+};
+
+template<string_like T>
+auto to_case_insensitive(const T& s) {
+	using V = typename T::value_type;
+    return std::basic_string_view<V, ci_char_traits<V>>(s.data(), s.size());
 }
 
 }
