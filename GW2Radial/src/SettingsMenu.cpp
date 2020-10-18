@@ -52,8 +52,12 @@ InputResponse SettingsMenu::OnInputChange(bool /*changed*/, const std::set<ScanC
 {
 	const bool isMenuKeybind = showKeybind_.matchesNoLeftRight(scs);
 	if (isMenuKeybind) {
-		isVisible_ = true;
-		Keybind::ForceRefreshDisplayStrings();
+		if(isVisible_)
+			isVisible_ = false;
+		else {
+		    isVisible_ = true;
+		    Keybind::ForceRefreshDisplayStrings();
+		}
 	}
 
 	return isMenuKeybind ? InputResponse::PREVENT_ALL : InputResponse::PASS_TO_GAME;
