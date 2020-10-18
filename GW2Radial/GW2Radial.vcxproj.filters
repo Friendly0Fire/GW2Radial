@@ -43,9 +43,6 @@
     <ClCompile Include="imgui\imgui.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui\examples\imgui_impl_win32.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="xxhash\xxhash.c">
       <Filter>External\xxHash</Filter>
     </ClCompile>
@@ -148,6 +145,9 @@
     <ClCompile Include="src\Condition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="imgui\backends\imgui_impl_win32.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -161,12 +161,6 @@
     </ClInclude>
     <ClInclude Include="simpleini\SimpleIni.h">
       <Filter>External\simpleini</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\examples\imgui_impl_dx9.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\examples\imgui_impl_win32.h">
-      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="xxhash\xxhash.h">
       <Filter>External\xxHash</Filter>
@@ -308,6 +302,12 @@
     </ClInclude>
     <ClInclude Include="include\Enums.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\backends\imgui_impl_dx9.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\backends\imgui_impl_win32.h">
+      <Filter>External\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

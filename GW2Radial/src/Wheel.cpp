@@ -140,13 +140,13 @@ void Wheel::DrawMenu()
 	
 	ImGuiTitle("Display Options");
 	
-	ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms");
+	ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Amount of time, in milliseconds, for the radial menu to fade in.");
-	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.25f, 4.f, "%.2f", 1.f);
+	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.25f, 4.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Scale factor for the size of the whole radial menu.");
-	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.05f, 0.25f, "%.2f", 1.f);
+	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.05f, 0.5f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Scale factor for the size of just the central region of the radial menu.");
-	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 1000, "%d ms");
+	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 3000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Amount of time, in milliseconds, to wait before displaying the radial menu. The input bound to the central region can still be sent by releasing the key, even before the menu is visible.");
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
 	ImGuiHelpTooltip("Either show the radial menu over or under the game's UI.");

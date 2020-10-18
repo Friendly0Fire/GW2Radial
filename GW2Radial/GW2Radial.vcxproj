@@ -141,7 +141,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="imgui\examples\imgui_impl_win32.cpp" />
+    <ClCompile Include="imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
@@ -182,8 +182,8 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h" />
-    <ClInclude Include="imgui\examples\imgui_impl_dx9.h" />
-    <ClInclude Include="imgui\examples\imgui_impl_win32.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_dx9.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_internal.h" />

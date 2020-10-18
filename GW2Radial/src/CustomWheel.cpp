@@ -4,9 +4,9 @@
 #include "WICTextureLoader.h"
 #include <filesystem>
 #include <fstream>
-#include <imgui/examples/imgui_impl_dx9.h>
 #include <ImGuiPopup.h>
 #include <FileSystem.h>
+#include <backends/imgui_impl_dx9.h>
 
 namespace GW2Radial
 {
