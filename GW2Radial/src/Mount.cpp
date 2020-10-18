@@ -31,12 +31,21 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 	doBypassWheel_ = [this](WheelElement*& we) {
 		cref mumble = MumbleLink::i();
 		if(mumble->isMounted()) {
-		    we = GetActiveElements().front();
-			return we != nullptr;
+			const auto& activeElems = GetActiveElements();
+			if(!activeElems.empty()) {
+		        we = activeElems.front();
+			    return we != nullptr;
+			}
 		}
+
+		if(!conditionallyDelayed_ && mumble->isInWvW()) {
+		    we = wheelElements_[uint(MountType::WARCLAW) - uint(MountType::FIRST)].get();
+			return we != nullptr && we->isBound();
+		}
+
 		if(!conditionallyDelayed_ && (mumble->isSwimmingOnSurface() || mumble->isUnderwater())) {
 		    we = wheelElements_[uint(MountType::SKIMMER) - uint(MountType::FIRST)].get();
-			return we != nullptr && we->isActive();
+			return we != nullptr && we->isBound();
 		}
 
 		return false;
