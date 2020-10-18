@@ -33,6 +33,9 @@ void SettingsMenu::Draw()
 			if(ImGui::BeginTabBar("GW2RadialMainTabBar", ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_FittingPolicyScroll)) {
 			    for (cref i : implementers_)
 			    {
+					if(!i->visible())
+						continue;
+
 				    if(ImGui::BeginTabItem(i->GetTabName(), nullptr, 0)) {
 					    currentTab_ = i;
 					    i->DrawMenu();

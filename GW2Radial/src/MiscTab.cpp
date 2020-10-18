@@ -17,15 +17,28 @@ MiscTab::MiscTab()
 
 MiscTab::~MiscTab()
 {
-	if(auto i = SettingsMenu::iNoInit(); i)
+	if(auto* i = SettingsMenu::iNoInit(); i)
 		i->RemoveImplementer(this);
 }
 void MiscTab::DrawMenu()
 {
-	if(auto uc = UpdateCheck::iNoInit(); uc)
+	ImGuiTitle("General");
+
+	if(auto* uc = UpdateCheck::iNoInit(); uc)
 		ImGuiConfigurationWrapper(ImGui::Checkbox, uc->checkEnabled_);
+	
+	ImGuiTitle("Toggle Menu Visibility");
+
+	for(auto& wheel : Core::i()->wheels()) {
+	    ImGuiConfigurationWrapper(ImGui::Checkbox, wheel->visibleInMenuOption());
+	}
+
+	ImGuiTitle("Custom Wheel Tools");
 
 	ImGui::Checkbox("Reload custom wheels on focus", &reloadOnFocus_);
+
+	if(ImGui::Button("Reload custom wheels"))
+		Core::i()->ForceReloadWheels();
 
 #ifdef _DEBUG
 	cref pos = MumbleLink::i()->position();
@@ -34,9 +47,6 @@ void MiscTab::DrawMenu()
 	bool dpiScaling = GFXSettings::i()->dpiScaling();
 	ImGui::Text(dpiScaling ? "DPI scaling enabled" : "DPI scaling disabled");
 #endif
-
-	if(ImGui::Button("Reload custom wheels"))
-		Core::i()->ForceReloadWheels();
 }
 
 }

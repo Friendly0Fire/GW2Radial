@@ -56,6 +56,10 @@ public:
 	
 	const std::string& nickname() const { return nickname_; }
 	const std::string& displayName() const { return displayName_; }
+	
+	auto& visibleInMenuOption() { return visibleInMenuOption_; }
+
+	bool visible() override { return visibleInMenuOption_.value(); }
 
 protected:
 	void Sort();
@@ -127,6 +131,8 @@ protected:
 	ConfigurationOption<bool> showDelayTimerOption_;
 	ConfigurationOption<bool> centerCancelDelayedInputOption_;
 	ConfigurationOption<bool> enableConditionsOption_;
+	
+	ConfigurationOption<bool> visibleInMenuOption_;
 
 	std::optional<Point> cursorResetPosition_;
 	fVector2 currentPosition_;

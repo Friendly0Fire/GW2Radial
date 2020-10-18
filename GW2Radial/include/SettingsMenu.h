@@ -17,6 +17,7 @@ public:
 	public:
 		virtual const char* GetTabName() const = 0;
 		virtual void DrawMenu() = 0;
+		virtual bool visible() { return true; }
 	};
 
 	SettingsMenu();

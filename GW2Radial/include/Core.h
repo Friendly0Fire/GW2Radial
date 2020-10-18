@@ -34,6 +34,8 @@ public:
 	ImFont* fontItalic() const { return fontItalic_; }
 	ImFont* fontIcon() const { return fontIcon_; }
 
+	const std::vector<std::unique_ptr<Wheel>>& wheels() const { return wheels_; }
+
 	void OnInjectorCreated();
 
 protected:

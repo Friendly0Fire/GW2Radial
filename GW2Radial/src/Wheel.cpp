@@ -36,7 +36,8 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	maximumConditionalWaitTimeOption_("Expiration time (in seconds) of queued mount input", "max_wait_cond", "wheel_" + nickname_, 30),
 	showDelayTimerOption_("Show timer around cursor when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
     centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
-    enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false)
+    enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false),
+    visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true)
 {
 	conditions_ = std::make_shared<ConditionSet>("wheel_" + nickname_);
 	keybind_.conditions(conditions_);
