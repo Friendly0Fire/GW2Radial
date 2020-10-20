@@ -35,6 +35,7 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 		auto* extraData = static_cast<MountExtraData*>(extraData_.get());
 	    if(ImGuiConfigurationWrapper(&ImGui::Checkbox, extraData->enableUnderwaterSkimmer))
 			aboveWater_.enabled = !extraData->enableUnderwaterSkimmer.value();
+		ImGuiHelpTooltip("This enables Skimmer auto-mounting to work underwater (in addition to on the water surface) in conjunction with the Skimming the Depths mastery.");
 	};
 
 	aboveWater_.enabled = !static_cast<MountExtraData*>(extraData_.get())->enableUnderwaterSkimmer.value();

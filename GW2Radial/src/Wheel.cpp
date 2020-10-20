@@ -142,12 +142,16 @@ void Wheel::DrawMenu()
 	
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Amount of time, in milliseconds, for the radial menu to fade in.");
+
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.25f, 4.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Scale factor for the size of the whole radial menu.");
+
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.05f, 0.5f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Scale factor for the size of just the central region of the radial menu.");
+
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 3000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Amount of time, in milliseconds, to wait before displaying the radial menu. The input bound to the central region can still be sent by releasing the key, even before the menu is visible.");
+
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
 	ImGuiHelpTooltip("Either show the radial menu over or under the game's UI.");
 
@@ -161,6 +165,7 @@ void Wheel::DrawMenu()
 		ImGuiDisable();
 	}
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
+	ImGuiHelpTooltip("This option will activate whichever option is hovered first. Any key pressed to activate the menu can be released immediately without dismissing it. Mutually exclusive with \"click to select\".");
 	if(clickSelectOption_.value())
 		ImGuiDisableEnd();
 
@@ -169,6 +174,7 @@ void Wheel::DrawMenu()
 		ImGuiDisable();
 	}
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
+	ImGuiHelpTooltip("This option will only activate an option when it is clicked on. Any key pressed to activate the menu can be released immediately without dismissing it. Mutually exclusive with \"hover to select\".");
 	if(noHoldOption_.value())
 		ImGuiDisableEnd();
 
@@ -184,6 +190,7 @@ void Wheel::DrawMenu()
 		ImGuiConfigurationWrapper(rb, "Favorite##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::FAVORITE));
 		ImGui::SameLine();
 		ImGuiConfigurationWrapper(rb, "As if opened##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::DIRECTION));
+		ImGuiHelpTooltip("Determines the behavior of the menu if it is dismissed before it becomes visible. By default, it does nothing, but it can also (1) trigger the last selected item; (2) trigger a fixed \"favorite\" option; (3) function exactly as if the menu was opened, making it possible to select an item with the mouse without seeing them.");
 
 		if (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()) == BehaviorBeforeDelay::FAVORITE)
 		{
@@ -196,6 +203,7 @@ void Wheel::DrawMenu()
 
 			bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
 			ImGuiConfigurationWrapper(cmb, delayFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
+			ImGuiHelpTooltip("If the \"favorite\" option is selected, this determine what the favorite is.");
 		}
 	}
 
@@ -212,6 +220,7 @@ void Wheel::DrawMenu()
 		ImGuiConfigurationWrapper(rb, "Previous##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
 		ImGui::SameLine();
 		ImGuiConfigurationWrapper(rb, "Favorite##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
+		ImGuiHelpTooltip("Determines the behavior of the central region of the menu. By default, it does nothing, but it can also (1) trigger the last selected item; (2) trigger a fixed \"favorite\" option.");
 	
 		if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
 		{
@@ -224,6 +233,7 @@ void Wheel::DrawMenu()
 
 			bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
 			ImGuiConfigurationWrapper(cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
+			ImGuiHelpTooltip("If the \"favorite\" option is selected, this determine what the favorite is.");
 		}
 	}
 
@@ -231,19 +241,27 @@ void Wheel::DrawMenu()
 		ImGuiDisableEnd();
 	
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
+	ImGuiHelpTooltip("Moves the cursor to the center of the screen when the \"show in center\" keybind is used.");
+
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
+	ImGuiHelpTooltip("Prevent the camera from being affected by mouse movements while the menu is displayed.");
+
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorAfterKeybindOption_);
+	ImGuiHelpTooltip("Moves the cursor to where it was on screen before the menu was displayed.");
 
 	if(extraUI_ && extraUI_->interaction)
 		extraUI_->interaction();
 	
 	ImGuiTitle("Queuing Options");
-
+	ImGui::PushItemWidth(0.33f * ImGui::GetWindowWidth());
 	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumConditionalWaitTimeOption_, 1, 10, 0);
+	ImGui::PopItemWidth();
+	ImGuiHelpTooltip("Maximum amount of time, in seconds, to wait with a queued input before dismissing it.");
 
 	if(noHoldOption_.value())
 		ImGuiDisable();
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, centerCancelDelayedInputOption_);
+	ImGuiHelpTooltip("If the center region has no bound behavior, this option makes it cancel any queued input.");
 	if(noHoldOption_.value())
 		ImGuiDisableEnd();
 
@@ -252,7 +270,7 @@ void Wheel::DrawMenu()
 	
 	ImGuiTitle("Visibility & Ordering");
 
-	ImGui::Text("Ordering top to bottom is clockwise starting at noon.");
+	ImGui::Text("Ordering top to bottom is clockwise starting at 12:00.");
 
 	for(auto it = sortedWheelElements_.begin(); it != sortedWheelElements_.end(); ++it)
 	{
