@@ -13,17 +13,25 @@ ImVec4 operator/(const ImVec4& v, float f);
 void ImGuiKeybindInput(GW2Radial::Keybind& setting, const char* tooltip = nullptr);
 
 template<typename F, typename T, typename... Args>
-void ImGuiConfigurationWrapper(F fct, const char* name, GW2Radial::ConfigurationOption<T>& value, Args&&... args)
+bool ImGuiConfigurationWrapper(F fct, const char* name, GW2Radial::ConfigurationOption<T>& value, Args&&... args)
 {
-	if(fct(name, &value.value(), std::forward<Args>(args)...))
+	if(fct(name, &value.value(), std::forward<Args>(args)...)) {
 		value.ForceSave();
+		return true;
+	}
+
+	return false;
 }
 
 template<typename F, typename T, typename... Args>
-void ImGuiConfigurationWrapper(F fct, GW2Radial::ConfigurationOption<T>& value, Args&&... args)
+bool ImGuiConfigurationWrapper(F fct, GW2Radial::ConfigurationOption<T>& value, Args&&... args)
 {
-	if(fct(value.displayName().c_str(), &value.value(), std::forward<Args>(args)...))
+	if(fct(value.displayName().c_str(), &value.value(), std::forward<Args>(args)...)) {
 		value.ForceSave();
+		return true;
+	}
+
+	return false;
 }
 
 void ImGuiTitle(const char * text);

@@ -23,7 +23,21 @@ bool Mount::isActive() const
 template<>
 void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 {
-	aboveWater_.enabled = true;
+	struct MountExtraData : Wheel::ExtraData {
+	    ConfigurationOption<bool> enableUnderwaterSkimmer;
+		MountExtraData(ConfigurationOption<bool>&& eus) : enableUnderwaterSkimmer(std::move(eus)) {}
+	};
+
+	extraData_ = std::make_shared<MountExtraData>(ConfigurationOption<bool>("Enable underwater Skimmer", "underwater_skimmer", "wheel_" + nickname_, false));
+
+	extraUI_.emplace();
+	extraUI_->interaction = [this]() {
+		auto* extraData = static_cast<MountExtraData*>(extraData_.get());
+	    if(ImGuiConfigurationWrapper(&ImGui::Checkbox, extraData->enableUnderwaterSkimmer))
+			aboveWater_.enabled = !extraData->enableUnderwaterSkimmer.value();
+	};
+
+	aboveWater_.enabled = !static_cast<MountExtraData*>(extraData_.get())->enableUnderwaterSkimmer.value();
 	aboveWater_.canToggleOff = true;
 	outOfCombat_.enabled = true;
 	outOfCombat_.canToggleOff = true;
@@ -38,12 +52,12 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 			}
 		}
 
-		if(!conditionallyDelayed_ && mumble->isInWvW()) {
+		if(mumble->isInWvW()) {
 		    we = wheelElements_[uint(MountType::WARCLAW) - uint(MountType::FIRST)].get();
 			return we != nullptr && we->isBound();
 		}
 
-		if(!conditionallyDelayed_ && (mumble->isSwimmingOnSurface() || mumble->isUnderwater())) {
+		if(mumble->isSwimmingOnSurface() || mumble->isUnderwater()) {
 		    we = wheelElements_[uint(MountType::SKIMMER) - uint(MountType::FIRST)].get();
 			return we != nullptr && we->isBound();
 		}

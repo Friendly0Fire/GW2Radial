@@ -16,6 +16,7 @@ public:
 	{
 		LoadValue();
 	}
+	ConfigurationOption(ConfigurationOption&&) = default;
 
 	const std::string & displayName() const { return displayName_; }
 	void displayName(const std::string &displayName) { displayName_ = displayName; }

@@ -150,6 +150,9 @@ void Wheel::DrawMenu()
 	ImGuiHelpTooltip("Amount of time, in milliseconds, to wait before displaying the radial menu. The input bound to the central region can still be sent by releasing the key, even before the menu is visible.");
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
 	ImGuiHelpTooltip("Either show the radial menu over or under the game's UI.");
+
+	if(extraUI_ && extraUI_->display)
+		extraUI_->display();
 	
 	ImGuiTitle("Interaction Options");
 
@@ -230,6 +233,9 @@ void Wheel::DrawMenu()
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorAfterKeybindOption_);
+
+	if(extraUI_ && extraUI_->interaction)
+		extraUI_->interaction();
 	
 	ImGuiTitle("Queuing Options");
 
@@ -240,6 +246,9 @@ void Wheel::DrawMenu()
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, centerCancelDelayedInputOption_);
 	if(noHoldOption_.value())
 		ImGuiDisableEnd();
+
+	if(extraUI_ && extraUI_->queuing)
+		extraUI_->queuing();
 	
 	ImGuiTitle("Visibility & Ordering");
 
@@ -262,6 +271,9 @@ void Wheel::DrawMenu()
 			e->sortingPriority(tempPriority);
 		}
 	}
+
+	if(extraUI_ && extraUI_->misc)
+		extraUI_->misc();
 
 	ImGui::PopID();
 }

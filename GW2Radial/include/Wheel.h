@@ -50,12 +50,12 @@ public:
 	void OnMapChange(uint prevId, uint newId);
 	void OnCharacterChange(const std::wstring& prevCharacterName, const std::wstring& newCharacterName);
 
-	bool drawOverUI() const { return showOverGameUIOption_.value(); }
+    [[nodiscard]] bool drawOverUI() const { return showOverGameUIOption_.value(); }
 
 	void SetResetCursorPositionBeforeKeyPress(bool enabled) { resetCursorPositionBeforeKeyPress_ = enabled; }
 	
-	const std::string& nickname() const { return nickname_; }
-	const std::string& displayName() const { return displayName_; }
+	[[nodiscard]] const std::string& nickname() const { return nickname_; }
+	[[nodiscard]] const std::string& displayName() const { return displayName_; }
 	
 	auto& visibleInMenuOption() { return visibleInMenuOption_; }
 
@@ -92,13 +92,15 @@ protected:
 		std::function<bool()> test, toggleOffTest;
 
 		[[nodiscard]] bool delayed() const {
-		    return !enabled ||
-				test() && (!canToggleOff || !toggleOffTest());
+			if(!enabled)
+				return false;
+		    return test() && (!canToggleOff || !toggleOffTest());
 		}
 
 		[[nodiscard]] bool passes() const {
-		    return !enabled ||
-				!test() ||
+			if(!enabled)
+				return true;
+		    return !test() ||
 				canToggleOff && toggleOffTest();
 		}
 	};
@@ -146,6 +148,15 @@ protected:
 	
 	Input::MouseMoveCallback mouseMoveCallback_;
 	Input::InputChangeCallback inputChangeCallback_;
+
+	struct ExtraUI {
+	    std::function<void()> display, interaction, queuing, misc;
+	};
+
+	struct ExtraData {};
+
+	std::optional<ExtraUI> extraUI_;
+	std::shared_ptr<ExtraData> extraData_;
 
 	fVector3 wipeMaskData_;
 
