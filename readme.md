@@ -17,6 +17,7 @@ An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/commen
 Please refer to the readme in the `custom_examples` folder for more information on how to create or download new menus.
 
 ## Credits
+- @QuitarHero and @TanukiSoup for extensive testing
 - Cerulean Dream for providing me with the initial motivator and inspiration in making his AutoHotkey-based radial menu
 - Ghost for the new mount art found in v0.3+
 - [freepik](https://www.freepik.com/) for novelty art
