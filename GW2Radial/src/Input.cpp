@@ -142,7 +142,7 @@ namespace GW2Radial
 
         InputResponse response = InputResponse::PASS_TO_GAME;
         // Only run these for key down/key up (incl. mouse buttons) events
-        if(!eventKeys.empty())
+        if(!eventKeys.empty() && !MumbleLink::i()->textboxHasFocus())
             for(auto& cb : inputChangeCallbacks_)
                 response |= (*cb)(downKeysChanged, DownKeys, eventKeys);
 
