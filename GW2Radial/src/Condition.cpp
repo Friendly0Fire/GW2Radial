@@ -84,7 +84,7 @@ void ConditionSet::Load() {
         if(item.find('/') == std::string::npos) {
         } else {
             std::vector<std::string> itemElems(3);
-            SplitString(item.c_str(), "/", itemElems.begin());
+            SplitString(Trim(item).c_str(), "/", itemElems.begin());
             ConditionOp op = ConditionOp::NONE;
             
             if(itemElems[0] == "OR")

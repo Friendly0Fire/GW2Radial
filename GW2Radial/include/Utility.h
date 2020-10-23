@@ -258,4 +258,20 @@ auto to_case_insensitive(const T& s) {
     return std::basic_string_view<V, ci_char_traits<V>>(s.data(), s.size());
 }
 
+template <typename Str> Str Trim(const Str &scIn) {
+    using Char = typename Str::value_type;
+    constexpr auto trimmable = []() constexpr {
+        if constexpr (std::is_same_v<Char, char>)
+            return " \t\n\r";
+        else if constexpr (std::is_same_v<Char, wchar_t>)
+            return L" \t\n\r";
+    }
+    ();
+
+    auto start = scIn.find_first_not_of(trimmable);
+    auto end = scIn.find_last_not_of(trimmable);
+
+    return scIn.substr(start, end - start + 1);
+}
+
 }
