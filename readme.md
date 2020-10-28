@@ -46,7 +46,7 @@ A: I do this for fun/because I wanted this to exist, but if you really want to, 
 
 ### Q: I'm having a crash on launch (maybe mentioning "Coherent DLL"), what do?
 
-A: There seems to be a lot of potential reasons for this particular crash. [BGDM's website](http://gw2bgdm.blogspot.com/p/faq.html#2.5) lists quite a few. I'd especially recommend making sure you have the very latest [VC++ Redist](https://go.microsoft.com/fwlink/?LinkId=746572). Please also ensure that your graphics card drivers are up-to-date.
+A: There seems to be a lot of potential reasons for this particular crash. [BGDM's website](https://web.archive.org/web/20200409062402/http://gw2bgdm.blogspot.com/p/faq.html#2.5) lists quite a few. I'd especially recommend making sure you have the very latest [VC++ Redist](https://go.microsoft.com/fwlink/?LinkId=746572). Please also ensure that your graphics card drivers are up-to-date.
 
 The crash may also be related to the Windows 10 Ransomware Protection system; you can add `Gw2-64.exe` and `CoherentUI_Host.exe` to the exception list following [these instructions](https://www.windowscentral.com/how-allow-blocked-apps-ransomware-protection-windows-10-october-2018-update) (thanks @Myster-Marz for the tip).
 
@@ -60,7 +60,9 @@ A: RivaTuner Statistics Server is a component of some GPU management software su
 
 ### Q: I want to load up ArcDPS/GW2Hook/something else which also needs to be called ``d3d9.dll``, how do I load both?
 
-A: You have two options: either the other thing you want to run supports *chainloading* this, in which case you should look up the documentation for that plugin (e.g. ArcDPS supports chainloading by renaming this plugin to ``d3d9_chainload.dll``), or you can make this plugin chainload something else by renaming that other plugin to ``d3d9_mchain.dll``.
+A: You have three options: the first option is to use the GW2 Addon Loader through the [GW2 Addon Manager](https://github.com/fmmmlee/GW2-Addon-Manager), **which is the recommended approach**.
+
+Otherwise, either the other thing you want to run supports *chainloading* this, in which case you should look up the documentation for that plugin (e.g. ArcDPS supports chainloading by renaming this plugin to ``d3d9_chainload.dll``), or you can make this plugin chainload something else by renaming that other plugin to ``d3d9_mchain.dll``.
 
 The most common use case would be combining ArcDPS, GW2Hook and this. For this instance, I heavily recommend setting things up as follows:
 - ArcDPS is named ``d3d9.dll``.
@@ -71,7 +73,7 @@ The most common use case would be combining ArcDPS, GW2Hook and this. For this i
 
 This should allow all addons to load properly. Note that there is special code present within GW2Radial to load GW2Hook properly, but this could break unexpectedly if GW2Hook/Reshade changes.
 
-Finally, note that combining addons is largely unsupported. I will attempt to keep ArcDPS and GW2Hook compatible with this, but that is the most I am able to do in a reasonable amount of time.
+Finally, note that combining addons is largely unsupported. I will attempt to keep ArcDPS and d912pxy compatible with this, but that is the most I am able to do in a reasonable amount of time.
 
 ### Q: What is the "show in center" keybind used for?
 
@@ -82,10 +84,6 @@ Unfortunately, I can't make this automatic (i.e. switching to that mode when Act
 ### Q: Can you make it so selecting a mount while already mounted will directly swap to the new mount?
 
 No. I talked with GW2 staff about this and they've decided that the can of worms it could potentially open is not worth it. Unfortunately, you'll need to select the new mount you want to use twice, once to unmount and then again to remount. This will not change unless ArenaNet's policy on addons changes.
-
-### Q: Can you make it so the addon doesn't send keys to the chat window?
-
-No. Similarly to the previous question, I'd need to hook into the game in ways that the devs don't want to deal with. As a result, the best I can suggest is to use non-character keys for the mounts (e.g. the F-row).
 
 ### Q: Can I use this code for my project?
 
