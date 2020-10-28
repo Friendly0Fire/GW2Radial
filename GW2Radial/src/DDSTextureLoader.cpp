@@ -24,6 +24,8 @@
 
 #include <wrl/client.h>
 
+#include <Misc.h>
+
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -1072,7 +1074,8 @@ HRESULT DirectX::CreateDDSTextureFromMemory(
     if (SUCCEEDED(hr))
     {
         hr = E_FAIL;
-        if (tex->GetType() == D3DRTYPE_TEXTURE)
+        if (IsD912Pxy(d3dDevice) && tex->GetType() == D3DRTYPE_SURFACE
+           || tex->GetType() == D3DRTYPE_TEXTURE)
         {
             *texture = static_cast<LPDIRECT3DTEXTURE9>(tex.Detach());
             return S_OK;

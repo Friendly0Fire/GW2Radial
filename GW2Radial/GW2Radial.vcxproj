@@ -214,6 +214,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\Keybind.h" />
     <ClInclude Include="include\Main.h" />
     <ClInclude Include="include\Marker.h" />
+    <ClInclude Include="include\Misc.h" />
     <ClInclude Include="include\MiscTab.h" />
     <ClInclude Include="include\Mount.h" />
     <ClInclude Include="include\MumbleLink.h" />

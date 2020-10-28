@@ -1,12 +1,14 @@
 #pragma once
 #include <algorithm>
-#include <Main.h>
 #include <cinttypes>
-#include <imgui.h>
 #include <istream>
 #include <cwctype>
 #include <filesystem>
+#include <string>
 #include <ShlObj.h>
+#include <imgui.h>
+#include <Main.h>
+#include <Misc.h>
 
 namespace GW2Radial
 {

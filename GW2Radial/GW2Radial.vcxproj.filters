@@ -309,6 +309,9 @@
     <ClInclude Include="imgui\backends\imgui_impl_win32.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="include\Misc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="rt_rcdat.bin">

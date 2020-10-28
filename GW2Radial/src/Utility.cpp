@@ -83,7 +83,8 @@ ComPtr<IDirect3DTexture9> CreateTextureFromResource(IDirect3DDevice9 * pDev, HMO
 
 	ComPtr<IDirect3DTexture9> ret = nullptr;
 
-    DirectX::CreateDDSTextureFromMemory(pDev, resourceSpan.data(), resourceSpan.size_bytes(), &ret);
+    auto hr = DirectX::CreateDDSTextureFromMemory(pDev, resourceSpan.data(), resourceSpan.size_bytes(), &ret);
+    GW2_ASSERT(SUCCEEDED(hr));
 
 	return ret;
 }

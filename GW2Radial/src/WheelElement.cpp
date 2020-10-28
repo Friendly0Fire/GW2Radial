@@ -21,6 +21,8 @@ WheelElement::WheelElement(uint id, const std::string &nickname, const std::stri
 	if(tex == nullptr)
 	    appearance_ = CreateTextureFromResource(dev, Core::i()->dllModule(), elementId_);
 
+	GW2_ASSERT(appearance_ != nullptr);
+
 	D3DSURFACE_DESC desc;
 	appearance_->GetLevelDesc(0, &desc);
 	aspectRatio_ = float(desc.Height) / float(desc.Width);

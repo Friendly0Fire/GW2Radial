@@ -15,6 +15,8 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
+#include <Misc.h>
+
 // Data
 static LPDIRECT3DDEVICE9        g_pd3dDevice = NULL;
 static LPDIRECT3DVERTEXBUFFER9  g_pVB = NULL;
@@ -480,7 +482,7 @@ void ImGui_ImplDX9_RenderDrawData(ImDrawData* draw_data)
 bool ImGui_ImplDX9_Init(IDirect3DDevice9* device)
 {
     g_pd3dDevice = device;
-	g_d912pxy_present = device->SetRenderState(D3DRS_ENABLE_D912PXY_API_HACKS, 1) == 343434;
+	g_d912pxy_present = IsD912Pxy(device);
     return true;
 }
 
