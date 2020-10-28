@@ -1,6 +1,19 @@
 # GW2 Radial
 
-An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) addon to show a convenient, customizable [radial menu overlay](https://giant.gfycat.com/WarpedInsistentIrishterrier.mp4) to select a mount, novelty item and more, on the fly, for *Guild Wars 2: Path of Fire*. This addon is compatible with the Windows client only; it will not work with the Mac client.
+An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) addon to show a convenient, customizable radial menu overlay to select a mount, novelty item and more, on the fly, for *Guild Wars 2: Path of Fire*. This addon is compatible with the Windows client only; it will not work with the Mac client.
+
+[![GW2Radial Demo](https://thumbs.gfycat.com/IgnorantIllfatedCrocodileskink-size_restricted.gif)](https://gfycat.com/ignorantillfatedcrocodileskink)    
+(click to see a better video)
+
+**Highlights include:**
+* Predefined menus for mounts, novelties and markers
+* Simple system to add custom radial menus and share them
+* Conditional menus, making it possible to have multiple menus on the same key depending on the situation
+* Smart automount: Skimmer is auto-selected when underwater or Warclaw when in WvW
+* Input queuing: combat (and underwater without the Skimmer mastery) prevents mount usage, so the selected mount is "queued" until out of combat:
+
+[![Input Queuing GW2Radial Demo](https://thumbs.gfycat.com/NegativeBlushingHake-size_restricted.gif)](https://gfycat.com/negativeblushinghake)    
+(click to see a better video)
 
 ## Installation
 - Download and extract the archive ``GW2Radial.zip`` found in the [latest release](https://github.com/Friendly0Fire/GW2Radial/releases/latest).
