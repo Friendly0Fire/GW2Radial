@@ -118,7 +118,7 @@ namespace GW2Radial
             case WM_XBUTTONDOWN:
                 eventDown = true;
             case WM_XBUTTONUP:
-                eventKeys.push_back({ uint(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? ScanCode::X1BUTTON : ScanCode::X2BUTTON), eventDown });
+                eventKeys.push_back({ GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? ScanCode::X1BUTTON : ScanCode::X2BUTTON, eventDown });
                 break;
             }
         }

@@ -6,7 +6,6 @@
 #include <sstream>
 #include <array>
 #include <Core.h>
-#include <ranges>
 
 namespace GW2Radial {
 
