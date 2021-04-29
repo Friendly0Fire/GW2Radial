@@ -334,6 +334,9 @@ struct KeyLParam {
 };
 
 ScanCode GetScanCode(KeyLParam lParam);
+inline ScanCode GetScanCodeFromVirtualKey(uint vk) {
+    return ScanCode(MapVirtualKey(vk, MAPVK_VK_TO_VSC));
+}
 
 inline bool IsMouse(ScanCode sc) {
     return (sc & ScanCode::MOUSE_FLAG) != ScanCode::NONE;
