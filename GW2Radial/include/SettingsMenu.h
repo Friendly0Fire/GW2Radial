@@ -29,14 +29,19 @@ public:
 	void AddImplementer(Implementer* impl) { implementers_.push_back(impl); if (!currentTab_) currentTab_ = impl; }
 	void RemoveImplementer(Implementer* impl) { implementers_.remove(impl); if(currentTab_ == impl) currentTab_ = nullptr; }
 
+	bool isVisible() const { return isVisible_; }
+
 protected:
-	InputResponse OnInputChange(bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys);
+	void OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response);
 
 	std::list<Implementer*> implementers_;
 	Implementer* currentTab_ = nullptr;
 
 	bool isVisible_ = false;
+	bool isFocused_ = false;
 	ActivationKeybind showKeybind_;
+	ScanCode allowThroughAlt_ = ScanCode::NONE;
+	ScanCode allowThroughShift_ = ScanCode::NONE;
 	
 	Input::InputChangeCallback inputChangeCallback_;
 };

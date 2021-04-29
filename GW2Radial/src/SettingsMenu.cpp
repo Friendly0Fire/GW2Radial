@@ -11,11 +11,13 @@ DEFINE_SINGLETON(SettingsMenu);
 SettingsMenu::SettingsMenu()
 	: showKeybind_("show_settings", "Show settings", "__core__", { ScanCode::SHIFT, ScanCode::ALT, GetScanCodeFromVirtualKey('M') }, false)
 {
-	inputChangeCallback_ = [this](bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys) { return OnInputChange(changed, scs, changedKeys); };
+	inputChangeCallback_ = { [this](bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response) { return OnInputChange(changed, scs, changedKeys, response); }, -1000 };
 	Input::i()->AddInputChangeCallback(&inputChangeCallback_);
 }
 void SettingsMenu::Draw()
 {
+	isFocused_ = false;
+
 	if (isVisible_)
 	{
 		ImGui::SetNextWindowSize({ 750, 600 }, ImGuiCond_::ImGuiCond_FirstUseEver);
@@ -24,6 +26,8 @@ void SettingsMenu::Draw()
 			ImGui::End();
 			return;
 		}
+
+		isFocused_ = ImGui::IsWindowFocused();
 	
 		if (!implementers_.empty())
 		{
@@ -51,19 +55,42 @@ void SettingsMenu::Draw()
 	}
 }
 
-InputResponse SettingsMenu::OnInputChange(bool /*changed*/, const std::set<ScanCode>& scs, const std::list<EventKey>& /*changedKeys*/)
+void SettingsMenu::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response)
 {
+	bool allowedThrough = false;
+	if (allowThroughAlt_ != ScanCode::NONE && std::any_of(changedKeys.begin(), changedKeys.end(), [&](const auto& ek) { return ek.sc == allowThroughAlt_ && ek.down == false; })) {
+		allowThroughAlt_ = ScanCode::NONE;
+		allowedThrough = true;
+	}
+
+	if (allowThroughShift_ != ScanCode::NONE && std::any_of(changedKeys.begin(), changedKeys.end(), [&](const auto& ek) { return ek.sc == allowThroughShift_ && ek.down == false; })) {
+		allowThroughShift_ = ScanCode::NONE;
+		allowedThrough = true;
+	}
+
+	if (allowedThrough)
+		return;
+
+
+	if (isFocused_)
+		response |= InputResponse::PREVENT_KEYBOARD;
+
 	const bool isMenuKeybind = showKeybind_.matchesNoLeftRight(scs);
 	if (isMenuKeybind) {
-		if(isVisible_)
+		if (isVisible_) {
 			isVisible_ = false;
-		else {
+		}
+		else
+		{
 		    isVisible_ = true;
 		    Keybind::ForceRefreshDisplayStrings();
 		}
-	}
 
-	return isMenuKeybind ? InputResponse::PREVENT_ALL : InputResponse::PASS_TO_GAME;
+		allowThroughAlt_ = scs.contains(ScanCode::ALTLEFT) ? ScanCode::ALTLEFT : ScanCode::ALTRIGHT;
+		allowThroughShift_ = scs.contains(ScanCode::SHIFTLEFT) ? ScanCode::SHIFTLEFT : ScanCode::SHIFTRIGHT;
+
+		response |= InputResponse::PREVENT_KEYBOARD;
+	}
 }
 
 }

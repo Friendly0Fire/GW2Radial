@@ -43,10 +43,10 @@ std::wstring GetScanCodeName(ScanCode scanCode) {
 		wchar_t c = wchar_t(scanCode) - 1 + 0x30;
 		return std::wstring(1, c);
 	}
-	if (ScanCode_t(scanCode) == ScanCode_t(ScanCode::NUMROW_0))
+	if (scanCode == ScanCode::NUMROW_0)
 		return L"0";
 
-	if (IsUniversalModifier(ScanCode(scanCode))) {
+	if (IsUniversalModifier(scanCode)) {
 		switch (scanCode) {
 		case ScanCode::SHIFT:
 			return L"SHIFT";

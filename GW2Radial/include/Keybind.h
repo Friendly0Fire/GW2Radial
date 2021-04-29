@@ -10,12 +10,12 @@ namespace GW2Radial
 class Keybind
 {
 public:
-	Keybind(std::string nickname, std::string displayName, std::string category, const std::set<ScanCode>& scs, bool saveToConfig);
+	Keybind(std::string nickname, std::string displayName, std::string category, const ScanCodeSet& scs, bool saveToConfig);
 	Keybind(std::string nickname, std::string displayName, std::string category);
 	~Keybind();
 
-	[[nodiscard]] const std::set<ScanCode>& scanCodes() const { return scanCodes_; }
-	void scanCodes(const std::set<ScanCode>& scs);
+	[[nodiscard]] const ScanCodeSet& scanCodes() const { return scanCodes_; }
+	void scanCodes(const ScanCodeSet& scs);
 	void scanCodes(const char* keys, bool vKey = false);
 
 	[[nodiscard]] const std::string& displayName() const { return displayName_; }
@@ -32,12 +32,11 @@ public:
 	[[nodiscard]] const char* keysDisplayString() const { return keysDisplayString_.data(); }
 	std::array<char, 256>& keysDisplayStringArray() { return keysDisplayString_; }
 	
-	[[nodiscard]] bool matches(const std::set<ScanCode>& scanCodes) const { return scanCodes == scanCodes_; }
-	[[nodiscard]] bool matchesPartial(const std::set<ScanCode>& scanCodes) const
-	{
-		return isSet() && std::includes(scanCodes.begin(), scanCodes.end(), scanCodes_.begin(), scanCodes_.end());
-	}
-	[[nodiscard]] bool matchesNoLeftRight(const std::set<ScanCode>& scanCodes) const;
+	[[nodiscard]] bool matches(const ScanCodeSet& scanCodes) const;
+	[[nodiscard]] bool matchesPartial(const ScanCodeSet& scanCodes) const;
+	[[nodiscard]] bool matchesNoLeftRight(const ScanCodeSet& scanCodes) const;
+
+	[[nodiscard]] bool contains(ScanCode sc) const { return scanCodes_.count(sc) > 0; }
 
 	static void ForceRefreshDisplayStrings();
 
@@ -48,7 +47,7 @@ protected:
 	std::string displayName_, nickname_, category_;
 	std::array<char, 256> keysDisplayString_ { };
 	bool isBeingModified_ = true;
-	std::set<ScanCode> scanCodes_;
+	ScanCodeSet scanCodes_;
 	bool saveToConfig_ = true;
 
 	static std::set<Keybind*> keybinds_;

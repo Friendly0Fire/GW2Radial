@@ -7,8 +7,9 @@
 #include <functional>
 #include <algorithm>
 #include <optional>
-#include "ConfigurationOption.h"
+#include <ConfigurationOption.h>
 #include <ScanCode.h>
+#include <Utility.h>
 
 namespace GW2Radial
 {
@@ -17,16 +18,16 @@ enum class InputResponse : uint
 {
 	PASS_TO_GAME = 0, // Do not prevent any input from reaching the game
 	PREVENT_MOUSE = 1, // Prevent mouse movement only from reaching the game
-	PREVENT_ALL = 2 // Prevent all input from reaching the game
+	PREVENT_KEYBOARD = 2, // Prevent keyboard inputs only from reaching the game
+	PREVENT_ALL = 3 // Prevent all input from reaching the game
 };
 
-inline InputResponse operator|(InputResponse a, InputResponse b) {
-    return InputResponse(std::max(uint(a), uint(b)));
-}
-
-inline InputResponse operator|=(InputResponse& a, InputResponse b) {
-    return (a = a | b);
-}
+enum class KeybindAction : uint {
+	NONE = 0,
+	DOWN = 1,
+	UP = 2,
+	BOTH = 3
+};
 
 struct EventKey
 {
@@ -40,11 +41,21 @@ struct Point
 	int y;
 };
 
+template<typename Func>
+struct Callback {
+	Func callback;
+	int priority = 0;
+
+	inline bool operator<(const Callback& other) const {
+		return priority < other.priority;
+	}
+};
+
 class Input : public Singleton<Input>
 {
 public:
-	using MouseMoveCallback = std::function<bool()>;
-	using InputChangeCallback = std::function<InputResponse(bool changed, const std::set<ScanCode>& sc, const std::list<EventKey>& changedKeys)>;
+	using MouseMoveCallback = Callback<std::function<void(bool& retval)>>;
+	using InputChangeCallback = Callback<std::function<void(bool changed, const ScanCodeSet& sc, const std::list<EventKey>& changedKeys, InputResponse& retval)>>;
 	Input();
 
 	uint id_H_LBUTTONDOWN() const { return id_H_LBUTTONDOWN_; }
@@ -63,11 +74,11 @@ public:
 	void OnFocusLost();
 	void OnUpdate();
 	
-	void AddMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.push_back(cb); }
-	void AddInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.push_back(cb); }
-	void RemoveMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.remove(cb); }
-	void RemoveInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.remove(cb); }
-	void SendKeybind(const std::set<ScanCode> &sc, std::optional<Point> const& cursorPos = { });
+	void AddMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.insert(cb); }
+	void AddInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.insert(cb); }
+	void RemoveMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.erase(cb); }
+	void RemoveInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.erase(cb); }
+	void SendKeybind(const ScanCodeSet &sc, std::optional<Point> const& cursorPos = { }, KeybindAction action = KeybindAction::BOTH);
 
 protected:
 	struct DelayedInput
@@ -105,13 +116,25 @@ protected:
 	// ReSharper restore CppInconsistentNaming
 
 
-	std::set<ScanCode> DownKeys;
+	ScanCodeSet DownKeys;
 	std::list<DelayedInput> QueuedInputs;
 	
-	std::list<MouseMoveCallback*> mouseMoveCallbacks_;
-	std::list<InputChangeCallback*> inputChangeCallbacks_;
+	std::set<MouseMoveCallback*, PtrComparator<MouseMoveCallback>> mouseMoveCallbacks_;
+	std::set<InputChangeCallback*, PtrComparator<InputChangeCallback>> inputChangeCallbacks_;
 
 	friend class MiscTab;
 };
 
+}
+
+inline GW2Radial::InputResponse operator|(GW2Radial::InputResponse a, GW2Radial::InputResponse b) {
+	return GW2Radial::InputResponse(std::max(uint(a), uint(b)));
+}
+
+inline GW2Radial::InputResponse operator|=(GW2Radial::InputResponse& a, GW2Radial::InputResponse b) {
+	return (a = a | b);
+}
+
+inline GW2Radial::KeybindAction operator&(GW2Radial::KeybindAction a, GW2Radial::KeybindAction b) {
+	return GW2Radial::KeybindAction(uint(a) & uint(b));
 }

@@ -66,7 +66,7 @@ void ImGuiKeybindInput(GW2Radial::Keybind& setting, const char* tooltip)
 	else if (setting.isBeingModified() && ImGui::Button(("Clear" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
 	{
 		setting.isBeingModified(false);
-		setting.scanCodes(std::set<GW2Radial::ScanCode>());
+		setting.scanCodes(GW2Radial::ScanCodeSet());
 	}
 
 	ImGui::SameLine();

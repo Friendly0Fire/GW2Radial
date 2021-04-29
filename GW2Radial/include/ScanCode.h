@@ -205,15 +205,15 @@ enum class ScanCode : uint {
 using ScanCode_t = std::underlying_type_t<ScanCode>;
 }
 
-constexpr GW2Radial::ScanCode operator&(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
+constexpr GW2Radial::ScanCode operator&(GW2Radial::ScanCode a, GW2Radial::ScanCode b) {
     return GW2Radial::ScanCode(GW2Radial::ScanCode_t(a) & GW2Radial::ScanCode_t(b));
 }
 
-constexpr GW2Radial::ScanCode operator|(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
+constexpr GW2Radial::ScanCode operator|(GW2Radial::ScanCode a, GW2Radial::ScanCode b) {
     return GW2Radial::ScanCode(GW2Radial::ScanCode_t(a) | GW2Radial::ScanCode_t(b));
 }
 
-constexpr GW2Radial::ScanCode operator~(const GW2Radial::ScanCode& a) {
+constexpr GW2Radial::ScanCode operator~(GW2Radial::ScanCode a) {
     return GW2Radial::ScanCode(~GW2Radial::ScanCode_t(a));
 }
 
@@ -295,28 +295,28 @@ std::wstring GetScanCodeName(ScanCode scanCode);
 
 constexpr bool IsSame(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
     if (IsUniversalModifier(a) || IsUniversalModifier(b)) {
-        ScanCode_t b2 = ScanCode_t(b);
         switch (a) {
         case ScanCode::SHIFTLEFT:
         case ScanCode::SHIFTRIGHT:
         case ScanCode::SHIFT:
-            return b2 == ScanCode_t(ScanCode::SHIFTLEFT) || b2 == ScanCode_t(ScanCode::SHIFTRIGHT) || b2 == ScanCode_t(ScanCode::SHIFT);
+            return b == ScanCode::SHIFTLEFT || b == ScanCode::SHIFTRIGHT || b == ScanCode::SHIFT;
         case ScanCode::CONTROLLEFT:
         case ScanCode::CONTROLRIGHT:
         case ScanCode::CONTROL:
-            return b2 == ScanCode_t(ScanCode::CONTROLLEFT) || b2 == ScanCode_t(ScanCode::CONTROLRIGHT) || b2 == ScanCode_t(ScanCode::CONTROL);
+            return b == ScanCode::CONTROLLEFT || b == ScanCode::CONTROLRIGHT || b == ScanCode::CONTROL;
         case ScanCode::ALTLEFT:
         case ScanCode::ALTRIGHT:
         case ScanCode::ALT:
-            return b2 == ScanCode_t(ScanCode::ALTLEFT) || b2 == ScanCode_t(ScanCode::ALTRIGHT) || b2 == ScanCode_t(ScanCode::ALT);
+            return b == ScanCode::ALTLEFT || b == ScanCode::ALTRIGHT || b == ScanCode::ALT;
         case ScanCode::METALEFT:
         case ScanCode::METARIGHT:
         case ScanCode::META:
-            return b2 == ScanCode_t(ScanCode::METALEFT) || b2 == ScanCode_t(ScanCode::METARIGHT) || b2 == ScanCode_t(ScanCode::META);
+            return b == ScanCode::METALEFT || b == ScanCode::METARIGHT || b == ScanCode::META;
         }
     }
 
-    return ScanCode_t(a) == ScanCode_t(b);
+    bool c = a == b;
+    return c;
 }
 
 struct KeyLParam {
@@ -344,7 +344,11 @@ inline bool IsMouse(ScanCode sc) {
 
 struct ScanCodeCompare
 {
-    bool operator()(const ScanCode& a, const ScanCode& b) const
+    bool operator()(const ScanCode& a, const ScanCode& b) const {
+        return Compare(a, b);
+    }
+
+    static bool Compare(const ScanCode& a, const ScanCode& b)
     {
         bool aIsModifier = IsModifier(a);
         bool bIsModifier = IsModifier(b);
@@ -392,15 +396,10 @@ struct ScanCodeCompare
         }
 
         // If two ScanCodes are of the same type, compare numerically
-        return uint(a) < uint(b);
+        return ScanCode_t(a) < ScanCode_t(b);
     }
 };
 
-}
+using ScanCodeSet = std::set<ScanCode, ScanCodeCompare>;
 
-inline constexpr bool operator==(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
-    return GW2Radial::IsSame(a, b);
-}
-inline constexpr bool operator!=(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
-    return !GW2Radial::IsSame(a, b);
 }

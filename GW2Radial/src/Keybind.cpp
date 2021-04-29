@@ -8,7 +8,7 @@ namespace GW2Radial
 {
 std::set<Keybind*> Keybind::keybinds_;
 
-Keybind::Keybind(std::string nickname, std::string displayName, std::string category, const std::set<ScanCode>& scs, bool saveToConfig) :
+Keybind::Keybind(std::string nickname, std::string displayName, std::string category, const ScanCodeSet& scs, bool saveToConfig) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category)), saveToConfig_(saveToConfig)
 {
 	keybinds_.insert(this);
@@ -34,7 +34,7 @@ Keybind::~Keybind()
 	keybinds_.erase(this);
 }
 
-void Keybind::scanCodes(const std::set<ScanCode>& scs)
+void Keybind::scanCodes(const ScanCodeSet& scs)
 {
 	if(!isBeingModified_)
 		return;
@@ -89,11 +89,35 @@ void Keybind::ApplyKeys()
 	}
 }
 
-bool Keybind::matchesNoLeftRight(const std::set<ScanCode>& scanCodes) const
+[[nodiscard]]
+bool Keybind::matches(const ScanCodeSet& scanCodes) const { 
+	if (!isSet() || scanCodes.empty())
+		return false;
+
+	return std::equal(scanCodes.begin(), scanCodes.end(), scanCodes_.begin(), scanCodes_.end(),
+						 [](auto a, auto b) {
+							 return IsSame(a, b);
+						 });
+}
+
+[[nodiscard]]
+bool Keybind::matchesPartial(const ScanCodeSet& scanCodes) const {
+	if (!isSet() || scanCodes.empty())
+		return false;
+
+	return std::includes(scanCodes.begin(), scanCodes.end(), scanCodes_.begin(), scanCodes_.end(),
+						 [](auto a, auto b) {
+							 return ScanCodeCompare::Compare(a, b);
+						 });
+}
+
+bool Keybind::matchesNoLeftRight(const ScanCodeSet& scanCodes) const
 {
-	const auto universalize = [](const std::set<ScanCode>& src)
+	if (!isSet() || scanCodes.empty()) return false;
+
+	const auto universalize = [](const ScanCodeSet& src)
 	{
-		std::set<ScanCode> out;
+		ScanCodeSet out;
 		for(cref k : src)
 		{
 			if (IsModifier(k))

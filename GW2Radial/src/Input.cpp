@@ -52,7 +52,7 @@ namespace GW2Radial
             // not a key we map from generic to left/right specialized
             //  just return it.
             newVk = vk;
-            break;    
+            break;
         }
 
         return newVk;
@@ -91,12 +91,13 @@ namespace GW2Radial
 
                     if ((msg == WM_SYSKEYDOWN || msg == WM_SYSKEYUP) && wParam != VK_F10)
                     {
+                        const ScanCode altCode = keylParam.extendedFlag ? ScanCode::ALTRIGHT : ScanCode::ALTLEFT;
                         if (keylParam.contextCode == 1)
-                            eventKeys.push_back({ sc, true });
+                            eventKeys.push_back({ altCode, true });
                         else
-                            eventKeys.push_back({ sc, false });
+                            eventKeys.push_back({ altCode, false });
                     }
-			
+
                     eventKeys.push_back({ sc, eventDown });
                     break;
                 }
@@ -126,9 +127,12 @@ namespace GW2Radial
         const auto isRawInputMouse = msg == WM_INPUT && IsRawInputMouse(lParam);
 
         bool preventMouseMove = false;
-        if(msg == WM_MOUSEMOVE || isRawInputMouse)
-            for(auto& cb : mouseMoveCallbacks_)
-                preventMouseMove |= (*cb)();
+        if (msg == WM_MOUSEMOVE || isRawInputMouse) {
+            bool interrupt = false;
+            for (auto& cb : mouseMoveCallbacks_) {
+                cb->callback(preventMouseMove);
+            }
+        }
 
         bool downKeysChanged = false;
 
@@ -142,9 +146,11 @@ namespace GW2Radial
 
         InputResponse response = InputResponse::PASS_TO_GAME;
         // Only run these for key down/key up (incl. mouse buttons) events
-        if(!eventKeys.empty() && !MumbleLink::i()->textboxHasFocus())
-            for(auto& cb : inputChangeCallbacks_)
-                response |= (*cb)(downKeysChanged, DownKeys, eventKeys);
+        if (!eventKeys.empty() && !MumbleLink::i()->textboxHasFocus()) {
+            for (auto& cb : inputChangeCallbacks_) {
+                cb->callback(downKeysChanged, DownKeys, eventKeys, response);
+            }
+        }
 
         ImGui_ImplWin32_WndProcHandler(Core::i()->gameWindow(), msg, wParam, lParam);
         if (msg == WM_MOUSEMOVE)
@@ -157,16 +163,31 @@ namespace GW2Radial
         if(response == InputResponse::PREVENT_ALL)
             return true;
 
+        if(response == InputResponse::PREVENT_KEYBOARD)
+        {
+            switch (msg)
+            {
+            case WM_KEYDOWN:
+            case WM_KEYUP:
+            case WM_SYSKEYDOWN:
+            case WM_SYSKEYUP:
+                    return true;
+            }
+        }
+
         if(response == InputResponse::PREVENT_MOUSE || preventMouseMove)
         {
             switch (msg)
             {
+            // Outright prevent those two events
             case WM_MOUSEMOVE:
                 return true;
             case WM_INPUT:
                 if(isRawInputMouse)
                     return true;
                 break;
+
+            // All other mouse events pass mouse position as well, so revert that
             case WM_LBUTTONDOWN:
             case WM_LBUTTONUP:
             case WM_RBUTTONDOWN:
@@ -351,7 +372,7 @@ namespace GW2Radial
         return { wParam, lParam };
     }
 
-    void Input::SendKeybind(const std::set<ScanCode> &scs, const std::optional<Point>& cursorPos)
+    void Input::SendKeybind(const ScanCodeSet &scs, const std::optional<Point>& cursorPos, KeybindAction action)
     {
         if (scs.empty())
         {
@@ -399,30 +420,32 @@ namespace GW2Radial
             }
         }
 
-        for (const auto &sc : scsSorted)
-        {
-            if (DownKeys.count(sc))
-                continue;
+        if (notNone(action & KeybindAction::DOWN)) {
+            for (const auto& sc : scsSorted) {
+                if (DownKeys.count(sc))
+                    continue;
 
-            auto sc2 = useUniversalModifiers ? MakeUniversal(sc) : sc;
+                auto sc2 = useUniversalModifiers ? MakeUniversal(sc) : sc;
 
-            DelayedInput i = TransformScanCode(sc2, true, currentTime, cursorPos);
-            if(i.wParam != 0)
-                QueuedInputs.push_back(i);
-            currentTime += 20;
+                DelayedInput i = TransformScanCode(sc2, true, currentTime, cursorPos);
+                if (i.wParam != 0)
+                    QueuedInputs.push_back(i);
+                currentTime += 20;
+            }
         }
+        if(action == KeybindAction::BOTH)
+            currentTime += 50;
 
-        currentTime += 50;
+        if (notNone(action & KeybindAction::UP)) {
+            for (const auto& sc : reverse(scsSorted)) {
+                if (DownKeys.count(sc))
+                    continue;
 
-        for (const auto &sc : reverse(scsSorted))
-        {
-            if (DownKeys.count(sc))
-                continue;
-
-            DelayedInput i = TransformScanCode(sc, false, currentTime, cursorPos);
-            if (i.wParam != 0)
-                QueuedInputs.push_back(i);
-            currentTime += 20;
+                DelayedInput i = TransformScanCode(sc, false, currentTime, cursorPos);
+                if (i.wParam != 0)
+                    QueuedInputs.push_back(i);
+                currentTime += 20;
+            }
         }
     }
 
