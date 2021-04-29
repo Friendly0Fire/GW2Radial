@@ -43,7 +43,7 @@ protected:
 	ScanCode allowThroughAlt_ = ScanCode::NONE;
 	ScanCode allowThroughShift_ = ScanCode::NONE;
 	
-	Input::InputChangeCallback inputChangeCallback_;
+	std::unique_ptr<Input::InputChangeCallback> inputChangeCallback_;
 };
 
 }

@@ -47,8 +47,14 @@ struct Callback {
 	int priority = 0;
 
 	inline bool operator<(const Callback& other) const {
-		return priority < other.priority;
+		if (priority != other.priority)
+			return priority < other.priority;
+		else
+			return &callback < &other.callback;
 	}
+
+	Callback(Func cb, int p = 0) :
+		callback(std::move(cb)), priority(p) { }
 };
 
 class Input : public Singleton<Input>

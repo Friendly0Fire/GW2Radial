@@ -146,8 +146,8 @@ protected:
 	ComPtr<IDirect3DTexture9> backgroundTexture_;
 	ComPtr<IDirect3DTexture9> wipeMaskTexture_;
 	
-	Input::MouseMoveCallback mouseMoveCallback_;
-	Input::InputChangeCallback inputChangeCallback_;
+	std::unique_ptr<Input::MouseMoveCallback> mouseMoveCallback_;
+	std::unique_ptr<Input::InputChangeCallback> inputChangeCallback_;
 
 	struct ExtraUI {
 	    std::function<void()> display, interaction, queuing, misc;

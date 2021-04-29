@@ -50,10 +50,10 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);
 	
-	mouseMoveCallback_ = { [this](bool& rv) { OnMouseMove(rv); } };
-	Input::i()->AddMouseMoveCallback(&mouseMoveCallback_);
-	inputChangeCallback_ = { [this](bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response) { OnInputChange(changed, scs, changedKeys, response); }, 0 };
-	Input::i()->AddInputChangeCallback(&inputChangeCallback_);
+	mouseMoveCallback_ = std::make_unique<Input::MouseMoveCallback>([this](bool& rv) { OnMouseMove(rv); });
+	Input::i()->AddMouseMoveCallback(mouseMoveCallback_.get());
+	inputChangeCallback_ = std::make_unique<Input::InputChangeCallback>([this](bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response) { OnInputChange(changed, scs, changedKeys, response); });
+	Input::i()->AddInputChangeCallback(inputChangeCallback_.get());
 
 	SettingsMenu::i()->AddImplementer(this);
 }
@@ -62,8 +62,8 @@ Wheel::~Wheel()
 {
 	if(auto i = Input::iNoInit(); i)
 	{
-		i->RemoveMouseMoveCallback(&mouseMoveCallback_);
-		i->RemoveInputChangeCallback(&inputChangeCallback_);
+		i->RemoveMouseMoveCallback(mouseMoveCallback_.get());
+		i->RemoveInputChangeCallback(inputChangeCallback_.get());
 	}
 	
 	if(auto i = SettingsMenu::iNoInit(); i)
@@ -646,8 +646,9 @@ void Wheel::OnMouseMove(bool& rv)
 void Wheel::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response)
 {
 	if (SettingsMenu::i()->isVisible()) {
-		const auto isAnyElementBeingModified = std::any_of(wheelElements_.begin(), wheelElements_.end(),
-														   [](cref we) { return we->keybind().isBeingModified(); });
+		bool isAnyElementBeingModified = keybind_.isBeingModified() || centralKeybind_.isBeingModified() ||
+			std::any_of(wheelElements_.begin(), wheelElements_.end(),
+													[](cref we) { return we->keybind().isBeingModified(); });
 
 		if (isAnyElementBeingModified) 	{
 			// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
