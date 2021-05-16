@@ -32,7 +32,7 @@ public:
 	[[nodiscard]] const char* keysDisplayString() const { return keysDisplayString_.data(); }
 	std::array<char, 256>& keysDisplayStringArray() { return keysDisplayString_; }
 	
-	[[nodiscard]] bool matches(const std::set<ScanCode>& scanCodes) const { return scanCodes == scanCodes_; }
+	[[nodiscard]] bool matches(const std::set<ScanCode>& scanCodes) const { return isSet() && (scanCodes == scanCodes_); }
 	[[nodiscard]] bool matchesPartial(const std::set<ScanCode>& scanCodes) const
 	{
 		return isSet() && std::includes(scanCodes.begin(), scanCodes.end(), scanCodes_.begin(), scanCodes_.end());
