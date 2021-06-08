@@ -203,7 +203,37 @@ enum class ScanCode : uint {
     MAX_VAL = (1u << 31) - 1 // 31 bits to fit in EventKey struct
 };
 using ScanCode_t = std::underlying_type_t<ScanCode>;
+
+enum class Modifier : ushort {
+    NONE = 0,
+
+    LCTRL = 1,
+    RCTRL = 2,
+    CTRL = LCTRL | RCTRL,
+
+    LALT = 4,
+    RALT = 8,
+    ALT = LALT | RALT,
+
+    LSHIFT = 16,
+    RSHIFT = 32,
+    SHIFT = LSHIFT | RSHIFT,
+};
+using Modifier_t = std::underlying_type_t<Modifier>;
 }
+
+constexpr GW2Radial::Modifier operator&(GW2Radial::Modifier a, GW2Radial::Modifier b) {
+    return GW2Radial::Modifier(GW2Radial::Modifier_t(a) & GW2Radial::Modifier_t(b));
+}
+
+constexpr GW2Radial::Modifier operator|(GW2Radial::Modifier a, GW2Radial::Modifier b) {
+    return GW2Radial::Modifier(GW2Radial::Modifier_t(a) | GW2Radial::Modifier_t(b));
+}
+
+constexpr GW2Radial::Modifier operator~(GW2Radial::Modifier a) {
+    return GW2Radial::Modifier(~GW2Radial::Modifier_t(a));
+}
+
 
 constexpr GW2Radial::ScanCode operator&(GW2Radial::ScanCode a, GW2Radial::ScanCode b) {
     return GW2Radial::ScanCode(GW2Radial::ScanCode_t(a) & GW2Radial::ScanCode_t(b));
@@ -219,7 +249,7 @@ constexpr GW2Radial::ScanCode operator~(GW2Radial::ScanCode a) {
 
 namespace GW2Radial {
 
-inline bool IsModifier(const ScanCode& a) {
+inline bool IsModifier(ScanCode a) {
     switch (a) {
     case ScanCode::SHIFTLEFT:
     case ScanCode::SHIFTRIGHT:
@@ -239,7 +269,32 @@ inline bool IsModifier(const ScanCode& a) {
     }
 }
 
-inline bool IsExtendedKey(const ScanCode& a) {
+inline Modifier ToModifier(ScanCode a) {
+    switch (a) {
+    case ScanCode::SHIFTLEFT:
+        return Modifier::LSHIFT;
+    case ScanCode::SHIFTRIGHT:
+        return Modifier::RSHIFT;
+    case ScanCode::SHIFT:
+        return Modifier::SHIFT;
+    case ScanCode::CONTROLLEFT:
+        return Modifier::LCTRL;
+    case ScanCode::CONTROLRIGHT:
+        return Modifier::RCTRL;
+    case ScanCode::CONTROL:
+        return Modifier::CTRL;
+    case ScanCode::ALTLEFT:
+        return Modifier::LALT;
+    case ScanCode::ALTRIGHT:
+        return Modifier::RALT;
+    case ScanCode::ALT:
+        return Modifier::ALT;
+    default:
+        return Modifier::NONE;
+    }
+}
+
+inline bool IsExtendedKey(ScanCode a) {
     switch (a) {
     case ScanCode::SHIFTRIGHT:
     case ScanCode::CONTROLRIGHT:
@@ -282,6 +337,25 @@ inline ScanCode MakeUniversal(const ScanCode& a) {
     case ScanCode::METARIGHT:
     case ScanCode::META:
         return ScanCode::META;
+    default:
+        return a;
+    }
+}
+
+inline Modifier MakeUniversal(const Modifier& a) {
+    switch (a) {
+    case Modifier::LSHIFT:
+    case Modifier::RSHIFT:
+    case Modifier::SHIFT:
+        return Modifier::SHIFT;
+    case Modifier::LCTRL:
+    case Modifier::RCTRL:
+    case Modifier::CTRL:
+        return Modifier::CTRL;
+    case Modifier::LALT:
+    case Modifier::RALT:
+    case Modifier::ALT:
+        return Modifier::ALT;
     default:
         return a;
     }
@@ -399,7 +473,5 @@ struct ScanCodeCompare
         return ScanCode_t(a) < ScanCode_t(b);
     }
 };
-
-using ScanCodeSet = std::set<ScanCode, ScanCodeCompare>;
 
 }

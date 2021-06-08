@@ -47,4 +47,9 @@ enum class NoveltyType : uint
 };
 const unsigned int NoveltyTypeCount = 6;
 
+template<typename E>
+bool Is(E e) {
+	return e != E::NONE;
+}
+
 }
