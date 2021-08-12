@@ -39,6 +39,11 @@ std::wstring GetScanCodeName(ScanCode scanCode) {
 	    }
 	}
 
+	if (scanCode >= ScanCode::F13 && scanCode <= ScanCode::F23)
+		return L"F" + std::to_wstring(uint(scanCode) - uint(ScanCode::F13) + 13);
+	if (scanCode == ScanCode::F24)
+		return L"F24";
+
 	if (scanCode >= ScanCode::NUMROW_1 && scanCode <= ScanCode::NUMROW_9) {
 		wchar_t c = wchar_t(scanCode) - 1 + 0x30;
 		return std::wstring(1, c);
