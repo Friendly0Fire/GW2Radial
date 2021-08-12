@@ -8,10 +8,9 @@
 
 namespace GW2Radial
 {
-DEFINE_SINGLETON(ConfigurationFile);
-	
-const wchar_t* g_configName = TEXT("config.ini");
-const wchar_t* g_imguiConfigName = TEXT("imgui_config.ini");
+
+const wchar_t* g_configName = L"config.ini";
+const wchar_t* g_imguiConfigName = L"imgui_config.ini";
 
 ConfigurationFile::ConfigurationFile()
 {

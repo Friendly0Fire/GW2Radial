@@ -6,13 +6,12 @@
 
 namespace GW2Radial
 {
-DEFINE_SINGLETON(SettingsMenu);
 
 SettingsMenu::SettingsMenu()
-	: showKeybind_("show_settings", "Show settings", "__core__", { ScanCode::SHIFT, ScanCode::ALT, GetScanCodeFromVirtualKey('M') }, false)
+	: showKeybind_("show_settings", "Show settings", "__core__", { GetScanCodeFromVirtualKey('M'), Modifier::SHIFT | Modifier::ALT }, false)
 {
 	inputChangeCallback_ = std::make_unique<Input::InputChangeCallback>([this](bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response) { return OnInputChange(changed, scs, changedKeys, response); }, -1000);
-	Input::i()->AddInputChangeCallback(inputChangeCallback_.get());
+	Input::i().AddInputChangeCallback(inputChangeCallback_.get());
 }
 void SettingsMenu::Draw()
 {

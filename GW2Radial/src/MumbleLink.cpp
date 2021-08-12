@@ -3,8 +3,6 @@
 
 namespace GW2Radial
 {
-DEFINE_SINGLETON(MumbleLink);
-
 struct LinkedMem
 {
 #ifdef WIN32

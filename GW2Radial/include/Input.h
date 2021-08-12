@@ -61,7 +61,7 @@ class Input : public Singleton<Input>
 {
 public:
 	using MouseMoveCallback = Callback<std::function<void(bool& retval)>>;
-	using InputChangeCallback = Callback<std::function<void(bool changed, const ScanCodeSet& sc, const std::list<EventKey>& changedKeys, InputResponse& retval)>>;
+	using InputChangeCallback = Callback<std::function<void(bool changed, const std::set<ScanCode>& sc, const std::list<EventKey>& changedKeys, InputResponse& retval)>>;
 	Input();
 
 	uint id_H_LBUTTONDOWN() const { return id_H_LBUTTONDOWN_; }
@@ -84,7 +84,7 @@ public:
 	void AddInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.insert(cb); }
 	void RemoveMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.erase(cb); }
 	void RemoveInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.erase(cb); }
-	void SendKeybind(const ScanCodeSet &sc, std::optional<Point> const& cursorPos = { }, KeybindAction action = KeybindAction::BOTH);
+	void SendKeybind(const KeyCombo& ks, std::optional<Point> const& cursorPos = std::nullopt, KeybindAction action = KeybindAction::BOTH);
 
 protected:
 	struct DelayedInput
@@ -122,7 +122,7 @@ protected:
 	// ReSharper restore CppInconsistentNaming
 
 
-	ScanCodeSet DownKeys;
+	std::set<ScanCode> DownKeys;
 	std::list<DelayedInput> QueuedInputs;
 	
 	std::set<MouseMoveCallback*, PtrComparator<MouseMoveCallback>> mouseMoveCallbacks_;
@@ -131,14 +131,6 @@ protected:
 	friend class MiscTab;
 };
 
-}
-
-inline GW2Radial::InputResponse operator|(GW2Radial::InputResponse a, GW2Radial::InputResponse b) {
-	return GW2Radial::InputResponse(std::max(uint(a), uint(b)));
-}
-
-inline GW2Radial::InputResponse operator|=(GW2Radial::InputResponse& a, GW2Radial::InputResponse b) {
-	return (a = a | b);
 }
 
 inline GW2Radial::KeybindAction operator&(GW2Radial::KeybindAction a, GW2Radial::KeybindAction b) {

@@ -97,6 +97,7 @@ typedef std::basic_string<TCHAR> tstring;
 typedef unsigned __int64         mstime;
 
 #define cref const auto&
+using std::tie;
 
 #ifndef HID_USAGE_PAGE_GENERIC
 #define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)

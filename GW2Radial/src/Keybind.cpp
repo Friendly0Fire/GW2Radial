@@ -13,23 +13,19 @@ Keybind::Keybind(std::string nickname, std::string displayName, std::string cate
 {
 	keybinds_.insert(this);
 
-	this->key(key);
-	this->modifier(mod);
-
-	isBeingModified_ = false;
+	keyCombo({ key, mod });
 }
 
 Keybind::Keybind(std::string nickname, std::string displayName, std::string category) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category))
 {
 	keybinds_.insert(this);
-	auto keys = ConfigurationFile::i()->ini().GetValue("Keybinds.2", nickname_.c_str());
+	auto keys = ConfigurationFile::i().ini().GetValue("Keybinds.2", nickname_.c_str());
 	if(keys) ParseConfig(keys);
 	else {
-		keys = ConfigurationFile::i()->ini().GetValue("Keybinds", nickname_.c_str());
+		keys = ConfigurationFile::i().ini().GetValue("Keybinds", nickname_.c_str());
 		if(keys) ParseKeys(keys);
 	}
-	isBeingModified_ = false;
 }
 
 Keybind::~Keybind()
@@ -39,9 +35,6 @@ Keybind::~Keybind()
 
 void Keybind::ParseKeys(const char* keys)
 {
-	if(!isBeingModified_)
-		return;
-
 	key_ = ScanCode::NONE;
 	mod_ = Modifier::NONE;
 
@@ -92,7 +85,7 @@ void Keybind::ParseConfig(const char* keys)
 		mod_ = Modifier(ushort(std::stoi(k[1].c_str())));
 }
 
-void Keybind::ApplyKeys()
+void Keybind::ApplyKeys() const
 {
 	UpdateDisplayString();
 	
@@ -100,28 +93,28 @@ void Keybind::ApplyKeys()
 	{
 		std::string settingValue = std::to_string(uint(key_)) + ", " + std::to_string(uint(mod_));
 
-		auto cfg = ConfigurationFile::i();
-		cfg->ini().SetValue("Keybinds.2", nickname_.c_str(), settingValue.c_str());
-		cfg->Save();
+		auto& cfg = ConfigurationFile::i();
+		cfg.ini().SetValue("Keybinds.2", nickname_.c_str(), settingValue.c_str());
+		cfg.Save();
 	}
 }
 
 [[nodiscard]]
-bool Keybind::matches(const Keyset& ks) const {
+bool Keybind::matches(const KeyCombo& ks) const {
 	return key_ == ks.first && mod_ == ks.second;
 }
 
 [[nodiscard]]
-bool Keybind::matchesPartial(const Keyset& ks) const {
+bool Keybind::matchesPartial(const KeyCombo& ks) const {
 	return key_ == ks.first;
 }
 
-bool Keybind::matchesNoLeftRight(const Keyset& ks) const
+bool Keybind::matchesNoLeftRight(const KeyCombo& ks) const
 {
 	return MakeUniversal(key_) == MakeUniversal(ks.first) && MakeUniversal(mod_) == MakeUniversal(ks.second);
 }
 
-void Keybind::UpdateDisplayString()
+void Keybind::UpdateDisplayString() const
 {
 	if(key_ == ScanCode::NONE)
 	{
@@ -130,25 +123,25 @@ void Keybind::UpdateDisplayString()
 	}
 
 	std::wstring keybind;
-	if (Is(mod_ & Modifier::CTRL))
+	if (notNone(mod_ & Modifier::CTRL))
 		keybind += L"CTRL + ";
-	else if (Is(mod_ & Modifier::LCTRL))
+	else if (notNone(mod_ & Modifier::LCTRL))
 		keybind += L"LCTRL + ";
-	else if (Is(mod_ & Modifier::RCTRL))
+	else if (notNone(mod_ & Modifier::RCTRL))
 		keybind += L"RCTRL + ";
 
-	if (Is(mod_ & Modifier::ALT))
+	if (notNone(mod_ & Modifier::ALT))
 		keybind += L"ALT + ";
-	else if (Is(mod_ & Modifier::LALT))
+	else if (notNone(mod_ & Modifier::LALT))
 		keybind += L"LALT + ";
-	else if (Is(mod_ & Modifier::RALT))
+	else if (notNone(mod_ & Modifier::RALT))
 		keybind += L"RALT + ";
 
-	if (Is(mod_ & Modifier::SHIFT))
+	if (notNone(mod_ & Modifier::SHIFT))
 		keybind += L"SHIFT + ";
-	else if (Is(mod_ & Modifier::LSHIFT))
+	else if (notNone(mod_ & Modifier::LSHIFT))
 		keybind += L"LSHIFT + ";
-	else if (Is(mod_ & Modifier::RSHIFT))
+	else if (notNone(mod_ & Modifier::RSHIFT))
 		keybind += L"RSHIFT + ";
 
 	keybind += GetScanCodeName(key_);

@@ -10,11 +10,7 @@
 namespace GW2Radial {
 
 void ConditionContext::Populate() {
-    auto mlPtr = MumbleLink::i();
-    if(!mlPtr)
-        return;
-
-    const auto& ml = *mlPtr;
+    const auto& ml = MumbleLink::i();
     
     inCombat = ml.isInCombat();
     inWvW = ml.isInWvW();
@@ -71,7 +67,7 @@ bool IsCharacterCondition::DrawInnerMenu() {
 
 void ConditionSet::Load() {
     const char* c = category_.c_str();
-    const auto& ini = ConfigurationFile::i()->ini();
+    const auto& ini = ConfigurationFile::i().ini();
 
     const char* set = ini.GetValue(c, "condition_set", "");
     if(strlen(set) == 0)
@@ -159,7 +155,7 @@ void ConditionSet::Save() const {
         set << c.condition->id() << "/" << c.condition->nickname() << ", ";
     }
 
-    ConfigurationFile::i()->ini().SetValue(cat, "condition_set", set.str().substr(0, set.str().size() - 2).c_str());
+    ConfigurationFile::i().ini().SetValue(cat, "condition_set", set.str().substr(0, set.str().size() - 2).c_str());
 }
 
 bool Condition::DrawMenu(const char* category, MenuResult& mr, bool isFirst, bool isLast) {
@@ -186,7 +182,7 @@ bool Condition::DrawMenu(const char* category, MenuResult& mr, bool isFirst, boo
 
     ImGui::SameLine();
 
-	ImGui::PushFont(Core::i()->fontIcon());
+	ImGui::PushFont(Core::i().fontIcon());
 
     std::u8string suffixu8(reinterpret_cast<const char8_t*>(suffix.c_str()));
 
@@ -318,7 +314,7 @@ void ConditionSet::DrawMenu() {
 
     if(dirty) {
         Save();
-        ConfigurationFile::i()->Save();
+        ConfigurationFile::i().Save();
     }
 
     ImGui::PopStyleVar();

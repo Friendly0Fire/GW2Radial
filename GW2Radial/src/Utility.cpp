@@ -59,20 +59,21 @@ int GetShaderFuncLength(const DWORD *pFunction)
 
 std::span<byte> LoadResource(UINT resId)
 {
-    const auto res = FindResource(Core::i()->dllModule(), MAKEINTRESOURCE(resId), RT_RCDATA);
+    cref dll = Core::i().dllModule();
+    const auto res = FindResource(dll, MAKEINTRESOURCE(resId), RT_RCDATA);
 	if(res)
 	{
-        const auto handle = LoadResource(Core::i()->dllModule(), res);
+        const auto handle = LoadResource(dll, res);
 		if(handle)
 		{
-			size_t sz = SizeofResource(Core::i()->dllModule(), res);
+			size_t sz = SizeofResource(dll, res);
 			void* ptr = LockResource(handle);
 
 			return std::span<byte>((byte*)ptr, sz);
 		}
 	}
 
-	return std::span<byte>();
+    return {};
 }
 
 ComPtr<IDirect3DTexture9> CreateTextureFromResource(IDirect3DDevice9 * pDev, HMODULE hModule, unsigned uResource)

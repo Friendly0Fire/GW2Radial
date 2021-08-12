@@ -36,7 +36,7 @@ public:
 	void ForceSave() const
 	{
 		SaveValue();
-		ConfigurationFile::i()->Save();
+		ConfigurationFile::i().Save();
 	}
 
 protected:
@@ -61,61 +61,61 @@ protected:
 template<>
 inline void ConfigurationOption<int>::LoadValue()
 {
-	value_ = ConfigurationFile::i()->ini().GetLongValue(category_.c_str(), nickname_.c_str(), value());
+	value_ = ConfigurationFile::i().ini().GetLongValue(category_.c_str(), nickname_.c_str(), value());
 }
 
 template<>
 inline void ConfigurationOption<double>::LoadValue()
 {
-	value_ = ConfigurationFile::i()->ini().GetDoubleValue(category_.c_str(), nickname_.c_str(), value());
+	value_ = ConfigurationFile::i().ini().GetDoubleValue(category_.c_str(), nickname_.c_str(), value());
 }
 
 template<>
 inline void ConfigurationOption<float>::LoadValue()
 {
-	value_ = float(ConfigurationFile::i()->ini().GetDoubleValue(category_.c_str(), nickname_.c_str(), value()));
+	value_ = float(ConfigurationFile::i().ini().GetDoubleValue(category_.c_str(), nickname_.c_str(), value()));
 }
 
 template<>
 inline void ConfigurationOption<bool>::LoadValue()
 {
-	value_ = ConfigurationFile::i()->ini().GetBoolValue(category_.c_str(), nickname_.c_str(), value());
+	value_ = ConfigurationFile::i().ini().GetBoolValue(category_.c_str(), nickname_.c_str(), value());
 }
 
 template<>
 inline void ConfigurationOption<const char*>::LoadValue()
 {
-	value_ = ConfigurationFile::i()->ini().GetValue(category_.c_str(), nickname_.c_str(), value());
+	value_ = ConfigurationFile::i().ini().GetValue(category_.c_str(), nickname_.c_str(), value());
 }
 
 template<>
 inline void ConfigurationOption<int>::SaveValue() const
 {
-	ConfigurationFile::i()->ini().SetLongValue(category_.c_str(), nickname_.c_str(), value());
+	ConfigurationFile::i().ini().SetLongValue(category_.c_str(), nickname_.c_str(), value());
 }
 
 template<>
 inline void ConfigurationOption<double>::SaveValue() const
 {
-	ConfigurationFile::i()->ini().SetDoubleValue(category_.c_str(), nickname_.c_str(), value());
+	ConfigurationFile::i().ini().SetDoubleValue(category_.c_str(), nickname_.c_str(), value());
 }
 
 template<>
 inline void ConfigurationOption<float>::SaveValue() const
 {
-	ConfigurationFile::i()->ini().SetDoubleValue(category_.c_str(), nickname_.c_str(), double(value()));
+	ConfigurationFile::i().ini().SetDoubleValue(category_.c_str(), nickname_.c_str(), double(value()));
 }
 
 template<>
 inline void ConfigurationOption<bool>::SaveValue() const
 {
-	ConfigurationFile::i()->ini().SetBoolValue(category_.c_str(), nickname_.c_str(), value());
+	ConfigurationFile::i().ini().SetBoolValue(category_.c_str(), nickname_.c_str(), value());
 }
 
 template<>
 inline void ConfigurationOption<const char*>::SaveValue() const
 {
-	ConfigurationFile::i()->ini().SetValue(category_.c_str(), nickname_.c_str(), value());
+	ConfigurationFile::i().ini().SetValue(category_.c_str(), nickname_.c_str(), value());
 }
 
 }

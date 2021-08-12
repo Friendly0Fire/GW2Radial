@@ -11,11 +11,10 @@ IMGUI_IMPL_API LRESULT  ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPAR
 
 namespace GW2Radial
 {
-
-    DEFINE_SINGLETON(Input);
-
     Input::Input()
     {
+        // While WM_USER+n is recommended by MSDN, we do not know if the game uses special
+        // window events, so avoid any potential conflict using explicit registration
         id_H_LBUTTONDOWN_ = RegisterWindowMessage(TEXT("H_LBUTTONDOWN"));
         id_H_LBUTTONUP_   = RegisterWindowMessage(TEXT("H_LBUTTONUP"));
         id_H_RBUTTONDOWN_ = RegisterWindowMessage(TEXT("H_RBUTTONDOWN"));
@@ -33,29 +32,22 @@ namespace GW2Radial
 
     WPARAM MapLeftRightKeys(WPARAM vk, LPARAM lParam)
     {
-        WPARAM newVk = vk;
         const UINT scancode = (lParam & 0x00ff0000) >> 16;
         const int extended  = (lParam & 0x01000000) != 0;
 
         switch (vk)
         {
         case VK_SHIFT:
-            newVk = MapVirtualKey(scancode, MAPVK_VSC_TO_VK_EX);
-            break;
+            return MapVirtualKey(scancode, MAPVK_VSC_TO_VK_EX);
         case VK_CONTROL:
-            newVk = extended ? VK_RCONTROL : VK_LCONTROL;
-            break;
+            return extended ? VK_RCONTROL : VK_LCONTROL;
         case VK_MENU:
-            newVk = extended ? VK_RMENU : VK_LMENU;
-            break;
+            return extended ? VK_RMENU : VK_LMENU;
         default:
-            // not a key we map from generic to left/right specialized
-            //  just return it.
-            newVk = vk;
-            break;
+            // Not a key we map from generic to left/right,
+            // just return it.
+            return vk;
         }
-
-        return newVk;
     }
 
     bool IsRawInputMouse(LPARAM lParam)
@@ -73,9 +65,8 @@ namespace GW2Radial
 
     bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
     {
-        std::list<EventKey> eventKeys;
-
         // Generate our EventKey list for the current message
+        std::list<EventKey> eventKeys;
         {
             bool eventDown = false;
             switch (msg)
@@ -143,16 +134,15 @@ namespace GW2Radial
             else
                 downKeysChanged |= DownKeys.erase(k.sc) > 0;
 
-
         InputResponse response = InputResponse::PASS_TO_GAME;
         // Only run these for key down/key up (incl. mouse buttons) events
-        if (!eventKeys.empty() && !MumbleLink::i()->textboxHasFocus()) {
+        if (!eventKeys.empty() && !MumbleLink::i().textboxHasFocus()) {
             for (auto& cb : inputChangeCallbacks_) {
                 cb->callback(downKeysChanged, DownKeys, eventKeys, response);
             }
         }
 
-        ImGui_ImplWin32_WndProcHandler(Core::i()->gameWindow(), msg, wParam, lParam);
+        ImGui_ImplWin32_WndProcHandler(Core::i().gameWindow(), msg, wParam, lParam);
         if (msg == WM_MOUSEMOVE)
         {
             auto& io = ImGui::GetIO();
@@ -171,7 +161,7 @@ namespace GW2Radial
             case WM_KEYUP:
             case WM_SYSKEYDOWN:
             case WM_SYSKEYUP:
-                    return true;
+                return true;
             }
         }
 
@@ -372,9 +362,9 @@ namespace GW2Radial
         return { wParam, lParam };
     }
 
-    void Input::SendKeybind(const ScanCodeSet &scs, const std::optional<Point>& cursorPos, KeybindAction action)
+    void Input::SendKeybind(const KeyCombo& ks, const std::optional<Point>& cursorPos, KeybindAction action)
     {
-        if (scs.empty())
+        if (ks.first == ScanCode::NONE)
         {
             if (cursorPos.has_value())
             {
@@ -387,65 +377,38 @@ namespace GW2Radial
             return;
         }
 
-        std::list<ScanCode> scsSorted(scs.begin(), scs.end());
-
-        if (scsSorted.size() > 1)
-        {
-            auto removeGeneric = [&](ScanCode g, ScanCode r)
-            {
-                if (const auto it = std::find(scsSorted.begin(), scsSorted.end(), g); it != scsSorted.end())
-                {
-                    scsSorted.erase(it);
-                    scsSorted.push_back(r);
-                }
-            };
-            removeGeneric(ScanCode::SHIFT, ScanCode::SHIFTLEFT);
-            removeGeneric(ScanCode::CONTROL, ScanCode::CONTROLLEFT);
-            removeGeneric(ScanCode::ALT, ScanCode::ALTLEFT);
-            removeGeneric(ScanCode::META, ScanCode::METALEFT);
-
-            scsSorted.sort(ScanCodeCompare());
-        }
-
         mstime currentTime = TimeInMilliseconds() + 10;
 
-        // GW2 only distinguishes left/right modifiers when not used with other keys
-        bool useUniversalModifiers = false;
-        for (cref sc : scsSorted)
-        {
-            if (!IsModifier(sc))
-            {
-                useUniversalModifiers = true;
-                break;
-            }
-        }
+        std::list<ScanCode> codes;
+        if (notNone(ks.second & Modifier::SHIFT))
+            codes.push_back(ScanCode::SHIFTLEFT);
+        if (notNone(ks.second & Modifier::CTRL))
+            codes.push_back(ScanCode::CONTROLLEFT);
+        if (notNone(ks.second & Modifier::ALT))
+            codes.push_back(ScanCode::ALTLEFT);
 
-        if (notNone(action & KeybindAction::DOWN)) {
-            for (const auto& sc : scsSorted) {
-                if (DownKeys.count(sc))
-                    continue;
+        codes.push_back(ks.first);
 
-                auto sc2 = useUniversalModifiers ? MakeUniversal(sc) : sc;
-
-                DelayedInput i = TransformScanCode(sc2, true, currentTime, cursorPos);
+        auto sendKeys = [&](ScanCode sc, bool down) {
+            if (!DownKeys.count(sc)) {
+                DelayedInput i = TransformScanCode(sc, down, currentTime, cursorPos);
                 if (i.wParam != 0)
                     QueuedInputs.push_back(i);
                 currentTime += 20;
             }
+        };
+
+        if (notNone(action & KeybindAction::DOWN)) {
+            for (auto sc : codes)
+                sendKeys(sc, true);
         }
+
         if(action == KeybindAction::BOTH)
             currentTime += 50;
 
         if (notNone(action & KeybindAction::UP)) {
-            for (const auto& sc : reverse(scsSorted)) {
-                if (DownKeys.count(sc))
-                    continue;
-
-                DelayedInput i = TransformScanCode(sc, false, currentTime, cursorPos);
-                if (i.wParam != 0)
-                    QueuedInputs.push_back(i);
-                currentTime += 20;
-            }
+            for (const auto& sc : reverse(codes))
+                sendKeys(sc, false);
         }
     }
 
@@ -462,7 +425,7 @@ namespace GW2Radial
             return;
 
         // Only send inputs that aren't too old
-        if(currentTime < qi.t + 1000 && !MumbleLink::i()->textboxHasFocus())
+        if(currentTime < qi.t + 1000 && !MumbleLink::i().textboxHasFocus())
         {
             if (qi.cursorPos)
             {
@@ -475,7 +438,7 @@ namespace GW2Radial
 #ifdef _DEBUG
                 FormattedOutputDebugString(L"Sending keybind 0x%x...\n", qi.wParam);
 #endif
-                PostMessage(Core::i()->gameWindow(), qi.msg, qi.wParam, qi.lParamValue);
+                PostMessage(Core::i().gameWindow(), qi.msg, qi.wParam, qi.lParamValue);
             }
         }
 

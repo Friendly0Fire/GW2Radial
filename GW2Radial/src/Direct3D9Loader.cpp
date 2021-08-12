@@ -187,7 +187,7 @@ void Direct3D9Loader::Init(gw2al_core_vtable* gAPI)
 {
 	D3D9_wrapper d3d9_wrap;
 	d3d9_wrap.enable_event = static_cast<pD3D9_wrapper_enable_event>(gAPI->query_function(
-        gAPI->hash_name(static_cast<wchar_t*>(D3D9_WRAPPER_ENABLE_EVENT_FNAME))));
+        gAPI->hash_name(const_cast<wchar_t*>(D3D9_WRAPPER_ENABLE_EVENT_FNAME))));
 
 	d3d9_wrap.enable_event(METH_OBJ_CreateDevice, WRAP_CB_PRE_POST);
 	d3d9_wrap.enable_event(METH_DEV_Release, WRAP_CB_POST);
