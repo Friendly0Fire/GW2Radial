@@ -204,7 +204,7 @@ enum class ScanCode : uint {
 };
 using ScanCode_t = std::underlying_type_t<ScanCode>;
 
-enum class Modifier : ushort {
+enum class Modifier : uint {
     NONE = 0,
 
     LCTRL = 1,

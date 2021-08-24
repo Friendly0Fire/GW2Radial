@@ -5,7 +5,7 @@ namespace GW2Radial
 {
 
 Novelty::Novelty(NoveltyType m, IDirect3DDevice9* dev)
-	: WheelElement(uint(m), std::string("novelty_") + GetNoveltyNicknameFromType(m), "Mounts", GetNoveltyNameFromType(m), dev)
+	: WheelElement(uint(m), std::string("novelty_") + GetNoveltyNicknameFromType(m), "Novelties", GetNoveltyNameFromType(m), dev)
 { }
 
 template<>

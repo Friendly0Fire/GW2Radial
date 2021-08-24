@@ -7,17 +7,48 @@
 namespace GW2Radial
 {
 
-using KeyCombo = std::pair<ScanCode, Modifier>;
+struct KeyCombo
+{
+public:
+	ScanCode& key = key_;
+	Modifier& mod = mod_;
+
+	KeyCombo() {
+		key = ScanCode::NONE;
+		mod = Modifier::NONE;
+	}
+	KeyCombo(ScanCode k, Modifier m) : key(k), mod(m) { }
+
+	operator std::tuple<ScanCode, Modifier>() const
+	{
+		return std::make_tuple(key, mod);
+	}
+
+private:
+	union {
+		uint64_t storage_;
+		struct {
+			ScanCode key_;
+			Modifier mod_;
+		};
+	};
+
+	friend std::partial_ordering operator<=>(const KeyCombo& a, const KeyCombo& b);
+};
+
+std::partial_ordering operator<=>(const KeyCombo& a, const KeyCombo& b)
+{
+	return a.storage_ <=> b.storage_;
+}
 
 class Keybind
 {
 public:
 	Keybind(std::string nickname, std::string displayName, std::string category, KeyCombo ks, bool saveToConfig)
-		: Keybind(nickname, displayName, category, ks.first, ks.second, saveToConfig) {}
+		: Keybind(nickname, displayName, category, ks.key, ks.mod, saveToConfig) {}
 
 	Keybind(std::string nickname, std::string displayName, std::string category, ScanCode key, Modifier mod, bool saveToConfig);
 	Keybind(std::string nickname, std::string displayName, std::string category);
-	~Keybind();
 
 	const KeyCombo& keyCombo() const { return { key_, mod_ }; }
 	ScanCode key() const { return key_; }
@@ -51,12 +82,12 @@ public:
 	[[nodiscard]] bool isSet() const { return key_ != ScanCode::NONE; }
 
 	[[nodiscard]] const char* keysDisplayString() const { return keysDisplayString_.data(); }
+	[[nodiscard]] char* keysDisplayString() { return keysDisplayString_.data(); }
+	[[nodiscard]] const size_t keysDisplayStringSize() const { return keysDisplayString_.size(); }
 	
 	[[nodiscard]] bool matches(const KeyCombo& ks) const;
 	[[nodiscard]] bool matchesPartial(const KeyCombo& ks) const;
 	[[nodiscard]] bool matchesNoLeftRight(const KeyCombo& ks) const;
-
-	static void ForceRefreshDisplayStrings();
 
 protected:
 	void UpdateDisplayString() const;
@@ -68,8 +99,6 @@ protected:
 	bool saveToConfig_ = true;
 
 	mutable std::array<char, 256> keysDisplayString_ { };
-
-	static std::set<Keybind*> keybinds_;
 };
 
 }

@@ -68,7 +68,6 @@ protected:
 	WheelElement* GetFavorite(int favoriteId);
 	std::vector<WheelElement*> GetActiveElements(bool sorted = true);
 	void OnMouseMove(bool& rv);
-	void OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response);
 	void ActivateWheel(bool isMountOverlayLocked);
 	void DeactivateWheel();
 	void SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos);
@@ -147,7 +146,6 @@ protected:
 	ComPtr<IDirect3DTexture9> wipeMaskTexture_;
 	
 	std::unique_ptr<Input::MouseMoveCallback> mouseMoveCallback_;
-	std::unique_ptr<Input::InputChangeCallback> inputChangeCallback_;
 
 	struct ExtraUI {
 	    std::function<void()> display, interaction, queuing, misc;
@@ -161,7 +159,7 @@ protected:
 	fVector3 wipeMaskData_;
 
     [[nodiscard]] const char* GetTabName() const override { return displayName_.c_str(); }
-	void DrawMenu() override;
+	void DrawMenu(Keybind* currentEditedKeybind) override;
 
 	friend class WheelElement;
 	friend class CustomWheelsManager;

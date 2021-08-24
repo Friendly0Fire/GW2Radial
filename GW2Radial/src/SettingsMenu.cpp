@@ -10,9 +10,8 @@ namespace GW2Radial
 SettingsMenu::SettingsMenu()
 	: showKeybind_("show_settings", "Show settings", "__core__", { GetScanCodeFromVirtualKey('M'), Modifier::SHIFT | Modifier::ALT }, false)
 {
-	inputChangeCallback_ = std::make_unique<Input::InputChangeCallback>([this](bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response) { return OnInputChange(changed, scs, changedKeys, response); }, -1000);
-	Input::i().AddInputChangeCallback(inputChangeCallback_.get());
 }
+
 void SettingsMenu::Draw()
 {
 	isFocused_ = false;
@@ -41,7 +40,7 @@ void SettingsMenu::Draw()
 
 				    if(ImGui::BeginTabItem(i->GetTabName(), nullptr, 0)) {
 					    currentTab_ = i;
-					    i->DrawMenu();
+					    i->DrawMenu(currentEditedKeybind_);
 				        ImGui::EndTabItem();
 				    }
 			    }
@@ -54,7 +53,8 @@ void SettingsMenu::Draw()
 	}
 }
 
-void SettingsMenu::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response)
+#if 0
+void SettingsMenu::OnInputChange(bool changed, const std::set<ScanCode>& scs, const std::list<EventKey>& changedKeys, InputResponse& response)
 {
 	bool allowedThrough = false;
 	if (allowThroughAlt_ != ScanCode::NONE && std::any_of(changedKeys.begin(), changedKeys.end(), [&](const auto& ek) { return ek.sc == allowThroughAlt_ && ek.down == false; })) {
@@ -91,5 +91,6 @@ void SettingsMenu::OnInputChange(bool changed, const ScanCodeSet& scs, const std
 		response |= InputResponse::PREVENT_KEYBOARD;
 	}
 }
+#endif
 
 }

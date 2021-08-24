@@ -15,7 +15,7 @@ bool Mount::isActive() const
 		return false;
 
 	if(elementId_ != uint(MountType::WARCLAW))
-		return !MumbleLink::i()->isInWvW();
+		return !MumbleLink::i().isInWvW();
 	
 	return true;
 }
@@ -45,7 +45,7 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 
 	doBypassWheel_ = [this](WheelElement*& we) {
 		cref mumble = MumbleLink::i();
-		if(mumble->isMounted()) {
+		if(mumble.isMounted()) {
 			const auto& activeElems = GetActiveElements();
 			if(!activeElems.empty()) {
 		        we = activeElems.front();
@@ -53,12 +53,12 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 			}
 		}
 
-		if(mumble->isInWvW()) {
+		if(mumble.isInWvW()) {
 		    we = wheelElements_[uint(MountType::WARCLAW) - uint(MountType::FIRST)].get();
 			return we != nullptr && we->isBound();
 		}
 
-		if(mumble->isSwimmingOnSurface() || mumble->isUnderwater()) {
+		if(mumble.isSwimmingOnSurface() || mumble.isUnderwater()) {
 		    we = wheelElements_[uint(MountType::SKIMMER) - uint(MountType::FIRST)].get();
 			return we != nullptr && we->isBound();
 		}

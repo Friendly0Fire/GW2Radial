@@ -130,17 +130,14 @@ namespace GW2Radial
         // Apply key events now
         for (cref k : eventKeys)
             if (k.down)
-                downKeysChanged |= DownKeys.insert(k.sc).second;
+                downKeysChanged |= downKeys_.insert(k.sc).second;
             else
-                downKeysChanged |= DownKeys.erase(k.sc) > 0;
+                downKeysChanged |= downKeys_.erase(k.sc) > 0;
 
         InputResponse response = InputResponse::PASS_TO_GAME;
         // Only run these for key down/key up (incl. mouse buttons) events
-        if (!eventKeys.empty() && !MumbleLink::i().textboxHasFocus()) {
-            for (auto& cb : inputChangeCallbacks_) {
-                cb->callback(downKeysChanged, DownKeys, eventKeys, response);
-            }
-        }
+        if (!eventKeys.empty() && !MumbleLink::i().textboxHasFocus())
+            TriggerKeybinds(downKeysChanged, eventKeys);
 
         ImGui_ImplWin32_WndProcHandler(Core::i().gameWindow(), msg, wParam, lParam);
         if (msg == WM_MOUSEMOVE)
@@ -244,12 +241,16 @@ namespace GW2Radial
 
     void Input::OnFocusLost()
     {
-        DownKeys.clear();
+        downKeys_.clear();
     }
 
     void Input::OnUpdate()
     {
         SendQueuedInputs();
+    }
+
+    void Input::TriggerKeybinds(bool downKeysChanged, const std::list<EventKey>& eventKeys)
+    {
     }
 
     uint Input::ConvertHookedMessage(uint msg) const
@@ -341,19 +342,19 @@ namespace GW2Radial
     std::tuple<WPARAM, LPARAM> Input::CreateMouseEventParams(const std::optional<Point>& cursorPos) const
     {
         WPARAM wParam = 0;
-        if (DownKeys.count(ScanCode::CONTROLLEFT) || DownKeys.count(ScanCode::CONTROLRIGHT))
+        if (downKeys_.count(ScanCode::CONTROLLEFT) || downKeys_.count(ScanCode::CONTROLRIGHT))
             wParam += MK_CONTROL;
-        if (DownKeys.count(ScanCode::SHIFTLEFT) || DownKeys.count(ScanCode::SHIFTRIGHT))
+        if (downKeys_.count(ScanCode::SHIFTLEFT) || downKeys_.count(ScanCode::SHIFTRIGHT))
             wParam += MK_SHIFT;
-        if (DownKeys.count(ScanCode::LBUTTON))
+        if (downKeys_.count(ScanCode::LBUTTON))
             wParam += MK_LBUTTON;
-        if (DownKeys.count(ScanCode::RBUTTON))
+        if (downKeys_.count(ScanCode::RBUTTON))
             wParam += MK_RBUTTON;
-        if (DownKeys.count(ScanCode::MBUTTON))
+        if (downKeys_.count(ScanCode::MBUTTON))
             wParam += MK_MBUTTON;
-        if (DownKeys.count(ScanCode::X1BUTTON))
+        if (downKeys_.count(ScanCode::X1BUTTON))
             wParam += MK_XBUTTON1;
-        if (DownKeys.count(ScanCode::X2BUTTON))
+        if (downKeys_.count(ScanCode::X2BUTTON))
             wParam += MK_XBUTTON2;
 
         cref io = ImGui::GetIO();
@@ -364,7 +365,7 @@ namespace GW2Radial
 
     void Input::SendKeybind(const KeyCombo& ks, const std::optional<Point>& cursorPos, KeybindAction action)
     {
-        if (ks.first == ScanCode::NONE)
+        if (ks.key == ScanCode::NONE)
         {
             if (cursorPos.has_value())
             {
@@ -372,7 +373,7 @@ namespace GW2Radial
                 i.t = TimeInMilliseconds() + 10;
                 std::tie(i.wParam, i.lParamValue) = CreateMouseEventParams(cursorPos);
                 i.msg = id_H_MOUSEMOVE_;
-                QueuedInputs.push_back(i);
+                queuedInputs_.push_back(i);
             }
             return;
         }
@@ -380,20 +381,20 @@ namespace GW2Radial
         mstime currentTime = TimeInMilliseconds() + 10;
 
         std::list<ScanCode> codes;
-        if (notNone(ks.second & Modifier::SHIFT))
+        if (notNone(ks.mod & Modifier::SHIFT))
             codes.push_back(ScanCode::SHIFTLEFT);
-        if (notNone(ks.second & Modifier::CTRL))
+        if (notNone(ks.mod & Modifier::CTRL))
             codes.push_back(ScanCode::CONTROLLEFT);
-        if (notNone(ks.second & Modifier::ALT))
+        if (notNone(ks.mod & Modifier::ALT))
             codes.push_back(ScanCode::ALTLEFT);
 
-        codes.push_back(ks.first);
+        codes.push_back(ks.key);
 
         auto sendKeys = [&](ScanCode sc, bool down) {
-            if (!DownKeys.count(sc)) {
+            if (!downKeys_.count(sc)) {
                 DelayedInput i = TransformScanCode(sc, down, currentTime, cursorPos);
                 if (i.wParam != 0)
-                    QueuedInputs.push_back(i);
+                    queuedInputs_.push_back(i);
                 currentTime += 20;
             }
         };
@@ -414,12 +415,12 @@ namespace GW2Radial
 
     void Input::SendQueuedInputs()
     {
-        if (QueuedInputs.empty())
+        if (queuedInputs_.empty())
             return;
 
         const auto currentTime = TimeInMilliseconds();
 
-        auto &qi = QueuedInputs.front();
+        auto &qi = queuedInputs_.front();
 
         if (currentTime < qi.t)
             return;
@@ -442,6 +443,16 @@ namespace GW2Radial
             }
         }
 
-        QueuedInputs.pop_front();
+        queuedInputs_.pop_front();
+    }
+
+    void Input::RegisterKeybind(ActivationKeybind* kb)
+    {
+        keybinds_[kb->keyCombo()] = kb;
+    }
+
+    void Input::UnregisterKeybind(ActivationKeybind* kb)
+    {
+        keybinds_.erase(kb->keyCombo());
     }
 }

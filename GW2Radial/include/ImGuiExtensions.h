@@ -10,7 +10,7 @@ ImVec2 operator-(const ImVec2& a, const ImVec2& b);
 ImVec2 operator*=(ImVec2& a, const ImVec2& b);
 
 ImVec4 operator/(const ImVec4& v, float f);
-void ImGuiKeybindInput(GW2Radial::Keybind& setting, const char* tooltip = nullptr);
+bool ImGuiKeybindInput(GW2Radial::Keybind& setting, bool beingModified, const char* tooltip);
 
 template<typename F, typename T, typename... Args>
 bool ImGuiConfigurationWrapper(F fct, const char* name, GW2Radial::ConfigurationOption<T>& value, Args&&... args)

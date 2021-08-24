@@ -271,7 +271,7 @@ void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
 		customWheels_.clear();
 	}
 
-	cref folderBase = ConfigurationFile::i()->folder() + L"custom\\";
+	cref folderBase = ConfigurationFile::i().folder() + L"custom\\";
 	if(std::filesystem::exists(folderBase))
 	{
 	    for(cref entry : std::filesystem::directory_iterator(folderBase))

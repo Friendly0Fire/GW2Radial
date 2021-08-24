@@ -16,7 +16,7 @@ public:
 	{
 	public:
 		virtual const char* GetTabName() const = 0;
-		virtual void DrawMenu() = 0;
+		virtual void DrawMenu(Keybind* currentEditedKeybind) = 0;
 		virtual bool visible() { return true; }
 	};
 
@@ -32,18 +32,15 @@ public:
 	bool isVisible() const { return isVisible_; }
 
 protected:
-	void OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response);
-
 	std::list<Implementer*> implementers_;
 	Implementer* currentTab_ = nullptr;
 
 	bool isVisible_ = false;
 	bool isFocused_ = false;
 	ActivationKeybind showKeybind_;
+	Keybind* currentEditedKeybind_ = nullptr;
 	ScanCode allowThroughAlt_ = ScanCode::NONE;
 	ScanCode allowThroughShift_ = ScanCode::NONE;
-	
-	std::unique_ptr<Input::InputChangeCallback> inputChangeCallback_;
 };
 
 }

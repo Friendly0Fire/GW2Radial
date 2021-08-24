@@ -16,7 +16,7 @@ namespace GW2Radial
 		if(opened_)
 		{
 			if(relative)
-				centerPos *= ImVec2(float(Core::i()->screenWidth()), float(Core::i()->screenHeight()));
+				centerPos *= ImVec2(float(Core::i().screenWidth()), float(Core::i().screenHeight()));
 
 			pos_ = centerPos;
 		}
@@ -29,7 +29,7 @@ namespace GW2Radial
 		if(opened_)
 		{
 			if(relative)
-				size *= ImVec2(float(Core::i()->screenWidth()), float(Core::i()->screenHeight()));
+				size *= ImVec2(float(Core::i().screenWidth()), float(Core::i().screenHeight()));
 
 			size_ = size;
 		}

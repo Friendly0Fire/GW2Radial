@@ -10,6 +10,7 @@
 #include <ConfigurationOption.h>
 #include <ScanCode.h>
 #include <Utility.h>
+#include <Keybind.h>
 
 namespace GW2Radial
 {
@@ -41,6 +42,8 @@ struct Point
 	int y;
 };
 
+class ActivationKeybind;
+
 template<typename Func>
 struct Callback {
 	Func callback;
@@ -61,8 +64,6 @@ class Input : public Singleton<Input>
 {
 public:
 	using MouseMoveCallback = Callback<std::function<void(bool& retval)>>;
-	using InputChangeCallback = Callback<std::function<void(bool changed, const std::set<ScanCode>& sc, const std::list<EventKey>& changedKeys, InputResponse& retval)>>;
-	Input();
 
 	uint id_H_LBUTTONDOWN() const { return id_H_LBUTTONDOWN_; }
 	uint id_H_LBUTTONUP() const { return id_H_LBUTTONUP_; }
@@ -81,9 +82,7 @@ public:
 	void OnUpdate();
 	
 	void AddMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.insert(cb); }
-	void AddInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.insert(cb); }
 	void RemoveMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.erase(cb); }
-	void RemoveInputChangeCallback(InputChangeCallback* cb) { inputChangeCallbacks_.erase(cb); }
 	void SendKeybind(const KeyCombo& ks, std::optional<Point> const& cursorPos = std::nullopt, KeybindAction action = KeybindAction::BOTH);
 
 protected:
@@ -100,6 +99,7 @@ protected:
 		std::optional<Point> cursorPos;
 	};
 
+	void TriggerKeybinds(bool downKeysChanged, const std::list<EventKey>& eventKeys);
 	uint ConvertHookedMessage(uint msg) const;
 	DelayedInput TransformScanCode(ScanCode sc, bool down, mstime t, const std::optional<Point>& cursorPos);
 	std::tuple<WPARAM, LPARAM> CreateMouseEventParams(const std::optional<Point>& cursorPos) const;
@@ -121,16 +121,28 @@ protected:
 	uint id_H_MOUSEMOVE_;
 	// ReSharper restore CppInconsistentNaming
 
-
-	std::set<ScanCode> DownKeys;
-	std::list<DelayedInput> QueuedInputs;
+	std::set<ScanCode> downKeys_;
+	std::list<DelayedInput> queuedInputs_;
 	
 	std::set<MouseMoveCallback*, PtrComparator<MouseMoveCallback>> mouseMoveCallbacks_;
-	std::set<InputChangeCallback*, PtrComparator<InputChangeCallback>> inputChangeCallbacks_;
+	std::map<KeyCombo, ActivationKeybind*> keybinds_;
+	ActivationKeybind* activeKeybind_ = nullptr;
+	void RegisterKeybind(ActivationKeybind* kb);
+	void UnregisterKeybind(ActivationKeybind* kb);
 
 	friend class MiscTab;
+	friend class ActivationKeybind;
 };
 
+}
+
+inline GW2Radial::InputResponse operator|(GW2Radial::InputResponse a, GW2Radial::InputResponse b) {
+	return GW2Radial::InputResponse(uint(a) | uint(b));
+}
+
+inline GW2Radial::InputResponse& operator|=(GW2Radial::InputResponse& a, GW2Radial::InputResponse b) {
+	a = a | b;
+	return a;
 }
 
 inline GW2Radial::KeybindAction operator&(GW2Radial::KeybindAction a, GW2Radial::KeybindAction b) {

@@ -43,31 +43,23 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	keybind_.conditions(conditions_);
 	centralKeybind_.conditions(conditions_);
 	
-	aboveWater_.test = []() { return MumbleLink::i()->isUnderwater(); };
-	aboveWater_.toggleOffTest = outOfCombat_.toggleOffTest = []() { return MumbleLink::i()->isMounted(); };
-	outOfCombat_.test = []() { return MumbleLink::i()->isInCombat(); };
+	aboveWater_.test = []() { return MumbleLink::i().isUnderwater(); };
+	aboveWater_.toggleOffTest = outOfCombat_.toggleOffTest = []() { return MumbleLink::i().isMounted(); };
+	outOfCombat_.test = []() { return MumbleLink::i().isInCombat(); };
 
-	backgroundTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), bgResourceId);
-	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i()->dllModule(), wipeMaskResourceId);
+	backgroundTexture_ = CreateTextureFromResource(dev, Core::i().dllModule(), bgResourceId);
+	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i().dllModule(), wipeMaskResourceId);
 	
 	mouseMoveCallback_ = std::make_unique<Input::MouseMoveCallback>([this](bool& rv) { OnMouseMove(rv); });
-	Input::i()->AddMouseMoveCallback(mouseMoveCallback_.get());
-	inputChangeCallback_ = std::make_unique<Input::InputChangeCallback>([this](bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response) { OnInputChange(changed, scs, changedKeys, response); });
-	Input::i()->AddInputChangeCallback(inputChangeCallback_.get());
+	Input::i().AddMouseMoveCallback(mouseMoveCallback_.get());
 
-	SettingsMenu::i()->AddImplementer(this);
+	SettingsMenu::i().AddImplementer(this);
 }
 
 Wheel::~Wheel()
 {
-	if(auto i = Input::iNoInit(); i)
-	{
-		i->RemoveMouseMoveCallback(mouseMoveCallback_.get());
-		i->RemoveInputChangeCallback(inputChangeCallback_.get());
-	}
-	
-	if(auto i = SettingsMenu::iNoInit(); i)
-		i->RemoveImplementer(this);
+	Input::i().RemoveMouseMoveCallback(mouseMoveCallback_.get());
+	SettingsMenu::i().RemoveImplementer(this);
 }
 
 void Wheel::UpdateHover()
@@ -75,12 +67,12 @@ void Wheel::UpdateHover()
 	const auto io = ImGui::GetIO();
 
 	fVector2 mousePos;
-	mousePos.x = io.MousePos.x / float(Core::i()->screenWidth());
-	mousePos.y = io.MousePos.y / float(Core::i()->screenHeight());
+	mousePos.x = io.MousePos.x / float(Core::i().screenWidth());
+	mousePos.y = io.MousePos.y / float(Core::i().screenHeight());
 	mousePos.x -= currentPosition_.x;
 	mousePos.y -= currentPosition_.y;
 
-	mousePos.y *= float(Core::i()->screenHeight()) / float(Core::i()->screenWidth());
+	mousePos.y *= float(Core::i().screenHeight()) / float(Core::i().screenWidth());
 
 	WheelElement* lastHovered = currentHovered_;
 
@@ -112,7 +104,7 @@ void Wheel::UpdateHover()
 	}
 }
 
-void Wheel::DrawMenu()
+void Wheel::DrawMenu(Keybind* currentEditedKeybind)
 {
 	ImGui::PushID((nickname_ + "Elements").c_str());
 
@@ -121,12 +113,12 @@ void Wheel::DrawMenu()
 	ImGui::TextUnformatted("Set the following to your in-game keybinds (F11, Control Options).");
 
 	for(auto& we : wheelElements_)
-		ImGuiKeybindInput(we->keybind());
+		ImGuiKeybindInput(we->keybind(), &we->keybind() == currentEditedKeybind, nullptr);
 	
 	ImGuiTitle("Keybinds");
 	
-	ImGuiKeybindInput(keybind_, "Pressing this key combination will open the radial menu at your cursor's current location.");
-	ImGuiKeybindInput(centralKeybind_, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
+	ImGuiKeybindInput(keybind_, &keybind_ == currentEditedKeybind, "Pressing this key combination will open the radial menu at your cursor's current location.");
+	ImGuiKeybindInput(centralKeybind_, &centralKeybind_ == currentEditedKeybind, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, enableConditionsOption_);
 
@@ -244,10 +236,10 @@ void Wheel::DrawMenu()
 	ImGuiHelpTooltip("Moves the cursor to the center of the screen when the \"show in center\" keybind is used.");
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
-	ImGuiHelpTooltip("Prevent the camera from being affected by mouse movements while the menu is displayed.");
+	ImGuiHelpTooltip("Prevents the camera from being affected by mouse movements while the menu is displayed.");
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorAfterKeybindOption_);
-	ImGuiHelpTooltip("Moves the cursor to where it was on screen before the menu was displayed.");
+	ImGuiHelpTooltip("Once the menu is dismissed, moves the cursor to where it was on screen before the menu was displayed.");
 
 	if(extraUI_ && extraUI_->interaction)
 		extraUI_->interaction();
@@ -270,7 +262,7 @@ void Wheel::DrawMenu()
 	
 	ImGuiTitle("Visibility & Ordering");
 
-	ImGui::Text("Ordering top to bottom is clockwise starting at 12:00.");
+	ImGui::Text("Ordering top to bottom is clockwise starting at noon.");
 
 	for(auto it = sortedWheelElements_.begin(); it != sortedWheelElements_.end(); ++it)
 	{
@@ -301,12 +293,12 @@ void Wheel::OnUpdate() {
 		const auto currentTime = TimeInMilliseconds();
 		if(currentTime <= conditionallyDelayedTime_ + maximumConditionalWaitTimeOption_.value() * 1000ull) {
 			cref mumble = MumbleLink::i();
-		    if (mumble->gameHasFocus() && !mumble->isMapOpen()
+		    if (mumble.gameHasFocus() && !mumble.isMapOpen()
 				&& aboveWater_.passes() && outOfCombat_.passes()) {
 			    conditionallyDelayedTestCount_++;
 			    if(conditionallyDelayedTestCount_ >= 10)
 			    {
-			        Input::i()->SendKeybind(conditionallyDelayed_->keybind().scanCodes(), std::nullopt);
+			        Input::i().SendKeybind(conditionallyDelayed_->keybind().keyCombo(), std::nullopt);
 			        conditionallyDelayed_ = nullptr;
 			        conditionallyDelayedTime_ = currentTime;
 					conditionallyDelayedTestCount_ = 0;
@@ -338,8 +330,8 @@ void Wheel::OnCharacterChange(const std::wstring& prevCharacterName, const std::
 
 void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 {
-	const int screenWidth = Core::i()->screenWidth();
-	const int screenHeight = Core::i()->screenHeight();
+	const int screenWidth = Core::i().screenWidth();
+	const int screenHeight = Core::i().screenHeight();
 
 	fVector4 screenSize = { float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight };
 
@@ -352,13 +344,13 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			if(resetCursorPositionToCenter_)
 			{
 				RECT rect = { };
-				if (GetWindowRect(Core::i()->gameWindow(), &rect))
+				if (GetWindowRect(Core::i().gameWindow(), &rect))
 				{
 					if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
 					{
 						auto& io = ImGui::GetIO();
-						io.MousePos.x = Core::i()->screenWidth() * 0.5f;
-						io.MousePos.y = Core::i()->screenHeight() * 0.5f;
+						io.MousePos.x = Core::i().screenWidth() * 0.5f;
+						io.MousePos.y = Core::i().screenHeight() * 0.5f;
 					}
 				}
 				resetCursorPositionToCenter_ = false;
@@ -489,10 +481,10 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		});
 
 		float dpiScale = 1.f;
-		if(GFXSettings::i()->dpiScaling())
-		    dpiScale = float(GetDpiForWindow(Core::i()->gameWindow())) / 96.f;
+		if(GFXSettings::i().dpiScaling())
+		    dpiScale = float(GetDpiForWindow(Core::i().gameWindow())) / 96.f;
 
-		float uiScale = float(MumbleLink::i()->uiScale());
+		float uiScale = float(MumbleLink::i().uiScale());
 
 		fVector2 topLeftCorner;
 		topLeftCorner.y = 77.f + 10.f * uiScale;
@@ -643,9 +635,10 @@ void Wheel::OnMouseMove(bool& rv)
 	rv |= isVisible_ && lockCameraWhenOverlayedOption_.value();
 }
 
+#if 0
 void Wheel::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response)
 {
-	if (SettingsMenu::i()->isVisible()) {
+	if (SettingsMenu::i().isVisible()) {
 		bool isAnyElementBeingModified = keybind_.isBeingModified() || centralKeybind_.isBeingModified() ||
 			std::any_of(wheelElements_.begin(), wheelElements_.end(),
 													[](cref we) { return we->keybind().isBeingModified(); });
@@ -691,7 +684,7 @@ void Wheel::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<
 
 	const bool previousVisibility = isVisible_;
 
-	if (MumbleLink::i()->isMapOpen())
+	if (MumbleLink::i().isMapOpen())
 		isVisible_ = false;
 	else {
 		bool mountOverlay = (!enableConditionsOption_.value() || keybind_.conditionsFulfilled()) && keybind_.matchesPartial(scs);
@@ -727,6 +720,7 @@ void Wheel::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<
 	if(clickSelectOption_.value() && !isVisible_ && previousVisibility)
 		response = InputResponse::PREVENT_ALL;
 }
+#endif
 
 void Wheel::ActivateWheel(bool isMountOverlayLocked)
 {
@@ -748,8 +742,8 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
 	else
 	{
 		resetCursorPositionToCenter_ = false;
-		currentPosition_.x = io.MousePos.x / float(Core::i()->screenWidth());
-		currentPosition_.y = io.MousePos.y / float(Core::i()->screenHeight());
+		currentPosition_.x = io.MousePos.x / float(Core::i().screenWidth());
+		currentPosition_.y = io.MousePos.y / float(Core::i().screenHeight());
 	}
 
 	currentTriggerTime_ = TimeInMilliseconds();
@@ -804,12 +798,12 @@ void Wheel::DeactivateWheel()
 
 void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) {
 	if (aboveWater_.delayed() || outOfCombat_.delayed()) {
-		Input::i()->SendKeybind(ScanCodeSet(), cursorResetPosition_);
+		Input::i().SendKeybind({}, cursorResetPosition_);
 		conditionallyDelayed_ = we;
 		conditionallyDelayedTime_ = TimeInMilliseconds();
 		conditionallyDelayedTestCount_ = 0;
 	} else
-		Input::i()->SendKeybind(we->keybind().scanCodes(), mousePos);
+		Input::i().SendKeybind(we->keybind().keyCombo(), mousePos);
 }
 
 

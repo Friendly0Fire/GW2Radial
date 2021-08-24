@@ -6,31 +6,21 @@
 
 namespace GW2Radial
 {
-std::set<Keybind*> Keybind::keybinds_;
-
 Keybind::Keybind(std::string nickname, std::string displayName, std::string category, ScanCode key, Modifier mod, bool saveToConfig) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category)), saveToConfig_(saveToConfig)
 {
-	keybinds_.insert(this);
-
 	keyCombo({ key, mod });
 }
 
 Keybind::Keybind(std::string nickname, std::string displayName, std::string category) :
 	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category))
 {
-	keybinds_.insert(this);
 	auto keys = ConfigurationFile::i().ini().GetValue("Keybinds.2", nickname_.c_str());
 	if(keys) ParseConfig(keys);
 	else {
 		keys = ConfigurationFile::i().ini().GetValue("Keybinds", nickname_.c_str());
 		if(keys) ParseKeys(keys);
 	}
-}
-
-Keybind::~Keybind()
-{
-	keybinds_.erase(this);
 }
 
 void Keybind::ParseKeys(const char* keys)
@@ -101,17 +91,17 @@ void Keybind::ApplyKeys() const
 
 [[nodiscard]]
 bool Keybind::matches(const KeyCombo& ks) const {
-	return key_ == ks.first && mod_ == ks.second;
+	return key_ == ks.key && mod_ == ks.mod;
 }
 
 [[nodiscard]]
 bool Keybind::matchesPartial(const KeyCombo& ks) const {
-	return key_ == ks.first;
+	return key_ == ks.key;
 }
 
 bool Keybind::matchesNoLeftRight(const KeyCombo& ks) const
 {
-	return MakeUniversal(key_) == MakeUniversal(ks.first) && MakeUniversal(mod_) == MakeUniversal(ks.second);
+	return MakeUniversal(key_) == MakeUniversal(ks.key) && MakeUniversal(mod_) == MakeUniversal(ks.mod);
 }
 
 void Keybind::UpdateDisplayString() const
@@ -147,11 +137,6 @@ void Keybind::UpdateDisplayString() const
 	keybind += GetScanCodeName(key_);
 
 	strcpy_s(keysDisplayString_.data(), keysDisplayString_.size(), utf8_encode(keybind).c_str());
-}
-
-void Keybind::ForceRefreshDisplayStrings() {
-	for (auto& kb : keybinds_)
-		kb->UpdateDisplayString();
 }
 
 }

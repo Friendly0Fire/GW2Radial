@@ -27,7 +27,6 @@ LONG WINAPI GW2RadialTopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
 
 namespace GW2Radial
 {
-DEFINE_SINGLETON(Core);
 
 void Core::Init(HMODULE dll)
 {
@@ -41,44 +40,44 @@ void Core::Init(HMODULE dll)
 	}
 
 	MumbleLink::i();
-	i()->dllModule_ = dll;
-	i()->InternalInit();
+	i().dllModule_ = dll;
+	i().InternalInit();
 }
 
 void Core::Shutdown()
 {
-	i_.reset();
+	InstanceInternal().reset();
 }
 
 Core::~Core()
 {
 	ImGui::DestroyContext();
 
-	if(auto i = Direct3D9Inject::iNoInit(); i != nullptr)
+	auto& i = Direct3D9Inject::i();
 	{
-		i->preCreateDeviceCallback = nullptr;
-		i->postCreateDeviceCallback = nullptr;
+		i.preCreateDeviceCallback = nullptr;
+		i.postCreateDeviceCallback = nullptr;
 		
-		i->preResetCallback = nullptr;
-		i->postResetCallback = nullptr;
+		i.preResetCallback = nullptr;
+		i.postResetCallback = nullptr;
 		
-		i->drawOverCallback = nullptr;
-		i->drawUnderCallback = nullptr;
+		i.drawOverCallback = nullptr;
+		i.drawUnderCallback = nullptr;
 	}
 }
 
 void Core::OnInjectorCreated()
 {
-	auto* inject = Direct3D9Inject::i();
+	auto& inject = Direct3D9Inject::i();
 	
-	inject->preCreateDeviceCallback = [this](HWND hWnd){ PreCreateDevice(hWnd); };
-	inject->postCreateDeviceCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostCreateDevice(d, pp); };
+	inject.preCreateDeviceCallback = [this](HWND hWnd){ PreCreateDevice(hWnd); };
+	inject.postCreateDeviceCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostCreateDevice(d, pp); };
 	
-	inject->preResetCallback = [this](){ PreReset(); };
-	inject->postResetCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); };
+	inject.preResetCallback = [this](){ PreReset(); };
+	inject.postResetCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); };
 	
-	inject->drawOverCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); };
-	inject->drawUnderCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); };
+	inject.drawOverCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); };
+	inject.drawUnderCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); };
 }
 
 void Core::InternalInit()
@@ -100,28 +99,28 @@ void Core::OnFocusLost()
 		if (wheel)
 			wheel->OnFocusLost();
 
-	Input::i()->OnFocusLost();
+	Input::i().OnFocusLost();
 }
 
 void Core::OnFocus() {
 	mainEffect_->Clear();
 	Keybind::ForceRefreshDisplayStrings();
 
-	if(MiscTab::i()->reloadOnFocus())
+	if(MiscTab::i().reloadOnFocus())
 		forceReloadWheels_ = true;
 }
 
 LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (msg == WM_KILLFOCUS)
-		i()->OnFocusLost();
+		i().OnFocusLost();
 	else if(msg == WM_SETFOCUS)
-		i()->OnFocus();
-	else if(Input::i()->OnInput(msg, wParam, lParam))
+		i().OnFocus();
+	else if(Input::i().OnInput(msg, wParam, lParam))
 		return 0;
 
 	// Whatever's left should be sent to the game
-	return CallWindowProc(i()->baseWndProc_, hWnd, msg, wParam, lParam);
+	return CallWindowProc(i().baseWndProc_, hWnd, msg, wParam, lParam);
 }
 
 void Core::PreCreateDevice(HWND hFocusWindow)
@@ -200,7 +199,7 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	else 
 		mainEffect_ = new Effect(device);
 
-	UpdateCheck::i()->CheckForUpdates();
+	UpdateCheck::i().CheckForUpdates();
 	MiscTab::i();
 
 	wheels_.emplace_back(Wheel::Create<Mount>(IDR_BG, IDR_WIPEMASK, "mounts", "Mounts", device));
@@ -254,9 +253,9 @@ void Core::DrawUnder(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 void Core::OnUpdate()
 {
-    const auto* mumble = MumbleLink::i();
+    cref mumble = MumbleLink::i();
 
-	uint map = mumble->mapId();
+	uint map = mumble.mapId();
 	if(map != mapId_)
 	{
 	    for (auto& wheel : wheels_)
@@ -265,12 +264,12 @@ void Core::OnUpdate()
 	    mapId_ = map;
 	}
 
-	if(characterName_ != mumble->characterName())
+	if(characterName_ != mumble.characterName())
 	{
 	    for (auto& wheel : wheels_)
-		    wheel->OnCharacterChange(characterName_, mumble->characterName());
+		    wheel->OnCharacterChange(characterName_, mumble.characterName());
 
-		characterName_ = mumble->characterName();
+		characterName_ = mumble.characterName();
 	}
 }
 
@@ -278,13 +277,13 @@ void Core::OnUpdate()
 void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 {
 	// This is the closest we have to a reliable "update" function, so use it as one
-	Input::i()->OnUpdate();
+	Input::i().OnUpdate();
 	
 	tickSkip_++;
 	if(tickSkip_ >= TickSkipCount)
 	{
 	    tickSkip_ -= TickSkipCount;
-		MumbleLink::i()->OnUpdate();
+		MumbleLink::i().OnUpdate();
 	    OnUpdate();
 	}
 
@@ -292,14 +291,14 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 	if(longTickSkip_ >= LongTickSkipCount)
 	{
 	    longTickSkip_ -= LongTickSkipCount;
-	    ConfigurationFile::i()->OnUpdate();
-		GFXSettings::i()->OnUpdate();
+	    ConfigurationFile::i().OnUpdate();
+		GFXSettings::i().OnUpdate();
 	}
 
 	for (auto& wheel : wheels_)
 		wheel->OnUpdate();
 
-	UpdateCheck::i()->CheckForUpdates();
+	UpdateCheck::i().CheckForUpdates();
 
 	if (firstFrame_)
 	{
@@ -322,7 +321,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		
 		customWheels_->Draw(device);
 
-		SettingsMenu::i()->Draw();
+		SettingsMenu::i().Draw();
 
 		if(!firstMessageShown_->value())
 			ImGuiPopup("Welcome to GW2Radial!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2& windowSize)
@@ -337,14 +336,14 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 					ShellExecute(0, 0, L"https://github.com/Friendly0Fire/GW2Radial", 0, 0 , SW_SHOW );
 			}, [&]() { firstMessageShown_->value(true); });
 
-		if (!ConfigurationFile::i()->lastSaveError().empty() && ConfigurationFile::i()->lastSaveErrorChanged())
+		if (!ConfigurationFile::i().lastSaveError().empty() && ConfigurationFile::i().lastSaveErrorChanged())
 			ImGuiPopup("Configuration could not be saved!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2&)
 			{
 				ImGui::Text("Could not save addon configuration. Reason given was:");
-				ImGui::TextWrapped(ConfigurationFile::i()->lastSaveError().c_str());
-			}, []() { ConfigurationFile::i()->lastSaveErrorChanged(false); });
+				ImGui::TextWrapped(ConfigurationFile::i().lastSaveError().c_str());
+			}, []() { ConfigurationFile::i().lastSaveErrorChanged(false); });
 
-		if(UpdateCheck::i()->updateAvailable() && !UpdateCheck::i()->updateDismissed())
+		if(UpdateCheck::i().updateAvailable() && !UpdateCheck::i().updateDismissed())
 			ImGuiPopup("Update available!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2& windowSize)
 			{
 				ImGui::TextWrapped("A new version of GW2Radial has been released! "
@@ -355,7 +354,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 
 				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial/releases/latest", ImVec2(windowSize.x * 0.8f, ImGui::GetFontSize() * 1.3f)))
 					ShellExecute(0, 0, L"https://github.com/Friendly0Fire/GW2Radial/releases/latest", 0, 0 , SW_SHOW );
-			}, []() { UpdateCheck::i()->updateDismissed(true); });
+			}, []() { UpdateCheck::i().updateDismissed(true); });
 
 		ImGui::Render();
 		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());

@@ -19,7 +19,7 @@ WheelElement::WheelElement(uint id, const std::string &nickname, const std::stri
 	  appearance_(tex)
 {
 	if(tex == nullptr)
-	    appearance_ = CreateTextureFromResource(dev, Core::i()->dllModule(), elementId_);
+	    appearance_ = CreateTextureFromResource(dev, Core::i().dllModule(), elementId_);
 
 	GW2_ASSERT(appearance_ != nullptr);
 
@@ -37,7 +37,7 @@ int WheelElement::DrawPriority(int extremumIndicator)
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, ("##Displayed" + nickname_).c_str(), isShownOption_);
 	ImGui::SameLine();
 	if(!isShownOption_.value() || !isActive())
-		ImGui::PushFont(Core::i()->fontItalic());
+		ImGui::PushFont(Core::i().fontItalic());
 	auto displayName = displayName_;
 	if(!keybind_.isSet())
 		displayName += " [No keybind]";
@@ -45,7 +45,7 @@ int WheelElement::DrawPriority(int extremumIndicator)
 	if(!isShownOption_.value() || !isActive())
 		ImGui::PopFont();
 
-	ImGui::PushFont(Core::i()->fontIcon());
+	ImGui::PushFont(Core::i().fontIcon());
 	
 	int rv = 0;
 	if(extremumIndicator != 1)
@@ -79,7 +79,7 @@ void WheelElement::SetShaderState()
 
 	fVector4 shadowData { shadowStrength_, shadowOffsetMultiplier * texWidth_, shadowOffsetMultiplier * texWidth_ * aspectRatio_, 1.f };
 	
-	auto fx = Core::i()->mainEffect();
+	auto fx = Core::i().mainEffect();
 	
 	{
 		using namespace ShaderRegister::ShaderPS;
@@ -93,8 +93,8 @@ void WheelElement::SetShaderState()
 
 void WheelElement::Draw(int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const Wheel* parent)
 {
-	auto fx = Core::i()->mainEffect();
-	auto& quad = Core::i()->quad();
+	auto fx = Core::i().mainEffect();
+	auto& quad = Core::i().quad();
 
 	const float hoverTimer = hoverFadeIn(currentTime, parent);
 
