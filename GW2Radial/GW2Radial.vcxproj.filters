@@ -166,6 +166,7 @@
     <ClCompile Include="src\UpdateCheck.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\ActivationKeybind.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">

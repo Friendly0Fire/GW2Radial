@@ -146,6 +146,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\ActivationKeybind.cpp" />
     <ClCompile Include="src\Condition.cpp" />
     <ClCompile Include="src\ConfigurationFile.cpp" />
     <ClCompile Include="src\Core.cpp" />
