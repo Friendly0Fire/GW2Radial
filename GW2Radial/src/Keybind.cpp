@@ -95,14 +95,39 @@ bool Keybind::matches(const KeyCombo& ks) const {
 }
 
 [[nodiscard]]
-bool Keybind::matchesPartial(const KeyCombo& ks) const {
-	return key_ == ks.key;
+bool Keybind::matches(const std::set<ScanCode>& ks) const
+{
+	return ks.contains(key_)
+		&& (isNone(mod_ & Modifier::LCTRL) || ks.contains(ScanCode::CONTROLLEFT))
+		&& (isNone(mod_ & Modifier::RCTRL) || ks.contains(ScanCode::CONTROLRIGHT))
+		&& (isNone(mod_ & Modifier::LSHIFT) || ks.contains(ScanCode::SHIFTLEFT))
+		&& (isNone(mod_ & Modifier::RSHIFT) || ks.contains(ScanCode::SHIFTRIGHT))
+		&& (isNone(mod_ & Modifier::LALT) || ks.contains(ScanCode::ALTLEFT))
+		&& (isNone(mod_ & Modifier::RALT) || ks.contains(ScanCode::ALTRIGHT));
+}
+
+float Keybind::matchesScored(const std::set<ScanCode>& ks) const
+{
+	return matches(ks) ? float(keyCount()) / float(ks.size()) : 0.f;
+}
+
+#if 0
+bool Keybind::matchesPartial(const std::set<ScanCode>& ks) const
+{
+	return ks.contains(key_)
+		|| (notNone(mod_ & Modifier::LCTRL) && ks.contains(ScanCode::CONTROLLEFT))
+		|| (notNone(mod_ & Modifier::RCTRL) && ks.contains(ScanCode::CONTROLRIGHT))
+		|| (notNone(mod_ & Modifier::LSHIFT) && ks.contains(ScanCode::SHIFTLEFT))
+		|| (notNone(mod_ & Modifier::RSHIFT) && ks.contains(ScanCode::SHIFTRIGHT))
+		|| (notNone(mod_ & Modifier::LALT) && ks.contains(ScanCode::ALTLEFT))
+		|| (notNone(mod_ & Modifier::RALT) && ks.contains(ScanCode::ALTRIGHT));
 }
 
 bool Keybind::matchesNoLeftRight(const KeyCombo& ks) const
 {
 	return MakeUniversal(key_) == MakeUniversal(ks.key) && MakeUniversal(mod_) == MakeUniversal(ks.mod);
 }
+#endif
 
 void Keybind::UpdateDisplayString() const
 {

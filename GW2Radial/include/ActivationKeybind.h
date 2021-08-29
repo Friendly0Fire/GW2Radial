@@ -10,6 +10,9 @@ namespace GW2Radial
 class ActivationKeybind : public Keybind
 {
 public:
+	using PreventPassToGame = bool;
+	using Activated = bool;
+	using Callback = std::function<PreventPassToGame(Activated)>;
 	ActivationKeybind(std::string nickname, std::string displayName, std::string category, KeyCombo ks, bool saveToConfig)
 		: Keybind(nickname, displayName, category, ks.key, ks.mod, saveToConfig) {
 		Bind();
@@ -25,6 +28,8 @@ public:
 	}
 	~ActivationKeybind();
 
+	void callback(Callback&& cb) { callback_ = std::move(cb); }
+	Callback callback() const { return callback_; }
 	void conditions(ConditionSetPtr ptr) { conditions_ = ptr; }
 
 	[[nodiscard]] bool conditionsFulfilled() const { return conditions_->passes(); }
@@ -32,6 +37,7 @@ public:
 protected:
 	void Bind();
 	ConditionSetPtr conditions_;
+	Callback callback_;
 };
 
 }

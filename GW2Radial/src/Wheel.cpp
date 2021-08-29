@@ -42,6 +42,12 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	conditions_ = std::make_shared<ConditionSet>("wheel_" + nickname_);
 	keybind_.conditions(conditions_);
 	centralKeybind_.conditions(conditions_);
+	keybind_.callback([&](ActivationKeybind::Activated a) {
+		a
+	});
+	centralKeybind_.callback([&](ActivationKeybind::Activated a) {
+		a
+	});
 	
 	aboveWater_.test = []() { return MumbleLink::i().isUnderwater(); };
 	aboveWater_.toggleOffTest = outOfCombat_.toggleOffTest = []() { return MumbleLink::i().isMounted(); };
@@ -117,8 +123,8 @@ void Wheel::DrawMenu(Keybind* currentEditedKeybind)
 	
 	ImGuiTitle("Keybinds");
 	
-	ImGuiKeybindInput(keybind_, &keybind_ == currentEditedKeybind, "Pressing this key combination will open the radial menu at your cursor's current location.");
-	ImGuiKeybindInput(centralKeybind_, &centralKeybind_ == currentEditedKeybind, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
+	ImGuiKeybindInput((Keybind&)keybind_, (Keybind*)&keybind_ == currentEditedKeybind, "Pressing this key combination will open the radial menu at your cursor's current location.");
+	ImGuiKeybindInput((Keybind&)centralKeybind_, (Keybind*)&centralKeybind_ == currentEditedKeybind, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, enableConditionsOption_);
 

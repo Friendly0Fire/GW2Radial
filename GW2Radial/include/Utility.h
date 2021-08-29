@@ -294,4 +294,9 @@ bool notNone(Enum e) {
 	return e != Enum::NONE;
 }
 
+template<enum_with_none Enum>
+bool isNone(Enum e) {
+	return e == Enum::NONE;
+}
+
 }

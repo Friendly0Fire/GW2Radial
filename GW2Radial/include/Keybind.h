@@ -84,10 +84,18 @@ public:
 	[[nodiscard]] const char* keysDisplayString() const { return keysDisplayString_.data(); }
 	[[nodiscard]] char* keysDisplayString() { return keysDisplayString_.data(); }
 	[[nodiscard]] const size_t keysDisplayStringSize() const { return keysDisplayString_.size(); }
-	
+
 	[[nodiscard]] bool matches(const KeyCombo& ks) const;
-	[[nodiscard]] bool matchesPartial(const KeyCombo& ks) const;
-	[[nodiscard]] bool matchesNoLeftRight(const KeyCombo& ks) const;
+	[[nodiscard]] bool matches(const std::set<ScanCode>& ks) const;
+	[[nodiscard]] float matchesScored(const std::set<ScanCode>& ks) const;
+	//[[nodiscard]] bool matchesPartial(const std::set<ScanCode>& ks) const;
+	//[[nodiscard]] bool matchesNoLeftRight(const KeyCombo& ks) const;
+
+	int keyCount() const {
+		return 1 + (notNone(mod_ & Modifier::CTRL) ? 1 : 0)
+			     + (notNone(mod_ & Modifier::SHIFT) ? 1 : 0)
+			     + (notNone(mod_ & Modifier::ALT) ? 1 : 0);
+	}
 
 protected:
 	void UpdateDisplayString() const;

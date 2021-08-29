@@ -10,6 +10,10 @@ namespace GW2Radial
 SettingsMenu::SettingsMenu()
 	: showKeybind_("show_settings", "Show settings", "__core__", { GetScanCodeFromVirtualKey('M'), Modifier::SHIFT | Modifier::ALT }, false)
 {
+	showKeybind_.callback([&](ActivationKeybind::Activated a) {
+		isVisible_ = a;
+		return true;
+	});
 }
 
 void SettingsMenu::Draw()

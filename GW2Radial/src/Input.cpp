@@ -137,7 +137,7 @@ namespace GW2Radial
         InputResponse response = InputResponse::PASS_TO_GAME;
         // Only run these for key down/key up (incl. mouse buttons) events
         if (!eventKeys.empty() && !MumbleLink::i().textboxHasFocus())
-            TriggerKeybinds(downKeysChanged, eventKeys);
+            response = TriggerKeybinds(downKeysChanged) ? InputResponse::PREVENT_KEYBOARD : InputResponse::PASS_TO_GAME;
 
         ImGui_ImplWin32_WndProcHandler(Core::i().gameWindow(), msg, wParam, lParam);
         if (msg == WM_MOUSEMOVE)
@@ -249,8 +249,27 @@ namespace GW2Radial
         SendQueuedInputs();
     }
 
-    void Input::TriggerKeybinds(bool downKeysChanged, const std::list<EventKey>& eventKeys)
+    ActivationKeybind::PreventPassToGame Input::TriggerKeybinds(bool downKeysChanged)
     {
+        if (!downKeysChanged)
+            return;
+
+        std::pair<float, ActivationKeybind*> bestScoredKeybind{ 0.f, nullptr };
+        for (auto& kb : keybinds_) {
+            float score = kb->matchesScored(downKeys_);
+            if (score > bestScoredKeybind.first)
+                bestScoredKeybind = { score, kb };
+        }
+
+        if (bestScoredKeybind.second) {
+            if (activeKeybind_ && activeKeybind_ != bestScoredKeybind.second)
+                activeKeybind_->callback()(false);
+
+            activeKeybind_ = bestScoredKeybind.second;
+            return activeKeybind_->callback()(true);
+        }
+
+        return false;
     }
 
     uint Input::ConvertHookedMessage(uint msg) const
@@ -448,11 +467,11 @@ namespace GW2Radial
 
     void Input::RegisterKeybind(ActivationKeybind* kb)
     {
-        keybinds_[kb->keyCombo()] = kb;
+        keybinds_.push_back(kb);
     }
 
     void Input::UnregisterKeybind(ActivationKeybind* kb)
     {
-        keybinds_.erase(kb->keyCombo());
+        std::remove(keybinds_.begin(), keybinds_.end(), kb);
     }
 }

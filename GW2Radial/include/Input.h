@@ -10,7 +10,7 @@
 #include <ConfigurationOption.h>
 #include <ScanCode.h>
 #include <Utility.h>
-#include <Keybind.h>
+#include <ActivationKeybind.h>
 
 namespace GW2Radial
 {
@@ -99,7 +99,7 @@ protected:
 		std::optional<Point> cursorPos;
 	};
 
-	void TriggerKeybinds(bool downKeysChanged, const std::list<EventKey>& eventKeys);
+	ActivationKeybind::PreventPassToGame TriggerKeybinds(bool downKeysChanged);
 	uint ConvertHookedMessage(uint msg) const;
 	DelayedInput TransformScanCode(ScanCode sc, bool down, mstime t, const std::optional<Point>& cursorPos);
 	std::tuple<WPARAM, LPARAM> CreateMouseEventParams(const std::optional<Point>& cursorPos) const;
@@ -125,7 +125,7 @@ protected:
 	std::list<DelayedInput> queuedInputs_;
 	
 	std::set<MouseMoveCallback*, PtrComparator<MouseMoveCallback>> mouseMoveCallbacks_;
-	std::map<KeyCombo, ActivationKeybind*> keybinds_;
+	std::vector<ActivationKeybind*> keybinds_;
 	ActivationKeybind* activeKeybind_ = nullptr;
 	void RegisterKeybind(ActivationKeybind* kb);
 	void UnregisterKeybind(ActivationKeybind* kb);
