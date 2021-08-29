@@ -125,6 +125,25 @@ namespace GW2Radial
             }
         }
 
+        bool preventMouseButton = false;
+        if (auto ek = eventKeys.front(); eventKeys.size() == 1 &&
+            (ek.sc == ScanCode::LBUTTON || ek.sc == ScanCode::MBUTTON || ek.sc == ScanCode::RBUTTON || ek.sc == ScanCode::X1BUTTON || ek.sc == ScanCode::X2BUTTON)) {
+            bool interrupt = false;
+            for (auto& cb : mouseButtonCallbacks_) {
+                cb->callback(ek, preventMouseButton);
+            }
+        }
+
+        InputResponse response = preventMouseButton ? InputResponse::PREVENT_MOUSE : InputResponse::PASS_TO_GAME;
+        if (inputRecordCallback_) {
+            response |= InputResponse::PREVENT_KEYBOARD;
+            if (std::any_of(eventKeys.begin(), eventKeys.end(),
+                [](const auto& ek) { return !ek.down && ek.sc != ScanCode::LBUTTON; })) {
+                (*inputRecordCallback_)(KeyCombo(downKeys_));
+                inputRecordCallback_ = std::nullopt;
+            }
+        }
+
         bool downKeysChanged = false;
 
         // Apply key events now
@@ -134,10 +153,9 @@ namespace GW2Radial
             else
                 downKeysChanged |= downKeys_.erase(k.sc) > 0;
 
-        InputResponse response = InputResponse::PASS_TO_GAME;
         // Only run these for key down/key up (incl. mouse buttons) events
         if (!eventKeys.empty() && !MumbleLink::i().textboxHasFocus())
-            response = TriggerKeybinds(downKeysChanged) ? InputResponse::PREVENT_KEYBOARD : InputResponse::PASS_TO_GAME;
+            response |= TriggerKeybinds(downKeysChanged) ? InputResponse::PREVENT_KEYBOARD : InputResponse::PASS_TO_GAME;
 
         ImGui_ImplWin32_WndProcHandler(Core::i().gameWindow(), msg, wParam, lParam);
         if (msg == WM_MOUSEMOVE)

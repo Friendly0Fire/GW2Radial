@@ -62,11 +62,15 @@ bool ImGuiKeybindInput(GW2Radial::Keybind& setting, bool beingModified, const ch
 	{
 		beingModified = true;
 		setting.keysDisplayString()[0] = '\0';
+		GW2Radial::Input::i().BeginRecordInputs([&setting](GW2Radial::KeyCombo kc) {
+			setting.keyCombo(kc);
+		});
 	}
 	else if (beingModified && ImGui::Button(("Clear" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
 	{
 		beingModified = false;
 		setting.keyCombo({});
+		GW2Radial::Input::i().CancelRecordInputs();
 	}
 
 	ImGui::SameLine();

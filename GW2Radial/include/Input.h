@@ -64,6 +64,8 @@ class Input : public Singleton<Input>
 {
 public:
 	using MouseMoveCallback = Callback<std::function<void(bool& retval)>>;
+	using MouseButtonCallback = Callback<std::function<void(EventKey ek, bool& retval)>>;
+	using RecordCallback = std::function<void(KeyCombo)>;
 
 	uint id_H_LBUTTONDOWN() const { return id_H_LBUTTONDOWN_; }
 	uint id_H_LBUTTONUP() const { return id_H_LBUTTONUP_; }
@@ -80,10 +82,14 @@ public:
 	bool OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam);
 	void OnFocusLost();
 	void OnUpdate();
-	
+
 	void AddMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.insert(cb); }
 	void RemoveMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.erase(cb); }
+	void AddMouseButtonCallback(MouseButtonCallback* cb) { mouseButtonCallbacks_.insert(cb); }
+	void RemoveMouseButtonCallback(MouseButtonCallback* cb) { mouseButtonCallbacks_.erase(cb); }
 	void SendKeybind(const KeyCombo& ks, std::optional<Point> const& cursorPos = std::nullopt, KeybindAction action = KeybindAction::BOTH);
+	void BeginRecordInputs(RecordCallback&& cb) { inputRecordCallback_ = std::move(cb); }
+	void CancelRecordInputs() { inputRecordCallback_ = std::nullopt; }
 
 protected:
 	struct DelayedInput
@@ -123,12 +129,16 @@ protected:
 
 	std::set<ScanCode> downKeys_;
 	std::list<DelayedInput> queuedInputs_;
-	
+
 	std::set<MouseMoveCallback*, PtrComparator<MouseMoveCallback>> mouseMoveCallbacks_;
+	std::set<MouseButtonCallback*, PtrComparator<MouseButtonCallback>> mouseButtonCallbacks_;
+	
 	std::vector<ActivationKeybind*> keybinds_;
 	ActivationKeybind* activeKeybind_ = nullptr;
 	void RegisterKeybind(ActivationKeybind* kb);
 	void UnregisterKeybind(ActivationKeybind* kb);
+
+	std::optional<RecordCallback> inputRecordCallback_ = std::nullopt;
 
 	friend class MiscTab;
 	friend class ActivationKeybind;

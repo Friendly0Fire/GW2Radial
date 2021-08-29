@@ -22,7 +22,7 @@ void SettingsMenu::Draw()
 
 	if (isVisible_)
 	{
-		ImGui::SetNextWindowSize({ 750, 600 }, ImGuiCond_::ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize({ 750, 600 }, ImGuiCond_FirstUseEver);
 		if(!ImGui::Begin("GW2Radial Options Menu", &isVisible_))
 		{
 			ImGui::End();

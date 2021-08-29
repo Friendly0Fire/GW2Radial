@@ -67,7 +67,9 @@ protected:
 	WheelElement* GetCenterHoveredElement();
 	WheelElement* GetFavorite(int favoriteId);
 	std::vector<WheelElement*> GetActiveElements(bool sorted = true);
+	bool KeybindEvent(bool center, bool activated);
 	void OnMouseMove(bool& rv);
+	void OnMouseButton(ScanCode sc, bool down, bool& rv);
 	void ActivateWheel(bool isMountOverlayLocked);
 	void DeactivateWheel();
 	void SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos);
@@ -144,8 +146,9 @@ protected:
 	
 	ComPtr<IDirect3DTexture9> backgroundTexture_;
 	ComPtr<IDirect3DTexture9> wipeMaskTexture_;
-	
+
 	std::unique_ptr<Input::MouseMoveCallback> mouseMoveCallback_;
+	std::unique_ptr<Input::MouseButtonCallback> mouseButtonCallback_;
 
 	struct ExtraUI {
 	    std::function<void()> display, interaction, queuing, misc;

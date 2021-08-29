@@ -43,10 +43,10 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	keybind_.conditions(conditions_);
 	centralKeybind_.conditions(conditions_);
 	keybind_.callback([&](ActivationKeybind::Activated a) {
-		a
+		return KeybindEvent(false, a);
 	});
 	centralKeybind_.callback([&](ActivationKeybind::Activated a) {
-		a
+		return KeybindEvent(true, a);
 	});
 	
 	aboveWater_.test = []() { return MumbleLink::i().isUnderwater(); };
@@ -59,12 +59,16 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	mouseMoveCallback_ = std::make_unique<Input::MouseMoveCallback>([this](bool& rv) { OnMouseMove(rv); });
 	Input::i().AddMouseMoveCallback(mouseMoveCallback_.get());
 
+	mouseButtonCallback_ = std::make_unique<Input::MouseButtonCallback>([this](EventKey ek, bool& rv) { OnMouseButton(ek.sc, ek.down, rv); });
+	Input::i().AddMouseButtonCallback(mouseButtonCallback_.get());
+
 	SettingsMenu::i().AddImplementer(this);
 }
 
 Wheel::~Wheel()
 {
 	Input::i().RemoveMouseMoveCallback(mouseMoveCallback_.get());
+	Input::i().RemoveMouseButtonCallback(mouseButtonCallback_.get());
 	SettingsMenu::i().RemoveImplementer(this);
 }
 
@@ -641,6 +645,55 @@ void Wheel::OnMouseMove(bool& rv)
 	rv |= isVisible_ && lockCameraWhenOverlayedOption_.value();
 }
 
+void Wheel::OnMouseButton(ScanCode sc, bool down, bool& rv)
+{
+	if (clickSelectOption_.value() && isVisible_) {
+		const bool previousVisibility = isVisible_;
+		isVisible_ = isVisible_ && sc != ScanCode::LBUTTON;
+		if (!isVisible_ && previousVisibility) {
+			rv = true;
+			DeactivateWheel();
+		}
+	}
+}
+
+bool Wheel::KeybindEvent(bool center, bool activated)
+{
+	const bool previousVisibility = isVisible_;
+
+	if (MumbleLink::i().isMapOpen())
+		isVisible_ = false;
+	else {
+		bool mountOverlay = (!enableConditionsOption_.value() || keybind_.conditionsFulfilled()) && center;
+		bool mountOverlayCenter = (!enableConditionsOption_.value() || centralKeybind_.conditionsFulfilled()) && !center;
+
+		WheelElement* bypassElement = nullptr;
+		if ((mountOverlayCenter || mountOverlay) && doBypassWheel_(bypassElement) && !waitingForBypassComplete_) {
+			isVisible_ = false;
+			waitingForBypassComplete_ = true;
+			SendKeybindOrDelay(bypassElement, std::nullopt);
+		}
+
+		if (waitingForBypassComplete_) {
+			if (!mountOverlay && !mountOverlayCenter)
+				waitingForBypassComplete_ = false;
+		}
+		else {
+			isVisible_ = mountOverlayCenter || mountOverlay;
+
+			// If holding down the button is not necessary, modify behavior
+			if (noHoldOption_.value() && previousVisibility && currentHovered_ == nullptr)
+				isVisible_ = true;
+
+			if (isVisible_ && !previousVisibility)
+				ActivateWheel(mountOverlayCenter);
+		}
+	}
+
+	if (!isVisible_ && previousVisibility)
+		DeactivateWheel();
+}
+
 #if 0
 void Wheel::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response)
 {
@@ -688,43 +741,7 @@ void Wheel::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<
 		return;
 	}
 
-	const bool previousVisibility = isVisible_;
-
-	if (MumbleLink::i().isMapOpen())
-		isVisible_ = false;
-	else {
-		bool mountOverlay = (!enableConditionsOption_.value() || keybind_.conditionsFulfilled()) && keybind_.matchesPartial(scs);
-		bool mountOverlayLocked = (!enableConditionsOption_.value() || centralKeybind_.conditionsFulfilled()) && centralKeybind_.matchesPartial(scs);
-
-		WheelElement* bypassElement = nullptr;
-		if ((mountOverlayLocked || mountOverlay) && doBypassWheel_(bypassElement) && !waitingForBypassComplete_) {
-			isVisible_ = false;
-			waitingForBypassComplete_ = true;
-			SendKeybindOrDelay(bypassElement, std::nullopt);
-		}
-
-		if (waitingForBypassComplete_) {
-			if (!mountOverlay && !mountOverlayLocked)
-				waitingForBypassComplete_ = false;
-		} else if (clickSelectOption_.value() && previousVisibility) {
-			isVisible_ = isVisible_ && !scs.contains(ScanCode::LBUTTON);
-		} else {
-			isVisible_ = mountOverlayLocked || mountOverlay;
-
-			// If holding down the button is not necessary, modify behavior
-			if (noHoldOption_.value() && previousVisibility && currentHovered_ == nullptr)
-				isVisible_ = true;
-
-			if (isVisible_ && !previousVisibility)
-				ActivateWheel(mountOverlayLocked);
-		}
-	}
-
-	if (!isVisible_ && previousVisibility)
-		DeactivateWheel();
-
-	if(clickSelectOption_.value() && !isVisible_ && previousVisibility)
-		response = InputResponse::PREVENT_ALL;
+	
 }
 #endif
 

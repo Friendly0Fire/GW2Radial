@@ -18,6 +18,14 @@ public:
 		mod = Modifier::NONE;
 	}
 	KeyCombo(ScanCode k, Modifier m) : key(k), mod(m) { }
+	explicit KeyCombo(const std::set<ScanCode>& keys) : KeyCombo() {
+		for (auto sc : keys) {
+			if (IsModifier(sc))
+				mod = mod | ToModifier(sc);
+			else
+				key = sc;
+		}
+	}
 
 	operator std::tuple<ScanCode, Modifier>() const
 	{
