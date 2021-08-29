@@ -65,8 +65,7 @@ namespace GW2Radial
 
     bool Input::OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam)
     {
-        // Generate our EventKey list for the current message
-        std::list<EventKey> eventKeys;
+        EventKey eventKey = { ScanCode::NONE, false };
         {
             bool eventDown = false;
             switch (msg)
@@ -83,34 +82,41 @@ namespace GW2Radial
                     if ((msg == WM_SYSKEYDOWN || msg == WM_SYSKEYUP) && wParam != VK_F10)
                     {
                         const ScanCode altCode = keylParam.extendedFlag ? ScanCode::ALTRIGHT : ScanCode::ALTLEFT;
-                        if (keylParam.contextCode == 1)
-                            eventKeys.push_back({ altCode, true });
-                        else
-                            eventKeys.push_back({ altCode, false });
+                        if (!downKeys_.contains(altCode))
+                        {
+                            // Simulate separate ALT event
+                            UINT msg2 = WM_KEYDOWN;
+                            WPARAM wParam2 = keylParam.extendedFlag ? VK_LMENU : VK_RMENU;
+                            LPARAM lParam2 = 0;
+                            auto& keylParam2 = KeyLParam::Get(lParam);
+                            keylParam2.scanCode = uint(altCode);
+                            keylParam2.extendedFlag = keylParam.extendedFlag;
+                            OnInput(msg2, wParam2, lParam2);
+                        }
                     }
 
-                    eventKeys.push_back({ sc, eventDown });
+                    eventKey = { sc, eventDown };
                     break;
                 }
             case WM_LBUTTONDOWN:
                 eventDown = true;
             case WM_LBUTTONUP:
-                eventKeys.push_back({ ScanCode::LBUTTON, eventDown });
+                eventKey = { ScanCode::LBUTTON, eventDown };
                 break;
             case WM_MBUTTONDOWN:
                 eventDown = true;
             case WM_MBUTTONUP:
-                eventKeys.push_back({ ScanCode::MBUTTON, eventDown });
+                eventKey = { ScanCode::MBUTTON, eventDown };
                 break;
             case WM_RBUTTONDOWN:
                 eventDown = true;
             case WM_RBUTTONUP:
-                eventKeys.push_back({ ScanCode::RBUTTON, eventDown });
+                eventKey = { ScanCode::RBUTTON, eventDown };
                 break;
             case WM_XBUTTONDOWN:
                 eventDown = true;
             case WM_XBUTTONUP:
-                eventKeys.push_back({ GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? ScanCode::X1BUTTON : ScanCode::X2BUTTON, eventDown });
+                eventKey = { GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? ScanCode::X1BUTTON : ScanCode::X2BUTTON, eventDown };
                 break;
             }
         }
@@ -126,19 +132,18 @@ namespace GW2Radial
         }
 
         bool preventMouseButton = false;
-        if (auto ek = eventKeys.front(); eventKeys.size() == 1 &&
-            (ek.sc == ScanCode::LBUTTON || ek.sc == ScanCode::MBUTTON || ek.sc == ScanCode::RBUTTON || ek.sc == ScanCode::X1BUTTON || ek.sc == ScanCode::X2BUTTON)) {
+        if (eventKey.sc != ScanCode::NONE &&
+            (eventKey.sc == ScanCode::LBUTTON || eventKey.sc == ScanCode::MBUTTON || eventKey.sc == ScanCode::RBUTTON || eventKey.sc == ScanCode::X1BUTTON || eventKey.sc == ScanCode::X2BUTTON)) {
             bool interrupt = false;
             for (auto& cb : mouseButtonCallbacks_) {
-                cb->callback(ek, preventMouseButton);
+                cb->callback(eventKey, preventMouseButton);
             }
         }
 
         InputResponse response = preventMouseButton ? InputResponse::PREVENT_MOUSE : InputResponse::PASS_TO_GAME;
         if (inputRecordCallback_) {
             response |= InputResponse::PREVENT_KEYBOARD;
-            if (std::any_of(eventKeys.begin(), eventKeys.end(),
-                [](const auto& ek) { return !ek.down && ek.sc != ScanCode::LBUTTON; })) {
+            if (!eventKey.down && eventKey.sc != ScanCode::LBUTTON) {
                 (*inputRecordCallback_)(KeyCombo(downKeys_));
                 inputRecordCallback_ = std::nullopt;
             }
@@ -146,15 +151,14 @@ namespace GW2Radial
 
         bool downKeysChanged = false;
 
-        // Apply key events now
-        for (cref k : eventKeys)
-            if (k.down)
-                downKeysChanged |= downKeys_.insert(k.sc).second;
-            else
-                downKeysChanged |= downKeys_.erase(k.sc) > 0;
+        // Apply key event now
+        if (eventKey.down)
+            downKeysChanged |= downKeys_.insert(eventKey.sc).second;
+        else
+            downKeysChanged |= downKeys_.erase(eventKey.sc) > 0;
 
         // Only run these for key down/key up (incl. mouse buttons) events
-        if (!eventKeys.empty() && !MumbleLink::i().textboxHasFocus())
+        if (eventKey.sc != ScanCode::NONE && !MumbleLink::i().textboxHasFocus())
             response |= TriggerKeybinds(downKeysChanged) ? InputResponse::PREVENT_KEYBOARD : InputResponse::PASS_TO_GAME;
 
         ImGui_ImplWin32_WndProcHandler(Core::i().gameWindow(), msg, wParam, lParam);
