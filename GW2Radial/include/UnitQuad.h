@@ -19,7 +19,6 @@ public:
 	UnitQuad& operator=(UnitQuad uq) = delete;
 	UnitQuad(UnitQuad&& uq) = delete;
 	UnitQuad& operator=(UnitQuad&& uq) = delete;
-	~UnitQuad();
 
 	ScreenVertex points[4];
 	WORD indices[6];

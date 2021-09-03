@@ -18,6 +18,8 @@ public:
 	Keybind(std::string nickname, std::string displayName, std::string category, ScanCode key, Modifier mod, bool saveToConfig);
 	Keybind(std::string nickname, std::string displayName, std::string category);
 
+	virtual ~Keybind();
+
 	KeyCombo keyCombo() const { return { key_, mod_ }; }
 	ScanCode key() const { return key_; }
 	Modifier modifier() const { return mod_; }

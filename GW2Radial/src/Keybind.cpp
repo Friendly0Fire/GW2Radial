@@ -26,6 +26,11 @@ Keybind::Keybind(std::string nickname, std::string displayName, std::string cate
 	Core::i().RegisterOnFocus(this);
 }
 
+Keybind::~Keybind()
+{
+	Core::i([&](auto& i) { i.UnregisterOnFocus(this); });
+}
+
 void Keybind::ParseKeys(const char* keys)
 {
 	key_ = ScanCode::NONE;

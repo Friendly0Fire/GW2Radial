@@ -16,7 +16,7 @@ MiscTab::MiscTab()
 
 MiscTab::~MiscTab()
 {
-	SettingsMenu::i().RemoveImplementer(this);
+	SettingsMenu::i([&](auto& i) { i.RemoveImplementer(this); });
 }
 void MiscTab::DrawMenu(Keybind*)
 {

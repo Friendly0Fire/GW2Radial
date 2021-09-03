@@ -67,9 +67,11 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 
 Wheel::~Wheel()
 {
-	Input::i().RemoveMouseMoveCallback(mouseMoveCallback_.get());
-	Input::i().RemoveMouseButtonCallback(mouseButtonCallback_.get());
-	SettingsMenu::i().RemoveImplementer(this);
+	Input::i([&](auto& i) {
+		i.RemoveMouseMoveCallback(mouseMoveCallback_.get());
+		i.RemoveMouseButtonCallback(mouseButtonCallback_.get());
+	});
+	SettingsMenu::i([&](auto& i) { i.RemoveImplementer(this); });
 }
 
 void Wheel::UpdateHover()

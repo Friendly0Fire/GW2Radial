@@ -40,6 +40,7 @@ public:
 	void OnInjectorCreated();
 
 	void RegisterOnFocus(FocusListener* fl) { focusListeners_.push_back(fl); }
+	void UnregisterOnFocus(FocusListener* fl) { auto it = std::find(focusListeners_.begin(), focusListeners_.end(), fl); if (it != focusListeners_.end()) focusListeners_.erase(it); }
 
 protected:
 	void InternalInit();

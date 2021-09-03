@@ -27,7 +27,6 @@ LONG WINAPI GW2RadialTopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
 
 namespace GW2Radial
 {
-
 void Core::Init(HMODULE dll)
 {
 #ifndef _DEBUG
@@ -39,31 +38,29 @@ void Core::Init(HMODULE dll)
 	    SetUnhandledExceptionFilter(GW2RadialTopLevelFilter);
 	}
 
-	MumbleLink::i();
 	i().dllModule_ = dll;
 	i().InternalInit();
 }
 
 void Core::Shutdown()
 {
-	InstanceInternal().reset();
+	SingletonManagerInstance.Shutdown();
 }
 
 Core::~Core()
 {
 	ImGui::DestroyContext();
 
-	auto& i = Direct3D9Inject::i();
-	{
+	Direct3D9Inject::i([&](auto& i) {
 		i.preCreateDeviceCallback = nullptr;
 		i.postCreateDeviceCallback = nullptr;
-		
+
 		i.preResetCallback = nullptr;
 		i.postResetCallback = nullptr;
-		
+
 		i.drawOverCallback = nullptr;
 		i.drawUnderCallback = nullptr;
-	}
+	});
 }
 
 void Core::OnInjectorCreated()

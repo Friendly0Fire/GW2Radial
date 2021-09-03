@@ -5,7 +5,7 @@ namespace GW2Radial
 {
 ActivationKeybind::~ActivationKeybind()
 {
-    Input::i().UnregisterKeybind(this);
+    Input::i([&](auto& i) { i.UnregisterKeybind(this); });
 }
 
 void ActivationKeybind::Bind()

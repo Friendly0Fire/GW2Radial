@@ -60,10 +60,6 @@ UnitQuad::UnitQuad(IDirect3DDevice9* device)
 		throw std::exception();
 }
 
-UnitQuad::~UnitQuad()
-{
-}
-
 const D3DVERTEXELEMENT9 * UnitQuad::def()
 {
 	return ScreenVertexDefinition;

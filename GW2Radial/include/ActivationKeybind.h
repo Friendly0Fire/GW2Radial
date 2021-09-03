@@ -26,7 +26,7 @@ public:
 		: Keybind(nickname, displayName, category) {
 		Bind();
 	}
-	~ActivationKeybind();
+	virtual ~ActivationKeybind();
 
 	void callback(Callback&& cb) { callback_ = std::move(cb); }
 	Callback callback() const { return callback_; }
