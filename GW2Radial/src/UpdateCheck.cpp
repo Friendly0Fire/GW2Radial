@@ -9,7 +9,6 @@
 
 namespace GW2Radial
 {
-DEFINE_SINGLETON(UpdateCheck);
 
 UpdateCheck::UpdateCheck()
 	: checkEnabled_("Automatically check for update", "check_for_updates", "Core", true)

@@ -27,6 +27,6 @@ public:
 	void Init(gw2al_core_vtable* gAPI);
 };
 
-inline Direct3D9Loader* GetD3D9Loader() { return static_cast<Direct3D9Loader*>(Direct3D9Inject::i()); }
+inline Direct3D9Loader* GetD3D9Loader() { return static_cast<Direct3D9Loader*>(&Direct3D9Inject::i()); }
 
 }

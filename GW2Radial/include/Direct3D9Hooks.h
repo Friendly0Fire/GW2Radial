@@ -78,6 +78,6 @@ protected:
 	Direct3D9VirtualFunctionTable_t direct3D9VirtualFunctionTable_ = { };
 	Direct3DDevice9VirtualFunctionTable_t direct3DDevice9VirtualFunctionTable_ = { };
 };
-inline Direct3D9Hooks* GetD3D9Hooks() { return static_cast<Direct3D9Hooks*>(Direct3D9Inject::i()); }
+inline Direct3D9Hooks* GetD3D9Hooks() { return static_cast<Direct3D9Hooks*>(&Direct3D9Inject::i()); }
 
 }

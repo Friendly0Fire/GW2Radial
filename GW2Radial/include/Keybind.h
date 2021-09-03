@@ -3,53 +3,13 @@
 #include <array>
 #include <set>
 #include <Input.h>
+#include <KeyCombo.h>
+#include <Defs.h>
 
 namespace GW2Radial
 {
 
-struct KeyCombo
-{
-public:
-	ScanCode& key = key_;
-	Modifier& mod = mod_;
-
-	KeyCombo() {
-		key = ScanCode::NONE;
-		mod = Modifier::NONE;
-	}
-	KeyCombo(ScanCode k, Modifier m) : key(k), mod(m) { }
-	explicit KeyCombo(const std::set<ScanCode>& keys) : KeyCombo() {
-		for (auto sc : keys) {
-			if (IsModifier(sc))
-				mod = mod | ToModifier(sc);
-			else
-				key = sc;
-		}
-	}
-
-	operator std::tuple<ScanCode, Modifier>() const
-	{
-		return std::make_tuple(key, mod);
-	}
-
-private:
-	union {
-		uint64_t storage_;
-		struct {
-			ScanCode key_;
-			Modifier mod_;
-		};
-	};
-
-	friend std::partial_ordering operator<=>(const KeyCombo& a, const KeyCombo& b);
-};
-
-std::partial_ordering operator<=>(const KeyCombo& a, const KeyCombo& b)
-{
-	return a.storage_ <=> b.storage_;
-}
-
-class Keybind
+class Keybind : public FocusListener
 {
 public:
 	Keybind(std::string nickname, std::string displayName, std::string category, KeyCombo ks, bool saveToConfig)
@@ -58,12 +18,13 @@ public:
 	Keybind(std::string nickname, std::string displayName, std::string category, ScanCode key, Modifier mod, bool saveToConfig);
 	Keybind(std::string nickname, std::string displayName, std::string category);
 
-	const KeyCombo& keyCombo() const { return { key_, mod_ }; }
+	KeyCombo keyCombo() const { return { key_, mod_ }; }
 	ScanCode key() const { return key_; }
 	Modifier modifier() const { return mod_; }
 
 	void keyCombo(const KeyCombo& ks) {
-		tie(key_, mod_) = ks;
+		key_ = ks.key;
+		mod_ = ks.mod;
 
 		ApplyKeys();
 	}
@@ -103,6 +64,10 @@ public:
 		return 1 + (notNone(mod_ & Modifier::CTRL) ? 1 : 0)
 			     + (notNone(mod_ & Modifier::SHIFT) ? 1 : 0)
 			     + (notNone(mod_ & Modifier::ALT) ? 1 : 0);
+	}
+
+	void OnFocus() override {
+		UpdateDisplayString();
 	}
 
 protected:

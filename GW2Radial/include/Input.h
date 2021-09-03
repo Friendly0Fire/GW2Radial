@@ -10,10 +10,13 @@
 #include <ConfigurationOption.h>
 #include <ScanCode.h>
 #include <Utility.h>
-#include <ActivationKeybind.h>
+#include <KeyCombo.h>
 
 namespace GW2Radial
 {
+
+using PreventPassToGame = bool;
+using Activated = bool;
 
 enum class InputResponse : uint
 {
@@ -67,6 +70,8 @@ public:
 	using MouseButtonCallback = Callback<std::function<void(EventKey ek, bool& retval)>>;
 	using RecordCallback = std::function<void(KeyCombo)>;
 
+	Input();
+
 	uint id_H_LBUTTONDOWN() const { return id_H_LBUTTONDOWN_; }
 	uint id_H_LBUTTONUP() const { return id_H_LBUTTONUP_; }
 	uint id_H_RBUTTONDOWN() const { return id_H_RBUTTONDOWN_; }
@@ -105,7 +110,7 @@ protected:
 		std::optional<Point> cursorPos;
 	};
 
-	ActivationKeybind::PreventPassToGame TriggerKeybinds(bool downKeysChanged);
+	PreventPassToGame TriggerKeybinds(bool downKeysChanged);
 	uint ConvertHookedMessage(uint msg) const;
 	DelayedInput TransformScanCode(ScanCode sc, bool down, mstime t, const std::optional<Point>& cursorPos);
 	std::tuple<WPARAM, LPARAM> CreateMouseEventParams(const std::optional<Point>& cursorPos) const;

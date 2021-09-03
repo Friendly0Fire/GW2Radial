@@ -10,9 +10,9 @@ class Singleton
 {
 public:
 	template<typename T2 = T> requires std::derived_from<T2, T>
-	static T& i(std::optional<std::unique_ptr<T2>&&> i = std::nullopt)
+	static T& i(std::unique_ptr<T2>&& i = nullptr)
 	{
-		return *InstanceInternal<T2>(i);
+		return *InstanceInternal<T2>(std::move(i));
 	}
 
 	virtual ~Singleton()
@@ -22,7 +22,7 @@ public:
 
 protected:
 	template<typename T2 = T> requires std::derived_from<T2, T>
-	static std::unique_ptr<T>& InstanceInternal(std::optional<std::unique_ptr<T2>&&> i = std::nullopt)
+	static std::unique_ptr<T>& InstanceInternal(std::unique_ptr<T2>&& i = nullptr)
 	{
 		static std::unique_ptr<T> i_;
 
@@ -32,10 +32,10 @@ protected:
 		}
 		else {
 			if (!i_ && i)
-				i_ = std::move(*i);
+				i_ = std::move(i);
 		}
 
-		return i_.get();
+		return i_;
 	}
 };
 

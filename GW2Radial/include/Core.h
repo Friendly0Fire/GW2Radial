@@ -5,6 +5,7 @@
 #include <Wheel.h>
 #include <UnitQuad.h>
 #include <CustomWheel.h>
+#include <Defs.h>
 
 namespace GW2Radial
 {
@@ -38,6 +39,8 @@ public:
 
 	void OnInjectorCreated();
 
+	void RegisterOnFocus(FocusListener* fl) { focusListeners_.push_back(fl); }
+
 protected:
 	void InternalInit();
 	void OnFocusLost();
@@ -69,6 +72,7 @@ protected:
 	const uint TickSkipCount = 10;
 	uint longTickSkip_ = 0;
 	const uint LongTickSkipCount = 600;
+	std::list<FocusListener*> focusListeners_;
 
 	std::unique_ptr<UnitQuad> quad_;
 	Effect* mainEffect_ = nullptr;

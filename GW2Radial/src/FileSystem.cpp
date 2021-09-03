@@ -6,8 +6,6 @@ namespace fs = std::filesystem;
 
 namespace GW2Radial
 {
-    DEFINE_SINGLETON(FileSystem);
-
     ZipArchive::Ptr FileSystem::FindOrCache(const fs::path& p)
     {
         if(auto arc = archiveCache_.find(p); arc != archiveCache_.end())
@@ -32,9 +30,9 @@ namespace GW2Radial
 
         if (p2.has_extension() && p2.extension() == L".zip")
         {
-            auto* fs = i();
+            auto& fs = i();
 
-            auto z = fs->FindOrCache(p2.string());
+            auto z = fs.FindOrCache(p2.string());
             if(z) {
                 if(zip) *zip = z;
                 return { p2, fs::relative(p, p2) };

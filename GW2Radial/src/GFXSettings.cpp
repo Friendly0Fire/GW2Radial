@@ -3,7 +3,6 @@
 #include <tinyxml2/tinyxml2.h>
 
 namespace GW2Radial {
-DEFINE_SINGLETON(GFXSettings);
 
 GFXSettings::GFXSettings() {
     filePath_ = FileSystem::GetSystemPath(FOLDERID_RoamingAppData) / "Guild Wars 2" / "GFXSettings.Gw2-64.exe.xml";

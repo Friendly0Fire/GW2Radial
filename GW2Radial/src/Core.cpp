@@ -104,7 +104,9 @@ void Core::OnFocusLost()
 
 void Core::OnFocus() {
 	mainEffect_->Clear();
-	Keybind::ForceRefreshDisplayStrings();
+
+	for (auto* fl : focusListeners_)
+		fl->OnFocus();
 
 	if(MiscTab::i().reloadOnFocus())
 		forceReloadWheels_ = true;

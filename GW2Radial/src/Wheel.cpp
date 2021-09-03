@@ -42,10 +42,10 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	conditions_ = std::make_shared<ConditionSet>("wheel_" + nickname_);
 	keybind_.conditions(conditions_);
 	centralKeybind_.conditions(conditions_);
-	keybind_.callback([&](ActivationKeybind::Activated a) {
+	keybind_.callback([&](Activated a) {
 		return KeybindEvent(false, a);
 	});
-	centralKeybind_.callback([&](ActivationKeybind::Activated a) {
+	centralKeybind_.callback([&](Activated a) {
 		return KeybindEvent(true, a);
 	});
 	
@@ -657,7 +657,7 @@ void Wheel::OnMouseButton(ScanCode sc, bool down, bool& rv)
 	}
 }
 
-bool Wheel::KeybindEvent(bool center, bool activated)
+PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
 {
 	const bool previousVisibility = isVisible_;
 
@@ -692,6 +692,8 @@ bool Wheel::KeybindEvent(bool center, bool activated)
 
 	if (!isVisible_ && previousVisibility)
 		DeactivateWheel();
+
+	return isVisible_ != previousVisibility;
 }
 
 #if 0

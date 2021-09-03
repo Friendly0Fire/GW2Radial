@@ -3,6 +3,7 @@
 #include <set>
 #include <Keybind.h>
 #include <Condition.h>
+#include <Input.h>
 
 namespace GW2Radial
 {
@@ -10,9 +11,8 @@ namespace GW2Radial
 class ActivationKeybind : public Keybind
 {
 public:
-	using PreventPassToGame = bool;
-	using Activated = bool;
 	using Callback = std::function<PreventPassToGame(Activated)>;
+
 	ActivationKeybind(std::string nickname, std::string displayName, std::string category, KeyCombo ks, bool saveToConfig)
 		: Keybind(nickname, displayName, category, ks.key, ks.mod, saveToConfig) {
 		Bind();

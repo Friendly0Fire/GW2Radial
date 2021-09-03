@@ -166,7 +166,9 @@
     <ClCompile Include="src\UpdateCheck.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\ActivationKeybind.cpp" />
+    <ClCompile Include="src\ActivationKeybind.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -330,6 +332,12 @@
     </ClInclude>
     <ClInclude Include="include\Tag.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="include\KeyCombo.h">
+      <Filter>Source Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Defs.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

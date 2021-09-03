@@ -271,10 +271,10 @@ namespace GW2Radial
         SendQueuedInputs();
     }
 
-    ActivationKeybind::PreventPassToGame Input::TriggerKeybinds(bool downKeysChanged)
+    PreventPassToGame Input::TriggerKeybinds(bool downKeysChanged)
     {
         if (!downKeysChanged)
-            return;
+            return false;
 
         std::pair<float, ActivationKeybind*> bestScoredKeybind{ 0.f, nullptr };
         for (auto& kb : keybinds_) {
@@ -494,6 +494,7 @@ namespace GW2Radial
 
     void Input::UnregisterKeybind(ActivationKeybind* kb)
     {
-        std::remove(keybinds_.begin(), keybinds_.end(), kb);
+        auto it = std::remove(keybinds_.begin(), keybinds_.end(), kb);
+        keybinds_.erase(it);
     }
 }

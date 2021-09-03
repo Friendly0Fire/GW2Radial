@@ -67,7 +67,7 @@ protected:
 	WheelElement* GetCenterHoveredElement();
 	WheelElement* GetFavorite(int favoriteId);
 	std::vector<WheelElement*> GetActiveElements(bool sorted = true);
-	bool KeybindEvent(bool center, bool activated);
+	PreventPassToGame KeybindEvent(bool center, bool activated);
 	void OnMouseMove(bool& rv);
 	void OnMouseButton(ScanCode sc, bool down, bool& rv);
 	void ActivateWheel(bool isMountOverlayLocked);
