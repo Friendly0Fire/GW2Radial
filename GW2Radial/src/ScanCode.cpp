@@ -51,7 +51,7 @@ std::wstring GetScanCodeName(ScanCode scanCode) {
 	if (scanCode == ScanCode::NUMROW_0)
 		return L"0";
 
-	if (IsUniversalModifier(scanCode)) {
+	if (IsUniversal(scanCode)) {
 		switch (scanCode) {
 		case ScanCode::SHIFT:
 			return L"SHIFT";
@@ -65,9 +65,19 @@ std::wstring GetScanCodeName(ScanCode scanCode) {
 	}
 
 	wchar_t keyName[50];
-	LONG lParam = (uint(scanCode) & 0xFF) << 16 | (IsExtendedKey(scanCode) ? 1 : 0) << 24;
+	LPARAM lParam = 0;
+	auto& lp = KeyLParam::Get(lParam);
+	lp.scanCode = uint(scanCode);
+	lp.extendedFlag = IsExtendedKey(scanCode) ? 1 : 0;
+	// = (uint(scanCode) & 0xFF) << 16 | (IsExtendedKey(scanCode) ? 1 : 0) << 24;
 	if (GetKeyNameTextW(lParam, keyName, int(std::size(keyName))) != 0)
 		return keyName;
+#ifdef _DEBUG
+	else {
+		auto err = GetLastError();
+		FormattedOutputDebugString(L"Could not get key name for scan code %d, error %d.\n", scanCode, err);
+	}
+#endif
 
 	return L"[Error]";
 }

@@ -73,48 +73,37 @@ namespace GW2Radial
             case WM_SYSKEYDOWN:
             case WM_KEYDOWN:
                 eventDown = true;
+            [[fallthrough]];
             case WM_SYSKEYUP:
             case WM_KEYUP:
                 {
                     auto& keylParam = KeyLParam::Get(lParam);
                     const ScanCode sc = GetScanCode(keylParam);
 
-                    if ((msg == WM_SYSKEYDOWN || msg == WM_SYSKEYUP) && wParam != VK_F10)
-                    {
-                        const ScanCode altCode = keylParam.extendedFlag ? ScanCode::ALTRIGHT : ScanCode::ALTLEFT;
-                        if (!downKeys_.contains(altCode))
-                        {
-                            // Simulate separate ALT event
-                            UINT msg2 = WM_KEYDOWN;
-                            WPARAM wParam2 = keylParam.extendedFlag ? VK_LMENU : VK_RMENU;
-                            LPARAM lParam2 = 0;
-                            auto& keylParam2 = KeyLParam::Get(lParam);
-                            keylParam2.scanCode = uint(altCode);
-                            keylParam2.extendedFlag = keylParam.extendedFlag;
-                            OnInput(msg2, wParam2, lParam2);
-                        }
-                    }
-
                     eventKey = { sc, eventDown };
                     break;
                 }
             case WM_LBUTTONDOWN:
                 eventDown = true;
+            [[fallthrough]];
             case WM_LBUTTONUP:
                 eventKey = { ScanCode::LBUTTON, eventDown };
                 break;
             case WM_MBUTTONDOWN:
                 eventDown = true;
+            [[fallthrough]];
             case WM_MBUTTONUP:
                 eventKey = { ScanCode::MBUTTON, eventDown };
                 break;
             case WM_RBUTTONDOWN:
                 eventDown = true;
+            [[fallthrough]];
             case WM_RBUTTONUP:
                 eventKey = { ScanCode::RBUTTON, eventDown };
                 break;
             case WM_XBUTTONDOWN:
                 eventDown = true;
+            [[fallthrough]];
             case WM_XBUTTONUP:
                 eventKey = { GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? ScanCode::X1BUTTON : ScanCode::X2BUTTON, eventDown };
                 break;
@@ -276,6 +265,18 @@ namespace GW2Radial
         if (!downKeysChanged)
             return false;
 
+#ifdef _DEBUG
+        std::wstring dbgkeys = L"";
+        if (downKeys_.empty()) {
+            dbgkeys = L"<NONE>";
+        } else {
+            for (cref k : downKeys_)
+                dbgkeys += GetScanCodeName(k) + L", ";
+            dbgkeys[dbgkeys.size() - 2] = L'\0';
+        }
+        FormattedOutputDebugString(L"Triggering keybinds, active keys: %s\n", dbgkeys.c_str());
+#endif
+
         std::pair<float, ActivationKeybind*> bestScoredKeybind{ 0.f, nullptr };
         for (auto& kb : keybinds_) {
             float score = kb->matchesScored(downKeys_);
@@ -337,7 +338,7 @@ namespace GW2Radial
         }
         else
         {
-            bool isUniversal = IsUniversalModifier(sc);
+            bool isUniversal = IsUniversal(sc);
             if (isUniversal)
                 sc = sc & ~ScanCode::UNIVERSAL_MODIFIER_FLAG;
 

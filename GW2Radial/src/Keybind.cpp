@@ -99,43 +99,22 @@ void Keybind::ApplyKeys() const
 
 [[nodiscard]]
 bool Keybind::matches(const KeyCombo& ks) const {
-	return key_ == ks.key && mod_ == ks.mod;
+	return key_ == ks.key && (mod_ & ks.mod) == mod_;
 }
 
 [[nodiscard]]
 bool Keybind::matches(const std::set<ScanCode>& ks) const
 {
 	return ks.contains(key_)
-		&& (isNone(mod_ & Modifier::LCTRL) || ks.contains(ScanCode::CONTROLLEFT))
-		&& (isNone(mod_ & Modifier::RCTRL) || ks.contains(ScanCode::CONTROLRIGHT))
-		&& (isNone(mod_ & Modifier::LSHIFT) || ks.contains(ScanCode::SHIFTLEFT))
-		&& (isNone(mod_ & Modifier::RSHIFT) || ks.contains(ScanCode::SHIFTRIGHT))
-		&& (isNone(mod_ & Modifier::LALT) || ks.contains(ScanCode::ALTLEFT))
-		&& (isNone(mod_ & Modifier::RALT) || ks.contains(ScanCode::ALTRIGHT));
+		&& (isNone(mod_ & Modifier::CTRL) || ks.contains(ScanCode::CONTROLLEFT) || ks.contains(ScanCode::CONTROLRIGHT))
+		&& (isNone(mod_ & Modifier::SHIFT) || ks.contains(ScanCode::SHIFTLEFT) || ks.contains(ScanCode::SHIFTRIGHT))
+		&& (isNone(mod_ & Modifier::ALT) || ks.contains(ScanCode::ALTLEFT) || ks.contains(ScanCode::ALTRIGHT));
 }
 
 float Keybind::matchesScored(const std::set<ScanCode>& ks) const
 {
 	return matches(ks) ? float(keyCount()) / float(ks.size()) : 0.f;
 }
-
-#if 0
-bool Keybind::matchesPartial(const std::set<ScanCode>& ks) const
-{
-	return ks.contains(key_)
-		|| (notNone(mod_ & Modifier::LCTRL) && ks.contains(ScanCode::CONTROLLEFT))
-		|| (notNone(mod_ & Modifier::RCTRL) && ks.contains(ScanCode::CONTROLRIGHT))
-		|| (notNone(mod_ & Modifier::LSHIFT) && ks.contains(ScanCode::SHIFTLEFT))
-		|| (notNone(mod_ & Modifier::RSHIFT) && ks.contains(ScanCode::SHIFTRIGHT))
-		|| (notNone(mod_ & Modifier::LALT) && ks.contains(ScanCode::ALTLEFT))
-		|| (notNone(mod_ & Modifier::RALT) && ks.contains(ScanCode::ALTRIGHT));
-}
-
-bool Keybind::matchesNoLeftRight(const KeyCombo& ks) const
-{
-	return MakeUniversal(key_) == MakeUniversal(ks.key) && MakeUniversal(mod_) == MakeUniversal(ks.mod);
-}
-#endif
 
 void Keybind::UpdateDisplayString() const
 {
@@ -148,24 +127,12 @@ void Keybind::UpdateDisplayString() const
 	std::wstring keybind;
 	if (notNone(mod_ & Modifier::CTRL))
 		keybind += L"CTRL + ";
-	else if (notNone(mod_ & Modifier::LCTRL))
-		keybind += L"LCTRL + ";
-	else if (notNone(mod_ & Modifier::RCTRL))
-		keybind += L"RCTRL + ";
 
 	if (notNone(mod_ & Modifier::ALT))
 		keybind += L"ALT + ";
-	else if (notNone(mod_ & Modifier::LALT))
-		keybind += L"LALT + ";
-	else if (notNone(mod_ & Modifier::RALT))
-		keybind += L"RALT + ";
 
 	if (notNone(mod_ & Modifier::SHIFT))
 		keybind += L"SHIFT + ";
-	else if (notNone(mod_ & Modifier::LSHIFT))
-		keybind += L"LSHIFT + ";
-	else if (notNone(mod_ & Modifier::RSHIFT))
-		keybind += L"RSHIFT + ";
 
 	keybind += GetScanCodeName(key_);
 

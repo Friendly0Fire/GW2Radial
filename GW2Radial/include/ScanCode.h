@@ -63,7 +63,7 @@ enum class ScanCode : uint {
     N = 0x31,
     M = 0x32,
     COMMA = 0x33,
-    PREIOD = 0x34,
+    PERIOD = 0x34,
     SLASH = 0x35,
     SHIFTRIGHT = 0x36,
     NUMPAD_MULTIPLY = 0x37,
@@ -207,17 +207,9 @@ using ScanCode_t = std::underlying_type_t<ScanCode>;
 enum class Modifier : uint {
     NONE = 0,
 
-    LCTRL = 1,
-    RCTRL = 2,
-    CTRL = LCTRL | RCTRL,
-
-    LALT = 4,
-    RALT = 8,
-    ALT = LALT | RALT,
-
-    LSHIFT = 16,
-    RSHIFT = 32,
-    SHIFT = LSHIFT | RSHIFT,
+    CTRL = 1,
+    SHIFT = 2,
+    ALT = 4
 };
 using Modifier_t = std::underlying_type_t<Modifier>;
 }
@@ -272,21 +264,15 @@ inline bool IsModifier(ScanCode a) {
 inline Modifier ToModifier(ScanCode a) {
     switch (a) {
     case ScanCode::SHIFTLEFT:
-        return Modifier::LSHIFT;
     case ScanCode::SHIFTRIGHT:
-        return Modifier::RSHIFT;
     case ScanCode::SHIFT:
         return Modifier::SHIFT;
     case ScanCode::CONTROLLEFT:
-        return Modifier::LCTRL;
     case ScanCode::CONTROLRIGHT:
-        return Modifier::RCTRL;
     case ScanCode::CONTROL:
         return Modifier::CTRL;
     case ScanCode::ALTLEFT:
-        return Modifier::LALT;
     case ScanCode::ALTRIGHT:
-        return Modifier::RALT;
     case ScanCode::ALT:
         return Modifier::ALT;
     default:
@@ -296,7 +282,6 @@ inline Modifier ToModifier(ScanCode a) {
 
 inline bool IsExtendedKey(ScanCode a) {
     switch (a) {
-    case ScanCode::SHIFTRIGHT:
     case ScanCode::CONTROLRIGHT:
     case ScanCode::ALTRIGHT:
     case ScanCode::METARIGHT:
@@ -311,6 +296,8 @@ inline bool IsExtendedKey(ScanCode a) {
     case ScanCode::ARROWDOWN:
     case ScanCode::ARROWUP:
     case ScanCode::ARROWRIGHT:
+    case ScanCode::NUMLOCK:
+    case ScanCode::PRINTSCREEN:
     case ScanCode::NUMPAD_DIVIDE:
     case ScanCode::NUMPAD_ENTER:
         return true;
@@ -342,33 +329,14 @@ inline ScanCode MakeUniversal(const ScanCode& a) {
     }
 }
 
-inline Modifier MakeUniversal(const Modifier& a) {
-    switch (a) {
-    case Modifier::LSHIFT:
-    case Modifier::RSHIFT:
-    case Modifier::SHIFT:
-        return Modifier::SHIFT;
-    case Modifier::LCTRL:
-    case Modifier::RCTRL:
-    case Modifier::CTRL:
-        return Modifier::CTRL;
-    case Modifier::LALT:
-    case Modifier::RALT:
-    case Modifier::ALT:
-        return Modifier::ALT;
-    default:
-        return a;
-    }
-}
-
-constexpr bool IsUniversalModifier(const ScanCode& a) {
-    return (ScanCode_t(a) & ScanCode_t(ScanCode::UNIVERSAL_MODIFIER_FLAG)) != ScanCode_t(ScanCode::NONE);
+constexpr bool IsUniversal(ScanCode a) {
+    return notNone(a & ScanCode::UNIVERSAL_MODIFIER_FLAG);
 }
 
 std::wstring GetScanCodeName(ScanCode scanCode);
 
-constexpr bool IsSame(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b) {
-    if (IsUniversalModifier(a) || IsUniversalModifier(b)) {
+constexpr bool IsSame(ScanCode a, ScanCode b) {
+    if (IsUniversal(a) || IsUniversal(b)) {
         switch (a) {
         case ScanCode::SHIFTLEFT:
         case ScanCode::SHIFTRIGHT:
@@ -389,8 +357,7 @@ constexpr bool IsSame(const GW2Radial::ScanCode& a, const GW2Radial::ScanCode& b
         }
     }
 
-    bool c = a == b;
-    return c;
+    return a == b;
 }
 
 struct KeyLParam {
@@ -413,7 +380,7 @@ inline ScanCode GetScanCodeFromVirtualKey(uint vk) {
 }
 
 inline bool IsMouse(ScanCode sc) {
-    return (sc & ScanCode::MOUSE_FLAG) != ScanCode::NONE;
+    return notNone(sc & ScanCode::MOUSE_FLAG);
 }
 
 struct ScanCodeCompare

@@ -59,10 +59,11 @@ public:
 	[[nodiscard]] bool matches(const KeyCombo& ks) const;
 	[[nodiscard]] bool matches(const std::set<ScanCode>& ks) const;
 	[[nodiscard]] float matchesScored(const std::set<ScanCode>& ks) const;
-	//[[nodiscard]] bool matchesPartial(const std::set<ScanCode>& ks) const;
-	//[[nodiscard]] bool matchesNoLeftRight(const KeyCombo& ks) const;
 
 	int keyCount() const {
+		if (key_ == ScanCode::NONE)
+			return 0;
+
 		return 1 + (notNone(mod_ & Modifier::CTRL) ? 1 : 0)
 			     + (notNone(mod_ & Modifier::SHIFT) ? 1 : 0)
 			     + (notNone(mod_ & Modifier::ALT) ? 1 : 0);
@@ -81,7 +82,7 @@ protected:
 	Modifier mod_;
 	bool saveToConfig_ = true;
 
-	mutable std::array<char, 256> keysDisplayString_ { };
+	mutable std::array<char, 128> keysDisplayString_ { };
 };
 
 }

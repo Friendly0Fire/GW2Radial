@@ -290,12 +290,12 @@ concept enum_with_none = requires(T && t) {
 };
 
 template<enum_with_none Enum>
-bool notNone(Enum e) {
+constexpr bool notNone(Enum e) {
 	return e != Enum::NONE;
 }
 
 template<enum_with_none Enum>
-bool isNone(Enum e) {
+constexpr bool isNone(Enum e) {
 	return e == Enum::NONE;
 }
 
