@@ -133,22 +133,22 @@ namespace GW2Radial
         if (inputRecordCallback_) {
             response |= InputResponse::PREVENT_KEYBOARD;
             if (!eventKey.down && eventKey.sc != ScanCode::LBUTTON) {
-                (*inputRecordCallback_)(KeyCombo(downKeys_));
+                (*inputRecordCallback_)(KeyCombo(eventKey.sc, downModifiers_));
                 inputRecordCallback_ = std::nullopt;
             }
         }
 
-        bool downKeysChanged = false;
-
-        // Apply key event now
-        if (eventKey.down)
-            downKeysChanged |= downKeys_.insert(eventKey.sc).second;
-        else
-            downKeysChanged |= downKeys_.erase(eventKey.sc) > 0;
-
         // Only run these for key down/key up (incl. mouse buttons) events
         if (eventKey.sc != ScanCode::NONE && !MumbleLink::i().textboxHasFocus())
-            response |= TriggerKeybinds(downKeysChanged) ? InputResponse::PREVENT_KEYBOARD : InputResponse::PASS_TO_GAME;
+            response |= TriggerKeybinds(eventKey) ? InputResponse::PREVENT_KEYBOARD : InputResponse::PASS_TO_GAME;
+
+        if (IsModifier(eventKey.sc)) {
+            auto mod = ToModifier(eventKey.sc);
+            if (eventKey.down)
+                downModifiers_ |= mod;
+            else
+                downModifiers_ &= ~mod;
+        }
 
         ImGui_ImplWin32_WndProcHandler(Core::i().gameWindow(), msg, wParam, lParam);
         if (msg == WM_MOUSEMOVE)
@@ -252,7 +252,6 @@ namespace GW2Radial
 
     void Input::OnFocusLost()
     {
-        downKeys_.clear();
     }
 
     void Input::OnUpdate()
@@ -260,36 +259,48 @@ namespace GW2Radial
         SendQueuedInputs();
     }
 
-    PreventPassToGame Input::TriggerKeybinds(bool downKeysChanged)
+    PreventPassToGame Input::TriggerKeybinds(const EventKey& ek)
     {
-        if (!downKeysChanged)
-            return false;
-
 #ifdef _DEBUG
         std::wstring dbgkeys = L"";
-        if (downKeys_.empty()) {
+        if (!ek.down && isNone(downModifiers_)) {
             dbgkeys = L"<NONE>";
         } else {
-            for (cref k : downKeys_)
-                dbgkeys += GetScanCodeName(k) + L", ";
-            dbgkeys[dbgkeys.size() - 2] = L'\0';
+            if (notNone(downModifiers_ & Modifier::CTRL))
+                dbgkeys += L"CTRL + ";
+            if (notNone(downModifiers_ & Modifier::SHIFT))
+                dbgkeys += L"SHIFT + ";
+            if (notNone(downModifiers_ & Modifier::ALT))
+                dbgkeys += L"ALT + ";
+            if(ek.down)
+                dbgkeys += GetScanCodeName(ek.sc);
+            else
+                dbgkeys[dbgkeys.size() - 3] = L'\0';
         }
         FormattedOutputDebugString(L"Triggering keybinds, active keys: %s\n", dbgkeys.c_str());
 #endif
 
-        std::pair<float, ActivationKeybind*> bestScoredKeybind{ 0.f, nullptr };
-        for (auto& kb : keybinds_) {
-            float score = kb->matchesScored(downKeys_);
-            if (score > bestScoredKeybind.first)
-                bestScoredKeybind = { score, kb };
-        }
-
-        if (bestScoredKeybind.second) {
-            if (activeKeybind_ && activeKeybind_ != bestScoredKeybind.second)
+        KeyCombo kc(ek.sc, downModifiers_);
+        if (ek.down) {
+            for (auto& kb : keybinds_[kc]) {
+                if (kb->conditionsFulfilled() && kb != activeKeybind_) {
+                    if (activeKeybind_ != nullptr)
+                        activeKeybind_->callback()(false);
+                    activeKeybind_ = kb;
+#ifdef _DEBUG
+                    FormattedOutputDebugString(L"Active keybind is now '%s'\n", utf8_decode(kb->displayName()).c_str());
+#endif
+                    return kb->callback()(true);
+                }
+            }
+        } else if(activeKeybind_ != nullptr) {
+            if (!activeKeybind_->matches(kc)) {
                 activeKeybind_->callback()(false);
-
-            activeKeybind_ = bestScoredKeybind.second;
-            return activeKeybind_->callback()(true);
+                activeKeybind_ = nullptr;
+#ifdef _DEBUG
+                OutputDebugString(L"Active keybind is now null\n");
+#endif
+            }
         }
 
         return false;
@@ -384,10 +395,11 @@ namespace GW2Radial
     std::tuple<WPARAM, LPARAM> Input::CreateMouseEventParams(const std::optional<Point>& cursorPos) const
     {
         WPARAM wParam = 0;
-        if (downKeys_.count(ScanCode::CONTROLLEFT) || downKeys_.count(ScanCode::CONTROLRIGHT))
+        if (notNone(downModifiers_ & Modifier::CTRL))
             wParam += MK_CONTROL;
-        if (downKeys_.count(ScanCode::SHIFTLEFT) || downKeys_.count(ScanCode::SHIFTRIGHT))
+        if (notNone(downModifiers_ & Modifier::SHIFT))
             wParam += MK_SHIFT;
+#if 0
         if (downKeys_.count(ScanCode::LBUTTON))
             wParam += MK_LBUTTON;
         if (downKeys_.count(ScanCode::RBUTTON))
@@ -398,6 +410,7 @@ namespace GW2Radial
             wParam += MK_XBUTTON1;
         if (downKeys_.count(ScanCode::X2BUTTON))
             wParam += MK_XBUTTON2;
+#endif
 
         cref io = ImGui::GetIO();
 
@@ -407,7 +420,7 @@ namespace GW2Radial
 
     void Input::SendKeybind(const KeyCombo& ks, const std::optional<Point>& cursorPos, KeybindAction action)
     {
-        if (ks.key == ScanCode::NONE)
+        if (ks.key() == ScanCode::NONE)
         {
             if (cursorPos.has_value())
             {
@@ -423,22 +436,20 @@ namespace GW2Radial
         mstime currentTime = TimeInMilliseconds() + 10;
 
         std::list<ScanCode> codes;
-        if (notNone(ks.mod & Modifier::SHIFT))
+        if (notNone(ks.mod() & Modifier::SHIFT))
             codes.push_back(ScanCode::SHIFTLEFT);
-        if (notNone(ks.mod & Modifier::CTRL))
+        if (notNone(ks.mod() & Modifier::CTRL))
             codes.push_back(ScanCode::CONTROLLEFT);
-        if (notNone(ks.mod & Modifier::ALT))
+        if (notNone(ks.mod() & Modifier::ALT))
             codes.push_back(ScanCode::ALTLEFT);
 
-        codes.push_back(ks.key);
+        codes.push_back(ks.key());
 
         auto sendKeys = [&](ScanCode sc, bool down) {
-            if (!downKeys_.count(sc)) {
-                DelayedInput i = TransformScanCode(sc, down, currentTime, cursorPos);
-                if (i.wParam != 0)
-                    queuedInputs_.push_back(i);
-                currentTime += 20;
-            }
+            DelayedInput i = TransformScanCode(sc, down, currentTime, cursorPos);
+            if (i.wParam != 0)
+                queuedInputs_.push_back(i);
+            currentTime += 20;
         };
 
         if (notNone(action & KeybindAction::DOWN)) {
@@ -490,12 +501,22 @@ namespace GW2Radial
 
     void Input::RegisterKeybind(ActivationKeybind* kb)
     {
-        keybinds_.push_back(kb);
+        keybinds_[kb->keyCombo()].push_back(kb);
+    }
+
+    void Input::UpdateKeybind(ActivationKeybind* kb)
+    {
+        UnregisterKeybind(kb);
+        RegisterKeybind(kb);
     }
 
     void Input::UnregisterKeybind(ActivationKeybind* kb)
     {
-        auto it = std::remove(keybinds_.begin(), keybinds_.end(), kb);
-        keybinds_.erase(it);
+        for (auto& [kc, vec] : keybinds_)
+        {
+            auto it = std::remove(vec.begin(), vec.end(), kb);
+            if (it != vec.end())
+                vec.erase(it);
+        }
     }
 }

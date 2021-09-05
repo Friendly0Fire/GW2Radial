@@ -13,7 +13,7 @@ class Keybind : public FocusListener
 {
 public:
 	Keybind(std::string nickname, std::string displayName, std::string category, KeyCombo ks, bool saveToConfig)
-		: Keybind(nickname, displayName, category, ks.key, ks.mod, saveToConfig) {}
+		: Keybind(nickname, displayName, category, ks.key(), ks.mod(), saveToConfig) {}
 
 	Keybind(std::string nickname, std::string displayName, std::string category, ScanCode key, Modifier mod, bool saveToConfig);
 	Keybind(std::string nickname, std::string displayName, std::string category);
@@ -25,8 +25,8 @@ public:
 	Modifier modifier() const { return mod_; }
 
 	void keyCombo(const KeyCombo& ks) {
-		key_ = ks.key;
-		mod_ = ks.mod;
+		key_ = ks.key();
+		mod_ = ks.mod();
 
 		ApplyKeys();
 	}
@@ -57,8 +57,6 @@ public:
 	[[nodiscard]] const size_t keysDisplayStringSize() const { return keysDisplayString_.size(); }
 
 	[[nodiscard]] bool matches(const KeyCombo& ks) const;
-	[[nodiscard]] bool matches(const std::set<ScanCode>& ks) const;
-	[[nodiscard]] float matchesScored(const std::set<ScanCode>& ks) const;
 
 	int keyCount() const {
 		if (key_ == ScanCode::NONE)
@@ -75,7 +73,7 @@ public:
 
 protected:
 	void UpdateDisplayString() const;
-	void ApplyKeys() const;
+	virtual void ApplyKeys();
 
 	std::string displayName_, nickname_, category_;
 	ScanCode key_;

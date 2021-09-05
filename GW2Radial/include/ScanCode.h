@@ -226,6 +226,16 @@ constexpr GW2Radial::Modifier operator~(GW2Radial::Modifier a) {
     return GW2Radial::Modifier(~GW2Radial::Modifier_t(a));
 }
 
+constexpr GW2Radial::Modifier& operator|=(GW2Radial::Modifier& a, GW2Radial::Modifier b) {
+    a = GW2Radial::Modifier(GW2Radial::Modifier_t(a) | GW2Radial::Modifier_t(b));
+    return a;
+}
+
+constexpr GW2Radial::Modifier& operator&=(GW2Radial::Modifier& a, GW2Radial::Modifier b) {
+    a = GW2Radial::Modifier(GW2Radial::Modifier_t(a) & GW2Radial::Modifier_t(b));
+    return a;
+}
+
 
 constexpr GW2Radial::ScanCode operator&(GW2Radial::ScanCode a, GW2Radial::ScanCode b) {
     return GW2Radial::ScanCode(GW2Radial::ScanCode_t(a) & GW2Radial::ScanCode_t(b));

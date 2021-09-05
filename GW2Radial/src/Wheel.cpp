@@ -666,29 +666,26 @@ PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
 	if (MumbleLink::i().isMapOpen())
 		isVisible_ = false;
 	else {
-		bool mountOverlay = (!enableConditionsOption_.value() || keybind_.conditionsFulfilled()) && center;
-		bool mountOverlayCenter = (!enableConditionsOption_.value() || centralKeybind_.conditionsFulfilled()) && !center;
-
 		WheelElement* bypassElement = nullptr;
-		if ((mountOverlayCenter || mountOverlay) && doBypassWheel_(bypassElement) && !waitingForBypassComplete_) {
+		if (activated && doBypassWheel_(bypassElement) && !waitingForBypassComplete_) {
 			isVisible_ = false;
 			waitingForBypassComplete_ = true;
 			SendKeybindOrDelay(bypassElement, std::nullopt);
 		}
 
 		if (waitingForBypassComplete_) {
-			if (!mountOverlay && !mountOverlayCenter)
+			if (!activated)
 				waitingForBypassComplete_ = false;
 		}
 		else {
-			isVisible_ = mountOverlayCenter || mountOverlay;
+			isVisible_ = activated;
 
 			// If holding down the button is not necessary, modify behavior
 			if (noHoldOption_.value() && previousVisibility && currentHovered_ == nullptr)
 				isVisible_ = true;
 
 			if (isVisible_ && !previousVisibility)
-				ActivateWheel(mountOverlayCenter);
+				ActivateWheel(center);
 		}
 	}
 

@@ -14,7 +14,7 @@ public:
 	using Callback = std::function<PreventPassToGame(Activated)>;
 
 	ActivationKeybind(std::string nickname, std::string displayName, std::string category, KeyCombo ks, bool saveToConfig)
-		: Keybind(nickname, displayName, category, ks.key, ks.mod, saveToConfig) {
+		: Keybind(nickname, displayName, category, ks.key(), ks.mod(), saveToConfig) {
 		Bind();
 	}
 
@@ -32,10 +32,12 @@ public:
 	Callback callback() const { return callback_; }
 	void conditions(ConditionSetPtr ptr) { conditions_ = ptr; }
 
-	[[nodiscard]] bool conditionsFulfilled() const { return conditions_->passes(); }
+	[[nodiscard]] bool conditionsFulfilled() const { return conditions_ == nullptr || conditions_->passes(); }
 
 protected:
+	void ApplyKeys() override { Rebind(); }
 	void Bind();
+	void Rebind();
 	ConditionSetPtr conditions_;
 	Callback callback_;
 };

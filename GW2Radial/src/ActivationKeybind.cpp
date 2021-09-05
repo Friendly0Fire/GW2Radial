@@ -12,4 +12,9 @@ void ActivationKeybind::Bind()
 {
     Input::i().RegisterKeybind(this);
 }
+
+void ActivationKeybind::Rebind()
+{
+    Input::i().UpdateKeybind(this);
+}
 }

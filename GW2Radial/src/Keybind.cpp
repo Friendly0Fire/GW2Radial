@@ -83,7 +83,7 @@ void Keybind::ParseConfig(const char* keys)
 		mod_ = Modifier(ushort(std::stoi(k[1].c_str())));
 }
 
-void Keybind::ApplyKeys() const
+void Keybind::ApplyKeys()
 {
 	UpdateDisplayString();
 	
@@ -99,21 +99,7 @@ void Keybind::ApplyKeys() const
 
 [[nodiscard]]
 bool Keybind::matches(const KeyCombo& ks) const {
-	return key_ == ks.key && (mod_ & ks.mod) == mod_;
-}
-
-[[nodiscard]]
-bool Keybind::matches(const std::set<ScanCode>& ks) const
-{
-	return ks.contains(key_)
-		&& (isNone(mod_ & Modifier::CTRL) || ks.contains(ScanCode::CONTROLLEFT) || ks.contains(ScanCode::CONTROLRIGHT))
-		&& (isNone(mod_ & Modifier::SHIFT) || ks.contains(ScanCode::SHIFTLEFT) || ks.contains(ScanCode::SHIFTRIGHT))
-		&& (isNone(mod_ & Modifier::ALT) || ks.contains(ScanCode::ALTLEFT) || ks.contains(ScanCode::ALTRIGHT));
-}
-
-float Keybind::matchesScored(const std::set<ScanCode>& ks) const
-{
-	return matches(ks) ? float(keyCount()) / float(ks.size()) : 0.f;
+	return key_ == ks.key() && (mod_ & ks.mod()) == mod_;
 }
 
 void Keybind::UpdateDisplayString() const

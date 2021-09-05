@@ -110,7 +110,7 @@ protected:
 		std::optional<Point> cursorPos;
 	};
 
-	PreventPassToGame TriggerKeybinds(bool downKeysChanged);
+	PreventPassToGame TriggerKeybinds(const EventKey& ek);
 	uint ConvertHookedMessage(uint msg) const;
 	DelayedInput TransformScanCode(ScanCode sc, bool down, mstime t, const std::optional<Point>& cursorPos);
 	std::tuple<WPARAM, LPARAM> CreateMouseEventParams(const std::optional<Point>& cursorPos) const;
@@ -131,16 +131,17 @@ protected:
 	uint id_H_KEYUP_;
 	uint id_H_MOUSEMOVE_;
 	// ReSharper restore CppInconsistentNaming
-
-	std::set<ScanCode> downKeys_;
+	
+	Modifier downModifiers_;
 	std::list<DelayedInput> queuedInputs_;
 
 	std::set<MouseMoveCallback*, PtrComparator<MouseMoveCallback>> mouseMoveCallbacks_;
 	std::set<MouseButtonCallback*, PtrComparator<MouseButtonCallback>> mouseButtonCallbacks_;
 	
-	std::vector<ActivationKeybind*> keybinds_;
+	std::map<KeyCombo, std::vector<ActivationKeybind*>> keybinds_;
 	ActivationKeybind* activeKeybind_ = nullptr;
 	void RegisterKeybind(ActivationKeybind* kb);
+	void UpdateKeybind(ActivationKeybind* kb);
 	void UnregisterKeybind(ActivationKeybind* kb);
 
 	std::optional<RecordCallback> inputRecordCallback_ = std::nullopt;

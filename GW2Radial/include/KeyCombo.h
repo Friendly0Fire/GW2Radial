@@ -7,20 +7,22 @@ namespace GW2Radial
 struct KeyCombo
 {
 public:
-	ScanCode& key = key_;
-	Modifier& mod = mod_;
+	ScanCode& key() { return key_; }
+	Modifier& mod() { return mod_; }
+	ScanCode key() const { return key_; }
+	Modifier mod() const { return mod_; }
 
 	KeyCombo() {
-		key = ScanCode::NONE;
-		mod = Modifier::NONE;
+		key_ = ScanCode::NONE;
+		mod_ = Modifier::NONE;
 	}
-	KeyCombo(ScanCode k, Modifier m) : key(k), mod(m) { }
+	KeyCombo(ScanCode k, Modifier m) : key_(k), mod_(m) { }
 	explicit KeyCombo(const std::set<ScanCode>& keys) : KeyCombo() {
 		for (auto sc : keys) {
 			if (IsModifier(sc))
-				mod = mod | ToModifier(sc);
+				mod_ = mod_ | ToModifier(sc);
 			else
-				key = sc;
+				key_ = sc;
 		}
 	}
 
