@@ -10,11 +10,13 @@ ActivationKeybind::~ActivationKeybind()
 
 void ActivationKeybind::Bind()
 {
-    Input::i().RegisterKeybind(this);
+    if(notNone(key_))
+        Input::i().RegisterKeybind(this);
 }
 
 void ActivationKeybind::Rebind()
 {
-    Input::i().UpdateKeybind(this);
+    if (notNone(key_))
+        Input::i().UpdateKeybind(this);
 }
 }
