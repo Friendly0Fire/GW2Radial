@@ -37,6 +37,7 @@ struct EventKey
 {
     ScanCode sc : 31;
 	bool down : 1;
+	bool operator==(const EventKey&) const = default;
 };
 
 struct Point
@@ -133,6 +134,7 @@ protected:
 	// ReSharper restore CppInconsistentNaming
 	
 	Modifier downModifiers_;
+	ScanCode lastDownKey_;
 	std::list<DelayedInput> queuedInputs_;
 
 	std::set<MouseMoveCallback*, PtrComparator<MouseMoveCallback>> mouseMoveCallbacks_;

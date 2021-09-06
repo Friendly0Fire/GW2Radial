@@ -138,11 +138,24 @@ namespace GW2Radial
             }
         }
 
-        // Only run these for key down/key up (incl. mouse buttons) events
-        if (eventKey.sc != ScanCode::NONE && !MumbleLink::i().textboxHasFocus())
-            response |= TriggerKeybinds(eventKey) ? InputResponse::PREVENT_KEYBOARD : InputResponse::PASS_TO_GAME;
+        // When releasing a key, immediately update modifiers to correctly release keybind
+        if (!eventKey.down && IsModifier(eventKey.sc)) {
+            auto mod = ToModifier(eventKey.sc);
+            if (eventKey.down)
+                downModifiers_ |= mod;
+            else
+                downModifiers_ &= ~mod;
+        }
 
-        if (IsModifier(eventKey.sc)) {
+        // Only run these for key down/key up (incl. mouse buttons) events
+        if (eventKey.sc != ScanCode::NONE && (eventKey.sc != lastDownKey_ || !eventKey.down) && !MumbleLink::i().textboxHasFocus()) {
+            response |= TriggerKeybinds(eventKey) ? InputResponse::PREVENT_KEYBOARD : InputResponse::PASS_TO_GAME;
+            if (eventKey.down) lastDownKey_ = eventKey.sc;
+            if (eventKey.sc == lastDownKey_ && !eventKey.down) lastDownKey_ = ScanCode::NONE;
+        }
+
+        // When pressing a key, delay modifiers until after handling in case the modifier key is used as a keybind
+        if (eventKey.down && IsModifier(eventKey.sc)) {
             auto mod = ToModifier(eventKey.sc);
             if (eventKey.down)
                 downModifiers_ |= mod;
@@ -280,7 +293,10 @@ namespace GW2Radial
         FormattedOutputDebugString(L"Triggering keybinds, active keys: %s\n", dbgkeys.c_str());
 #endif
 
-        KeyCombo kc(ek.sc, downModifiers_);
+        // Key is pressed  => use it as main key
+        // Key is released => if it's a modifier, keep last down key as main key
+        //                 => if not, main key is nil (only modifiers may remain pressed)
+        KeyCombo kc(ek.down ? ek.sc : ek.sc == lastDownKey_ ? ScanCode::NONE : lastDownKey_, downModifiers_);
         if (ek.down) {
             for (auto& kb : keybinds_[kc]) {
                 if (kb->conditionsFulfilled() && kb != activeKeybind_) {
