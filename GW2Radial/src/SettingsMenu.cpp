@@ -20,6 +20,11 @@ void SettingsMenu::Draw()
 {
 	isFocused_ = false;
 
+	if(isVisible_)
+		Input::i().BlockKeybinds(1);
+	else
+		Input::i().UnblockKeybinds(1);
+
 	if (isVisible_)
 	{
 		ImGui::SetNextWindowSize({ 750, 600 }, ImGuiCond_FirstUseEver);

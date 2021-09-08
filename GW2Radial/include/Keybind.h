@@ -71,8 +71,9 @@ public:
 		UpdateDisplayString();
 	}
 
+	void UpdateDisplayString(const std::optional<KeyCombo>& kc = std::nullopt) const;
+
 protected:
-	void UpdateDisplayString() const;
 	virtual void ApplyKeys();
 
 	std::string displayName_, nickname_, category_;

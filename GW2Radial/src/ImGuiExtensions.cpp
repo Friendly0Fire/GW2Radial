@@ -66,11 +66,16 @@ void ImGuiKeybindInput(GW2Radial::Keybind& keybind, GW2Radial::Keybind** keybind
 
 		*keybindBeingModified = &keybind;
 		keybind.keysDisplayString()[0] = '\0';
-		GW2Radial::Input::i().BeginRecordInputs([&keybind, keybindBeingModified](GW2Radial::KeyCombo kc) {
-			keybind.keyCombo(kc);
-			if (*keybindBeingModified == &keybind) {
-				*keybindBeingModified = nullptr;
+		GW2Radial::Input::i().BeginRecordInputs([&keybind, keybindBeingModified](GW2Radial::KeyCombo kc, bool final) {
+			if (final) {
+				keybind.keyCombo(kc);
+				if (*keybindBeingModified == &keybind) {
+					*keybindBeingModified = nullptr;
+				}
 			}
+			else
+				keybind.UpdateDisplayString(kc);
+			
 		});
 	}
 	else if (beingModified && ImGui::Button(("Clear" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))

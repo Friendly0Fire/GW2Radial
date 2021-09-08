@@ -110,6 +110,10 @@ namespace GW2Radial
             }
         }
 
+        // Eliminate repeat inputs
+        if (eventKey.sc == lastDownKey_ && eventKey.down)
+            eventKey.sc = ScanCode::NONE;
+
         const auto isRawInputMouse = msg == WM_INPUT && IsRawInputMouse(lParam);
 
         bool preventMouseMove = false;
@@ -132,9 +136,9 @@ namespace GW2Radial
         InputResponse response = preventMouseButton ? InputResponse::PREVENT_MOUSE : InputResponse::PASS_TO_GAME;
         if (inputRecordCallback_ && eventKey.sc != ScanCode::NONE) {
             response |= InputResponse::PREVENT_KEYBOARD;
-            if (!eventKey.down && eventKey.sc != ScanCode::LBUTTON) {
-                (*inputRecordCallback_)(KeyCombo(eventKey.sc, downModifiers_));
-                inputRecordCallback_ = std::nullopt;
+            if (eventKey.sc != ScanCode::LBUTTON) {
+                (*inputRecordCallback_)(KeyCombo(eventKey.sc, downModifiers_), !eventKey.down);
+                if(!eventKey.down) inputRecordCallback_ = std::nullopt;
             }
         }
 
@@ -148,7 +152,7 @@ namespace GW2Radial
         }
 
         // Only run these for key down/key up (incl. mouse buttons) events
-        if (eventKey.sc != ScanCode::NONE && (eventKey.sc != lastDownKey_ || !eventKey.down) && !MumbleLink::i().textboxHasFocus()) {
+        if (!keybindsBlocked() && eventKey.sc != ScanCode::NONE && (eventKey.sc != lastDownKey_ || !eventKey.down) && !MumbleLink::i().textboxHasFocus()) {
             response |= TriggerKeybinds(eventKey) ? InputResponse::PREVENT_KEYBOARD : InputResponse::PASS_TO_GAME;
             if (eventKey.down) lastDownKey_ = eventKey.sc;
             if (eventKey.sc == lastDownKey_ && !eventKey.down) lastDownKey_ = ScanCode::NONE;

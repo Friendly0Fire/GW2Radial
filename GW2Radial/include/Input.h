@@ -69,7 +69,7 @@ class Input : public Singleton<Input>
 public:
 	using MouseMoveCallback = Callback<std::function<void(bool& retval)>>;
 	using MouseButtonCallback = Callback<std::function<void(EventKey ek, bool& retval)>>;
-	using RecordCallback = std::function<void(KeyCombo)>;
+	using RecordCallback = std::function<void(KeyCombo, bool)>;
 
 	Input();
 
@@ -88,6 +88,10 @@ public:
 	bool OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam);
 	void OnFocusLost();
 	void OnUpdate();
+
+	void BlockKeybinds(uint id) { blockKeybinds_ |= id; }
+	void UnblockKeybinds(uint id) { blockKeybinds_ &= ~id; }
+	bool keybindsBlocked() const { return blockKeybinds_ != 0; }
 
 	void AddMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.insert(cb); }
 	void RemoveMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.erase(cb); }
@@ -136,6 +140,7 @@ protected:
 	Modifier downModifiers_;
 	ScanCode lastDownKey_;
 	std::list<DelayedInput> queuedInputs_;
+	uint blockKeybinds_ = false;
 
 	std::set<MouseMoveCallback*, PtrComparator<MouseMoveCallback>> mouseMoveCallbacks_;
 	std::set<MouseButtonCallback*, PtrComparator<MouseButtonCallback>> mouseButtonCallbacks_;

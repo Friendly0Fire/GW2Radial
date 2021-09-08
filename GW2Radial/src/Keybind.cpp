@@ -102,25 +102,27 @@ bool Keybind::matches(const KeyCombo& ks) const {
 	return key_ == ks.key() && (mod_ & ks.mod()) == mod_;
 }
 
-void Keybind::UpdateDisplayString() const
+void Keybind::UpdateDisplayString(const std::optional<KeyCombo>& kc) const
 {
-	if(key_ == ScanCode::NONE)
+	auto k = kc ? *kc : KeyCombo(key_, mod_);
+
+	if(k.key() == ScanCode::NONE)
 	{
 		keysDisplayString_[0] = '\0';
 		return;
 	}
 
 	std::wstring keybind;
-	if (notNone(mod_ & Modifier::CTRL))
+	if (notNone(k.mod() & Modifier::CTRL))
 		keybind += L"CTRL + ";
 
-	if (notNone(mod_ & Modifier::ALT))
+	if (notNone(k.mod() & Modifier::ALT))
 		keybind += L"ALT + ";
 
-	if (notNone(mod_ & Modifier::SHIFT))
+	if (notNone(k.mod() & Modifier::SHIFT))
 		keybind += L"SHIFT + ";
 
-	keybind += GetScanCodeName(key_);
+	keybind += GetScanCodeName(k.key());
 
 	Log::i().Print(Severity::Debug, L"Setting keybind '{}' to display '{}'", utf8_decode(nickname()), keybind);
 
