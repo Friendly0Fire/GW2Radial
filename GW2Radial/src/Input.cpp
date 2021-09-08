@@ -130,7 +130,7 @@ namespace GW2Radial
         }
 
         InputResponse response = preventMouseButton ? InputResponse::PREVENT_MOUSE : InputResponse::PASS_TO_GAME;
-        if (inputRecordCallback_) {
+        if (inputRecordCallback_ && eventKey.sc != ScanCode::NONE) {
             response |= InputResponse::PREVENT_KEYBOARD;
             if (!eventKey.down && eventKey.sc != ScanCode::LBUTTON) {
                 (*inputRecordCallback_)(KeyCombo(eventKey.sc, downModifiers_));
@@ -290,7 +290,7 @@ namespace GW2Radial
             else
                 dbgkeys[dbgkeys.size() - 3] = L'\0';
         }
-        FormattedOutputDebugString(L"Triggering keybinds, active keys: %s\n", dbgkeys.c_str());
+        Log::i().Print(Severity::Debug, L"Triggering keybinds, active keys: {}", dbgkeys);
 #endif
 
         // Key is pressed  => use it as main key
@@ -304,7 +304,7 @@ namespace GW2Radial
                         activeKeybind_->callback()(false);
                     activeKeybind_ = kb;
 #ifdef _DEBUG
-                    FormattedOutputDebugString(L"Active keybind is now '%s'\n", utf8_decode(kb->displayName()).c_str());
+                    Log::i().Print(Severity::Info, "Active keybind is now '{}'", kb->displayName());
 #endif
                     return kb->callback()(true);
                 }
@@ -314,7 +314,7 @@ namespace GW2Radial
                 activeKeybind_->callback()(false);
                 activeKeybind_ = nullptr;
 #ifdef _DEBUG
-                OutputDebugString(L"Active keybind is now null\n");
+                Log::i().Print(Severity::Info, "Active keybind is now null");
 #endif
             }
         }
@@ -499,15 +499,13 @@ namespace GW2Radial
         {
             if (qi.cursorPos)
             {
-                FormattedOutputDebugString(L"Moving cursor to (%d, %d)...\n", qi.cursorPos->x, qi.cursorPos->y);
+                Log::i().Print(Severity::Debug, L"Moving cursor to ({}, {})...", qi.cursorPos->x, qi.cursorPos->y);
                 SetCursorPos(qi.cursorPos->x, qi.cursorPos->y);
             }
 
             if (qi.msg != id_H_MOUSEMOVE_)
             {
-#ifdef _DEBUG
-                FormattedOutputDebugString(L"Sending keybind 0x%x...\n", qi.wParam);
-#endif
+                Log::i().Print(Severity::Debug, L"Sending keybind 0x{:x}...", qi.wParam);
                 PostMessage(Core::i().gameWindow(), qi.msg, qi.wParam, qi.lParamValue);
             }
         }

@@ -1,4 +1,5 @@
 #include <UnitQuad.h>
+#include <Effect.h>
 
 namespace GW2Radial
 {

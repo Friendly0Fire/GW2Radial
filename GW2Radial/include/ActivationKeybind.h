@@ -35,7 +35,10 @@ public:
 	[[nodiscard]] bool conditionsFulfilled() const { return conditions_ == nullptr || conditions_->passes(); }
 
 protected:
-	void ApplyKeys() override { Rebind(); }
+	void ApplyKeys() override {
+		Rebind();
+		Keybind::ApplyKeys(); 
+	}
 	void Bind();
 	void Rebind();
 	ConditionSetPtr conditions_;

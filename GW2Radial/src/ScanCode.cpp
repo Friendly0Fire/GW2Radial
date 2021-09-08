@@ -72,12 +72,10 @@ std::wstring GetScanCodeName(ScanCode scanCode) {
 	// = (uint(scanCode) & 0xFF) << 16 | (IsExtendedKey(scanCode) ? 1 : 0) << 24;
 	if (GetKeyNameTextW(lParam, keyName, int(std::size(keyName))) != 0)
 		return keyName;
-#ifdef _DEBUG
 	else {
 		auto err = GetLastError();
-		FormattedOutputDebugString(L"Could not get key name for scan code %d, error %d.\n", scanCode, err);
+		Log::i().Print(Severity::Warn, L"Could not get key name for scan code {}, error 0x{:x}.", uint(scanCode), err);
 	}
-#endif
 
 	return L"[Error]";
 }

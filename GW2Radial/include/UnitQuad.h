@@ -6,6 +6,8 @@
 namespace GW2Radial
 {
 
+class Effect;
+
 struct ScreenVertex
 {
 	fVector2 uv;

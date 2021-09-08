@@ -1,5 +1,6 @@
 #include <MumbleLink.h>
 #include <nlohmann/json.hpp>
+#include <Utility.h>
 
 namespace GW2Radial
 {

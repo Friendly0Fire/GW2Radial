@@ -12,6 +12,7 @@
 #include <GFXSettings.h>
 #include <MumbleLink.h>
 #include "../shaders/registers.h"
+#include <Effect.h>
 
 namespace GW2Radial
 {
@@ -116,7 +117,7 @@ void Wheel::UpdateHover()
 	}
 }
 
-void Wheel::DrawMenu(Keybind* currentEditedKeybind)
+void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 {
 	ImGui::PushID((nickname_ + "Elements").c_str());
 
@@ -125,12 +126,12 @@ void Wheel::DrawMenu(Keybind* currentEditedKeybind)
 	ImGui::TextUnformatted("Set the following to your in-game keybinds (F11, Control Options).");
 
 	for(auto& we : wheelElements_)
-		ImGuiKeybindInput(we->keybind(), &we->keybind() == currentEditedKeybind, nullptr);
+		ImGuiKeybindInput(we->keybind(), currentEditedKeybind, nullptr);
 	
 	ImGuiTitle("Keybinds");
 	
-	ImGuiKeybindInput((Keybind&)keybind_, (Keybind*)&keybind_ == currentEditedKeybind, "Pressing this key combination will open the radial menu at your cursor's current location.");
-	ImGuiKeybindInput((Keybind&)centralKeybind_, (Keybind*)&centralKeybind_ == currentEditedKeybind, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
+	ImGuiKeybindInput((Keybind&)keybind_, currentEditedKeybind, "Pressing this key combination will open the radial menu at your cursor's current location.");
+	ImGuiKeybindInput((Keybind&)centralKeybind_, currentEditedKeybind, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, enableConditionsOption_);
 

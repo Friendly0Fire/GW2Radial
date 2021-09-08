@@ -169,6 +169,9 @@
     <ClCompile Include="src\ActivationKeybind.cpp">
       <Filter>Source Files\Input</Filter>
     </ClCompile>
+    <ClCompile Include="src\Log.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -339,6 +342,12 @@
     <ClInclude Include="include\Defs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Log.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Win.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="rt_rcdat.bin">
@@ -452,6 +461,9 @@
       <Filter>Resource Files\Assets</Filter>
     </Font>
     <Font Include="art\Fonts\fa-solid-900.ttf">
+      <Filter>Resource Files\Assets</Filter>
+    </Font>
+    <Font Include="art\Fonts\consolas.ttf">
       <Filter>Resource Files\Assets</Filter>
     </Font>
   </ItemGroup>

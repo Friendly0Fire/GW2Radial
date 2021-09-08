@@ -44,7 +44,7 @@ void SettingsMenu::Draw()
 
 				    if(ImGui::BeginTabItem(i->GetTabName(), nullptr, 0)) {
 					    currentTab_ = i;
-					    i->DrawMenu(currentEditedKeybind_);
+					    i->DrawMenu(&currentEditedKeybind_);
 				        ImGui::EndTabItem();
 				    }
 			    }

@@ -42,3 +42,4 @@
 #define IDR_FONT_ITALIC	302
 #define IDR_FONT_DRAW	303
 #define IDR_FONT_ICON	304
+#define IDR_FONT_MONO	305

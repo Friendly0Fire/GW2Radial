@@ -10,6 +10,8 @@
 namespace GW2Radial
 {
 
+class Effect;
+
 class Wheel : public SettingsMenu::Implementer
 {
 public:
@@ -162,7 +164,7 @@ protected:
 	fVector3 wipeMaskData_;
 
     [[nodiscard]] const char* GetTabName() const override { return displayName_.c_str(); }
-	void DrawMenu(Keybind* currentEditedKeybind) override;
+	void DrawMenu(Keybind** currentEditedKeybind) override;
 
 	friend class WheelElement;
 	friend class CustomWheelsManager;

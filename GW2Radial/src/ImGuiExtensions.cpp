@@ -31,9 +31,10 @@ ImVec4 operator/(const ImVec4& v, const float f)
 
 std::map<void*, int> specialIds;
 
-bool ImGuiKeybindInput(GW2Radial::Keybind& setting, bool beingModified, const char* tooltip)
+void ImGuiKeybindInput(GW2Radial::Keybind& keybind, GW2Radial::Keybind** keybindBeingModified, const char* tooltip)
 {
-	std::string suffix = "##" + setting.nickname();
+	bool beingModified = *keybindBeingModified == &keybind;
+	std::string suffix = "##" + keybind.nickname();
 
 	float windowWidth = ImGui::GetWindowWidth() - ImGuiHelpTooltipSize();
 
@@ -50,7 +51,7 @@ bool ImGuiKeybindInput(GW2Radial::Keybind& setting, bool beingModified, const ch
 	else
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.15f, 0.15f, 0.15f, 1));
 
-	ImGui::InputText(suffix.c_str(), setting.keysDisplayString(), setting.keysDisplayStringSize(), ImGuiInputTextFlags_ReadOnly);
+	ImGui::InputText(suffix.c_str(), keybind.keysDisplayString(), keybind.keysDisplayStringSize(), ImGuiInputTextFlags_ReadOnly);
 
 	ImGui::PopItemWidth();
 
@@ -60,16 +61,22 @@ bool ImGuiKeybindInput(GW2Radial::Keybind& setting, bool beingModified, const ch
 
 	if (!beingModified && ImGui::Button(("Set" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
 	{
-		beingModified = true;
-		setting.keysDisplayString()[0] = '\0';
-		GW2Radial::Input::i().BeginRecordInputs([&setting](GW2Radial::KeyCombo kc) {
-			setting.keyCombo(kc);
+		if(keybindBeingModified)
+			GW2Radial::Input::i().CancelRecordInputs();
+
+		*keybindBeingModified = &keybind;
+		keybind.keysDisplayString()[0] = '\0';
+		GW2Radial::Input::i().BeginRecordInputs([&keybind, keybindBeingModified](GW2Radial::KeyCombo kc) {
+			keybind.keyCombo(kc);
+			if (*keybindBeingModified == &keybind) {
+				*keybindBeingModified = nullptr;
+			}
 		});
 	}
 	else if (beingModified && ImGui::Button(("Clear" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
 	{
 		beingModified = false;
-		setting.keyCombo({});
+		keybind.keyCombo({});
 		GW2Radial::Input::i().CancelRecordInputs();
 	}
 
@@ -77,14 +84,12 @@ bool ImGuiKeybindInput(GW2Radial::Keybind& setting, bool beingModified, const ch
 
 	ImGui::PushItemWidth(windowWidth * 0.5f);
 
-	ImGui::Text(setting.displayName().c_str());
+	ImGui::Text(keybind.displayName().c_str());
 
 	ImGui::PopItemWidth();
 
 	if(tooltip)
 	    ImGuiHelpTooltip(tooltip);
-
-	return beingModified;
 }
 
 void ImGuiTitle(const char * text)

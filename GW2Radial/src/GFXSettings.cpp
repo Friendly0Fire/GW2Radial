@@ -1,6 +1,7 @@
 ﻿#include <FileSystem.h>
 #include <GFXSettings.h>
 #include <tinyxml2/tinyxml2.h>
+#include <Utility.h>
 
 namespace GW2Radial {
 

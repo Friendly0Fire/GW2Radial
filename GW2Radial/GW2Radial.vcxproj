@@ -164,6 +164,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClCompile Include="src\imgui_impl_dx9_custom.cpp" />
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Keybind.cpp" />
+    <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Marker.cpp" />
     <ClCompile Include="src\Minidump.cpp" />
@@ -215,6 +216,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\Input.h" />
     <ClInclude Include="include\Keybind.h" />
     <ClInclude Include="include\KeyCombo.h" />
+    <ClInclude Include="include\Log.h" />
     <ClInclude Include="include\Main.h" />
     <ClInclude Include="include\Marker.h" />
     <ClInclude Include="include\Misc.h" />
@@ -234,6 +236,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
     <ClInclude Include="include\WICTextureLoader.h" />
+    <ClInclude Include="include\Win.h" />
     <ClInclude Include="loader-core\include\gw2al_api.h" />
     <ClInclude Include="shaders\registers.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />
@@ -320,6 +323,7 @@ zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     <Image Include="art\Finals\x_marker.dds" />
   </ItemGroup>
   <ItemGroup>
+    <Font Include="art\Fonts\consolas.ttf" />
     <Font Include="art\Fonts\fa-solid-900.ttf" />
     <Font Include="art\Fonts\SourceSansPro-Black.ttf" />
     <Font Include="art\Fonts\SourceSansPro-Italic.ttf" />

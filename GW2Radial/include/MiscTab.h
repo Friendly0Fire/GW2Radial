@@ -13,7 +13,7 @@ public:
 	~MiscTab();
 
 	const char * GetTabName() const override { return "Misc"; }
-	void DrawMenu(Keybind*) override;
+	void DrawMenu(Keybind**) override;
 
 	bool reloadOnFocus() const { return reloadOnFocus_; }
 };

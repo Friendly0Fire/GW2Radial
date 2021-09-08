@@ -122,6 +122,8 @@ void Keybind::UpdateDisplayString() const
 
 	keybind += GetScanCodeName(key_);
 
+	Log::i().Print(Severity::Debug, L"Setting keybind '{}' to display '{}'", utf8_decode(nickname()), keybind);
+
 	strcpy_s(keysDisplayString_.data(), keysDisplayString_.size(), utf8_encode(keybind).c_str());
 }
 

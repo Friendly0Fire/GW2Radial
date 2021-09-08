@@ -18,9 +18,11 @@
 #include <Marker.h>
 #include <MiscTab.h>
 #include <MumbleLink.h>
+#include <Effect.h>
 #include <Effect_dx12.h>
 #include <CustomWheel.h>
 #include <GFXSettings.h>
+#include <Log.h>
 #include <IconFontCppHeaders/IconsFontAwesome5.h>
 
 LONG WINAPI GW2RadialTopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
@@ -151,6 +153,8 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 		fontItalic_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 25.f, &fontCfg);
 	if(const auto data = LoadResource(IDR_FONT_DRAW); data.data())
 		fontDraw_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 100.f, &fontCfg);
+	if (const auto data = LoadResource(IDR_FONT_MONO); data.data())
+		fontMono_ = imio.Fonts->AddFontFromMemoryTTF(data.data(), int(data.size_bytes()), 18.f, &fontCfg);
 	if(const auto data = LoadResource(IDR_FONT_ICON); data.data()) {
 		fontCfg.GlyphMinAdvanceX = 25.f;
 		static const ImWchar iconRange[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
@@ -321,6 +325,7 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 		customWheels_->Draw(device);
 
 		SettingsMenu::i().Draw();
+		Log::i().Draw();
 
 		if(!firstMessageShown_->value())
 			ImGuiPopup("Welcome to GW2Radial!").Position({0.5f, 0.45f}).Size({0.35f, 0.2f}).Display([&](const ImVec2& windowSize)

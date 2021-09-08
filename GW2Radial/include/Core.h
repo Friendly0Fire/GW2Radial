@@ -10,6 +10,8 @@
 namespace GW2Radial
 {
 
+class Effect;
+
 class Core : public Singleton<Core>
 {
 public:
@@ -34,6 +36,7 @@ public:
 	ImFont* fontBlack() const { return fontBlack_; }
 	ImFont* fontItalic() const { return fontItalic_; }
 	ImFont* fontIcon() const { return fontIcon_; }
+	ImFont* fontMono() const { return fontMono_; }
 
 	const std::vector<std::unique_ptr<Wheel>>& wheels() const { return wheels_; }
 
@@ -78,7 +81,7 @@ protected:
 	std::unique_ptr<UnitQuad> quad_;
 	Effect* mainEffect_ = nullptr;
 
-	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr, *fontDraw_ = nullptr, *fontIcon_ = nullptr;
+	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr, *fontDraw_ = nullptr, *fontIcon_ = nullptr, *fontMono_ = nullptr;
 
 	std::vector<std::unique_ptr<Wheel>> wheels_;
 	std::unique_ptr<CustomWheelsManager> customWheels_;

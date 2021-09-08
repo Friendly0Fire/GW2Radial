@@ -76,20 +76,21 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
     if(SUCCEEDED(hr))
         return;
 
-#ifndef _DEBUG
-    CriticalMessageBox(L"Fatal error: shader compilation failed! Error code was 0x%X. Please report this to https://github.com/Friendly0Fire/GW2Radial/issues", hr);
-#endif
-
-    FormattedOutputDebugString(L"Compilation failed: 0x%X\n", hr);
+    Log::i().Print(Severity::Error, L"Compilation failed: 0x{:x}", hr);
 
     if (errors) {
         const char* errorsText = static_cast<const char*>(errors->GetBufferPointer());
 
-        FormattedOutputDebugString("Compilation errors:\n%s", errorsText);
+        Log::i().Print(Severity::Error, "Compilation errors:\n{}", errorsText);
 
-        // Break to fix errors
-        GW2_ASSERT(errors != nullptr);
     }
+
+#ifndef _DEBUG
+    CriticalMessageBox(L"Fatal error: shader compilation failed! Error code was 0x%X. Please report this to https://github.com/Friendly0Fire/GW2Radial/issues", hr);
+#endif
+
+    // Break to fix errors
+    GW2_ASSERT(errors != nullptr);
 }
 
 [[nodiscard]] std::variant<ComPtr<IDirect3DPixelShader9>, ComPtr<IDirect3DVertexShader9>> Effect::CompileShader(

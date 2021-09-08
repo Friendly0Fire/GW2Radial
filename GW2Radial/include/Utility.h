@@ -5,8 +5,10 @@
 #include <cwctype>
 #include <filesystem>
 #include <string>
+
 #include <ShlObj.h>
 #include <imgui.h>
+
 #include <Main.h>
 #include <Misc.h>
 
@@ -14,9 +16,9 @@ namespace GW2Radial
 {
 
 // Convert a wide Unicode string to an UTF8 string
-std::string utf8_encode(const std::wstring &wstr);
+std::string utf8_encode(const std::wstring& wstr);
 // Convert an UTF8 string to a wide Unicode String
-std::wstring utf8_decode(const std::string &str);
+std::wstring utf8_decode(const std::string& str);
 
 void SplitFilename(const tstring & str, tstring * folder, tstring * file);
 
@@ -62,34 +64,6 @@ inline float SmoothStep(float x)
 inline float frand()
 {
 	return float(rand()) / RAND_MAX;
-}
-
-inline void FormattedOutputDebugString(const char* fmt, ...) {
-	char buffer[4096];
-	va_list args;
-	va_start(args, fmt);
-	vsprintf_s(buffer, fmt, args);
-	if(IsDebuggerPresent())
-	    OutputDebugStringA(buffer);
-	else {
-		GetLogStream() << buffer;
-		GetLogStream().flush();
-	}
-	va_end(args);
-}
-
-inline void FormattedOutputDebugString(const wchar_t* fmt, ...) {
-	wchar_t buffer[4096];
-	va_list args;
-	va_start(args, fmt);
-	vswprintf_s(buffer, fmt, args);
-	if(IsDebuggerPresent())
-	    OutputDebugStringW(buffer);
-	else {
-		GetLogStream() << utf8_encode(buffer);
-		GetLogStream().flush();
-	}
-	va_end(args);
 }
 
 ComPtr<IDirect3DTexture9> CreateTextureFromResource(IDirect3DDevice9* pDev, HMODULE hModule, unsigned uResource);
@@ -282,21 +256,5 @@ struct PtrComparator {
 		return (*a) < (*b);
 	}
 };
-
-template<typename T>
-concept enum_with_none = requires(T && t) {
-	requires std::is_enum_v<T>;
-	T::NONE;
-};
-
-template<enum_with_none Enum>
-constexpr bool notNone(Enum e) {
-	return e != Enum::NONE;
-}
-
-template<enum_with_none Enum>
-constexpr bool isNone(Enum e) {
-	return e == Enum::NONE;
-}
 
 }

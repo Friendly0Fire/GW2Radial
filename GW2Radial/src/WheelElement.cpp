@@ -4,6 +4,7 @@
 #include <Utility.h>
 #include <Wheel.h>
 #include <IconFontCppHeaders/IconsFontAwesome5.h>
+#include <Effect.h>
 
 #include "../shaders/registers.h"
 

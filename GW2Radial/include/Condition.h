@@ -7,6 +7,8 @@
 #include <functional>
 #include <numeric>
 #include <optional>
+#include <imgui.h>
+#include <Utility.h>
 
 namespace GW2Radial
 {

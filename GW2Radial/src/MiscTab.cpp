@@ -18,7 +18,7 @@ MiscTab::~MiscTab()
 {
 	SettingsMenu::i([&](auto& i) { i.RemoveImplementer(this); });
 }
-void MiscTab::DrawMenu(Keybind*)
+void MiscTab::DrawMenu(Keybind**)
 {
 	ImGuiTitle("General");
 
