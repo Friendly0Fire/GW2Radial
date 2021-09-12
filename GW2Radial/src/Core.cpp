@@ -79,6 +79,15 @@ void Core::OnInjectorCreated()
 	inject.drawUnderCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); };
 }
 
+void Core::OnInputLanguageChange()
+{
+	Log::i().Print(Severity::Info, "Input language change detected, reloading...");
+	SettingsMenu::i().OnInputLanguageChange();
+
+	for (auto* ilcl : ilcListeners_)
+		ilcl->OnInputLanguageChange();
+}
+
 void Core::InternalInit()
 {
 	// Add an extra reference count to the library so it persists through GW2's load-unload routine
@@ -103,9 +112,6 @@ void Core::OnFocusLost()
 
 void Core::OnFocus() {
 	mainEffect_->Clear();
-
-	for (auto* fl : focusListeners_)
-		fl->OnFocus();
 
 	if(MiscTab::i().reloadOnFocus())
 		forceReloadWheels_ = true;

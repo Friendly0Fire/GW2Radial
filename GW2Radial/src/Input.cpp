@@ -70,6 +70,9 @@ namespace GW2Radial
             bool eventDown = false;
             switch (msg)
             {
+            case WM_INPUTLANGCHANGE:
+                Core::i().OnInputLanguageChange();
+                break;
             case WM_SYSKEYDOWN:
             case WM_KEYDOWN:
                 eventDown = true;

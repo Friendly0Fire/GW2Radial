@@ -23,6 +23,7 @@ public:
 	SettingsMenu();
 
 	void Draw();
+	void OnInputLanguageChange();
 
 	const Keybind& showKeybind() const { return showKeybind_; }
 	

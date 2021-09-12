@@ -11,7 +11,7 @@ Keybind::Keybind(std::string nickname, std::string displayName, std::string cate
 	nickname_(std::move(nickname)), displayName_(std::move(displayName)), category_(std::move(category)), saveToConfig_(saveToConfig)
 {
 	keyCombo({ key, mod });
-	Core::i().RegisterOnFocus(this);
+	Core::i().RegisterOnInputLanguageChange(this);
 }
 
 Keybind::Keybind(std::string nickname, std::string displayName, std::string category) :
@@ -23,12 +23,12 @@ Keybind::Keybind(std::string nickname, std::string displayName, std::string cate
 		keys = ConfigurationFile::i().ini().GetValue("Keybinds", nickname_.c_str());
 		if(keys) ParseKeys(keys);
 	}
-	Core::i().RegisterOnFocus(this);
+	Core::i().RegisterOnInputLanguageChange(this);
 }
 
 Keybind::~Keybind()
 {
-	Core::i([&](auto& i) { i.UnregisterOnFocus(this); });
+	Core::i([&](auto& i) { i.UnregisterOnInputLanguageChange(this); });
 }
 
 void Keybind::ParseKeys(const char* keys)

@@ -9,7 +9,7 @@
 namespace GW2Radial
 {
 
-class Keybind : public FocusListener
+class Keybind : public InputLanguageChangeListener
 {
 public:
 	Keybind(std::string nickname, std::string displayName, std::string category, KeyCombo ks, bool saveToConfig)
@@ -67,7 +67,7 @@ public:
 			     + (notNone(mod_ & Modifier::ALT) ? 1 : 0);
 	}
 
-	void OnFocus() override {
+	void OnInputLanguageChange() override {
 		UpdateDisplayString();
 	}
 

@@ -17,6 +17,11 @@ SettingsMenu::SettingsMenu()
 	});
 }
 
+void SettingsMenu::OnInputLanguageChange()
+{
+	showKeybind_.key(GetScanCodeFromVirtualKey('M'));
+}
+
 void SettingsMenu::Draw()
 {
 	isFocused_ = false;

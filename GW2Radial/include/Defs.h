@@ -2,7 +2,7 @@
 
 namespace GW2Radial
 {
-    struct FocusListener {
-        virtual void OnFocus() = 0;
+    struct InputLanguageChangeListener {
+        virtual void OnInputLanguageChange() = 0;
     };
 }

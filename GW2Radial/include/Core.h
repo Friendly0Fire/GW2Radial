@@ -42,8 +42,10 @@ public:
 
 	void OnInjectorCreated();
 
-	void RegisterOnFocus(FocusListener* fl) { focusListeners_.push_back(fl); }
-	void UnregisterOnFocus(FocusListener* fl) { auto it = std::find(focusListeners_.begin(), focusListeners_.end(), fl); if (it != focusListeners_.end()) focusListeners_.erase(it); }
+	void OnInputLanguageChange();
+
+	void RegisterOnInputLanguageChange(InputLanguageChangeListener* ilcl) { ilcListeners_.push_back(ilcl); }
+	void UnregisterOnInputLanguageChange(InputLanguageChangeListener* ilcl) { auto it = std::find(ilcListeners_.begin(), ilcListeners_.end(), ilcl); if (it != ilcListeners_.end()) ilcListeners_.erase(it); }
 
 protected:
 	void InternalInit();
@@ -76,7 +78,7 @@ protected:
 	const uint TickSkipCount = 10;
 	uint longTickSkip_ = 0;
 	const uint LongTickSkipCount = 600;
-	std::list<FocusListener*> focusListeners_;
+	std::list<InputLanguageChangeListener*> ilcListeners_;
 
 	std::unique_ptr<UnitQuad> quad_;
 	Effect* mainEffect_ = nullptr;
