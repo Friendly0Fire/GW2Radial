@@ -28,7 +28,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
-          toolset: 16.XX
+          toolset: 14.29
 
       - name: Build
         run: msbuild.exe "${env:GITHUB_WORKSPACE}\GW2Radial.sln" /t:Build /p:Configuration=Release /p:Platform=x64
