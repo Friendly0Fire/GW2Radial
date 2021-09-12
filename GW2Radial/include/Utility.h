@@ -257,4 +257,27 @@ struct PtrComparator {
 	}
 };
 
+std::span<const wchar_t*> GetCommandLineArgs();
+
+inline const wchar_t* GetCommandLineArg(const wchar_t* name) {
+	bool saveNextArg = false;
+	for (auto* arg : GetCommandLineArgs()) {
+		if (saveNextArg) {
+			return arg;
+		}
+
+		auto l = wcslen(arg);
+		if (l > 1 && (arg[0] == L'/' || arg[0] == L'-') && _wcsnicmp(name, &arg[1], 6) == 0) {
+			if (l > 7 && arg[7] == L':') {
+				return &arg[8];
+				break;
+			}
+			else
+				saveNextArg = true;
+		}
+	}
+
+	return nullptr;
+}
+
 }

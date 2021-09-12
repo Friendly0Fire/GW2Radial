@@ -52,7 +52,10 @@ struct MumbleContext {
 };
 
 MumbleLink::MumbleLink() {
-	fileMapping_ = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(LinkedMem), L"MumbleLink");
+	if (auto* m = GetCommandLineArg(L"mumble"); m)
+		fileMappingName_ = m;
+
+	fileMapping_ = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(LinkedMem), fileMappingName_.c_str());
 	if(!fileMapping_)
 		return;
 

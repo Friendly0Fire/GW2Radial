@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <TGA.h>
+#include <shellapi.h>
 
 namespace GW2Radial
 {
@@ -122,5 +123,13 @@ void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint b
     of.write((char*)tgaData.data(), tgaData.size());
 
     surf2->UnlockRect();
+}
+
+std::span<const wchar_t*> GetCommandLineArgs() {
+    auto cmdLine = GetCommandLineW();
+    int num = 0;
+    wchar_t** args = CommandLineToArgvW(cmdLine, &num);
+
+    return std::span { const_cast<const wchar_t**>(args), size_t(num) };
 }
 }

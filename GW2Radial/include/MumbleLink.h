@@ -58,11 +58,11 @@ public:
 	[[nodiscard]] std::wstring characterName() const;
 	[[nodiscard]] bool isSwimmingOnSurface() const;
 	[[nodiscard]] bool isUnderwater() const;
-	
+
 	[[nodiscard]] Profession characterProfession() const {
 	    return identity_.profession;
     }
-	
+
 	[[nodiscard]] uint8_t characterSpecialization() const {
 	    return identity_.specialization;
     }
@@ -84,6 +84,8 @@ public:
 	}
 
 protected:
+	std::wstring fileMappingName_ = L"MumbleLink";
+
 	[[nodiscard]] uint32_t uiState() const;
 
 	struct Identity
