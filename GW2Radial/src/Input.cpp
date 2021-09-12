@@ -297,22 +297,32 @@ namespace GW2Radial
         Log::i().Print(Severity::Debug, L"Triggering keybinds, active keys: {}", dbgkeys);
 #endif
 
+        std::pair<int, ActivationKeybind*> bestKeybind = { 0, nullptr };
         // Key is pressed  => use it as main key
         // Key is released => if it's a modifier, keep last down key as main key
         //                 => if not, main key is nil (only modifiers may remain pressed)
         KeyCombo kc(ek.down ? ek.sc : ek.sc == lastDownKey_ ? ScanCode::NONE : lastDownKey_, downModifiers_);
         if (ek.down) {
             for (auto& kb : keybinds_[kc]) {
-                if (kb->conditionsFulfilled() && kb != activeKeybind_) {
-                    if (activeKeybind_ != nullptr)
-                        activeKeybind_->callback()(false);
-                    activeKeybind_ = kb;
-#ifdef _DEBUG
-                    Log::i().Print(Severity::Info, "Active keybind is now '{}'", kb->displayName());
-#endif
-                    return kb->callback()(true);
+                if (kb->conditionsFulfilled()) {
+                    int score = kb->conditionsScore();
+                    if (score > bestKeybind.first)
+                        bestKeybind = { score, kb };
                 }
             }
+
+            if (bestKeybind.second && bestKeybind.second != activeKeybind_) {
+                if (activeKeybind_ != nullptr)
+                    activeKeybind_->callback()(false);
+                activeKeybind_ = bestKeybind.second;
+
+#ifdef _DEBUG
+                Log::i().Print(Severity::Info, "Active keybind is now '{}'", activeKeybind_->displayName());
+#endif
+
+                return activeKeybind_->callback()(true);
+            }
+
         } else if(activeKeybind_ != nullptr) {
             if (!activeKeybind_->matches(kc)) {
                 activeKeybind_->callback()(false);

@@ -183,6 +183,7 @@ public:
     explicit ConditionSet(std::string category);
 
     [[nodiscard]] bool passes() const;
+    [[nodiscard]] int score() const { return int(conditions_.size()); }
     void Save() const;
     void DrawMenu();
 };

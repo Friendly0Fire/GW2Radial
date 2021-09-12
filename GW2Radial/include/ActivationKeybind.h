@@ -33,6 +33,7 @@ public:
 	void conditions(ConditionSetPtr ptr) { conditions_ = ptr; }
 
 	[[nodiscard]] bool conditionsFulfilled() const { return conditions_ == nullptr || conditions_->passes(); }
+	[[nodiscard]] int conditionsScore() const { return conditions_ == nullptr ? 0 : conditions_->score(); }
 
 protected:
 	void ApplyKeys() override {
