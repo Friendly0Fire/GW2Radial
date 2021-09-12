@@ -173,6 +173,7 @@ class ConditionSet {
     std::list<ConditionEntry> conditions_;
 
     int newConditionComboSel_ = 0;
+    bool enabled_ = false;
 
     void Load();
 
@@ -181,6 +182,8 @@ class ConditionSet {
     bool ConditionOperatorMenu(ConditionOp& op, uint id) const;
 public:
     explicit ConditionSet(std::string category);
+
+    void enable(bool e) { enabled_ = e; }
 
     [[nodiscard]] bool passes() const;
     [[nodiscard]] int score() const { return int(conditions_.size()); }

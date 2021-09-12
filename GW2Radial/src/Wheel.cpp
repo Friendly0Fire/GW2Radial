@@ -41,6 +41,7 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
     visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true)
 {
 	conditions_ = std::make_shared<ConditionSet>("wheel_" + nickname_);
+	conditions_->enable(enableConditionsOption_.value());
 	keybind_.conditions(conditions_);
 	centralKeybind_.conditions(conditions_);
 	keybind_.callback([&](Activated a) {
@@ -133,7 +134,8 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 	ImGuiKeybindInput((Keybind&)keybind_, currentEditedKeybind, "Pressing this key combination will open the radial menu at your cursor's current location.");
 	ImGuiKeybindInput((Keybind&)centralKeybind_, currentEditedKeybind, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
 
-	ImGuiConfigurationWrapper(&ImGui::Checkbox, enableConditionsOption_);
+	if (ImGuiConfigurationWrapper(&ImGui::Checkbox, enableConditionsOption_) && conditions_)
+		conditions_->enable(enableConditionsOption_.value());
 
 	if(conditions_ && enableConditionsOption_.value()) {
 	    ImGui::Indent();

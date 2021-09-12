@@ -117,6 +117,9 @@ ConditionSet::ConditionSet(std::string category) : category_(std::move(category)
 }
 
 bool ConditionSet::passes() const {
+    if (!enabled_)
+        return true;
+
     ConditionContext cc;
     cc.Populate();
 
