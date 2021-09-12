@@ -94,7 +94,7 @@
       <Command>mkdir "$(ProjectDir)int"
 del "$(ProjectDir)int\Shaders.zip"
 cd "$(ProjectDir)shaders"
-zip.exe "$(ProjectDir)int\Shaders.zip"  *.*</Command>
+"$(SolutionDir)tools\zip.exe" "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
