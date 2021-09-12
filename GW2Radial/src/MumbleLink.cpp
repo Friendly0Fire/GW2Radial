@@ -56,12 +56,16 @@ MumbleLink::MumbleLink() {
 		fileMappingName_ = m;
 
 	fileMapping_ = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(LinkedMem), fileMappingName_.c_str());
-	if(!fileMapping_)
+	if (!fileMapping_) {
+		Log::i().Print(Severity::Error, L"Could not find MumbleLink map named '{}'!", fileMappingName_.c_str());
 		return;
+	}
 
 	linkedMemory_ = static_cast<LinkedMem*>(MapViewOfFile(fileMapping_, FILE_MAP_READ, 0, 0, sizeof(LinkedMem)));
 	if(!linkedMemory_)
 	{
+		Log::i().Print(Severity::Error, L"Could not map to MumbleLink map named '{}'!", fileMappingName_.c_str());
+
 		CloseHandle(fileMapping_);
 		fileMapping_ = nullptr;
 	}
