@@ -81,6 +81,8 @@ void Keybind::ParseConfig(const char* keys)
 		mod_ = Modifier::NONE;
 	else
 		mod_ = Modifier(ushort(std::stoi(k[1].c_str())));
+
+	ApplyKeys();
 }
 
 void Keybind::ApplyKeys()
