@@ -33,3 +33,11 @@ jobs:
       - name: Build
         run: msbuild.exe "${env:GITHUB_WORKSPACE}\GW2Radial.sln" /t:Build /p:Configuration=Release /p:Platform=x64
 
+      - name: Save build
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: |
+            x64/Release/gw2addon_gw2radial.dll
+            x64/Release/readme.md
+
