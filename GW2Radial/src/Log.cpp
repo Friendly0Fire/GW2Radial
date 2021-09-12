@@ -10,7 +10,7 @@ namespace GW2Radial
 Log::Log()
 {
 #ifdef _DEBUG
-    isVisible_ = true;
+    isVisible_ = IsDebuggerPresent();
 #endif
 }
 
