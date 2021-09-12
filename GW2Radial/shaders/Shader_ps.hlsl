@@ -117,7 +117,7 @@ float4 BgImage_PS(PS_INPUT In) : COLOR0
 	}
 
 	// Combine all masks, ensuring that the edge and center masks never increase brightness when combined and that the border mask never darkens the circle
-	return color * saturate(edge_mask * center_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * wheelFadeIn * float4(1, 1, 1, 1.2f);
+	return color * saturate(edge_mask * center_mask) * clamp(border_mask, 1.f, 2.f) * clamp(luma, 0.8f, 1.2f) * wheelFadeIn * float4(1, 1, 1, 1.2f) * fGlobalOpacity;
 }
 
 float4 BaseMountImage(float2 uv, sampler2D samp, out float shadow) {
@@ -159,7 +159,7 @@ float4 MountImage_PS(PS_INPUT In) : COLOR0
 		glow = color.rgb * (glowMask / 4) * hoverFadeIn * 0.5f * (0.5f + 0.5f * srnoise(In.UV * 3.18f + 0.15f * float2(cos(fAnimationTimer * 3), sin(fAnimationTimer * 2))));
 	}
 
-	return float4(finalColor.rgb + glow, max(color.a, shadow)) * fWheelFadeIn.x;
+	return float4(finalColor.rgb + glow, max(color.a, shadow)) * fWheelFadeIn.x * fGlobalOpacity;
 }
 
 float4 Cursor_PS(PS_INPUT In) : COLOR0
@@ -173,7 +173,7 @@ float4 Cursor_PS(PS_INPUT In) : COLOR0
 	color *= pow(1.f - smoothstep(0.f, 1.f, polar.x), 4.f);
 	color *= 1 - lerp(0.1f, 1.f, smoothstep(0.2f, 0.6f, polar.x)) * smoothrandom;
 
-	return color;
+	return color * fGlobalOpacity;
 }
 
 float LogNormal(float x, float sigma)

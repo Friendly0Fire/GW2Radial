@@ -120,6 +120,7 @@ protected:
 	
 	ConfigurationOption<float> scaleOption_;
 	ConfigurationOption<float> centerScaleOption_;
+	ConfigurationOption<int> opacityMultiplierOption_;
 	
 	ConfigurationOption<int> displayDelayOption_;
 	ConfigurationOption<int> animationTimeOption_;

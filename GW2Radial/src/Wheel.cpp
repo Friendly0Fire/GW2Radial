@@ -38,7 +38,8 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	showDelayTimerOption_("Show timer around cursor when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
     centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
     enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false),
-    visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true)
+    visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true),
+	opacityMultiplierOption_("Opacity multiplier", "opacity", "wheel_" + nickname_, 100)
 {
 	conditions_ = std::make_shared<ConditionSet>("wheel_" + nickname_);
 	conditions_->enable(enableConditionsOption_.value());
@@ -146,6 +147,9 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 	}
 	
 	ImGuiTitle("Display Options");
+
+	ImGuiConfigurationWrapper(&ImGui::SliderInt, opacityMultiplierOption_, 0, 100, "%d %%", ImGuiSliderFlags_AlwaysClamp);
+	ImGuiHelpTooltip("Transparency of the entire overlay. Setting to 0% hides it entirely.");
 	
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Amount of time, in milliseconds, for the radial menu to fade in.");
@@ -345,6 +349,9 @@ void Wheel::OnCharacterChange(const std::wstring& prevCharacterName, const std::
 
 void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 {
+	if (opacityMultiplierOption_.value() == 0)
+		return;
+
 	const int screenWidth = Core::i().screenWidth();
 	const int screenHeight = Core::i().screenHeight();
 
@@ -433,6 +440,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fAnimationTimer, fmod(currentTime / 1010.f, 55000.f));
 				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fCenterScale, centerScaleOption_.value());
 				    fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementCount, activeElements.size());
+					fx->SetVariable(ShaderType::PIXEL_SHADER, float_fGlobalOpacity, opacityMultiplierOption_.value() * 0.01f);
 				    fx->SetVariableArray(ShaderType::PIXEL_SHADER, array_float4_fHoverFadeIns, (const std::span<float>&)hoveredFadeIns);
 					
 					fx->SetSamplerStates(sampler2D_texMainSampler, {});
@@ -548,6 +556,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, std::min(absDt * 2, 1.f));
 		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fTimeLeft, timeLeft);
 			fx->SetVariable(ShaderType::PIXEL_SHADER, bool_bShowIcon, conditionallyDelayed_ != nullptr);
+			fx->SetVariable(ShaderType::PIXEL_SHADER, float_fGlobalOpacity, opacityMultiplierOption_.value() * 0.01f);
 			
 			fx->SetSamplerStates(sampler2D_texMainSampler, {});
 			fx->SetSamplerStates(sampler2D_texSecondarySampler, {
