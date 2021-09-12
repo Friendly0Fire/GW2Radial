@@ -272,6 +272,18 @@ namespace GW2Radial
 
     void Input::OnFocusLost()
     {
+        downModifiers_ = Modifier::NONE;
+    }
+
+    void Input::OnFocus()
+    {
+        downModifiers_ = Modifier::NONE;
+        if (GetAsyncKeyState(VK_SHIFT))
+            downModifiers_ |= Modifier::SHIFT;
+        if (GetAsyncKeyState(VK_CONTROL))
+            downModifiers_ |= Modifier::CTRL;
+        if (GetAsyncKeyState(VK_MENU))
+            downModifiers_ |= Modifier::ALT;
     }
 
     void Input::OnUpdate()

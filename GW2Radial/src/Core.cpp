@@ -113,6 +113,8 @@ void Core::OnFocusLost()
 void Core::OnFocus() {
 	mainEffect_->Clear();
 
+	Input::i().OnFocus();
+
 	if(MiscTab::i().reloadOnFocus())
 		forceReloadWheels_ = true;
 }

@@ -87,6 +87,7 @@ public:
 	// Returns true to consume message
 	bool OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam);
 	void OnFocusLost();
+	void OnFocus();
 	void OnUpdate();
 
 	void BlockKeybinds(uint id) { blockKeybinds_ |= id; }
