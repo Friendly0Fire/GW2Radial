@@ -6,7 +6,7 @@
 struct PS_INPUT
 {
 	float4 pos : POSITION;
-	float2 UV: TEXCOORD0;
+	float2 UV : TEXCOORD0;
 };
 
 float2 makeSmoothRandom(float2 uv, float4 scales, float4 timeScales)

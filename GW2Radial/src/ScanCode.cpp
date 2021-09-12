@@ -74,7 +74,7 @@ std::wstring GetScanCodeName(ScanCode scanCode) {
 		return keyName;
 	else {
 		auto err = GetLastError();
-		Log::i().Print(Severity::Warn, L"Could not get key name for scan code {}, error 0x{:x}.", uint(scanCode), err);
+		Log::i().Print(Severity::Warn, L"Could not get key name for scan code 0x{:x}, error 0x{:x}.", uint(scanCode), uint(err));
 	}
 
 	return L"[Error]";

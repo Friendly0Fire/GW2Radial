@@ -76,13 +76,12 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
     if(SUCCEEDED(hr))
         return;
 
-    Log::i().Print(Severity::Error, L"Compilation failed: 0x{:x}", hr);
+    Log::i().Print(Severity::Error, L"Compilation failed: 0x{:x}", uint(hr));
 
     if (errors) {
         const char* errorsText = static_cast<const char*>(errors->GetBufferPointer());
 
         Log::i().Print(Severity::Error, "Compilation errors:\n{}", errorsText);
-
     }
 
 #ifndef _DEBUG
@@ -90,7 +89,7 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
 #endif
 
     // Break to fix errors
-    GW2_ASSERT(errors != nullptr);
+    GW2_ASSERT(errors == nullptr);
 }
 
 [[nodiscard]] std::variant<ComPtr<IDirect3DPixelShader9>, ComPtr<IDirect3DVertexShader9>> Effect::CompileShader(

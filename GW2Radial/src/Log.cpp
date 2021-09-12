@@ -29,7 +29,10 @@ void Log::Draw()
     if (ImGui::Button("Clear"))
         lines_.clear();
     ImGui::SameLine();
-    ImGui::Checkbox("Autoscroll", &autoscroll_);
+
+    bool scrollDown = false;
+    if (ImGui::Checkbox("Autoscroll", &autoscroll_) && autoscroll_)
+        scrollDown = true;
 
     ImGui::SameLine();
     ImGui::Spacing();
@@ -48,7 +51,9 @@ void Log::Draw()
         }
         ImGui::PopStyleColor();
     };
+#ifdef _DEBUG
     filter("Debug", Severity::Debug);
+#endif
     filter("Info", Severity::Info);
     filter("Warn", Severity::Warn);
     filter("Error", Severity::Error);
@@ -58,44 +63,77 @@ void Log::Draw()
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
     ImGui::PushFont(Core::i().fontMono());
 
-    ImGuiListClipper clipper;
-    clipper.Begin(lines_.size(), ImGui::GetTextLineHeightWithSpacing());
-    while (clipper.Step()) {
-        for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++)
-        {
-            cref l = lines_[line_no];
+    int filtered_size = lines_.size();
+    if ((filter_ & uint8_t(Severity::MaxVal)) != uint8_t(Severity::MaxVal)) {
+        for (cref l : lines_)
             if ((uint8_t(l.sev) & filter_) == 0)
-                continue;
-            
-            uint32_t col = (line_no & 1) == 0 ? 0xFFFFFFFF : 0xFFDDDDDD;
-
-            ImGui::PushID(line_no);
-
-            ImGui::PushStyleColor(ImGuiCol_Text, col);
-            ImGui::TextUnformatted(l.time.c_str());
-            ImGui::SameLine();
-
-            ImGui::PushStyleColor(ImGuiCol_Text, ToColor(l.sev));
-            ImGui::TextUnformatted(ToString(l.sev));
-            ImGui::SameLine();
-
-            ImGui::PushStyleColor(ImGuiCol_Text, col);
-            ImGui::TextUnformatted(l.message.c_str());
-
-            ImGui::PopStyleColor(3);
-            ImGui::PopID();
-        }
+                filtered_size--;
     }
-    clipper.End();
+
+    if (filtered_size > 0) {
+        ImGuiListClipper clipper;
+        clipper.Begin(filtered_size);
+        while (clipper.Step()) {
+            int offset = 0;
+            for (int line_no = 0; line_no < clipper.DisplayEnd; )
+            {
+                cref l = lines_[line_no + offset];
+                if ((uint8_t(l.sev) & filter_) == 0) {
+                    offset++;
+                    continue;
+                }
+
+                line_no++;
+                if (clipper.DisplayStart >= line_no)
+                    continue;
+
+                uint32_t col = (line_no & 1) == 0 ? 0xFFFFFFFF : 0xFFDDDDDD;
+
+                ImGui::PushID(line_no);
+
+                ImGui::PushStyleColor(ImGuiCol_Text, col);
+                ImGui::TextUnformatted(l.time.c_str());
+                ImGui::SameLine();
+
+                ImGui::PushStyleColor(ImGuiCol_Text, ToColor(l.sev));
+                ImGui::TextUnformatted(ToString(l.sev));
+                ImGui::SameLine();
+
+                ImGui::PushStyleColor(ImGuiCol_Text, col);
+                ImGui::TextUnformatted(l.message.c_str());
+
+                ImGui::PopStyleColor(3);
+                ImGui::PopID();
+            }
+        }
+        clipper.End();
+    }
 
     ImGui::PopFont();
     ImGui::PopStyleVar();
 
-    if (autoscroll_ && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+    if (scrollDown || autoscroll_ && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
         ImGui::SetScrollHereY(1.0f);
 
     ImGui::EndChild();
     ImGui::End();
+}
+
+void Log::PrintInternal(Severity sev, const std::string& line)
+{
+    {
+        auto ts = ToString(Timestamp::clock::now());
+        std::list<std::string> lines;
+        SplitString(line.c_str(), "\n", std::back_inserter(lines));
+        for(auto& l : lines)
+            lines_.push_back({ sev, ts, l });
+    }
+    while (lines_.size() > maxLines_)
+        lines_.pop_front();
+
+    std::string l = std::format("{}{}{}\n", lines_.back().time, ToString(sev), line);
+    OutputDebugStringA(l.c_str());
+    logStream() << l.c_str();
 }
 
 std::string Log::ToString(const std::string& s)

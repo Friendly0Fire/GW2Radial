@@ -28,26 +28,29 @@ public:
     Log();
     ~Log() = default;
 
+    bool isVisible() const { return isVisible_; }
+    void isVisible(bool v) { isVisible_ = v; }
+
     template<typename T, typename... Args>
     void Print(Severity sev, const T& fmt, Args&& ...args) {
+#ifndef _DEBUG
+        if (sev == Severity::Debug)
+            return;
+#endif
         std::string l;
         if constexpr (sizeof...(args) > 0)
             l = ToString(std::vformat(fmt, MakeFormatArgs(fmt[0], std::forward<Args>(args)...)));
         else
             l = ToString(fmt);
 
-        lines_.push_back({ sev, ToString(Timestamp::clock::now()), l });
-        while (lines_.size() > maxLines_)
-            lines_.pop_front();
-
-        l = std::format("{}{}{}\n", lines_.back().time, ToString(sev), lines_.back().message);
-        OutputDebugStringA(l.c_str());
-        logStream() << l.c_str();
+        PrintInternal(sev, l);
     }
 
     void Draw();
 
 private:
+    void PrintInternal(Severity sev, const std::string& line);
+
     std::string ToString(const std::string& s);
     std::string ToString(const std::wstring& s);
     std::string ToString(const Timestamp& t);

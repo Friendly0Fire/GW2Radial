@@ -23,6 +23,9 @@ void MiscTab::DrawMenu(Keybind**)
 	ImGuiTitle("General");
 
 	ImGuiConfigurationWrapper(ImGui::Checkbox, UpdateCheck::i().checkEnabled_);
+
+	if (ImGui::Button("Open Log Window"))
+		Log::i().isVisible(true);
 	
 	ImGuiTitle("Toggle Menu Visibility");
 

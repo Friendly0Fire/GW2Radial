@@ -509,7 +509,7 @@ namespace GW2Radial
 
             if (qi.msg != id_H_MOUSEMOVE_)
             {
-                Log::i().Print(Severity::Debug, L"Sending keybind 0x{:x}...", qi.wParam);
+                Log::i().Print(Severity::Debug, L"Sending keybind 0x{:x}...", uint(qi.wParam));
                 PostMessage(Core::i().gameWindow(), qi.msg, qi.wParam, qi.lParamValue);
             }
         }
