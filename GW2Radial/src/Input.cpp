@@ -297,7 +297,7 @@ namespace GW2Radial
         Log::i().Print(Severity::Debug, L"Triggering keybinds, active keys: {}", dbgkeys);
 #endif
 
-        std::pair<int, ActivationKeybind*> bestKeybind = { 0, nullptr };
+        std::pair<int, ActivationKeybind*> bestKeybind = { -1, nullptr };
         // Key is pressed  => use it as main key
         // Key is released => if it's a modifier, keep last down key as main key
         //                 => if not, main key is nil (only modifiers may remain pressed)
