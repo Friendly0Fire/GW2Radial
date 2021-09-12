@@ -514,7 +514,9 @@ namespace GW2Radial
             if (qi.cursorPos)
             {
                 Log::i().Print(Severity::Debug, L"Moving cursor to ({}, {})...", qi.cursorPos->x, qi.cursorPos->y);
-                SetCursorPos(qi.cursorPos->x, qi.cursorPos->y);
+                POINT p{ qi.cursorPos->x, qi.cursorPos->y };
+                ClientToScreen(Core::i().gameWindow(), &p);
+                SetCursorPos(p.x, p.y);
             }
 
             if (qi.msg != id_H_MOUSEMOVE_)
