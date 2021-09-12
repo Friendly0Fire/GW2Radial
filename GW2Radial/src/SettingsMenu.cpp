@@ -11,7 +11,8 @@ SettingsMenu::SettingsMenu()
 	: showKeybind_("show_settings", "Show settings", "__core__", { GetScanCodeFromVirtualKey('M'), Modifier::SHIFT | Modifier::ALT }, false)
 {
 	showKeybind_.callback([&](Activated a) {
-		isVisible_ = true;
+		if(a)
+			isVisible_ = true;
 		return true;
 	});
 }
