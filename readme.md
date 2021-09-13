@@ -2,7 +2,7 @@
 
 An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) addon to show a convenient, customizable radial menu overlay to select a mount, novelty item and more, on the fly, for *Guild Wars 2: Path of Fire*. This addon is compatible with the Windows client only; it will not work with the Mac client.
 
-[![GW2Radial Demo](https://thumbs.gfycat.com/IgnorantIllfatedCrocodileskink-size_restricted.gif)](https://gfycat.com/ignorantillfatedcrocodileskink)    
+[![GW2Radial Demo](https://thumbs.gfycat.com/IgnorantIllfatedCrocodileskink-size_restricted.gif)](https://gfycat.com/ignorantillfatedcrocodileskink)
 (click to see a better video)
 
 **Highlights include:**
@@ -12,10 +12,18 @@ An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/commen
 * Smart automount: Skimmer is auto-selected when underwater or Warclaw when in WvW
 * Input queuing: combat (and underwater without the Skimmer mastery) prevents mount usage, so the selected mount is "queued" until out of combat:
 
-[![Input Queuing GW2Radial Demo](https://thumbs.gfycat.com/NegativeBlushingHake-size_restricted.gif)](https://gfycat.com/negativeblushinghake)    
+[![Input Queuing GW2Radial Demo](https://thumbs.gfycat.com/NegativeBlushingHake-size_restricted.gif)](https://gfycat.com/negativeblushinghake)
 (click to see a better video)
 
 ## Installation
+
+### Automatic Installation
+- Download the [GW2 Addon Manager](https://github.com/gw2-addon-loader/GW2-Addon-Manager).
+- From the list of addons, select GW2Radial.
+- Click Update.
+- Run the game!
+
+### Manual Installation
 - Download and extract the archive ``GW2Radial.zip`` found in the [latest release](https://github.com/Friendly0Fire/GW2Radial/releases/latest).
 - Place ``d3d9.dll`` in your bin64 directory (default path: ``C:\Program Files\Guild Wars 2\bin64``).
 - Run the game! If everything was setup properly, you should be greeted by a prompt on your first launch.
@@ -60,7 +68,7 @@ A: RivaTuner Statistics Server is a component of some GPU management software su
 
 ### Q: I want to load up ArcDPS/GW2Hook/something else which also needs to be called ``d3d9.dll``, how do I load both?
 
-A: You have three options: the first option is to use the GW2 Addon Loader through the [GW2 Addon Manager](https://github.com/fmmmlee/GW2-Addon-Manager), **which is the recommended approach**.
+A: You have three options: the first option is to use the GW2 Addon Loader through the [GW2 Addon Manager](https://github.com/gw2-addon-loader/GW2-Addon-Manager), **which is the recommended approach**.
 
 Otherwise, either the other thing you want to run supports *chainloading* this, in which case you should look up the documentation for that plugin (e.g. ArcDPS supports chainloading by renaming this plugin to ``d3d9_chainload.dll``), or you can make this plugin chainload something else by renaming that other plugin to ``d3d9_mchain.dll``.
 
