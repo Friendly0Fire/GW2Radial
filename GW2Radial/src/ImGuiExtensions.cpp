@@ -34,6 +34,7 @@ std::map<void*, int> specialIds;
 void ImGuiKeybindInput(GW2Radial::Keybind& keybind, GW2Radial::Keybind** keybindBeingModified, const char* tooltip)
 {
 	bool beingModified = *keybindBeingModified == &keybind;
+	bool disableSet = !beingModified && *keybindBeingModified != nullptr;
 	std::string suffix = "##" + keybind.nickname();
 
 	float windowWidth = ImGui::GetWindowWidth() - ImGuiHelpTooltipSize();
@@ -59,7 +60,13 @@ void ImGuiKeybindInput(GW2Radial::Keybind& keybind, GW2Radial::Keybind** keybind
 
 	ImGui::SameLine();
 
-	if (!beingModified && ImGui::Button(("Set" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
+	if (disableSet) {
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyleColorVec4(ImGuiCol_Button));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyleColorVec4(ImGuiCol_Button));
+	}
+
+	if (!beingModified && ImGui::Button(("Set" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)) && !disableSet)
 	{
 		if(keybindBeingModified)
 			GW2Radial::Input::i().CancelRecordInputs();
@@ -80,9 +87,16 @@ void ImGuiKeybindInput(GW2Radial::Keybind& keybind, GW2Radial::Keybind** keybind
 	}
 	else if (beingModified && ImGui::Button(("Clear" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
 	{
-		beingModified = false;
 		keybind.keyCombo({});
+		if (*keybindBeingModified == &keybind) {
+			*keybindBeingModified = nullptr;
+		}
 		GW2Radial::Input::i().CancelRecordInputs();
+	}
+
+	if (disableSet) {
+		ImGui::PopStyleVar();
+		ImGui::PopStyleColor(2);
 	}
 
 	ImGui::SameLine();
