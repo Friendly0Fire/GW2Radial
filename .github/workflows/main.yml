@@ -37,7 +37,7 @@ jobs:
 
       - name: Save nightly build from master
         uses: actions/upload-artifact@v2
-        if: ! startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') == false
         with:
           name: nightly-${{ github.sha }}
           path: |
