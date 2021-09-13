@@ -140,7 +140,11 @@ namespace GW2Radial
         if (inputRecordCallback_ && eventKey.sc != ScanCode::NONE) {
             response |= InputResponse::PREVENT_KEYBOARD;
             if (eventKey.sc != ScanCode::LBUTTON) {
-                (*inputRecordCallback_)(KeyCombo(eventKey.sc, downModifiers_), !eventKey.down);
+                auto m = downModifiers_;
+                if (!eventKey.down && IsModifier(eventKey.sc)) {
+                    m &= ~ToModifier(eventKey.sc);
+                }
+                (*inputRecordCallback_)(KeyCombo(eventKey.sc, m), !eventKey.down);
                 if(!eventKey.down) inputRecordCallback_ = std::nullopt;
             }
         }
