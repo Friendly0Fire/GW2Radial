@@ -90,6 +90,7 @@ public:
 	void OnFocus();
 	void OnUpdate();
 
+	void ClearActive() { downModifiers_ = Modifier::NONE; activeKeybind_ = nullptr; }
 	void BlockKeybinds(uint id) { blockKeybinds_ |= id; }
 	void UnblockKeybinds(uint id) { blockKeybinds_ &= ~id; }
 	bool keybindsBlocked() const { return blockKeybinds_ != 0; }
