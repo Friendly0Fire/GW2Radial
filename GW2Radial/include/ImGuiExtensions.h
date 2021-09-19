@@ -34,6 +34,11 @@ bool ImGuiConfigurationWrapper(F fct, GW2Radial::ConfigurationOption<T>& value, 
 	return false;
 }
 
+inline bool ImGuiInputIntFormat(const char* label, int* v, const char* format, int step = 0, int step_fast = 0, ImGuiInputTextFlags flags = 0)
+{
+	return ImGui::InputScalar(label, ImGuiDataType_S32, (void*)v, (void*)(step > 0 ? &step : NULL), (void*)(step_fast > 0 ? &step_fast : NULL), format, flags);
+}
+
 void ImGuiTitle(const char * text);
 float ImGuiHelpTooltipSize();
 void ImGuiHelpTooltip(const char* desc);

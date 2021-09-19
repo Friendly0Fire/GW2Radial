@@ -34,8 +34,9 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  clickSelectOption_("Require click on option to select", "click_select", "wheel_" + nickname_, false),
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
-	maximumConditionalWaitTimeOption_("Expiration time (in seconds) of queued mount input", "max_wait_cond", "wheel_" + nickname_, 30),
-	showDelayTimerOption_("Show timer around cursor when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
+	maximumConditionalWaitTimeOption_("Expiration time of queued input", "max_wait_cond", "wheel_" + nickname_, 30),
+	conditionalDelayDelayOption_("Delay before sending queued input", "min_delay_cond", "wheel_" + nickname_, 200),
+	showDelayTimerOption_("Show timer next to skill bar when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
     centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
     enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false),
     visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true),
@@ -265,9 +266,11 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 	
 	ImGuiTitle("Queuing Options");
 	ImGui::PushItemWidth(0.33f * ImGui::GetWindowWidth());
-	ImGuiConfigurationWrapper(&ImGui::InputInt, maximumConditionalWaitTimeOption_, 1, 10, 0);
-	ImGui::PopItemWidth();
+	ImGuiConfigurationWrapper(&ImGuiInputIntFormat, conditionalDelayDelayOption_, "%d ms", 1, 100, 0);
+	ImGuiHelpTooltip("Time, in milliseconds, to wait before sending a queued input once all conditions pass. Increasing this value can make activation more reliable.");
+	ImGuiConfigurationWrapper(&ImGuiInputIntFormat, maximumConditionalWaitTimeOption_, "%d s", 1, 10, 0);
 	ImGuiHelpTooltip("Maximum amount of time, in seconds, to wait with a queued input before dismissing it.");
+	ImGui::PopItemWidth();
 
 	if(noHoldOption_.value())
 		ImGuiDisable();
@@ -314,20 +317,21 @@ void Wheel::OnUpdate() {
 			cref mumble = MumbleLink::i();
 		    if (mumble.gameHasFocus() && !mumble.isMapOpen()
 				&& aboveWater_.passes() && outOfCombat_.passes()) {
-			    conditionallyDelayedTestCount_++;
-			    if(conditionallyDelayedTestCount_ >= 10)
-			    {
-			        Input::i().SendKeybind(conditionallyDelayed_->keybind().keyCombo(), std::nullopt);
-			        conditionallyDelayed_ = nullptr;
-			        conditionallyDelayedTime_ = currentTime;
-					conditionallyDelayedTestCount_ = 0;
-			    }
+				if (!conditionallyDelayedTestPasses_)
+					conditionallyDelayedPassesTime_ = currentTime;
+				else if(currentTime >= conditionallyDelayedPassesTime_ + conditionalDelayDelayOption_.value()) {
+					Input::i().SendKeybind(conditionallyDelayed_->keybind().keyCombo(), std::nullopt);
+					conditionallyDelayed_ = nullptr;
+					conditionallyDelayedTime_ = currentTime;
+					conditionallyDelayedTestPasses_ = false;
+				}
+				conditionallyDelayedTestPasses_ = true;
 		    } else
-			    conditionallyDelayedTestCount_ = 0;
+				conditionallyDelayedTestPasses_ = false;
 		} else {
 		    conditionallyDelayed_ = nullptr;
 			conditionallyDelayedTime_ = currentTime;
-			conditionallyDelayedTestCount_ = 0;
+			conditionallyDelayedTestPasses_ = false;
 		}
 	}
 }
@@ -336,14 +340,14 @@ void Wheel::OnMapChange(uint prevId, uint newId)
 {
 	conditionallyDelayed_ = nullptr;
 	conditionallyDelayedTime_ = TimeInMilliseconds();
-	conditionallyDelayedTestCount_ = 0;
+	conditionallyDelayedTestPasses_ = false;
 }
 
 void Wheel::OnCharacterChange(const std::wstring& prevCharacterName, const std::wstring& newCharacterName)
 {
 	conditionallyDelayed_ = nullptr;
 	conditionallyDelayedTime_ = TimeInMilliseconds();
-	conditionallyDelayedTestCount_ = 0;
+	conditionallyDelayedTestPasses_ = false;
 }
 
 
@@ -587,7 +591,7 @@ void Wheel::OnFocusLost()
 	
 	conditionallyDelayed_ = nullptr;
 	conditionallyDelayedTime_ = TimeInMilliseconds();
-	conditionallyDelayedTestCount_ = 0;
+	conditionallyDelayedTestPasses_ = false;
 }
 
 void Wheel::Sort()
@@ -797,7 +801,7 @@ void Wheel::DeactivateWheel()
 	if(currentHovered_ == nullptr && centerCancelDelayedInputOption_.value()) {
 	    conditionallyDelayed_ = nullptr;
 	    conditionallyDelayedTime_ = TimeInMilliseconds();
-	    conditionallyDelayedTestCount_ = 0;
+		conditionallyDelayedTestPasses_ = false;
 
 		return;
 	}
@@ -837,7 +841,7 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) 
 		Input::i().SendKeybind({}, cursorResetPosition_);
 		conditionallyDelayed_ = we;
 		conditionallyDelayedTime_ = TimeInMilliseconds();
-		conditionallyDelayedTestCount_ = 0;
+		conditionallyDelayedTestPasses_ = false;
 	} else
 		Input::i().SendKeybind(we->keybind().keyCombo(), mousePos);
 }

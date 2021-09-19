@@ -112,7 +112,8 @@ protected:
 
 	WheelElement* conditionallyDelayed_ = nullptr;
 	mstime conditionallyDelayedTime_ = 0;
-	uint conditionallyDelayedTestCount_ = 0;
+	bool conditionallyDelayedTestPasses_ = false;
+	mstime conditionallyDelayedPassesTime_ = 0;
 
 	ConfigurationOption<int> centerBehaviorOption_;
 	ConfigurationOption<int> centerFavoriteOption_;
@@ -134,6 +135,7 @@ protected:
 	ConfigurationOption<bool> resetCursorAfterKeybindOption_;
 
 	ConfigurationOption<int> maximumConditionalWaitTimeOption_;
+	ConfigurationOption<int> conditionalDelayDelayOption_;
 	ConfigurationOption<bool> showDelayTimerOption_;
 	ConfigurationOption<bool> centerCancelDelayedInputOption_;
 	ConfigurationOption<bool> enableConditionsOption_;
