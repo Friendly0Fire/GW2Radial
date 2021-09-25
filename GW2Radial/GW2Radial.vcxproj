@@ -80,8 +80,6 @@
       <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (
   copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2addon_gw2radial.dll"
   copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2addon_gw2radial.pdb"
-  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\d3d9.dll"
-  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\d3d9.pdb"
 ) else (
   echo No target defined, skipping copy. To setup automatic copy, define environment variable GW2RADIAL_TARGET_DIR to your GW2 root install directory.
 )</Command>

@@ -13,6 +13,7 @@ public:
 	virtual ~BaseSingleton() { }
 protected:
 	static BaseSingleton* Store(std::unique_ptr<BaseSingleton>&& ptr);
+	static void Clear(BaseSingleton* ptr);
 };
 
 class SingletonManager
@@ -29,13 +30,7 @@ private:
 
 	friend class BaseSingleton;
 };
-inline static SingletonManager SingletonManagerInstance;
-
-inline BaseSingleton* BaseSingleton::Store(std::unique_ptr<BaseSingleton>&& ptr)
-{
-	SingletonManagerInstance.singletons_.push(std::move(ptr));
-	return SingletonManagerInstance.singletons_.top().get();
-}
+extern SingletonManager g_singletonManagerInstance;
 
 template<typename T, bool AutoInit = true>
 class Singleton : public BaseSingleton
@@ -73,8 +68,15 @@ public:
 			action(*i_);
 	}
 
+	static void reset()
+	{
+		if(init_)
+			Clear(i_);
+	}
+
 	virtual ~Singleton() {
 		i_ = nullptr;
+		init_ = false;
 	}
 
 private:
