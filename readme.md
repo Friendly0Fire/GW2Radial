@@ -1,5 +1,8 @@
 # GW2 Radial
 
+![GitHub all releases](https://img.shields.io/github/downloads/Friendly0Fire/GW2Radial/total) ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Friendly0Fire/GW2Radial/CI) ![Discord](https://img.shields.io/discord/384735285197537290?label=Discord)
+
+
 An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/comments/746mar/mount_radial_menu_addon_very_alpha_much_untested/dnwqj9x/) addon to show a convenient, customizable radial menu overlay to select a mount, novelty item and more, on the fly, for *Guild Wars 2: Path of Fire*. This addon is compatible with the Windows client only; it will not work with the Mac client.
 
 [![GW2Radial Demo](https://thumbs.gfycat.com/IgnorantIllfatedCrocodileskink-size_restricted.gif)](https://gfycat.com/ignorantillfatedcrocodileskink)
