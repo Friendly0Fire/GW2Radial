@@ -27,7 +27,7 @@
 	url = https://github.com/Friendly0Fire/minhook.git
 [submodule "GW2Radial/tinyxml2"]
 	path = GW2Radial/tinyxml2
-	url = git@github.com:Friendly0Fire/tinyxml2.git
+	url = https://github.com/Friendly0Fire/tinyxml2.git
 [submodule "GW2Radial/IconFontCppHeaders"]
 	path = GW2Radial/IconFontCppHeaders
 	url = https://github.com/juliettef/IconFontCppHeaders
