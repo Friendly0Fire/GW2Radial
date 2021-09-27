@@ -46,7 +46,7 @@ void Core::Init(HMODULE dll)
 
 void Core::Shutdown()
 {
-	SingletonManagerInstance.Shutdown();
+	g_singletonManagerInstance.Shutdown();
 }
 
 Core::~Core()
