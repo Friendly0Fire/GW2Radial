@@ -52,14 +52,14 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	centralKeybind_.callback([&](Activated a) {
 		return KeybindEvent(true, a);
 	});
-	
+
 	aboveWater_.test = []() { return MumbleLink::i().isUnderwater(); };
 	aboveWater_.toggleOffTest = outOfCombat_.toggleOffTest = []() { return MumbleLink::i().isMounted(); };
 	outOfCombat_.test = []() { return MumbleLink::i().isInCombat(); };
 
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i().dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i().dllModule(), wipeMaskResourceId);
-	
+
 	mouseMoveCallback_ = std::make_unique<Input::MouseMoveCallback>([this](bool& rv) { OnMouseMove(rv); });
 	Input::i().AddMouseMoveCallback(mouseMoveCallback_.get());
 
@@ -130,9 +130,9 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 	for(auto& we : wheelElements_)
 		ImGuiKeybindInput(we->keybind(), currentEditedKeybind, nullptr);
-	
+
 	ImGuiTitle("Keybinds");
-	
+
 	ImGuiKeybindInput((Keybind&)keybind_, currentEditedKeybind, "Pressing this key combination will open the radial menu at your cursor's current location.");
 	ImGuiKeybindInput((Keybind&)centralKeybind_, currentEditedKeybind, "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back after you have selected an option.");
 
@@ -146,12 +146,12 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 		ImGui::Unindent();
 	}
-	
+
 	ImGuiTitle("Display Options");
 
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, opacityMultiplierOption_, 0, 100, "%d %%", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Transparency of the entire overlay. Setting to 0% hides it entirely.");
-	
+
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Amount of time, in milliseconds, for the radial menu to fade in.");
 
@@ -169,7 +169,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 	if(extraUI_ && extraUI_->display)
 		extraUI_->display();
-	
+
 	ImGuiTitle("Interaction Options");
 
 	if(clickSelectOption_.value()) {
@@ -190,7 +190,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 	if(noHoldOption_.value())
 		ImGuiDisableEnd();
 
-	if(CenterBehavior(centerBehaviorOption_.value()) != CenterBehavior::NOTHING && displayDelayOption_.value() > 0)
+	if(displayDelayOption_.value() > 0)
 	{
 		ImGui::Text((behaviorOnReleaseBeforeDelay_.displayName() + ":").c_str());
 
@@ -208,7 +208,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 		{
 			const auto textSize = ImGui::CalcTextSize(delayFavoriteOption_.displayName().c_str());
 			const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
-			
+
 			std::vector<const char*> potentialNames(wheelElements_.size());
 				for (uint i = 0; i < wheelElements_.size(); i++)
 					potentialNames[i] = wheelElements_[i]->displayName().c_str();
@@ -233,12 +233,12 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 		ImGui::SameLine();
 		ImGuiConfigurationWrapper(rb, "Favorite##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
 		ImGuiHelpTooltip("Determines the behavior of the central region of the menu. By default, it does nothing, but it can also (1) trigger the last selected item; (2) trigger a fixed \"favorite\" option.");
-	
+
 		if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
 		{
 			const auto textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
 			const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
-			
+
 			std::vector<const char*> potentialNames(wheelElements_.size());
 				for (uint i = 0; i < wheelElements_.size(); i++)
 					potentialNames[i] = wheelElements_[i]->displayName().c_str();
@@ -251,7 +251,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 	if(noHoldOption_.value())
 		ImGuiDisableEnd();
-	
+
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
 	ImGuiHelpTooltip("Moves the cursor to the center of the screen when the \"show in center\" keybind is used.");
 
@@ -263,7 +263,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 	if(extraUI_ && extraUI_->interaction)
 		extraUI_->interaction();
-	
+
 	ImGuiTitle("Queuing Options");
 	ImGui::PushItemWidth(0.33f * ImGui::GetWindowWidth());
 	ImGuiConfigurationWrapper(&ImGuiInputIntFormat, conditionalDelayDelayOption_, "%d ms", 1, 100, 0);
@@ -281,7 +281,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 	if(extraUI_ && extraUI_->queuing)
 		extraUI_->queuing();
-	
+
 	ImGuiTitle("Visibility & Ordering");
 
 	ImGui::Text("Ordering top to bottom is clockwise starting at noon.");
@@ -363,24 +363,29 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 	const auto currentTime = TimeInMilliseconds();
 
+	const auto resetCursorPositionToCenter = [&]() {
+		RECT rect = { };
+		if (GetWindowRect(Core::i().gameWindow(), &rect))
+		{
+			if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
+			{
+				auto& io = ImGui::GetIO();
+				io.MousePos.x = screenWidth * 0.5f;
+				io.MousePos.y = screenHeight * 0.5f;
+			}
+		}
+		resetCursorPositionToCenter_ = false;
+	};
+
+	if (behaviorOnReleaseBeforeDelay_.value() == int(BehaviorBeforeDelay::DIRECTION) && resetCursorPositionToCenter_)
+		resetCursorPositionToCenter();
+
 	if (isVisible_)
 	{
 		if (currentTime >= currentTriggerTime_ + displayDelayOption_.value())
 		{
-			if(resetCursorPositionToCenter_)
-			{
-				RECT rect = { };
-				if (GetWindowRect(Core::i().gameWindow(), &rect))
-				{
-					if (SetCursorPos((rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top))
-					{
-						auto& io = ImGui::GetIO();
-						io.MousePos.x = Core::i().screenWidth() * 0.5f;
-						io.MousePos.y = Core::i().screenHeight() * 0.5f;
-					}
-				}
-				resetCursorPositionToCenter_ = false;
-			}
+			if (resetCursorPositionToCenter_)
+				resetCursorPositionToCenter();
 
 			fx->Begin();
 			quad->Bind(fx);
@@ -403,9 +408,9 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				baseSpriteDimensions.y = currentPosition_.y;
 				baseSpriteDimensions.z = scaleOption_.value() * 0.5f * screenSize.y * screenSize.z;
 				baseSpriteDimensions.w = scaleOption_.value() * 0.5f;
-				
+
 				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / float(animationTimeOption_.value() * 0.5f));
-				
+
 				std::vector<float> hoveredFadeIns;
 				std::transform(activeElements.begin(), activeElements.end(), std::back_inserter(hoveredFadeIns),
 					[&](const WheelElement* elem) { return elem->hoverFadeIn(currentTime, this); });
@@ -437,7 +442,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				{
 				    using namespace ShaderRegister::ShaderPS;
 				    using namespace ShaderRegister::ShaderVS;
-					
+
 				    fx->SetVariable(ShaderType::PIXEL_SHADER, float3_fWipeMaskData, wipeMaskData_);
 				    fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, baseSpriteDimensions);
 				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, fadeTimer);
@@ -446,7 +451,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				    fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementCount, activeElements.size());
 					fx->SetVariable(ShaderType::PIXEL_SHADER, float_fGlobalOpacity, opacityMultiplierOption_.value() * 0.01f);
 				    fx->SetVariableArray(ShaderType::PIXEL_SHADER, array_float4_fHoverFadeIns, (const std::span<float>&)hoveredFadeIns);
-					
+
 					fx->SetSamplerStates(sampler2D_texMainSampler, {});
 					fx->SetSamplerStates(sampler2D_texWipeMaskImageSampler, {});
 				    fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_.Get());
@@ -473,7 +478,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 			{
 				cref io = ImGui::GetIO();
-				
+
 				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "Cursor_PS");
 				fx->SetRenderStates({
 					{ D3DRS_DESTBLEND, D3DBLEND_ONE },
@@ -482,7 +487,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f  * screenSize.y * screenSize.z, 0.08f };
 				fx->SetVariable(ShaderType::VERTEX_SHADER, ShaderRegister::ShaderVS::float4_fSpriteDimensions, spriteDimensions);
-				
+
 				fx->ApplyStates();
 				quad->Draw();
 			}
@@ -497,7 +502,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		else
 			timeLeft = 1.f - (currentTime - conditionallyDelayedTime_) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
 	    cref io = ImGui::GetIO();
-		
+
 		fx->Begin();
 		quad->Bind(fx);
 		fx->SetShader(ShaderType::VERTEX_SHADER, L"Shader_vs.hlsl", "ScreenQuad_VS");
@@ -520,12 +525,12 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 		float bottom = 13.f + 1.f * uiScale;
 		topLeftCorner.x = 450.f / 107.f * topLeftCorner.y;
-		
+
 		float widthMinScale = std::min(1.f, screenSize.x / 1024.f);
 		float heightMinScale = std::min(1.f, screenSize.y / 768.f);
 
 		float minScale = std::min(widthMinScale, heightMinScale);
-		
+
 		topLeftCorner.x *= dpiScale * minScale;
 		topLeftCorner.y *= dpiScale * minScale;
 		bottom *= dpiScale * minScale;
@@ -548,7 +553,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		      topLeftCorner.y * screenSize.w,
 	          spriteSize * screenSize.z,
 	          spriteSize * screenSize.w };
-		
+
 		spriteDimensions.x += spriteDimensions.z * 0.5f;
 		spriteDimensions.y += spriteDimensions.w * 0.5f;
 
@@ -561,7 +566,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fTimeLeft, timeLeft);
 			fx->SetVariable(ShaderType::PIXEL_SHADER, bool_bShowIcon, conditionallyDelayed_ != nullptr);
 			fx->SetVariable(ShaderType::PIXEL_SHADER, float_fGlobalOpacity, opacityMultiplierOption_.value() * 0.01f);
-			
+
 			fx->SetSamplerStates(sampler2D_texMainSampler, {});
 			fx->SetSamplerStates(sampler2D_texSecondarySampler, {
 				{ D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER },
@@ -575,7 +580,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				conditionallyDelayed_->SetShaderState();
 			}
 		}
-		
+
 		fx->ApplyStates();
 		quad->Draw();
 
@@ -588,7 +593,7 @@ void Wheel::OnFocusLost()
 	currentHovered_ = nullptr;
 	isVisible_ = false;
 	currentTriggerTime_ = 0;
-	
+
 	conditionallyDelayed_ = nullptr;
 	conditionallyDelayedTime_ = TimeInMilliseconds();
 	conditionallyDelayedTestPasses_ = false;
@@ -654,7 +659,7 @@ void Wheel::OnMouseMove(bool& rv)
 	if(isVisible_)
 	{
 		UpdateHover();
-		
+
 		// If holding down the button is not necessary, modify behavior
 		if(noHoldOption_.value() && isVisible_ && currentHovered_ != nullptr)
 			DeactivateWheel();
@@ -758,7 +763,7 @@ void Wheel::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<
 		return;
 	}
 
-	
+
 }
 #endif
 
@@ -787,7 +792,7 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
 	}
 
 	currentTriggerTime_ = TimeInMilliseconds();
-	
+
 	wipeMaskData_ = { frand() * 0.20f + 0.40f, frand() * 0.20f + 0.40f, frand() * 2 * float(M_PI) };
 
 	UpdateHover();

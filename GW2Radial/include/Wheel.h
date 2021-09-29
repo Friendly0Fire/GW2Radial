@@ -55,10 +55,10 @@ public:
     [[nodiscard]] bool drawOverUI() const { return showOverGameUIOption_.value(); }
 
 	void SetResetCursorPositionBeforeKeyPress(bool enabled) { resetCursorPositionBeforeKeyPress_ = enabled; }
-	
+
 	[[nodiscard]] const std::string& nickname() const { return nickname_; }
 	[[nodiscard]] const std::string& displayName() const { return displayName_; }
-	
+
 	auto& visibleInMenuOption() { return visibleInMenuOption_; }
 
 	bool visible() override { return visibleInMenuOption_.value(); }
@@ -118,14 +118,14 @@ protected:
 	ConfigurationOption<int> centerBehaviorOption_;
 	ConfigurationOption<int> centerFavoriteOption_;
 	ConfigurationOption<int> delayFavoriteOption_;
-	
+
 	ConfigurationOption<float> scaleOption_;
 	ConfigurationOption<float> centerScaleOption_;
 	ConfigurationOption<int> opacityMultiplierOption_;
-	
+
 	ConfigurationOption<int> displayDelayOption_;
 	ConfigurationOption<int> animationTimeOption_;
-	
+
 	ConfigurationOption<bool> resetCursorOnLockedKeybindOption_;
 	ConfigurationOption<bool> lockCameraWhenOverlayedOption_;
 	ConfigurationOption<bool> showOverGameUIOption_;
@@ -139,7 +139,7 @@ protected:
 	ConfigurationOption<bool> showDelayTimerOption_;
 	ConfigurationOption<bool> centerCancelDelayedInputOption_;
 	ConfigurationOption<bool> enableConditionsOption_;
-	
+
 	ConfigurationOption<bool> visibleInMenuOption_;
 
 	std::optional<Point> cursorResetPosition_;
@@ -148,7 +148,7 @@ protected:
 
 	WheelElement* currentHovered_ = nullptr;
 	WheelElement* previousUsed_ = nullptr;
-	
+
 	ComPtr<IDirect3DTexture9> backgroundTexture_;
 	ComPtr<IDirect3DTexture9> wipeMaskTexture_;
 
