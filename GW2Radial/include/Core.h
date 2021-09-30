@@ -47,6 +47,8 @@ public:
 	void RegisterOnInputLanguageChange(InputLanguageChangeListener* ilcl) { ilcListeners_.push_back(ilcl); }
 	void UnregisterOnInputLanguageChange(InputLanguageChangeListener* ilcl) { auto it = std::find(ilcListeners_.begin(), ilcListeners_.end(), ilcl); if (it != ilcListeners_.end()) ilcListeners_.erase(it); }
 
+	UINT GetDpiForWindow(HWND hwnd);
+
 protected:
 	void InternalInit();
 	void OnFocusLost();
@@ -92,5 +94,9 @@ protected:
 	std::unique_ptr<ConfigurationOption<bool>> ignoreRTSS_;
 
 	ImGuiContext* imguiContext_ = nullptr;
+
+	using GetDpiForWindow_t = decltype(::GetDpiForWindow)*;
+	HMODULE user32_ = 0;
+	GetDpiForWindow_t getDpiForWindow_ = nullptr;
 };
 }

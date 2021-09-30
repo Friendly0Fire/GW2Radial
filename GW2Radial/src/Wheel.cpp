@@ -514,7 +514,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 		float dpiScale = 1.f;
 		if(GFXSettings::i().dpiScaling())
-		    dpiScale = float(GetDpiForWindow(Core::i().gameWindow())) / 96.f;
+		    dpiScale = float(Core::i().GetDpiForWindow(Core::i().gameWindow())) / 96.f;
 
 		float uiScale = float(MumbleLink::i().uiScale());
 

@@ -63,6 +63,9 @@ Core::~Core()
 		i.drawOverCallback = nullptr;
 		i.drawUnderCallback = nullptr;
 	});
+
+	if(user32_)
+		FreeLibrary(user32_);
 }
 
 void Core::OnInjectorCreated()
@@ -88,6 +91,14 @@ void Core::OnInputLanguageChange()
 		ilcl->OnInputLanguageChange();
 }
 
+UINT Core::GetDpiForWindow(HWND hwnd)
+{
+	if (getDpiForWindow_)
+		return getDpiForWindow_(hwnd);
+	else
+		return 96;
+}
+
 void Core::InternalInit()
 {
 	// Add an extra reference count to the library so it persists through GW2's load-unload routine
@@ -97,6 +108,10 @@ void Core::InternalInit()
 		GetModuleFileName(dllModule_, selfpath, MAX_PATH);
 		LoadLibrary(selfpath);
 	}
+
+	user32_ = LoadLibrary(L"User32.dll");
+	if(user32_)
+		getDpiForWindow_ = (GetDpiForWindow_t)GetProcAddress(user32_, "GetDpiForWindow");
 	
 	imguiContext_ = ImGui::CreateContext();
 }
