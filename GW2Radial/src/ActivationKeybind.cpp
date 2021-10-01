@@ -18,5 +18,7 @@ void ActivationKeybind::Rebind()
 {
     if (notNone(key_))
         Input::i().UpdateKeybind(this);
+    else
+        Input::i().UnregisterKeybind(this);
 }
 }

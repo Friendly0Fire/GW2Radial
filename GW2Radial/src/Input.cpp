@@ -295,6 +295,25 @@ namespace GW2Radial
         SendQueuedInputs();
     }
 
+    void Input::ClearActive() {
+        downModifiers_ = Modifier::NONE;
+        activeKeybind_ = nullptr;
+        Log::i().Print(Severity::Info, "Clearing active keybind {} and modifiers {}", activeKeybind_ ? activeKeybind_->nickname() : "null", downModifiers_);
+    }
+
+    void Input::BlockKeybinds(uint id) {
+        uint old = blockKeybinds_;
+        blockKeybinds_ |= id;
+        ClearActive();
+        Log::i().Print(Severity::Info, "Blocking keybinds, flag {} -> {}", old, blockKeybinds_);
+    }
+
+    void Input::UnblockKeybinds(uint id) {
+        uint old = blockKeybinds_;
+        blockKeybinds_ &= ~id;
+        Log::i().Print(Severity::Info, "Unblocking keybinds, flag {} -> {}", old, blockKeybinds_);
+    }
+
     PreventPassToGame Input::TriggerKeybinds(const EventKey& ek)
     {
 #ifdef _DEBUG
@@ -324,7 +343,10 @@ namespace GW2Radial
         std::pair<int, ActivationKeybind*> bestKeybind = { -1, nullptr };
         bool activeKeybindDeactivated = activeKeybind_ && !ek.down && (ek.sc == activeKeybind_->key() || notNone(ToModifier(ek.sc) & activeKeybind_->modifier()));
         if (activeKeybind_ && !activeKeybindDeactivated)
+        {
+            Log::i().Print(Severity::Info, "Best candidate keybind set to prior active keybind '{}'", activeKeybind_->nickname());
             bestKeybind = { activeKeybind_->conditionsScore(), activeKeybind_ };
+        }
 
         if (ek.down) {
             for (auto& kb : keybinds_[kc]) {
@@ -341,7 +363,7 @@ namespace GW2Radial
                 activeKeybind_ = bestKeybind.second;
 
 #ifdef _DEBUG
-                Log::i().Print(Severity::Info, "Active keybind is now '{}'", activeKeybind_->displayName());
+                Log::i().Print(Severity::Info, "Active keybind is now '{}'", activeKeybind_->nickname());
 #endif
 
                 return activeKeybind_->callback()(true);

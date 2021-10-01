@@ -38,7 +38,7 @@ public:
 protected:
 	void ApplyKeys() override {
 		Rebind();
-		Keybind::ApplyKeys(); 
+		Keybind::ApplyKeys();
 	}
 	void Bind();
 	void Rebind();

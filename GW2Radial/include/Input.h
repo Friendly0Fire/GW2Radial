@@ -84,16 +84,17 @@ public:
 	uint id_H_KEYDOWN() const { return id_H_KEYDOWN_; }
 	uint id_H_KEYUP() const { return id_H_KEYUP_; }
 
+	bool keybindsBlocked() const { return blockKeybinds_ != 0; }
+
 	// Returns true to consume message
 	bool OnInput(UINT& msg, WPARAM& wParam, LPARAM& lParam);
 	void OnFocusLost();
 	void OnFocus();
 	void OnUpdate();
 
-	void ClearActive() { downModifiers_ = Modifier::NONE; activeKeybind_ = nullptr; }
-	void BlockKeybinds(uint id) { blockKeybinds_ |= id; }
-	void UnblockKeybinds(uint id) { blockKeybinds_ &= ~id; }
-	bool keybindsBlocked() const { return blockKeybinds_ != 0; }
+	void ClearActive();
+	void BlockKeybinds(uint id);
+	void UnblockKeybinds(uint id);
 
 	void AddMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.insert(cb); }
 	void RemoveMouseMoveCallback(MouseMoveCallback* cb) { mouseMoveCallbacks_.erase(cb); }
@@ -142,7 +143,7 @@ protected:
 	Modifier downModifiers_;
 	ScanCode lastDownKey_;
 	std::list<DelayedInput> queuedInputs_;
-	uint blockKeybinds_ = false;
+	uint blockKeybinds_ = 0;
 
 	std::set<MouseMoveCallback*, PtrComparator<MouseMoveCallback>> mouseMoveCallbacks_;
 	std::set<MouseButtonCallback*, PtrComparator<MouseButtonCallback>> mouseButtonCallbacks_;

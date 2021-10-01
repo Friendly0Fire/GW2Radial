@@ -89,12 +89,15 @@ void Keybind::ApplyKeys()
 {
 	UpdateDisplayString();
 	
-	if(saveToConfig_ && key_ != ScanCode::NONE)
+	if(saveToConfig_)
 	{
 		std::string settingValue = std::to_string(uint(key_)) + ", " + std::to_string(uint(mod_));
 
 		auto& cfg = ConfigurationFile::i();
-		cfg.ini().SetValue("Keybinds.2", nickname_.c_str(), settingValue.c_str());
+		if (key_ != ScanCode::NONE)
+			cfg.ini().SetValue("Keybinds.2", nickname_.c_str(), settingValue.c_str());
+		else
+			cfg.ini().DeleteValue("Keybinds.2", nickname_.c_str(), nullptr);
 		cfg.Save();
 	}
 }

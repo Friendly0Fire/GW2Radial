@@ -87,11 +87,9 @@ void ImGuiKeybindInput(GW2Radial::Keybind& keybind, GW2Radial::Keybind** keybind
 	}
 	else if (beingModified && ImGui::Button(("Clear" + suffix).c_str(), ImVec2(windowWidth * 0.1f, 0.f)))
 	{
-		keybind.keyCombo({});
-		if (*keybindBeingModified == &keybind) {
-			*keybindBeingModified = nullptr;
-		}
 		GW2Radial::Input::i().CancelRecordInputs();
+		*keybindBeingModified = nullptr;
+		keybind.keyCombo({});
 	}
 
 	if (disableSet) {
