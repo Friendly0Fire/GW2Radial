@@ -298,7 +298,7 @@ namespace GW2Radial
     void Input::ClearActive() {
         downModifiers_ = Modifier::NONE;
         activeKeybind_ = nullptr;
-        Log::i().Print(Severity::Info, "Clearing active keybind {} and modifiers {}", activeKeybind_ ? activeKeybind_->nickname() : "null", downModifiers_);
+        Log::i().Print(Severity::Info, "Clearing active keybind {} and modifiers {}", activeKeybind_ ? activeKeybind_->nickname().c_str() : "null", Modifier_t(downModifiers_));
     }
 
     void Input::BlockKeybinds(uint id) {
