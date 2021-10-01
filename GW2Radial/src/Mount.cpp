@@ -46,6 +46,10 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 	doBypassWheel_ = [this](WheelElement*& we) {
 		cref mumble = MumbleLink::i();
 		if(mumble.isMounted()) {
+			if (previousUsed_ != nullptr) {
+				we = previousUsed_;
+				return true;
+			}
 			const auto& activeElems = GetActiveElements();
 			if(!activeElems.empty()) {
 		        we = activeElems.front();
