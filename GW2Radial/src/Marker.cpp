@@ -24,7 +24,7 @@ Marker::Marker(MarkerType m, IDirect3DDevice9* dev)
 template<>
 void Wheel::Setup<Marker>(IDirect3DDevice9* dev)
 {
-	SetResetCursorPositionBeforeKeyPress(true);
+	SetAlwaysResetCursorPositionBeforeKeyPress(true);
 	for (cref type : data)
 		AddElement(std::make_unique<Marker>(type.first, dev));
 }

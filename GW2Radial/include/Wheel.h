@@ -54,7 +54,7 @@ public:
 
     [[nodiscard]] bool drawOverUI() const { return showOverGameUIOption_.value(); }
 
-	void SetResetCursorPositionBeforeKeyPress(bool enabled) { resetCursorPositionBeforeKeyPress_ = enabled; }
+	void SetAlwaysResetCursorPositionBeforeKeyPress(bool enabled) { alwaysResetCursorPositionBeforeKeyPress_ = enabled; }
 
 	[[nodiscard]] const std::string& nickname() const { return nickname_; }
 	[[nodiscard]] const std::string& displayName() const { return displayName_; }
@@ -78,7 +78,7 @@ protected:
 	std::function<bool(WheelElement*&)> doBypassWheel_ = [](auto) { return false; };
 
 	std::string nickname_, displayName_;
-	bool resetCursorPositionBeforeKeyPress_ = false;
+	bool alwaysResetCursorPositionBeforeKeyPress_ = false;
 	bool resetCursorPositionToCenter_ = false;
 
 	std::vector<std::unique_ptr<WheelElement>> wheelElements_;

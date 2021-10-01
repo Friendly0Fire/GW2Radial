@@ -477,6 +477,7 @@ namespace GW2Radial
             if (cursorPos.has_value())
             {
                 DelayedInput i { };
+                i.cursorPos = cursorPos;
                 i.t = TimeInMilliseconds() + 10;
                 std::tie(i.wParam, i.lParamValue) = CreateMouseEventParams(cursorPos);
                 i.msg = id_H_MOUSEMOVE_;

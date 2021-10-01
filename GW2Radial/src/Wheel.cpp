@@ -258,8 +258,11 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
 	ImGuiHelpTooltip("Prevents the camera from being affected by mouse movements while the menu is displayed.");
 
-	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorAfterKeybindOption_);
-	ImGuiHelpTooltip("Once the menu is dismissed, moves the cursor to where it was on screen before the menu was displayed.");
+	if (!alwaysResetCursorPositionBeforeKeyPress_)
+	{
+		ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorAfterKeybindOption_);
+		ImGuiHelpTooltip("Once the menu is dismissed, moves the cursor to where it was on screen before the menu was displayed.");
+	}
 
 	if(extraUI_ && extraUI_->interaction)
 		extraUI_->interaction();
@@ -771,8 +774,11 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
 {
 	auto& io = ImGui::GetIO();
 
-	if (resetCursorPositionBeforeKeyPress_ || resetCursorAfterKeybindOption_.value())
+	if (alwaysResetCursorPositionBeforeKeyPress_ || resetCursorAfterKeybindOption_.value())
+	{
 		cursorResetPosition_ = { static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y) };
+		Log::i().Print(Severity::Debug, "Storing cursor position ({}, {}) for restore...", cursorResetPosition_->x, cursorResetPosition_->y);
+	}
 	else
 		cursorResetPosition_.reset();
 
@@ -839,16 +845,34 @@ void Wheel::DeactivateWheel()
 	    previousUsed_ = currentHovered_;
 	    currentHovered_ = nullptr;
 	}
+	else
+		SendKeybindOrDelay(nullptr, cursorResetPosition_);
 }
 
 void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) {
+	if (we == nullptr && mousePos) {
+		Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}).", cursorResetPosition_->x, cursorResetPosition_->y);
+		Input::i().SendKeybind({}, mousePos);
+		return;
+	}
+
 	if (aboveWater_.delayed() || outOfCombat_.delayed()) {
-		Input::i().SendKeybind({}, cursorResetPosition_);
+		if (mousePos)
+			Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}) and delaying keybind.", cursorResetPosition_->x, cursorResetPosition_->y);
+		else
+			Log::i().Print(Severity::Debug, "Delaying keybind.");
+		Input::i().SendKeybind({}, mousePos);
 		conditionallyDelayed_ = we;
 		conditionallyDelayedTime_ = TimeInMilliseconds();
 		conditionallyDelayedTestPasses_ = false;
-	} else
+	}
+	else {
+		if (mousePos)
+			Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}) and sending keybind.", cursorResetPosition_->x, cursorResetPosition_->y);
+		else
+			Log::i().Print(Severity::Debug, "Sending keybind.");
 		Input::i().SendKeybind(we->keybind().keyCombo(), mousePos);
+	}
 }
 
 
