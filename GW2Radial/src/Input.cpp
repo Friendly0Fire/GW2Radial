@@ -346,27 +346,33 @@ namespace GW2Radial
         //                 => if not, main key is nil (only modifiers may remain pressed)
         KeyCombo kc(ek.down ? ek.sc : ek.sc == lastDownKey_ ? ScanCode::NONE : lastDownKey_, downModifiers_);
 
-        std::pair<int, ActivationKeybind*> bestKeybind = { -1, nullptr };
+        struct
+        {
+            int condiScore = -1;
+            int keyScore = -1;
+            ActivationKeybind* kb = nullptr;
+        } bestKeybind;
         bool activeKeybindDeactivated = activeKeybind_ && !ek.down && (ek.sc == activeKeybind_->key() || notNone(ToModifier(ek.sc) & activeKeybind_->modifier()));
         if (activeKeybind_ && !activeKeybindDeactivated)
         {
             Log::i().Print(Severity::Info, "Best candidate keybind set to prior active keybind '{}'", activeKeybind_->nickname());
-            bestKeybind = { activeKeybind_->conditionsScore(), activeKeybind_ };
+            bestKeybind = { activeKeybind_->conditionsScore(), activeKeybind_->keysScore(), activeKeybind_ };
         }
 
         if (ek.down) {
             for (auto& kb : keybinds_[kc]) {
                 if (kb->conditionsFulfilled()) {
-                    int score = kb->conditionsScore();
-                    if (score > bestKeybind.first)
-                        bestKeybind = { score, kb };
+                    int condiScore = kb->conditionsScore();
+                    int keyScore = kb->keysScore();
+                    if (condiScore > bestKeybind.condiScore || condiScore == bestKeybind.condiScore && keyScore > bestKeybind.keyScore)
+                        bestKeybind = { condiScore, keyScore, kb };
                 }
             }
 
-            if (bestKeybind.second && bestKeybind.second != activeKeybind_) {
+            if (bestKeybind.kb && bestKeybind.kb != activeKeybind_) {
                 if (activeKeybind_ != nullptr)
                     activeKeybind_->callback()(false);
-                activeKeybind_ = bestKeybind.second;
+                activeKeybind_ = bestKeybind.kb;
 
 #ifdef _DEBUG
                 Log::i().Print(Severity::Info, "Active keybind is now '{}'", activeKeybind_->nickname());

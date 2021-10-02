@@ -34,6 +34,7 @@ public:
 
 	[[nodiscard]] bool conditionsFulfilled() const { return conditions_ == nullptr || conditions_->passes(); }
 	[[nodiscard]] int conditionsScore() const { return conditions_ == nullptr ? 0 : conditions_->score(); }
+	[[nodiscard]] int keysScore() const { return std::popcount(Modifier_t(mod_)); }
 
 protected:
 	void ApplyKeys() override {
