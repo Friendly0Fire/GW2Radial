@@ -32,8 +32,11 @@ jobs:
           arch: amd64
           toolset: 14.29
 
+      - name: Generate version information
+        run: powershell "${env:GITHUB_WORKSPACE}\Version.ps1" -ref "${{github.ref}}" -sha "${{github.sha}}"
+
       - name: Build
-        run: msbuild.exe "${env:GITHUB_WORKSPACE}\GW2Radial.sln" /t:Build /p:Configuration=Release /p:Platform=x64
+        run: msbuild.exe "${env:GITHUB_WORKSPACE}\GW2Radial.sln" /t:Build /p:Configuration=Release /p:Platform=x64 /p:GitHubDefs=USE_GITHUB_VER
 
       - name: Save nightly build from master
         uses: actions/upload-artifact@v2

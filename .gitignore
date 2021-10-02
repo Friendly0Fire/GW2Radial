@@ -262,3 +262,6 @@ __pycache__/
 *.pyc
 GW2Radial/int/
 temp/
+
+GW2Radial/include/git.h
+GW2Radial/include/github.h

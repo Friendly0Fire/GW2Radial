@@ -5,6 +5,7 @@
 #include <Core.h>
 #include <GFXSettings.h>
 #include <MumbleLink.h>
+#include <Version.h>
 
 namespace GW2Radial
 {
@@ -21,6 +22,8 @@ MiscTab::~MiscTab()
 void MiscTab::DrawMenu(Keybind**)
 {
 	ImGuiTitle("General");
+
+	ImGui::Text("Version %s", GW2RADIAL_VER);
 
 	ImGuiConfigurationWrapper(ImGui::Checkbox, UpdateCheck::i().checkEnabled_);
 

@@ -24,6 +24,7 @@
 #include <GFXSettings.h>
 #include <Log.h>
 #include <IconFontCppHeaders/IconsFontAwesome5.h>
+#include <Version.h>
 
 LONG WINAPI GW2RadialTopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
 
@@ -31,6 +32,8 @@ namespace GW2Radial
 {
 void Core::Init(HMODULE dll)
 {
+	Log::i().Print(Severity::Info, "This is GW2Radial {}", GW2RADIAL_VER);
+
 #ifndef _DEBUG
 	if(std::filesystem::exists(GetAddonFolder() / L"minidump.txt"))
 #endif

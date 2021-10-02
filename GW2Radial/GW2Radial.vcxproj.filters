@@ -348,6 +348,9 @@
     <ClInclude Include="include\Win.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Version.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="rt_rcdat.bin">
