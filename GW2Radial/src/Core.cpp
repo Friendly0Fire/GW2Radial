@@ -359,7 +359,8 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 				ImGui::TextWrapped("Welcome to GW2Radial! This small addon shows a convenient, customizable radial menu overlay to select a mount or novelty on the fly for Guild Wars 2: Path of Fire. "
 				"To begin, use the shortcut Shift+Alt+M to open the settings menu and take a moment to bind your keys. If you ever need further assistance, please visit "
 				"this project's website at");
-				
+
+				ImGui::Spacing();
 				ImGui::SetCursorPosX(windowSize.x * 0.1f);
 
 				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial", ImVec2(windowSize.x * 0.8f, ImGui::GetFontSize() * 1.3f)))
@@ -379,7 +380,8 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 				ImGui::TextWrapped("A new version of GW2Radial has been released! "
 					"Please follow the link below to look at the changes and download the update. "
 					"Remember that you can always disable this version check in the settings.");
-				
+
+				ImGui::Spacing();
 				ImGui::SetCursorPosX(windowSize.x * 0.1f);
 
 				if(ImGui::Button("https://github.com/Friendly0Fire/GW2Radial/releases/latest", ImVec2(windowSize.x * 0.8f, ImGui::GetFontSize() * 1.3f)))
