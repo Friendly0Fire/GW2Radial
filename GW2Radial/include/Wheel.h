@@ -139,6 +139,7 @@ protected:
 	ConfigurationOption<bool> showDelayTimerOption_;
 	ConfigurationOption<bool> centerCancelDelayedInputOption_;
 	ConfigurationOption<bool> enableConditionsOption_;
+	ConfigurationOption<bool> enableQueuingOption_;
 
 	ConfigurationOption<bool> visibleInMenuOption_;
 

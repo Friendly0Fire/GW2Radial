@@ -43,5 +43,10 @@ void ImGuiTitle(const char * text);
 float ImGuiHelpTooltipSize();
 void ImGuiHelpTooltip(const char* desc);
 
-void ImGuiDisable(float alpha = 0.6f);
-void ImGuiDisableEnd();
+class ImGuiDisabler
+{
+	static bool disabled_;
+public:
+	ImGuiDisabler(bool disable, float alpha = 0.6f);
+	~ImGuiDisabler();
+};

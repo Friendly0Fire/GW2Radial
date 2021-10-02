@@ -144,7 +144,13 @@ void ImGuiHelpTooltip(const char* desc)
     }
 }
 
-void ImGuiDisable(float alpha) {
+bool ImGuiDisabler::disabled_ = false;
+
+ImGuiDisabler::ImGuiDisabler(bool disable, float alpha) {
+	if (!disable || disabled_)
+		return;
+
+	disabled_ = true;
     ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * alpha);
 	auto disabledColor = ImGui::GetColorU32(ImGuiCol_TextDisabled);
@@ -153,8 +159,13 @@ void ImGuiDisable(float alpha) {
 	ImGui::PushStyleColor(ImGuiCol_Text, disabledColor);
 	ImGui::PushStyleColor(ImGuiCol_Button, disabledColor);
 }
-void ImGuiDisableEnd() {
+
+ImGuiDisabler::~ImGuiDisabler() {
+	if (!disabled_)
+		return;
+
 	ImGui::PopStyleColor(4);
     ImGui::PopStyleVar();
     ImGui::PopItemFlag();
+	disabled_ = false;
 }

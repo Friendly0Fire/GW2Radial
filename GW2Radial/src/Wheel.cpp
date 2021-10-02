@@ -38,7 +38,8 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	conditionalDelayDelayOption_("Delay before sending queued input", "min_delay_cond", "wheel_" + nickname_, 200),
 	showDelayTimerOption_("Show timer next to skill bar when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
     centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
-    enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false),
+	enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false),
+	enableQueuingOption_("Enable input queuing", "queuing_enabled", "wheel_" + nickname_, true),
     visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true),
 	opacityMultiplierOption_("Opacity multiplier", "opacity", "wheel_" + nickname_, 100)
 {
@@ -128,7 +129,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 	ImGui::TextUnformatted("Set the following to your in-game keybinds (F11, Control Options).");
 
-	for(auto& we : wheelElements_)
+	for (auto& we : wheelElements_)
 		ImGuiKeybindInput(we->keybind(), currentEditedKeybind, nullptr);
 
 	ImGuiTitle("Keybinds");
@@ -139,8 +140,10 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 	if (ImGuiConfigurationWrapper(&ImGui::Checkbox, enableConditionsOption_) && conditions_)
 		conditions_->enable(enableConditionsOption_.value());
 
-	if(conditions_ && enableConditionsOption_.value()) {
-	    ImGui::Indent();
+	{
+		ImGuiDisabler disable(!conditions_ || !enableConditionsOption_.value());
+
+		ImGui::Indent();
 
 		conditions_->DrawMenu();
 
@@ -167,31 +170,32 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
 	ImGuiHelpTooltip("Either show the radial menu over or under the game's UI.");
 
-	if(extraUI_ && extraUI_->display)
+	if (extraUI_ && extraUI_->display)
 		extraUI_->display();
 
 	ImGuiTitle("Interaction Options");
 
-	if(clickSelectOption_.value()) {
-		noHoldOption_.value() = false;
-		ImGuiDisable();
-	}
-	ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
-	ImGuiHelpTooltip("This option will activate whichever option is hovered first. Any key pressed to activate the menu can be released immediately without dismissing it. Mutually exclusive with \"click to select\".");
-	if(clickSelectOption_.value())
-		ImGuiDisableEnd();
-
-	if(noHoldOption_.value()) {
-		clickSelectOption_.value() = false;
-		ImGuiDisable();
-	}
-	ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
-	ImGuiHelpTooltip("This option will only activate an option when it is clicked on. Any key pressed to activate the menu can be released immediately without dismissing it. Mutually exclusive with \"hover to select\".");
-	if(noHoldOption_.value())
-		ImGuiDisableEnd();
-
-	if(displayDelayOption_.value() > 0)
 	{
+		ImGuiDisabler disable(clickSelectOption_.value());
+		if (clickSelectOption_.value())
+			noHoldOption_.value() = false;
+
+		ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
+		ImGuiHelpTooltip("This option will activate whichever option is hovered first. Any key pressed to activate the menu can be released immediately without dismissing it. Mutually exclusive with \"click to select\".");
+	}
+
+	{
+		ImGuiDisabler disable(noHoldOption_.value());
+		if (noHoldOption_.value())
+			clickSelectOption_.value() = false;
+
+		ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
+		ImGuiHelpTooltip("This option will only activate an option when it is clicked on. Any key pressed to activate the menu can be released immediately without dismissing it. Mutually exclusive with \"hover to select\".");
+	}
+
+	{
+		ImGuiDisabler disable(displayDelayOption_.value() == 0);
+
 		ImGui::Text((behaviorOnReleaseBeforeDelay_.displayName() + ":").c_str());
 
 		bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
@@ -219,10 +223,9 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 		}
 	}
 
-	if(noHoldOption_.value())
-		ImGuiDisable();
-
 	{
+		ImGuiDisabler disable(noHoldOption_.value());
+
 		ImGui::Text((centerBehaviorOption_.displayName() + ":").c_str());
 		ImGui::SameLine();
 
@@ -240,17 +243,14 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 			const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
 
 			std::vector<const char*> potentialNames(wheelElements_.size());
-				for (uint i = 0; i < wheelElements_.size(); i++)
-					potentialNames[i] = wheelElements_[i]->displayName().c_str();
+			for (uint i = 0; i < wheelElements_.size(); i++)
+				potentialNames[i] = wheelElements_[i]->displayName().c_str();
 
 			bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
 			ImGuiConfigurationWrapper(cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
 			ImGuiHelpTooltip("If the \"favorite\" option is selected, this determine what the favorite is.");
 		}
 	}
-
-	if(noHoldOption_.value())
-		ImGuiDisableEnd();
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
 	ImGuiHelpTooltip("Moves the cursor to the center of the screen when the \"show in center\" keybind is used.");
@@ -268,22 +268,29 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 		extraUI_->interaction();
 
 	ImGuiTitle("Queuing Options");
-	ImGui::PushItemWidth(0.33f * ImGui::GetWindowWidth());
-	ImGuiConfigurationWrapper(&ImGuiInputIntFormat, conditionalDelayDelayOption_, "%d ms", 1, 100, 0);
-	ImGuiHelpTooltip("Time, in milliseconds, to wait before sending a queued input once all conditions pass. Increasing this value can make activation more reliable.");
-	ImGuiConfigurationWrapper(&ImGuiInputIntFormat, maximumConditionalWaitTimeOption_, "%d s", 1, 10, 0);
-	ImGuiHelpTooltip("Maximum amount of time, in seconds, to wait with a queued input before dismissing it.");
-	ImGui::PopItemWidth();
 
-	if(noHoldOption_.value())
-		ImGuiDisable();
-	ImGuiConfigurationWrapper(&ImGui::Checkbox, centerCancelDelayedInputOption_);
-	ImGuiHelpTooltip("If the center region has no bound behavior, this option makes it cancel any queued input.");
-	if(noHoldOption_.value())
-		ImGuiDisableEnd();
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, enableQueuingOption_);
+	ImGuiHelpTooltip("If sending a keybind now would be ignored by the game (e.g., mounting while in combat), enabling queuing will \"queue\" the input until all necessary conditions are satisfied.");
 
-	if(extraUI_ && extraUI_->queuing)
-		extraUI_->queuing();
+	{
+		ImGuiDisabler disable(!enableQueuingOption_.value());
+
+		ImGui::PushItemWidth(0.33f * ImGui::GetWindowWidth());
+		ImGuiConfigurationWrapper(&ImGuiInputIntFormat, conditionalDelayDelayOption_, "%d ms", 1, 100, 0);
+		ImGuiHelpTooltip("Time, in milliseconds, to wait before sending a queued input once all conditions pass. Increasing this value can make activation more reliable.");
+		ImGuiConfigurationWrapper(&ImGuiInputIntFormat, maximumConditionalWaitTimeOption_, "%d s", 1, 10, 0);
+		ImGuiHelpTooltip("Maximum amount of time, in seconds, to wait with a queued input before dismissing it.");
+		ImGui::PopItemWidth();
+
+		{
+			ImGuiDisabler disable2(noHoldOption_.value());
+			ImGuiConfigurationWrapper(&ImGui::Checkbox, centerCancelDelayedInputOption_);
+			ImGuiHelpTooltip("If the center region has no bound behavior, this option makes it cancel any queued input.");
+		}
+
+		if (extraUI_ && extraUI_->queuing)
+			extraUI_->queuing();
+	}
 
 	ImGuiTitle("Visibility & Ordering");
 
@@ -432,6 +439,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 						break;
 					}
 				}
+				[[fallthrough]];
 				default:
 					hoveredFadeIns.push_back(0.f);
 					break;
@@ -862,9 +870,12 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) 
 		else
 			Log::i().Print(Severity::Debug, "Delaying keybind.");
 		Input::i().SendKeybind({}, mousePos);
-		conditionallyDelayed_ = we;
-		conditionallyDelayedTime_ = TimeInMilliseconds();
-		conditionallyDelayedTestPasses_ = false;
+		if (enableQueuingOption_.value())
+		{
+			conditionallyDelayed_ = we;
+			conditionallyDelayedTime_ = TimeInMilliseconds();
+			conditionallyDelayedTestPasses_ = false;
+		}
 	}
 	else {
 		if (mousePos)
