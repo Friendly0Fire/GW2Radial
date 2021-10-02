@@ -304,6 +304,9 @@ namespace GW2Radial
     void Input::BlockKeybinds(uint id) {
         uint old = blockKeybinds_;
         blockKeybinds_ |= id;
+        if (old == blockKeybinds_)
+            return;
+
         ClearActive();
         Log::i().Print(Severity::Info, "Blocking keybinds, flag {} -> {}", old, blockKeybinds_);
     }
@@ -311,6 +314,9 @@ namespace GW2Radial
     void Input::UnblockKeybinds(uint id) {
         uint old = blockKeybinds_;
         blockKeybinds_ &= ~id;
+        if (old == blockKeybinds_)
+            return;
+
         Log::i().Print(Severity::Info, "Unblocking keybinds, flag {} -> {}", old, blockKeybinds_);
     }
 

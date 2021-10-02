@@ -51,6 +51,11 @@ std::wstring GetScanCodeName(ScanCode scanCode) {
 	if (scanCode == ScanCode::NUMROW_0)
 		return L"0";
 
+	if (scanCode == ScanCode::METALEFT)
+		return L"LWIN";
+	if (scanCode == ScanCode::METARIGHT)
+		return L"RWIN";
+
 	if (IsUniversal(scanCode)) {
 		switch (scanCode) {
 		case ScanCode::SHIFT:
