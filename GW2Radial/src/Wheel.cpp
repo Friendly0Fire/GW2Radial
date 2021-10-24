@@ -858,9 +858,11 @@ void Wheel::DeactivateWheel()
 }
 
 void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) {
-	if (we == nullptr && mousePos) {
-		Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}).", cursorResetPosition_->x, cursorResetPosition_->y);
-		Input::i().SendKeybind({}, mousePos);
+	if (we == nullptr) {
+		if (mousePos) {
+			Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}).", cursorResetPosition_->x, cursorResetPosition_->y);
+			Input::i().SendKeybind({}, mousePos);
+		}
 		return;
 	}
 
