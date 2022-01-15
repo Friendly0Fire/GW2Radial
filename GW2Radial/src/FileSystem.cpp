@@ -56,7 +56,27 @@ namespace GW2Radial
         cref [base, sub] = SplitZipPath(p, &zip);
         if(!zip) return false;
 
-        return zip->GetEntry(sub.string()) != nullptr;
+        return zip->GetEntry(sub.lexically_normal().generic_string()) != nullptr;
+    }
+
+    std::vector<std::filesystem::path> FileSystem::IterateZipFolders(const std::filesystem::path& zipPath)
+    {
+        auto& fs = i();
+        ZipArchive::Ptr zip = fs.FindOrCache(zipPath);
+        if (!zip)
+            return {};
+
+        std::vector<std::filesystem::path> paths;
+        for (uint i = 0; i < zip->GetEntriesCount(); i++)
+        {
+            auto p = zip->GetEntry(i);
+            if (!p->IsDirectory())
+                continue;
+
+            paths.push_back((zipPath / p->GetFullName()).lexically_normal());
+        }
+
+        return paths;
     }
 
     std::vector<byte> FileSystem::ReadFile(std::istream& is)
@@ -99,7 +119,7 @@ namespace GW2Radial
         ZipArchive::Ptr zip;
         cref [base, sub] = SplitZipPath(p, &zip);
 
-        auto entry = zip->GetEntry(sub.string());
+        auto entry = zip->GetEntry(sub.generic_string());
         if(!entry) return {};
 
         auto* decompress = entry->GetDecompressionStream();

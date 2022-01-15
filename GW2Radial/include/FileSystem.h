@@ -25,5 +25,6 @@ namespace GW2Radial
         static std::vector<byte> ReadFile(const std::filesystem::path& p);
         static std::vector<byte> ReadFile(std::istream& is);
         static std::filesystem::path GetSystemPath(REFKNOWNFOLDERID id, DWORD flags = KF_FLAG_DEFAULT);
+        static std::vector<std::filesystem::path> IterateZipFolders(const std::filesystem::path& p);
     };
 }
