@@ -333,10 +333,10 @@ namespace GW2Radial
                 dbgkeys += L"SHIFT + ";
             if (notNone(downModifiers_ & Modifier::ALT))
                 dbgkeys += L"ALT + ";
-            if(ek.down)
+            if (ek.down)
                 dbgkeys += GetScanCodeName(ek.sc);
             else
-                dbgkeys[dbgkeys.size() - 3] = L'\0';
+                dbgkeys.resize(dbgkeys.size() - 3);
         }
         Log::i().Print(Severity::Debug, L"Triggering keybinds, active keys: {}", dbgkeys);
 #endif
