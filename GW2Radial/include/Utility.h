@@ -175,8 +175,8 @@ inline AddonFolders GetAddonFolders() {
 	if(FAILED(SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, nullptr, &myDocuments)))
 		myDocuments = nullptr;
 	
-	const auto programFilesLocation = exeFolder + L"\\addons\\gw2radial\\";
-	const auto myDocumentsLocation = std::wstring(NULL_COALESCE(myDocuments, L"")) + L"\\GUILD WARS 2\\addons\\gw2radial\\";
+	const auto programFilesLocation = std::filesystem::path(exeFolder + L"\\addons\\gw2radial\\");
+	const auto myDocumentsLocation = myDocuments ? std::filesystem::path(std::wstring(myDocuments) + L"\\GUILD WARS 2\\addons\\gw2radial\\") : std::filesystem::path();
 
 	return { programFilesLocation, myDocumentsLocation };
 }

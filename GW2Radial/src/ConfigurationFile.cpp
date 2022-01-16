@@ -91,11 +91,11 @@ std::tuple<bool /*exists*/, bool /*writable*/> ConfigurationFile::CheckFolder(co
 
 	bool exists = true, writable = true;
 
-	if(SHCreateDirectoryExW(nullptr, folder.c_str(), nullptr) == ERROR_ACCESS_DENIED)
-		writable = false;
+	if (filepath.empty() || !std::filesystem::exists(filepath))
+		writable = exists = false;
 
-	if(!std::filesystem::exists(filepath))
-		exists = false;
+	if(exists && SHCreateDirectoryExW(nullptr, folder.c_str(), nullptr) == ERROR_ACCESS_DENIED)
+		writable = false;
 
 	if(writable)
 	{
