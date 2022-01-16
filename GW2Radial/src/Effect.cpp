@@ -85,7 +85,10 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
     }
 
 #ifndef _DEBUG
-    CriticalMessageBox(L"Fatal error: shader compilation failed! Error code was 0x%X. Please report this to https://github.com/Friendly0Fire/GW2Radial/issues", hr);
+    if (hr == 0x88760b59)
+        CriticalMessageBox(L"Fatal error: outdated shader compiler. Please install Windows Update KB4019990 or upgrade to a more modern operating system.");
+    else
+        CriticalMessageBox(L"Fatal error: shader compilation failed! Error code was 0x%X. Please report this to https://github.com/Friendly0Fire/GW2Radial/issues", hr);
 #endif
 
     // Break to fix errors
