@@ -48,7 +48,7 @@ jobs:
             x64/Release/readme.md
       - name: Zip files for tag
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: papeloto/action-zip@v1
+        uses: vimtor/action-zip@v1
         with:
           files: x64/Release/gw2addon_gw2radial.dll x64/Release/readme.md
           dest: gw2radial.zip
