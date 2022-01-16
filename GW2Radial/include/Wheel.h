@@ -108,11 +108,12 @@ protected:
 		}
 	};
 
-	DelayTest aboveWater_, outOfCombat_;
+	DelayTest aboveWater_, outOfCombat_, custom_;
 
 	WheelElement* conditionallyDelayed_ = nullptr;
 	mstime conditionallyDelayedTime_ = 0;
 	bool conditionallyDelayedTestPasses_ = false;
+	bool conditionallyDelayedCustom_ = false;
 	mstime conditionallyDelayedPassesTime_ = 0;
 
 	ConfigurationOption<int> centerBehaviorOption_;

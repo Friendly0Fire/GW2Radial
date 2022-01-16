@@ -25,36 +25,71 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 {
 	struct MountExtraData : Wheel::ExtraData {
 	    ConfigurationOption<bool> enableUnderwaterSkimmer;
-		MountExtraData(ConfigurationOption<bool>&& eus) : enableUnderwaterSkimmer(std::move(eus)) {}
+		ConfigurationOption<int> dismountDelayOption;
+		ConfigurationOption<bool> quickDismountOption;
+		mstime dismountTriggerTime;
+		MountExtraData(ConfigurationOption<bool>&& eus,
+			ConfigurationOption<int>&& ddo,
+			ConfigurationOption<bool>&& qdo)
+			: enableUnderwaterSkimmer(std::move(eus)),
+			dismountDelayOption(std::move(ddo)),
+			quickDismountOption(std::move(qdo)),
+			dismountTriggerTime(0) {}
 	};
 
-	extraData_ = std::make_shared<MountExtraData>(ConfigurationOption<bool>("Enable underwater Skimmer", "underwater_skimmer", "wheel_" + nickname_, false));
+	extraData_ = std::make_shared<MountExtraData>(
+		ConfigurationOption<bool>("Enable underwater Skimmer", "underwater_skimmer", "wheel_" + nickname_, false),
+		ConfigurationOption<int>("Dismount delay", "dismount_delay", "wheel_" + nickname_, 0),
+		ConfigurationOption<bool>("Quick dismount", "quick_dismount", "wheel_" + nickname_, true)
+		);
 
 	extraUI_.emplace();
 	extraUI_->interaction = [this]() {
-		auto* extraData = static_cast<MountExtraData*>(extraData_.get());
+		MountExtraData* extraData = static_cast<MountExtraData*>(extraData_.get());
 	    if(ImGuiConfigurationWrapper(&ImGui::Checkbox, extraData->enableUnderwaterSkimmer))
 			aboveWater_.enabled = !extraData->enableUnderwaterSkimmer.value();
 		ImGuiHelpTooltip("This enables Skimmer auto-mounting to work underwater (in addition to on the water surface) in conjunction with the Skimming the Depths mastery.");
+
+		ImGuiConfigurationWrapper(&ImGui::Checkbox, extraData->quickDismountOption);
+		ImGuiHelpTooltip("If enabled, using any keybind while mounted will directly send a mount keybind to dismount without showing the radial menu.");
+		{
+			ImGuiDisabler disable(!extraData->quickDismountOption.value());
+			ImGuiConfigurationWrapper(&ImGui::SliderInt, extraData->dismountDelayOption, 0, 3000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
+			ImGuiHelpTooltip("Amount of time, in milliseconds, to wait between pressing the keybind and dismounting.");
+		}
 	};
 
 	aboveWater_.enabled = !static_cast<MountExtraData*>(extraData_.get())->enableUnderwaterSkimmer.value();
 	aboveWater_.canToggleOff = true;
 	outOfCombat_.enabled = true;
 	outOfCombat_.canToggleOff = true;
+	custom_.test = [this]()
+	{
+		return TimeInMilliseconds() < static_cast<MountExtraData*>(extraData_.get())->dismountTriggerTime;
+	};
+	custom_.enabled = true;
 
 	doBypassWheel_ = [this](WheelElement*& we) {
+		MountExtraData* data = static_cast<MountExtraData*>(extraData_.get());
 		cref mumble = MumbleLink::i();
-		if(mumble.isMounted()) {
-			if (previousUsed_ != nullptr) {
+		if(data->quickDismountOption.value() && mumble.isMounted()) {
+			if (previousUsed_ != nullptr)
 				we = previousUsed_;
+			else {
+				const auto& activeElems = GetActiveElements();
+				if (!activeElems.empty())
+					we = activeElems.front();
+			}
+
+			if (we) {
+				if (data->dismountDelayOption.value() > 0)
+					data->dismountTriggerTime = TimeInMilliseconds() + data->dismountDelayOption.value();
+				else
+					data->dismountTriggerTime = 0;
 				return true;
 			}
-			const auto& activeElems = GetActiveElements();
-			if(!activeElems.empty()) {
-		        we = activeElems.front();
-			    return we != nullptr;
-			}
+
+			return false;
 		}
 
 		if(mumble.isInWvW()) {

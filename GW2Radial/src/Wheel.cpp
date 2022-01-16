@@ -57,6 +57,7 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	aboveWater_.test = []() { return MumbleLink::i().isUnderwater(); };
 	aboveWater_.toggleOffTest = outOfCombat_.toggleOffTest = []() { return MumbleLink::i().isMounted(); };
 	outOfCombat_.test = []() { return MumbleLink::i().isInCombat(); };
+	custom_.test = custom_.toggleOffTest = []() { return false; };
 
 	backgroundTexture_ = CreateTextureFromResource(dev, Core::i().dllModule(), bgResourceId);
 	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i().dllModule(), wipeMaskResourceId);
@@ -322,26 +323,40 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 void Wheel::OnUpdate() {
 	if (conditionallyDelayed_) {
-		const auto currentTime = TimeInMilliseconds();
-		if(currentTime <= conditionallyDelayedTime_ + maximumConditionalWaitTimeOption_.value() * 1000ull) {
+		if (conditionallyDelayedCustom_) {
 			cref mumble = MumbleLink::i();
-		    if (mumble.gameHasFocus() && !mumble.isMapOpen()
-				&& aboveWater_.passes() && outOfCombat_.passes()) {
-				if (!conditionallyDelayedTestPasses_)
-					conditionallyDelayedPassesTime_ = currentTime;
-				else if(currentTime >= conditionallyDelayedPassesTime_ + conditionalDelayDelayOption_.value()) {
-					Input::i().SendKeybind(conditionallyDelayed_->keybind().keyCombo(), std::nullopt);
-					conditionallyDelayed_ = nullptr;
-					conditionallyDelayedTime_ = currentTime;
-					conditionallyDelayedTestPasses_ = false;
-				}
-				conditionallyDelayedTestPasses_ = true;
-		    } else
+			if (mumble.gameHasFocus() && !mumble.isMapOpen()
+				&& aboveWater_.passes() && outOfCombat_.passes() && custom_.passes()) {
+				Input::i().SendKeybind(conditionallyDelayed_->keybind().keyCombo(), std::nullopt);
+				conditionallyDelayed_ = nullptr;
+				conditionallyDelayedTime_ = TimeInMilliseconds();
+				conditionallyDelayedCustom_ = false;
 				conditionallyDelayedTestPasses_ = false;
+			}
 		} else {
-		    conditionallyDelayed_ = nullptr;
-			conditionallyDelayedTime_ = currentTime;
-			conditionallyDelayedTestPasses_ = false;
+			const auto currentTime = TimeInMilliseconds();
+			if (currentTime <= conditionallyDelayedTime_ + maximumConditionalWaitTimeOption_.value() * 1000ull) {
+				cref mumble = MumbleLink::i();
+				if (mumble.gameHasFocus() && !mumble.isMapOpen()
+					&& aboveWater_.passes() && outOfCombat_.passes() && custom_.passes()) {
+					if (!conditionallyDelayedTestPasses_)
+						conditionallyDelayedPassesTime_ = currentTime;
+					else if (currentTime >= conditionallyDelayedPassesTime_ + conditionalDelayDelayOption_.value()) {
+						Input::i().SendKeybind(conditionallyDelayed_->keybind().keyCombo(), std::nullopt);
+						conditionallyDelayed_ = nullptr;
+						conditionallyDelayedTime_ = currentTime;
+						conditionallyDelayedTestPasses_ = false;
+					}
+					conditionallyDelayedTestPasses_ = true;
+				}
+				else
+					conditionallyDelayedTestPasses_ = false;
+			}
+			else {
+				conditionallyDelayed_ = nullptr;
+				conditionallyDelayedTime_ = currentTime;
+				conditionallyDelayedTestPasses_ = false;
+			}
 		}
 	}
 }
@@ -351,6 +366,7 @@ void Wheel::OnMapChange(uint prevId, uint newId)
 	conditionallyDelayed_ = nullptr;
 	conditionallyDelayedTime_ = TimeInMilliseconds();
 	conditionallyDelayedTestPasses_ = false;
+	conditionallyDelayedCustom_ = false;
 }
 
 void Wheel::OnCharacterChange(const std::wstring& prevCharacterName, const std::wstring& newCharacterName)
@@ -358,6 +374,7 @@ void Wheel::OnCharacterChange(const std::wstring& prevCharacterName, const std::
 	conditionallyDelayed_ = nullptr;
 	conditionallyDelayedTime_ = TimeInMilliseconds();
 	conditionallyDelayedTestPasses_ = false;
+	conditionallyDelayedCustom_ = false;
 }
 
 
@@ -505,7 +522,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 			fx->End();
 		}
-	} else if(showDelayTimerOption_.value() && (conditionallyDelayed_ != nullptr || currentTime - conditionallyDelayedTime_ < 500)) {
+	} else if(showDelayTimerOption_.value() && !conditionallyDelayedCustom_ && (conditionallyDelayed_ != nullptr || currentTime - conditionallyDelayedTime_ < 500)) {
 		float dt = float(currentTime - conditionallyDelayedTime_) / 1000.f;
 		float absDt = dt;
 		float timeLeft = 0.f;
@@ -608,6 +625,7 @@ void Wheel::OnFocusLost()
 	conditionallyDelayed_ = nullptr;
 	conditionallyDelayedTime_ = TimeInMilliseconds();
 	conditionallyDelayedTestPasses_ = false;
+	conditionallyDelayedCustom_ = false;
 }
 
 void Wheel::Sort()
@@ -821,6 +839,7 @@ void Wheel::DeactivateWheel()
 	    conditionallyDelayed_ = nullptr;
 	    conditionallyDelayedTime_ = TimeInMilliseconds();
 		conditionallyDelayedTestPasses_ = false;
+		conditionallyDelayedCustom_ = false;
 
 		return;
 	}
@@ -866,14 +885,17 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) 
 		return;
 	}
 
-	if (aboveWater_.delayed() || outOfCombat_.delayed()) {
+	if (bool customDelay = custom_.delayed(); customDelay || aboveWater_.delayed() || outOfCombat_.delayed()) {
 		if (mousePos)
 			Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}) and delaying keybind.", cursorResetPosition_->x, cursorResetPosition_->y);
 		else
 			Log::i().Print(Severity::Debug, "Delaying keybind.");
 		Input::i().SendKeybind({}, mousePos);
-		if (enableQueuingOption_.value())
-		{
+		if (customDelay) {
+			conditionallyDelayed_ = we;
+			conditionallyDelayedCustom_ = true;
+		}
+		else if (enableQueuingOption_.value()) {
 			conditionallyDelayed_ = we;
 			conditionallyDelayedTime_ = TimeInMilliseconds();
 			conditionallyDelayedTestPasses_ = false;
