@@ -17,7 +17,7 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -31,6 +31,7 @@ jobs:
         with:
           arch: amd64
           toolset: 14.31
+          sdk: 10.0.22000.0
 
       - name: Generate version information
         run: powershell "${env:GITHUB_WORKSPACE}\Version.ps1" -ref "${{github.ref}}" -sha "${{github.sha}}"
