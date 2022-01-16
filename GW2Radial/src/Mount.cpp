@@ -27,20 +27,24 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 	    ConfigurationOption<bool> enableUnderwaterSkimmer;
 		ConfigurationOption<int> dismountDelayOption;
 		ConfigurationOption<bool> quickDismountOption;
+		ConfigurationOption<bool> quickWvWOption;
 		mstime dismountTriggerTime;
 		MountExtraData(ConfigurationOption<bool>&& eus,
 			ConfigurationOption<int>&& ddo,
-			ConfigurationOption<bool>&& qdo)
+			ConfigurationOption<bool>&& qdo,
+			ConfigurationOption<bool>&& qwvwo)
 			: enableUnderwaterSkimmer(std::move(eus)),
 			dismountDelayOption(std::move(ddo)),
 			quickDismountOption(std::move(qdo)),
+			quickWvWOption(std::move(qwvwo)),
 			dismountTriggerTime(0) {}
 	};
 
 	extraData_ = std::make_shared<MountExtraData>(
 		ConfigurationOption<bool>("Enable underwater Skimmer", "underwater_skimmer", "wheel_" + nickname_, false),
 		ConfigurationOption<int>("Dismount delay", "dismount_delay", "wheel_" + nickname_, 0),
-		ConfigurationOption<bool>("Quick dismount", "quick_dismount", "wheel_" + nickname_, true)
+		ConfigurationOption<bool>("Quick dismount", "quick_dismount", "wheel_" + nickname_, true),
+		ConfigurationOption<bool>("Quick Warclaw", "quick_wvw", "wheel_" + nickname_, true)
 		);
 
 	extraUI_.emplace();
@@ -49,6 +53,9 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 	    if(ImGuiConfigurationWrapper(&ImGui::Checkbox, extraData->enableUnderwaterSkimmer))
 			aboveWater_.enabled = !extraData->enableUnderwaterSkimmer.value();
 		ImGuiHelpTooltip("This enables Skimmer auto-mounting to work underwater (in addition to on the water surface) in conjunction with the Skimming the Depths mastery.");
+
+		ImGuiConfigurationWrapper(&ImGui::Checkbox, extraData->quickWvWOption);
+		ImGuiHelpTooltip("If enabled, using any keybind in WvW will mount the Warclaw without showing the radial menu.");
 
 		ImGuiConfigurationWrapper(&ImGui::Checkbox, extraData->quickDismountOption);
 		ImGuiHelpTooltip("If enabled, using any keybind while mounted will directly send a mount keybind to dismount without showing the radial menu.");
@@ -92,12 +99,12 @@ void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
 			return false;
 		}
 
-		if(mumble.isInWvW()) {
+		if(data->quickWvWOption.value() && mumble.isInWvW()) {
 		    we = wheelElements_[uint(MountType::WARCLAW) - uint(MountType::FIRST)].get();
 			return we != nullptr && we->isBound();
 		}
 
-		if(mumble.isSwimmingOnSurface() || mumble.isUnderwater()) {
+		if(!mumble.isInWvW() && (mumble.isSwimmingOnSurface() || mumble.isUnderwater() && data->enableUnderwaterSkimmer.value())) {
 		    we = wheelElements_[uint(MountType::SKIMMER) - uint(MountType::FIRST)].get();
 			return we != nullptr && we->isBound();
 		}
