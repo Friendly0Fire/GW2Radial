@@ -328,10 +328,7 @@ void Wheel::OnUpdate() {
 			if (mumble.gameHasFocus() && !mumble.isMapOpen()
 				&& aboveWater_.passes() && outOfCombat_.passes() && custom_.passes()) {
 				Input::i().SendKeybind(conditionallyDelayed_->keybind().keyCombo(), std::nullopt);
-				conditionallyDelayed_ = nullptr;
-				conditionallyDelayedTime_ = TimeInMilliseconds();
-				conditionallyDelayedCustom_ = false;
-				conditionallyDelayedTestPasses_ = false;
+				ResetConditionallyDelayed(false);
 			}
 		} else {
 			const auto currentTime = TimeInMilliseconds();
@@ -343,40 +340,28 @@ void Wheel::OnUpdate() {
 						conditionallyDelayedPassesTime_ = currentTime;
 					else if (currentTime >= conditionallyDelayedPassesTime_ + conditionalDelayDelayOption_.value()) {
 						Input::i().SendKeybind(conditionallyDelayed_->keybind().keyCombo(), std::nullopt);
-						conditionallyDelayed_ = nullptr;
-						conditionallyDelayedTime_ = currentTime;
-						conditionallyDelayedTestPasses_ = false;
+						ResetConditionallyDelayed(true, currentTime);
 					}
 					conditionallyDelayedTestPasses_ = true;
 				}
 				else
 					conditionallyDelayedTestPasses_ = false;
 			}
-			else {
-				conditionallyDelayed_ = nullptr;
-				conditionallyDelayedTime_ = currentTime;
-				conditionallyDelayedTestPasses_ = false;
-			}
+			else
+				ResetConditionallyDelayed(true, currentTime);
 		}
 	}
 }
 
 void Wheel::OnMapChange(uint prevId, uint newId)
 {
-	conditionallyDelayed_ = nullptr;
-	conditionallyDelayedTime_ = TimeInMilliseconds();
-	conditionallyDelayedTestPasses_ = false;
-	conditionallyDelayedCustom_ = false;
+	ResetConditionallyDelayed(false);
 }
 
 void Wheel::OnCharacterChange(const std::wstring& prevCharacterName, const std::wstring& newCharacterName)
 {
-	conditionallyDelayed_ = nullptr;
-	conditionallyDelayedTime_ = TimeInMilliseconds();
-	conditionallyDelayedTestPasses_ = false;
-	conditionallyDelayedCustom_ = false;
+	ResetConditionallyDelayed(false);
 }
-
 
 void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 {
@@ -522,7 +507,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 
 			fx->End();
 		}
-	} else if(showDelayTimerOption_.value() && !conditionallyDelayedCustom_ && (conditionallyDelayed_ != nullptr || currentTime - conditionallyDelayedTime_ < 500)) {
+	} else if(showDelayTimerOption_.value() && !conditionallyDelayedCustom_ && (conditionallyDelayed_ != nullptr || currentTime < conditionallyDelayedTime_ + conditionallyDelayedFadeOutTime)) {
 		float dt = float(currentTime - conditionallyDelayedTime_) / 1000.f;
 		float absDt = dt;
 		float timeLeft = 0.f;
@@ -836,11 +821,7 @@ void Wheel::DeactivateWheel()
 	resetCursorPositionToCenter_ = false;
 
 	if(currentHovered_ == nullptr && centerCancelDelayedInputOption_.value()) {
-	    conditionallyDelayed_ = nullptr;
-	    conditionallyDelayedTime_ = TimeInMilliseconds();
-		conditionallyDelayedTestPasses_ = false;
-		conditionallyDelayedCustom_ = false;
-
+		ResetConditionallyDelayed(true);
 		return;
 	}
 
@@ -912,5 +893,11 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) 
 	}
 }
 
-
+void Wheel::ResetConditionallyDelayed(bool withFadeOut, mstime currentTime)
+{
+	conditionallyDelayed_ = nullptr;
+	conditionallyDelayedTime_ = withFadeOut ? currentTime : currentTime - conditionallyDelayedFadeOutTime;
+	conditionallyDelayedTestPasses_ = false;
+	conditionallyDelayedCustom_ = false;
+}
 }

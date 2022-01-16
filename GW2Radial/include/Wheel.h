@@ -66,6 +66,8 @@ public:
 protected:
 	void Sort();
 
+	static const mstime conditionallyDelayedFadeOutTime = 500;
+
 	WheelElement* GetCenterHoveredElement();
 	WheelElement* GetFavorite(int favoriteId);
 	std::vector<WheelElement*> GetActiveElements(bool sorted = true);
@@ -75,6 +77,7 @@ protected:
 	void ActivateWheel(bool isMountOverlayLocked);
 	void DeactivateWheel();
 	void SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos);
+	void ResetConditionallyDelayed(bool withFadeOut, mstime currentTime = TimeInMilliseconds());
 	std::function<bool(WheelElement*&)> doBypassWheel_ = [](auto) { return false; };
 
 	std::string nickname_, displayName_;
