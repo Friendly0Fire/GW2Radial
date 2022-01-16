@@ -884,6 +884,8 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) 
 			Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}) and sending keybind.", cursorResetPosition_->x, cursorResetPosition_->y);
 		else
 			Log::i().Print(Severity::Debug, "Sending keybind.");
+
+		Input::i().KeyUpActive();
 		Input::i().SendKeybind(we->keybind().keyCombo(), mousePos);
 	}
 }

@@ -92,6 +92,7 @@ public:
 	void OnFocus();
 	void OnUpdate();
 
+	void KeyUpActive();
 	void ClearActive();
 	void BlockKeybinds(uint id);
 	void UnblockKeybinds(uint id);

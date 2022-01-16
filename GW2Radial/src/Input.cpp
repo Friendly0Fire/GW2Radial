@@ -295,6 +295,14 @@ namespace GW2Radial
         SendQueuedInputs();
     }
 
+    void Input::KeyUpActive()
+    {
+        if (!activeKeybind_)
+            return;
+
+        SendKeybind(activeKeybind_->keyCombo(), std::nullopt, KeybindAction::UP);
+    }
+
     void Input::ClearActive() {
         downModifiers_ = Modifier::NONE;
         activeKeybind_ = nullptr;
