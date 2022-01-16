@@ -599,6 +599,9 @@ namespace GW2Radial
 
     void Input::UnregisterKeybind(ActivationKeybind* kb)
     {
+        if (activeKeybind_ == kb)
+            activeKeybind_ = nullptr;
+
         for (auto& [kc, vec] : keybinds_)
         {
             auto it = std::remove(vec.begin(), vec.end(), kb);
