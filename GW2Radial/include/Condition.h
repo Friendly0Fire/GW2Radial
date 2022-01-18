@@ -25,6 +25,7 @@ struct ConditionContext {
     bool inWvW;
     bool underwater;
     MumbleLink::Profession profession;
+    MumbleLink::EliteSpec elitespec;
     std::wstring character;
 
     void Populate();
@@ -124,6 +125,35 @@ public:
     void Load(const char* category) override {
         Condition::Load(category);
         profession_ = static_cast<MumbleLink::Profession>(ConfigurationFile::i().ini().GetLongValue(category, paramName("id").c_str(), 0));
+    }
+};
+
+class IsEliteSpecCondition final : public Condition {
+public:
+    using Condition::Condition;
+    inline static const char* Nickname = "elitespec";
+
+private:
+    MumbleLink::EliteSpec elitespec_;
+
+    [[nodiscard]] bool test(const ConditionContext& cc) const override { return cc.elitespec == elitespec_; }
+    [[nodiscard]] std::string nickname() const override { return Nickname; }
+    [[nodiscard]] bool DrawInnerMenu() override;
+
+public:
+    [[nodiscard]] MumbleLink::EliteSpec elitespec() const { return elitespec_; }
+    void elitespec(MumbleLink::EliteSpec id) { elitespec_ = id; }
+    [[nodiscard]] bool operator==(const IsEliteSpecCondition& other) const {
+        return elitespec_ == other.elitespec_;
+    }
+
+    void Save(const char* category) const override {
+        Condition::Save(category);
+        ConfigurationFile::i().ini().SetLongValue(category, paramName("id").c_str(), static_cast<long>(elitespec_));
+    }
+    void Load(const char* category) override {
+        Condition::Load(category);
+        elitespec_ = static_cast<MumbleLink::EliteSpec>(ConfigurationFile::i().ini().GetLongValue(category, paramName("id").c_str(), 0));
     }
 };
 

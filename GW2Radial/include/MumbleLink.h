@@ -25,6 +25,37 @@ public:
 		REVENANT = 9
 	};
 
+	enum class EliteSpec : uint8_t {
+		NONE = 0,
+		BERSERKER = 1,
+		BLADESWORN = 2,
+		CATALYST = 3,
+		CHRONOMANCER = 4,
+		DAREDEVIL = 5,
+		DEADEYE = 6,
+		DRAGONHUNTER = 7,
+		DRUID = 8,
+		FIREBRAND = 9,
+		HARBINGER = 10,
+		HERALD = 11,
+		HOLOSMITH = 12,
+		MECHANIST = 13,
+		MIRAGE = 14,
+		REAPER = 15,
+		RENEGADE = 16,
+		SCOURGE = 17,
+		SCRAPPER = 18,
+		SOULBEAST = 19,
+		SPECTER = 20,
+		SPELLBREAKER = 21,
+		TEMPEST = 22,
+		UNTAMED = 23,
+		VINDICATOR = 24,
+		VIRTUOSO = 25,
+		WEAVER = 26,
+		WILLBENDER = 27
+	};
+
 	enum class Race : uint8_t {
 	    ASURA = 0,
 		CHARR = 1,
@@ -63,9 +94,7 @@ public:
 	    return identity_.profession;
     }
 
-	[[nodiscard]] uint8_t characterSpecialization() const {
-	    return identity_.specialization;
-    }
+	[[nodiscard]] EliteSpec characterSpecialization() const;
 
     [[nodiscard]] Race characterRace() const {
 	    return identity_.race;
@@ -91,7 +120,7 @@ protected:
 	struct Identity
 	{
 	    Profession profession = Profession::NONE;
-		uint8_t specialization = 0;
+		EliteSpec specialization = EliteSpec::NONE;
 		Race race = Race::ASURA;
 		bool commander = false;
 		float fov = 0.f;

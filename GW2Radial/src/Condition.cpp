@@ -17,6 +17,7 @@ void ConditionContext::Populate() {
     underwater = ml.isUnderwater();
     profession = ml.characterProfession();
     character = std::wstring(ml.characterName());
+    elitespec = ml.characterSpecialization();
 }
 
 template<typename T>
@@ -38,6 +39,23 @@ bool IsProfessionCondition::DrawInnerMenu() {
     
     if(ImGui::Combo(suffix.c_str(), &comboVal, items)) {
         profession_ = static_cast<MumbleLink::Profession>(comboVal + 1);
+        ImGui::PopItemWidth();
+        return true;
+    }
+
+    ImGui::PopItemWidth();
+    return false;
+}
+
+bool IsEliteSpecCondition::DrawInnerMenu() {
+    auto suffix = "##condition_elitespec_" + std::to_string(id_);
+    ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
+
+    int comboVal = static_cast<int>(elitespec_) - 1;
+    const char* items = "Berserker\0Bladesworn\0Catalyst\0Chronomancer\0Daredevil\0Deadeye\0Dragonhunter\0Druid\0Firebrand\0Harbinger\0Herald\0Holosmith\0Mechanist\0Mirage\0Reaper\0Renegade\0Scourge\0Scrapper\0Soulbeast\0Specter\0Spellbreaker\0Tempest\0Untamed\0Vindicator\0Virtuoso\0Weaver\0Willbender\0";
+
+    if (ImGui::Combo(suffix.c_str(), &comboVal, items)) {
+        elitespec_ = static_cast<MumbleLink::EliteSpec>(comboVal + 1);
         ImGui::PopItemWidth();
         return true;
     }
@@ -95,6 +113,7 @@ void ConditionSet::Load() {
             MakeConditionIf<IsWvWCondition>(itemElems[2], id, cond)        ||
             MakeConditionIf<IsUnderwaterCondition>(itemElems[2], id, cond) ||
             MakeConditionIf<IsProfessionCondition>(itemElems[2], id, cond) ||
+            MakeConditionIf<IsEliteSpecCondition>(itemElems[2], id, cond)  ||
             MakeConditionIf<IsCharacterCondition>(itemElems[2], id, cond);
 
             cond->Load(c);
@@ -241,6 +260,8 @@ std::unique_ptr<Condition> ConditionSet::CreateCondition(uint id) const {
     case 3:
         return std::make_unique<IsProfessionCondition>(id);
     case 4:
+        return std::make_unique<IsEliteSpecCondition>(id);
+    case 5:
         return std::make_unique<IsCharacterCondition>(id);
     default:
         return nullptr;
@@ -305,7 +326,7 @@ void ConditionSet::DrawMenu() {
     
     ImGui::Spacing(); ImGui::Spacing();
 	ImGui::Separator();
-    const char* items = "In combat\0In WvW\0Underwater\0Is profession\0Is character\0";
+    const char* items = "In combat\0In WvW\0Underwater\0Is profession\0Is elite spec\0Is character\0";
     ImGui::Combo("##NewConditionCombo", &newConditionComboSel_, items);
 
     ImGui::SameLine();

@@ -96,7 +96,7 @@ void MumbleLink::OnUpdate()
 		if(f != json.end())
 			value = *f;
 	};
-	
+
 	updateIfExists(identity_.commander, "commander");
 	updateIfExists(identity_.fov, "fov");
 	updateIfExists(identity_.uiScale, "uisz");
@@ -142,6 +142,72 @@ bool MumbleLink::isUnderwater() const {
 		return false;
 
     return linkedMemory_->fAvatarPosition.y < MinSurfaceThreshold;
+}
+
+MumbleLink::EliteSpec MumbleLink::characterSpecialization() const
+{
+	enum class AnetEliteSpec : uint8_t {
+		NONE = 0,
+		DRUID = 5,
+		DAREDEVIL = 7,
+		BERSERKER = 18,
+		DRAGONHUNTER = 27,
+		REAPER = 34,
+		CHRONOMANCER = 40,
+		SCRAPPER = 43,
+		TEMPEST = 48,
+		HERALD = 52,
+		SOULBEAST = 55,
+		WEAVER = 56,
+		HOLOSMITH = 57,
+		DEADEYE = 58,
+		MIRAGE = 59,
+		SCOURGE = 60,
+		SPELLBREAKER = 61,
+		FIREBRAND = 62,
+		RENEGADE = 63,
+		HARBINGER = 64,
+		WILLBENDER = 65,
+		VIRTUOSO = 66,
+		CATALYST = 67,
+		BLADESWORN = 68,
+		VINDICATOR = 69,
+		MECHANIST = 70,
+		SPECTER = 71,
+		UNTAMED = 72
+	};
+
+	switch (AnetEliteSpec(identity_.specialization))
+	{
+	default: return EliteSpec::NONE;
+	case AnetEliteSpec::DRUID : return EliteSpec::DRUID;
+	case AnetEliteSpec::DAREDEVIL : return EliteSpec::DAREDEVIL;
+	case AnetEliteSpec::BERSERKER : return EliteSpec::BERSERKER;
+	case AnetEliteSpec::DRAGONHUNTER : return EliteSpec::DRAGONHUNTER;
+	case AnetEliteSpec::REAPER : return EliteSpec::REAPER;
+	case AnetEliteSpec::CHRONOMANCER : return EliteSpec::CHRONOMANCER;
+	case AnetEliteSpec::SCRAPPER : return EliteSpec::SCRAPPER;
+	case AnetEliteSpec::TEMPEST : return EliteSpec::TEMPEST;
+	case AnetEliteSpec::HERALD : return EliteSpec::HERALD;
+	case AnetEliteSpec::SOULBEAST : return EliteSpec::SOULBEAST;
+	case AnetEliteSpec::WEAVER : return EliteSpec::WEAVER;
+	case AnetEliteSpec::HOLOSMITH : return EliteSpec::HOLOSMITH;
+	case AnetEliteSpec::DEADEYE : return EliteSpec::DEADEYE;
+	case AnetEliteSpec::MIRAGE : return EliteSpec::MIRAGE;
+	case AnetEliteSpec::SCOURGE : return EliteSpec::SCOURGE;
+	case AnetEliteSpec::SPELLBREAKER : return EliteSpec::SPELLBREAKER;
+	case AnetEliteSpec::FIREBRAND : return EliteSpec::FIREBRAND;
+	case AnetEliteSpec::RENEGADE : return EliteSpec::RENEGADE;
+	case AnetEliteSpec::HARBINGER : return EliteSpec::HARBINGER;
+	case AnetEliteSpec::WILLBENDER : return EliteSpec::WILLBENDER;
+	case AnetEliteSpec::VIRTUOSO : return EliteSpec::VIRTUOSO;
+	case AnetEliteSpec::CATALYST : return EliteSpec::CATALYST;
+	case AnetEliteSpec::BLADESWORN : return EliteSpec::BLADESWORN;
+	case AnetEliteSpec::VINDICATOR : return EliteSpec::VINDICATOR;
+	case AnetEliteSpec::MECHANIST : return EliteSpec::MECHANIST;
+	case AnetEliteSpec::SPECTER : return EliteSpec::SPECTER;
+	case AnetEliteSpec::UNTAMED : return EliteSpec::UNTAMED;
+	}
 }
 
 
