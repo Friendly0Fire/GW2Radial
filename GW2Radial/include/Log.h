@@ -7,6 +7,7 @@
 
 #include <Win.h>
 #include <Singleton.h>
+#include <mutex>
 
 namespace GW2Radial
 {
@@ -78,6 +79,7 @@ private:
         std::string message;
     };
     std::deque<Line> lines_;
+    std::mutex linesMutex_;
 };
 
 }

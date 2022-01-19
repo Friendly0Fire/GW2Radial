@@ -26,8 +26,10 @@ void Log::Draw()
         return;
     }
 
-    if (ImGui::Button("Clear"))
+    if (ImGui::Button("Clear")) {
+        std::lock_guard guard{ linesMutex_ };
         lines_.clear();
+    }
     ImGui::SameLine();
 
     bool scrollDown = false;
@@ -63,50 +65,54 @@ void Log::Draw()
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
     ImGui::PushFont(Core::i().fontMono());
 
-    int filtered_size = lines_.size();
-    if ((filter_ & uint8_t(Severity::MaxVal)) != uint8_t(Severity::MaxVal)) {
-        for (cref l : lines_)
-            if ((uint8_t(l.sev) & filter_) == 0)
-                filtered_size--;
-    }
-
-    if (filtered_size > 0) {
-        ImGuiListClipper clipper;
-        clipper.Begin(filtered_size);
-        while (clipper.Step()) {
-            int offset = 0;
-            for (int line_no = 0; line_no < clipper.DisplayEnd; )
-            {
-                cref l = lines_[line_no + offset];
-                if ((uint8_t(l.sev) & filter_) == 0) {
-                    offset++;
-                    continue;
-                }
-
-                line_no++;
-                if (clipper.DisplayStart >= line_no)
-                    continue;
-
-                uint32_t col = (line_no & 1) == 0 ? 0xFFFFFFFF : 0xFFDDDDDD;
-
-                ImGui::PushID(line_no);
-
-                ImGui::PushStyleColor(ImGuiCol_Text, col);
-                ImGui::TextUnformatted(l.time.c_str());
-                ImGui::SameLine();
-
-                ImGui::PushStyleColor(ImGuiCol_Text, ToColor(l.sev));
-                ImGui::TextUnformatted(ToString(l.sev));
-                ImGui::SameLine();
-
-                ImGui::PushStyleColor(ImGuiCol_Text, col);
-                ImGui::TextUnformatted(l.message.c_str());
-
-                ImGui::PopStyleColor(3);
-                ImGui::PopID();
-            }
+    if(!lines_.empty())
+    {
+        std::lock_guard guard{ linesMutex_ };
+        int filtered_size = lines_.size();
+        if ((filter_ & uint8_t(Severity::MaxVal)) != uint8_t(Severity::MaxVal)) {
+            for (cref l : lines_)
+                if ((uint8_t(l.sev) & filter_) == 0)
+                    filtered_size--;
         }
-        clipper.End();
+
+        if (filtered_size > 0) {
+            ImGuiListClipper clipper;
+            clipper.Begin(filtered_size);
+            while (clipper.Step()) {
+                int offset = 0;
+                for (int line_no = 0; line_no < clipper.DisplayEnd; )
+                {
+                    cref l = lines_[line_no + offset];
+                    if ((uint8_t(l.sev) & filter_) == 0) {
+                        offset++;
+                        continue;
+                    }
+
+                    line_no++;
+                    if (clipper.DisplayStart >= line_no)
+                        continue;
+
+                    uint32_t col = (line_no & 1) == 0 ? 0xFFFFFFFF : 0xFFDDDDDD;
+
+                    ImGui::PushID(line_no);
+
+                    ImGui::PushStyleColor(ImGuiCol_Text, col);
+                    ImGui::TextUnformatted(l.time.c_str());
+                    ImGui::SameLine();
+
+                    ImGui::PushStyleColor(ImGuiCol_Text, ToColor(l.sev));
+                    ImGui::TextUnformatted(ToString(l.sev));
+                    ImGui::SameLine();
+
+                    ImGui::PushStyleColor(ImGuiCol_Text, col);
+                    ImGui::TextUnformatted(l.message.c_str());
+
+                    ImGui::PopStyleColor(3);
+                    ImGui::PopID();
+                }
+            }
+            clipper.End();
+        }
     }
 
     ImGui::PopFont();
@@ -121,6 +127,8 @@ void Log::Draw()
 
 void Log::PrintInternal(Severity sev, const std::string& line)
 {
+    std::lock_guard guard{ linesMutex_ };
+
     {
         auto ts = ToString(Timestamp::clock::now());
         std::list<std::string> lines;
@@ -128,6 +136,7 @@ void Log::PrintInternal(Severity sev, const std::string& line)
         for(auto& l : lines)
             lines_.push_back({ sev, ts, l });
     }
+
     while (lines_.size() > maxLines_)
         lines_.pop_front();
 
