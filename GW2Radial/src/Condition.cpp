@@ -51,11 +51,11 @@ bool IsEliteSpecCondition::DrawInnerMenu() {
     auto suffix = "##condition_elitespec_" + std::to_string(id_);
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
 
-    int comboVal = static_cast<int>(elitespec_) - 1;
-    const char* items = "Berserker\0Bladesworn\0Catalyst\0Chronomancer\0Daredevil\0Deadeye\0Dragonhunter\0Druid\0Firebrand\0Harbinger\0Herald\0Holosmith\0Mechanist\0Mirage\0Reaper\0Renegade\0Scourge\0Scrapper\0Soulbeast\0Specter\0Spellbreaker\0Tempest\0Untamed\0Vindicator\0Virtuoso\0Weaver\0Willbender\0";
+    int comboVal = static_cast<int>(elitespec_);
+    const char* items = "No Elite\0Berserker\0Bladesworn\0Catalyst\0Chronomancer\0Daredevil\0Deadeye\0Dragonhunter\0Druid\0Firebrand\0Harbinger\0Herald\0Holosmith\0Mechanist\0Mirage\0Reaper\0Renegade\0Scourge\0Scrapper\0Soulbeast\0Specter\0Spellbreaker\0Tempest\0Untamed\0Vindicator\0Virtuoso\0Weaver\0Willbender\0";
 
     if (ImGui::Combo(suffix.c_str(), &comboVal, items)) {
-        elitespec_ = static_cast<MumbleLink::EliteSpec>(comboVal + 1);
+        elitespec_ = static_cast<MumbleLink::EliteSpec>(comboVal);
         ImGui::PopItemWidth();
         return true;
     }
