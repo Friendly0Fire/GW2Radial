@@ -703,6 +703,7 @@ PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
 	else {
 		WheelElement* bypassElement = nullptr;
 		if (activated && doBypassWheel_(bypassElement) && !waitingForBypassComplete_) {
+			previousUsed_ = bypassElement;
 			isVisible_ = false;
 			waitingForBypassComplete_ = true;
 			SendKeybindOrDelay(bypassElement, std::nullopt);
