@@ -1,3 +1,5 @@
+name: Issues Management
+
 on:
   issues:
     types: [opened, edited]
