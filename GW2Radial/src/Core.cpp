@@ -35,7 +35,7 @@ void Core::Init(HMODULE dll)
 	Log::i().Print(Severity::Info, "This is GW2Radial {}", GW2RADIAL_VER);
 
 #ifndef _DEBUG
-	if(std::filesystem::exists(GetAddonFolder() / L"minidump.txt"))
+	if(auto addonFolder = GetAddonFolder(); addonFolder && std::filesystem::exists(*addonFolder / L"minidump.txt"))
 #endif
 	{
         // Install our own exception handler to automatically log minidumps.
