@@ -125,6 +125,62 @@ void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint b
     surf2->UnlockRect();
 }
 
+std::filesystem::path GetGameFolder()
+{
+    wchar_t exeFullPath[MAX_PATH];
+    GetModuleFileNameW(nullptr, exeFullPath, MAX_PATH);
+    std::wstring exeFolder;
+    SplitFilename(exeFullPath, &exeFolder, nullptr);
+
+    return exeFolder;
+}
+
+std::optional<std::filesystem::path> GetDocumentsFolder()
+{
+    wchar_t* myDocuments;
+    if (FAILED(SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, nullptr, &myDocuments)))
+        return std::nullopt;
+
+    std::filesystem::path documentsGW2 = myDocuments;
+    documentsGW2 /= L"GUILD WARS 2";
+
+    if (std::filesystem::is_directory(documentsGW2))
+        return documentsGW2;
+
+    return std::nullopt;
+}
+
+std::optional<std::filesystem::path> GetAddonFolder()
+{
+    auto folder = (GetGameFolder() / "addons/gw2radial").make_preferred();
+
+    if (std::filesystem::is_directory(folder))
+        return folder;
+
+    if (SUCCEEDED(SHCreateDirectoryExW(nullptr, folder.c_str(), nullptr)))
+        return folder;
+
+    Log::i().Print(Severity::Warn, L"Could not open or create configuration folder '{}'.", folder.wstring());
+
+    auto docs = GetDocumentsFolder();
+    if (!docs) {
+        Log::i().Print(Severity::Error, L"Could not locate Documents folder (fallback).");
+        return std::nullopt;
+    }
+
+    folder = (*docs / "addons/gw2radial").make_preferred();
+
+    if (std::filesystem::is_directory(folder))
+        return folder;
+
+    if (SUCCEEDED(SHCreateDirectoryExW(nullptr, folder.c_str(), nullptr)))
+        return folder;
+
+    Log::i().Print(Severity::Error, L"Could not open or create configuration folder '{}'.", folder.wstring());
+
+    return std::nullopt;
+}
+
 std::span<const wchar_t*> GetCommandLineArgs() {
     auto cmdLine = GetCommandLineW();
     int num = 0;

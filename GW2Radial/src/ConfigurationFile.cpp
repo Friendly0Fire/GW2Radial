@@ -19,34 +19,42 @@ ConfigurationFile::ConfigurationFile()
 
 void ConfigurationFile::Reload()
 {
-	auto folders = GetAddonFolders();
-	auto [pfExists, pfWritable] = CheckFolder(folders.programFiles);
-	auto [mdExists, mdWritable] = CheckFolder(folders.myDocuments);
-	
-	ini_.SetUnicode();
-	if(pfExists)
+	auto folder = GetAddonFolder();
+	if (!folder)
 	{
-		ini_.LoadFile((folders.programFiles / g_configName).c_str());
-		LoadImGuiSettings(folders.programFiles / g_imguiConfigName);
-	}
-	else if(mdExists)
-	{
-		ini_.LoadFile((folders.myDocuments / g_configName).c_str());
-		LoadImGuiSettings(folders.myDocuments / g_imguiConfigName);
+		folder_ = std::nullopt;
+		return;
 	}
 
-	if(pfWritable)
-		folder_ = folders.programFiles;
-	else
-		folder_ = folders.myDocuments;
+	FILE* fp = nullptr;
+	if (_wfopen_s(&fp, (*folder / g_configName).c_str(), L"ab") != 0)
+	{
+		Log::i().Print(Severity::Error, L"Could write to config file '{}'.", (*folder / g_configName).wstring());
+		folder_ = std::nullopt;
+		return;
+	}
+	else if (fp)
+		fclose(fp);
 	
-	location_ = folder_ + g_configName;
-	imguiLocation_ = folder_ + g_imguiConfigName;
+	ini_.SetUnicode();
+	ini_.LoadFile((*folder / g_configName).c_str());
+	LoadImGuiSettings(*folder / g_imguiConfigName);
+	folder_ = folder;
+
+	Log::i().Print(Severity::Info, L"Config folder is now '{}'.", folder_->wstring());
 }
 
 void ConfigurationFile::Save()
 {
-	const auto r = ini_.SaveFile(location_.c_str());
+	if (!folder_)
+	{
+		const auto prevSaveError = lastSaveError_;
+		lastSaveError_ = "No configuration folder could be located.";
+		lastSaveErrorChanged_ |= prevSaveError != lastSaveError_;
+		return;
+	}
+
+	const auto r = ini_.SaveFile((*folder_ / g_configName).c_str());
 
 	if (r < 0)
 	{
@@ -82,31 +90,8 @@ void ConfigurationFile::Save()
 
 void ConfigurationFile::OnUpdate() const
 {
-	SaveImGuiSettings(imguiLocation_);
-}
-
-std::tuple<bool /*exists*/, bool /*writable*/> ConfigurationFile::CheckFolder(const std::filesystem::path& folder)
-{
-	const auto filepath = folder / g_configName;
-
-	bool exists = true, writable = true;
-
-	if (filepath.empty() || !std::filesystem::exists(filepath))
-		writable = exists = false;
-
-	if(exists && SHCreateDirectoryExW(nullptr, folder.c_str(), nullptr) == ERROR_ACCESS_DENIED)
-		writable = false;
-
-	if(writable)
-	{
-		FILE *fp = nullptr;
-		if(_wfopen_s(&fp, filepath.c_str(), L"ab") != 0)
-			writable = false;
-		else if(fp)
-			fclose(fp);
-	}
-
-	return { exists, writable };
+	if(folder_)
+		SaveImGuiSettings(*folder_ / g_imguiConfigName);
 }
 
 void ConfigurationFile::LoadImGuiSettings(const std::wstring & location)

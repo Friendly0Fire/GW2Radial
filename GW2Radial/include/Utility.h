@@ -161,36 +161,9 @@ constexpr uint operator "" _len(const char*, size_t len) {
     return uint(len);
 }
 
-struct AddonFolders {
-    std::filesystem::path programFiles, myDocuments;
-};
-
-inline AddonFolders GetAddonFolders() {
-	wchar_t exeFullPath[MAX_PATH];
-	GetModuleFileNameW(nullptr, exeFullPath, MAX_PATH);
-	std::wstring exeFolder;
-	SplitFilename(exeFullPath, &exeFolder, nullptr);
-
-	wchar_t* myDocuments;
-	if(FAILED(SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, nullptr, &myDocuments)))
-		myDocuments = nullptr;
-	
-	const auto programFilesLocation = std::filesystem::path(exeFolder + L"\\addons\\gw2radial\\");
-	const auto myDocumentsLocation = myDocuments ? std::filesystem::path(std::wstring(myDocuments) + L"\\GUILD WARS 2\\addons\\gw2radial\\") : std::filesystem::path();
-
-	return { programFilesLocation, myDocumentsLocation };
-}
-
-inline std::filesystem::path GetAddonFolder() {
-	auto folders = GetAddonFolders();
-
-	if(std::filesystem::exists(folders.programFiles))
-		return folders.programFiles;
-	else if(std::filesystem::exists(folders.myDocuments))
-		return folders.myDocuments;
-	else
-		return {};
-}
+std::filesystem::path GetGameFolder();
+std::optional<std::filesystem::path> GetDocumentsFolder();
+std::optional<std::filesystem::path> GetAddonFolder();
 
 template<typename T>
 T safe_toupper(T c) {

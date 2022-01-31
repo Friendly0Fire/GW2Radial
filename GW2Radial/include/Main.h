@@ -8,11 +8,13 @@
 #include <wrl.h>
 #include <d3d9.h>
 #include <fstream>
+#include <filesystem>
 
 #include <Resource.h>
 #include <Log.h>
 
 #define NULL_COALESCE(a, b) ((a) != nullptr ? (a) : (b))
+#define OPT_COALESCE(a, b) ((a) ? (a) : (b))
 #define SQUARE(x) ((x) * (x))
 
 template <typename... Args>

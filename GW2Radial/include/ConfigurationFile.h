@@ -21,16 +21,14 @@ public:
 
 	CSimpleIniA& ini() { return ini_; }
 
-	const std::wstring& folder() const { return folder_; }
+	const auto& folder() const { return folder_; }
 
 protected:
-	static std::tuple<bool /*exists*/, bool /*writable*/> CheckFolder(const std::filesystem::path& folder);
 	static void LoadImGuiSettings(const std::wstring& location);
 	static void SaveImGuiSettings(const std::wstring& location);
 
 	CSimpleIniA ini_;
-	std::wstring folder_;
-	std::wstring location_, imguiLocation_;
+	std::optional<std::filesystem::path> folder_;
 
 	bool lastSaveErrorChanged_ = false;
 	std::string lastSaveError_;

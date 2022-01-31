@@ -271,38 +271,43 @@ void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
 		customWheels_.clear();
 	}
 
-	cref folderBase = ConfigurationFile::i().folder() + L"custom\\";
-	if(std::filesystem::exists(folderBase))
+	auto folderBaseOpt = ConfigurationFile::i().folder();
+	if (folderBaseOpt)
 	{
-		auto addWheel = [&](const std::filesystem::path& configFile)
+		auto folderBase = *folderBaseOpt / L"custom";
+
+		if (std::filesystem::exists(folderBase))
 		{
-			auto wheel = BuildWheel(configFile, dev);
-			if (wheel)
+			auto addWheel = [&](const std::filesystem::path& configFile)
 			{
-				wheels_.push_back(std::move(wheel));
-				customWheels_.push_back(wheels_.back().get());
-			}
-		};
-
-	    for(cref entry : std::filesystem::directory_iterator(folderBase))
-	    {
-	        if(!entry.is_directory() && entry.path().extension() != L".zip")
-			    continue;
-
-		    std::filesystem::path configFile = entry.path() / L"config.ini";
-			if (FileSystem::Exists(configFile))
-				addWheel(configFile);
-			else if (auto dirs = FileSystem::IterateZipFolders(entry.path()); !dirs.empty())
-			{
-				for (cref subdir : dirs)
+				auto wheel = BuildWheel(configFile, dev);
+				if (wheel)
 				{
-					std::filesystem::path subdirCfgFile = subdir / L"config.ini";
-					if (FileSystem::Exists(subdirCfgFile))
-						addWheel(subdirCfgFile);
+					wheels_.push_back(std::move(wheel));
+					customWheels_.push_back(wheels_.back().get());
 				}
+			};
+
+			for (cref entry : std::filesystem::directory_iterator(folderBase))
+			{
+				if (!entry.is_directory() && entry.path().extension() != L".zip")
+					continue;
+
+				std::filesystem::path configFile = entry.path() / L"config.ini";
+				if (FileSystem::Exists(configFile))
+					addWheel(configFile);
+				else if (auto dirs = FileSystem::IterateZipFolders(entry.path()); !dirs.empty())
+				{
+					for (cref subdir : dirs)
+					{
+						std::filesystem::path subdirCfgFile = subdir / L"config.ini";
+						if (FileSystem::Exists(subdirCfgFile))
+							addWheel(subdirCfgFile);
+					}
+				}
+
 			}
-		    
-	    }
+		}
 	}
 
 	loaded_ = true;
