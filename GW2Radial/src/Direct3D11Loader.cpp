@@ -19,6 +19,48 @@ typedef struct wrapped_com_obj
 		IDXGISwapChain4* orig_swc;
 		IDXGIFactory5* orig_dxgi;
 	};
+	union
+	{
+		struct
+		{
+			UINT SyncInterval;
+			UINT Flags;
+		} Present;
+		struct
+		{
+			UINT SyncInterval;
+			UINT PresentFlags;
+			const DXGI_PRESENT_PARAMETERS* pPresentParameters;
+		} Present1;
+		struct
+		{
+			IDXGIAdapter*			 pAdapter;
+			D3D_DRIVER_TYPE          DriverType;
+			HMODULE                  Software;
+			UINT                     Flags;
+			const D3D_FEATURE_LEVEL* pFeatureLevels;
+			UINT                     FeatureLevels;
+			UINT                     SDKVersion;
+			ID3D11Device**			 ppDevice;
+			D3D_FEATURE_LEVEL*		 pFeatureLevel;
+			ID3D11DeviceContext**	 ppImmediateContext;
+		} CreateDevice;
+		struct
+		{
+			IUnknown* pDevice;
+			DXGI_SWAP_CHAIN_DESC* pDesc;
+			IDXGISwapChain** ppSwapChain;
+		} CreateSwapChain;
+		struct
+		{
+			IUnknown* pDevice;
+			HWND hWnd;
+			const DXGI_SWAP_CHAIN_DESC1* pDesc;
+			const DXGI_SWAP_CHAIN_FULLSCREEN_DESC* pFullscreenDesc;
+			IDXGIOutput* pRestrictToOutput;
+			IDXGISwapChain1** ppSwapChain;
+		} CreateSwapChainForHwnd;
+	};
 } wrapped_com_obj;
 
 typedef struct wrap_event_data
@@ -30,118 +72,59 @@ typedef struct wrap_event_data
 namespace GW2Radial
 {
 
-void Direct3D11Loader::DevPostRelease(IDirect3DDevice9 * sThis, ULONG refs)
+void Direct3D11Loader::PrePresentSwapChain()
 {
-	if (refs == 1)
-	{
-		preResetCallback();
-		sThis->Release();
-	}
+	prePresentSwapChainCallback();
 }
 
-void Direct3D11Loader::DevPrePresent(IDirect3DDevice9 *sThis)
+void Direct3D11Loader::PreCreateSwapChain(HWND hwnd)
 {
-	drawOverCallback(sThis, isFrameDrawn_, true);
-	isFrameDrawn_ = false;	
+	preCreateSwapChainCallback(hwnd);
 }
 
-void Direct3D11Loader::DevPreReset()
+void Direct3D11Loader::PostCreateSwapChain(IDXGISwapChain* swc)
 {
-	preResetCallback();
+	postCreateSwapChainCallback(swc);
 }
 
-void Direct3D11Loader::DevPostReset(IDirect3DDevice9 *sThis, D3DPRESENT_PARAMETERS *pPresentationParameters, HRESULT hr)
+void Direct3D11Loader::PostCreateDevice(ID3D11Device* pDevice)
 {
-	if (FAILED(hr))
-		return;
-
-	postResetCallback(sThis, pPresentationParameters);	
-}
-
-void Direct3D11Loader::DevPostCreateVertexShader(const DWORD *pFunction, IDirect3DVertexShader9 **ppShader)
-{
-	if (!preUiVertexShader_)
-	{
-		int l = GetShaderFuncLength(pFunction);
-		XXH64_hash_t hash = XXH64(pFunction, l, 0);
-		if (hash == preUiVertexShaderHash_)
-			preUiVertexShader_ = *ppShader;
-	}	
-}
-
-void Direct3D11Loader::DevPostSetVertexShader(IDirect3DDevice9 *sThis, IDirect3DVertexShader9 *pShader)
-{	
-	if (!isInShaderHook_ && pShader && !isFrameDrawn_ && pShader == preUiVertexShader_)
-	{
-		isInShaderHook_ = true;
-		drawUnderCallback(sThis, isFrameDrawn_, false);
-		isInShaderHook_ = false;
-		isFrameDrawn_ = true;
-	}	
-}
-void Direct3D11Loader::DevPostCreatePixelShader(const DWORD *pFunction, IDirect3DPixelShader9 **ppShader)
-{	
-	if (!preUiPixelShader_)
-	{
-		int l = GetShaderFuncLength(pFunction);
-		XXH64_hash_t hash = XXH64(pFunction, l, 0);
-		if (hash == preUiPixelShaderHash_)
-			preUiPixelShader_ = *ppShader;
-	}	
-}
-
-void Direct3D11Loader::DevPostSetPixelShader(IDirect3DDevice9 *sThis, IDirect3DPixelShader9 *pShader)
-{
-	if (!isInShaderHook_ && pShader && !isFrameDrawn_ && pShader == preUiPixelShader_)
-	{
-		isInShaderHook_ = true;
-		drawUnderCallback(sThis, isFrameDrawn_, false);
-		isInShaderHook_ = false;
-		isFrameDrawn_ = true;
-	}
-}
-
-void Direct3D11Loader::ObjPreCreateDevice(HWND hFocusWindow)
-{
-	preCreateDeviceCallback(hFocusWindow);
-}
-
-void Direct3D11Loader::ObjPostCreateDevice(IDirect3DDevice9 *pDevice, D3DPRESENT_PARAMETERS *pPresentationParameters)
-{
-	postCreateDeviceCallback(pDevice, pPresentationParameters);	
-	pDevice->AddRef();
-}
-
-void OnDevPostRelease(wrap_event_data* evd)
-{
-	GetD3D11Loader()->DevPostRelease((*evd->stackPtr)->orig_dev11, *((ULONG*)evd->ret));
+	postCreateDeviceCallback(pDevice);
 }
 
 void OnSwapChainPrePresent(wrap_event_data* evd)
 {
-	GetD3D11Loader()->SwapChainPrePresent((*evd->stackPtr)->orig_swc);
+	GetD3D11Loader()->PrePresentSwapChain();
 }
 
 void OnSwapChainPrePresent1(wrap_event_data* evd)
 {
-	GetD3D11Loader()->SwapChainPrePresent((*evd->stackPtr)->orig_swc);
+	GetD3D11Loader()->PrePresentSwapChain();
 }
 
-void OnObjPreCreateDevice(wrap_event_data* evd)
+void OnPostCreateDevice(wrap_event_data* evd)
 {
-	d3d9_api_call* dx_api_cp = (d3d9_api_call*)evd->stackPtr;
-	GetD3D11Loader()->ObjPreCreateDevice(dx_api_cp->CreateDevice.v3);
-}
-
-void OnObjPostCreateDevice(wrap_event_data* evd)
-{
-	d3d9_api_call* dx_api_cp = (d3d9_api_call*)evd->stackPtr;
-	GetD3D11Loader()->ObjPostCreateDevice(*dx_api_cp->CreateDevice.ret, dx_api_cp->CreateDevice.v5);
+	GetD3D11Loader()->PostCreateDevice(*(*evd->stackPtr)->CreateDevice.ppDevice);
 }
 
 void OnDXGIPostCreateSwapChain(wrap_event_data* evd)
 {
-	GetD3D11Loader()->DXGICreateSwapChain((*evd->stackPtr)->orig_swc);
+	GetD3D11Loader()->PostCreateSwapChain(*(*evd->stackPtr)->CreateSwapChain.ppSwapChain);
+}
+
+void OnDXGIPostCreateSwapChainForHwnd(wrap_event_data* evd)
+{
+	GetD3D11Loader()->PostCreateSwapChain(*(*evd->stackPtr)->CreateSwapChainForHwnd.ppSwapChain);
+}
+
+void OnDXGIPreCreateSwapChain(wrap_event_data* evd)
+{
+	GetD3D11Loader()->PreCreateSwapChain((*evd->stackPtr)->CreateSwapChain.pDesc->OutputWindow);
+}
+
+void OnDXGIPreCreateSwapChainForHwnd(wrap_event_data* evd)
+{
+	GetD3D11Loader()->PreCreateSwapChain((*evd->stackPtr)->CreateSwapChainForHwnd.hWnd);
 }
 
 void Direct3D11Loader::Init(gw2al_core_vtable* gAPI)
@@ -159,15 +142,13 @@ void Direct3D11Loader::Init(gw2al_core_vtable* gAPI)
 	d3d9_wrap.enable_event(METH_DXGI_CreateSwapChainForCoreWindow, WRAP_CB_POST);
 	d3d9_wrap.enable_event(METH_DXGI_CreateSwapChainForHwnd, WRAP_CB_POST);
 
-	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DEV11_Release", OnDevPostRelease, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_SWC_Present", OnSwapChainPrePresent, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_SWC_Present1", OnSwapChainPrePresent1, 0);
-	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_OBJ_CreateDevice", OnObjPreCreateDevice, 0);
-	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_OBJ_CreateDevice", OnObjPostCreateDevice, 0);
+	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_OBJ_CreateDevice", OnPostCreateDevice, 0);
+	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_DXGI_CreateSwapChain", OnDXGIPreCreateSwapChain, 0);
+	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_DXGI_CreateSwapChainForHwnd", OnDXGIPreCreateSwapChainForHwnd, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DXGI_CreateSwapChain", OnDXGIPostCreateSwapChain, 0);
-	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DXGI_CreateSwapChainForComposition", OnDXGIPostCreateSwapChain, 0);
-	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DXGI_CreateSwapChainForCoreWindow", OnDXGIPostCreateSwapChain, 0);
-	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DXGI_CreateSwapChainForHwnd", OnDXGIPostCreateSwapChain, 0);
+	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DXGI_CreateSwapChainForHwnd", OnDXGIPostCreateSwapChainForHwnd, 0);
 }
 
 }

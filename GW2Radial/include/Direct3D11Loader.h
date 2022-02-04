@@ -12,12 +12,11 @@ class Direct3D11Loader : public Direct3D11Inject
 {
 public:
 	Direct3D11Loader() = default;
-	
-	void DevPostRelease(ID3D11Device* sThis, ULONG refs);
-	void SwapChainPrePresent(IDXGISwapChain* sThis);
-	void ObjPreCreateDevice(HWND hFocusWindow);
-	void ObjPostCreateDevice(ID3D11Device* pDevice);
-	void DXGICreateSwapChain(ID3D11Device* pDevice);
+
+	void PrePresentSwapChain();
+	void PostCreateDevice(ID3D11Device* pDevice);
+	void PreCreateSwapChain(HWND hwnd);
+	void PostCreateSwapChain(IDXGISwapChain* swc);
 
 	void Init(gw2al_core_vtable* gAPI);
 };

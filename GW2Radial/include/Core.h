@@ -6,6 +6,8 @@
 #include <UnitQuad.h>
 #include <CustomWheel.h>
 #include <Defs.h>
+#include <d3d11.h>
+#include <dxgi.h>
 
 namespace GW2Radial
 {
@@ -55,21 +57,19 @@ protected:
 	void OnFocus();
 	void OnUpdate();
 
-	void OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters);
-	void OnDeviceUnset();
+	void Draw();
 
-	void PreCreateDevice(HWND hFocusWindow);
-	void PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters);
+	void PostCreateDevice(ID3D11Device* device);
 
-	void PreReset();
-	void PostReset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS *presentationParameters);
+	void PreCreateSwapChain(HWND hwnd);
+	void PostCreateSwapChain(IDXGISwapChain* swc);
 	
-	void DrawUnder(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded);
-	void DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded);
 
 	HWND gameWindow_ = nullptr;
 	HMODULE dllModule_ = nullptr;
 	WNDPROC baseWndProc_ = nullptr;
+	ID3D11Device* device_ = nullptr;
+	ID3D11DeviceContext* context_ = nullptr;
 
 	uint screenWidth_ = 0, screenHeight_ = 0;
 	bool firstFrame_ = true;

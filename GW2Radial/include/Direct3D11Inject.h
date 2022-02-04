@@ -2,7 +2,7 @@
 
 #include <Main.h>
 #include <xxhash/xxhash.h>
-#include <d3d9.h>
+#include <d3d11.h>
 #include <functional>
 #include <Singleton.h>
 
@@ -12,14 +12,17 @@ namespace GW2Radial
 class Direct3D11Inject : public Singleton<Direct3D11Inject, false>
 {
 public:
-	using DrawCallback = std::function<void(ID3D11Device*, bool, bool)>;
-	using PreCreateDeviceCallback = std::function<void(HWND)>;
+	using PrePresentSwapChainCallback = std::function<void()>;
+
 	using PostCreateDeviceCallback = std::function<void(ID3D11Device*)>;
+
+	using PreCreateSwapChainCallback = std::function<void(HWND)>;
 	using PostCreateSwapChainCallback = std::function<void(IDXGISwapChain*)>;
 
-	DrawCallback drawCallback;
-	PreCreateDeviceCallback preCreateDeviceCallback;
+	PrePresentSwapChainCallback prePresentSwapChainCallback;
 	PostCreateDeviceCallback postCreateDeviceCallback;
+	PreCreateSwapChainCallback preCreateSwapChainCallback;
+	PostCreateSwapChainCallback postCreateSwapChainCallback;
 
 protected:
 	Direct3D11Inject() = default;

@@ -13,6 +13,7 @@
 #include <Resource.h>
 #include <Log.h>
 
+#define COM_RELEASE(x) if(x) { x->Release(); x = nullptr; }
 #define NULL_COALESCE(a, b) ((a) != nullptr ? (a) : (b))
 #define OPT_COALESCE(a, b) ((a) ? (a) : (b))
 #define SQUARE(x) ((x) * (x))
