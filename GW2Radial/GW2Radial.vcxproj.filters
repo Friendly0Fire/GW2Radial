@@ -82,19 +82,10 @@
     <ClCompile Include="src\DDSTextureLoader.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Direct3D9Hooks.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Direct3D9Loader.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Direct3DVirtualFunctionTable.c">
+    <ClCompile Include="src\Direct3D11Loader.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Effect.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Effect_dx12.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\WICTextureLoader.cpp">
@@ -192,9 +183,6 @@
     <ClInclude Include="include\Resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h">
-      <Filter>External\Addon Loader</Filter>
-    </ClInclude>
     <ClInclude Include="loader-core\include\gw2al_api.h">
       <Filter>External\Addon Loader</Filter>
     </ClInclude>
@@ -225,28 +213,16 @@
     <ClInclude Include="include\Main.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\d912pxy.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="include\DDSTextureLoader.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="include\Direct3D9Hooks.h">
+    <ClInclude Include="include\Direct3D11Inject.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="include\Direct3D9Inject.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Direct3D9Loader.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Direct3DVirtualFunctionTable.h">
+    <ClInclude Include="include\Direct3D11Loader.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\Effect.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Effect_dx12.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\WICTextureLoader.h">
@@ -350,6 +326,9 @@
     </ClInclude>
     <ClInclude Include="include\Version.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h">
+      <Filter>External\Addon Loader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

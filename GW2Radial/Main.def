@@ -4,5 +4,3 @@ EXPORTS
     gw2addon_get_description
     gw2addon_load
     gw2addon_unload
-    Direct3DCreate9
-    Direct3DCreate9Ex

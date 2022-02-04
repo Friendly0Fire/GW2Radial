@@ -1,5 +1,5 @@
 #include <Core.h>
-#include <Direct3D9Loader.h>
+#include <Direct3D11Loader.h>
 #include <imgui.h>
 #include <backends/imgui_impl_dx9.h>
 #include <backends/imgui_impl_win32.h>
@@ -19,7 +19,6 @@
 #include <MiscTab.h>
 #include <MumbleLink.h>
 #include <Effect.h>
-#include <Effect_dx12.h>
 #include <CustomWheel.h>
 #include <GFXSettings.h>
 #include <Log.h>
@@ -56,15 +55,11 @@ Core::~Core()
 {
 	ImGui::DestroyContext();
 
-	Direct3D9Inject::i([&](auto& i) {
+	Direct3D11Inject::i([&](auto& i) {
 		i.preCreateDeviceCallback = nullptr;
 		i.postCreateDeviceCallback = nullptr;
 
-		i.preResetCallback = nullptr;
-		i.postResetCallback = nullptr;
-
-		i.drawOverCallback = nullptr;
-		i.drawUnderCallback = nullptr;
+		i.drawCallback = nullptr;
 	});
 
 	if(user32_)
@@ -73,16 +68,12 @@ Core::~Core()
 
 void Core::OnInjectorCreated()
 {
-	auto& inject = Direct3D9Inject::i();
+	auto& inject = Direct3D11Inject::i();
 	
 	inject.preCreateDeviceCallback = [this](HWND hWnd){ PreCreateDevice(hWnd); };
 	inject.postCreateDeviceCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostCreateDevice(d, pp); };
 	
-	inject.preResetCallback = [this](){ PreReset(); };
-	inject.postResetCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); };
-	
-	inject.drawOverCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); };
-	inject.drawUnderCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); };
+	inject.drawCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); };
 }
 
 void Core::OnInputLanguageChange()
@@ -221,12 +212,7 @@ void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presenta
 	try { quad_ = std::make_unique<UnitQuad>(device); }
 	catch (...) { quad_ = nullptr; }
 
-	//megai2: check for d912pxy
-	//D3DRS_ENABLE_D912PXY_API_HACKS == 220
-	if (IsD912Pxy(device))
-		mainEffect_ = new Effect_dx12(device);
-	else 
-		mainEffect_ = new Effect(device);
+	mainEffect_ = new Effect(device);
 
 	UpdateCheck::i().CheckForUpdates();
 	MiscTab::i();
