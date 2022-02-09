@@ -18,7 +18,7 @@
 #include <Marker.h>
 #include <MiscTab.h>
 #include <MumbleLink.h>
-#include <Effect.h>
+#include <ShaderManager.h>
 #include <CustomWheel.h>
 #include <GFXSettings.h>
 #include <Log.h>
@@ -124,7 +124,7 @@ void Core::OnFocusLost()
 }
 
 void Core::OnFocus() {
-	mainEffect_->Clear();
+	mainEffect_->ReloadAll();
 
 	Input::i().OnFocus();
 
@@ -222,8 +222,7 @@ void Core::PostCreateDevice(ID3D11Device* device)
 	try { quad_ = std::make_unique<UnitQuad>(device_); }
 	catch (...) { quad_ = nullptr; }
 
-
-	mainEffect_ = new Effect(device_);
+	ShaderManager::i(std::make_unique<ShaderManager>(device_));
 
 	UpdateCheck::i().CheckForUpdates();
 	MiscTab::i();

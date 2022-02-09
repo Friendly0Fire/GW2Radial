@@ -12,7 +12,7 @@
 namespace GW2Radial
 {
 
-class Effect;
+class ShaderManager;
 
 class Core : public Singleton<Core>
 {
@@ -33,7 +33,7 @@ public:
 	uint screenWidth() const { return screenWidth_; }
 	uint screenHeight() const { return screenHeight_; }
 	const std::unique_ptr<UnitQuad>& quad() const { return quad_; }
-	Effect* mainEffect() const { return mainEffect_; }
+	ShaderManager* mainEffect() const { return mainEffect_; }
 	ImFont* font() const { return font_; }
 	ImFont* fontBlack() const { return fontBlack_; }
 	ImFont* fontItalic() const { return fontItalic_; }
@@ -83,7 +83,6 @@ protected:
 	std::list<InputLanguageChangeListener*> ilcListeners_;
 
 	std::unique_ptr<UnitQuad> quad_;
-	Effect* mainEffect_ = nullptr;
 
 	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr, *fontDraw_ = nullptr, *fontIcon_ = nullptr, *fontMono_ = nullptr;
 

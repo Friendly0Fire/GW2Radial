@@ -70,9 +70,6 @@
     <ClCompile Include="src\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\imgui_impl_dx9_custom.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="imgui\imgui_widgets.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
@@ -85,7 +82,7 @@
     <ClCompile Include="src\Direct3D11Loader.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Effect.cpp">
+    <ClCompile Include="src\ShaderManager.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\WICTextureLoader.cpp">
@@ -163,6 +160,9 @@
     <ClCompile Include="src\Log.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="imgui\backends\imgui_impl_dx11.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -198,9 +198,6 @@
     <ClInclude Include="imgui\imstb_truetype.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui\backends\imgui_impl_dx9.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="imgui\backends\imgui_impl_win32.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
@@ -222,7 +219,7 @@
     <ClInclude Include="include\Direct3D11Loader.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="include\Effect.h">
+    <ClInclude Include="include\ShaderManager.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\WICTextureLoader.h">
@@ -329,6 +326,9 @@
     </ClInclude>
     <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h">
       <Filter>External\Addon Loader</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\backends\imgui_impl_dx11.h">
+      <Filter>External\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

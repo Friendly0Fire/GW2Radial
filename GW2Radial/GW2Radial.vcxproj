@@ -140,6 +140,7 @@ cd "$(ProjectDir)shaders"
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
@@ -152,12 +153,11 @@ cd "$(ProjectDir)shaders"
     <ClCompile Include="src\CustomWheel.cpp" />
     <ClCompile Include="src\DDSTextureLoader.cpp" />
     <ClCompile Include="src\Direct3D11Loader.cpp" />
-    <ClCompile Include="src\Effect.cpp" />
+    <ClCompile Include="src\ShaderManager.cpp" />
     <ClCompile Include="src\FileSystem.cpp" />
     <ClCompile Include="src\GFXSettings.cpp" />
     <ClCompile Include="src\ImGuiExtensions.cpp" />
     <ClCompile Include="src\ImGuiPopup.cpp" />
-    <ClCompile Include="src\imgui_impl_dx9_custom.cpp" />
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Keybind.cpp" />
     <ClCompile Include="src\Log.cpp" />
@@ -180,7 +180,7 @@ cd "$(ProjectDir)shaders"
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h" />
-    <ClInclude Include="imgui\backends\imgui_impl_dx9.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
@@ -199,7 +199,7 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\Defs.h" />
     <ClInclude Include="include\Direct3D11Inject.h" />
     <ClInclude Include="include\Direct3D11Loader.h" />
-    <ClInclude Include="include\Effect.h" />
+    <ClInclude Include="include\ShaderManager.h" />
     <ClInclude Include="include\Enums.h" />
     <ClInclude Include="include\FileSystem.h" />
     <ClInclude Include="include\GFXSettings.h" />
