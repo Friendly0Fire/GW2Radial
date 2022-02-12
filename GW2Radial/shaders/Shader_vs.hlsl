@@ -8,9 +8,11 @@ struct VS_SCREEN
 	float2 UV : TEXCOORD0;
 };
 
-VS_SCREEN ScreenQuad_VS(in float2 UV : TEXCOORD0)
+VS_SCREEN ScreenQuad_VS(in uint id : SV_VertexID)
 {
     VS_SCREEN Out = (VS_SCREEN)0;
+
+	float2 UV = float2(id & 1, id >> 1);
 
 	float2 dims = (UV * 2 - 1) * fSpriteDimensions.zw;
 

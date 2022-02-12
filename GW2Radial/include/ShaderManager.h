@@ -30,6 +30,10 @@ class ConstantBufferBase
 
 protected:
 	void Upload(void* data, size_t size);
+
+public:
+	ConstantBufferBase() = default;
+	bool IsValid() const { return buf != nullptr; }
 };
 
 template<typename T>
@@ -45,6 +49,8 @@ class ConstantBuffer : public ConstantBufferBase
 	T data;
 
 public:
+	ConstantBuffer() = default;
+
 	ConstantBuffer(const ConstantBuffer&) = delete;
 	ConstantBuffer(ConstantBuffer&&) = default;
 	ConstantBuffer& operator=(const ConstantBuffer&) = delete;
@@ -71,7 +77,7 @@ public:
 	ConstantBuffer<T> MakeConstantBuffer(std::optional<const T&> data = std::nullopt_t)
 	{
 		auto buf = MakeConstantBuffer(sizeof(T), data.has_value() ? &data : nullptr);
-		return ConstantBuffer<T>(context_, buf, data);
+		return { context_, buf, data };
 	}
 
 	template<typename... Args>

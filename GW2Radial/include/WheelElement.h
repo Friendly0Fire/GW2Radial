@@ -9,13 +9,13 @@ namespace GW2Radial
 class WheelElement
 {
 public:
-	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName, IDirect3DDevice9* dev, ComPtr<IDirect3DTexture9> tex = nullptr);
+	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName, ID3D11Device* dev, ComPtr<ID3D11ShaderResourceView> srv = nullptr);
 	virtual ~WheelElement() = default;
 
 	int DrawPriority(int extremumIndicator);
 
-	void SetShaderState();
-	void Draw(int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
+	void SetShaderState(const fVector4& spriteDimensions);
+	void Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
 
 	uint elementId() const { return elementId_; }
 	
@@ -44,7 +44,7 @@ public:
 	bool isBound() const { return keybind_.isSet(); }
 	virtual bool isActive() const { return isBound() && isShownOption_.value(); }
 
-	IDirect3DTexture9* appearance() const { return appearance_.Get(); }
+	ID3D11ShaderResourceView* appearance() const { return appearance_.Get(); }
 
 protected:
 	virtual fVector4 color() = 0;
@@ -55,7 +55,7 @@ protected:
 	std::string nickname_, displayName_;
 	uint elementId_;
 	Keybind keybind_;
-	ComPtr<IDirect3DTexture9> appearance_;
+	ComPtr<ID3D11ShaderResourceView> appearance_;
 	mstime currentHoverTime_ = 0;
 	mstime currentExitTime_ = 0;
 	float aspectRatio_ = 1.f;
@@ -63,6 +63,17 @@ protected:
 	float colorizeAmount_ = 1.f;
 	float texWidth_ = 0.f;
 	bool premultiplyAlpha_ = false;
+
+	struct WheelElementCB
+	{
+		fVector4 adjustedColor;
+		fVector4 shadowData;
+		fVector4 spriteDimensions;
+		int elementId;
+		bool premultiplyAlpha;
+	};
+
+	static ConstantBuffer<WheelElementCB> cb_s;
 };
 
 }

@@ -69,6 +69,18 @@ inline float frand()
 std::pair<ComPtr<ID3D11Resource>, ComPtr<ID3D11ShaderResourceView>> CreateTextureFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource);
 
 template<typename T>
+std::pair<ComPtr<T>, ComPtr<ID3D11ShaderResourceView>> CreateTextureFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource)
+{
+	auto [res, srv] = CreateTextureFromResource(pDev, hModule, uResource);
+
+	ComPtr<T> tex;
+	res->QueryInterface(tex.GetAddressOf());
+	GW2_ASSERT(tex != nullptr);
+
+	return { tex, srv };
+}
+
+template<typename T>
 auto ConvertToVector4(const T& val) {
 	const float IntOffset = 0.f;
 	// Fundamental types
@@ -205,7 +217,8 @@ auto ToCaseInsensitive(const T& s) {
     return std::basic_string_view<V, ci_char_traits<V>>(s.data(), s.size());
 }
 
-template <typename Str> Str Trim(const Str &scIn) {
+template <typename Str>
+Str Trim(const Str &scIn) {
     using Char = typename Str::value_type;
     constexpr auto trimmable = []() constexpr {
         if constexpr (std::is_same_v<Char, char>)
@@ -230,25 +243,8 @@ struct PtrComparator {
 
 std::span<const wchar_t*> GetCommandLineArgs();
 
-inline const wchar_t* GetCommandLineArg(const wchar_t* name) {
-	bool saveNextArg = false;
-	for (auto* arg : GetCommandLineArgs()) {
-		if (saveNextArg) {
-			return arg;
-		}
+const wchar_t* GetCommandLineArg(const wchar_t* name);
 
-		auto l = wcslen(arg);
-		if (l > 1 && (arg[0] == L'/' || arg[0] == L'-') && _wcsnicmp(name, &arg[1], 6) == 0) {
-			if (l > 7 && arg[7] == L':') {
-				return &arg[8];
-				break;
-			}
-			else
-				saveNextArg = true;
-		}
-	}
-
-	return nullptr;
-}
+void DrawScreenQuad(ComPtr<ID3D11DeviceContext>& ctx);
 
 }
