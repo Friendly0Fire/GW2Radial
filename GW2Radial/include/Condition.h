@@ -165,14 +165,14 @@ public:
 private:
     std::wstring characterName_;
     
-    [[nodiscard]] bool test(const ConditionContext& cc) const override { return to_case_insensitive(cc.character) == to_case_insensitive(characterName_); }
+    [[nodiscard]] bool test(const ConditionContext& cc) const override { return ToCaseInsensitive(cc.character) == ToCaseInsensitive(characterName_); }
     [[nodiscard]] std::string nickname() const override { return Nickname; }
     [[nodiscard]] bool DrawInnerMenu() override;
 
 public:
     [[nodiscard]] const std::wstring& characterName() const { return characterName_; }
     [[nodiscard]] bool operator==(const IsCharacterCondition& other) const {
-        return to_case_insensitive(characterName_) == to_case_insensitive(other.characterName_);
+        return ToCaseInsensitive(characterName_) == ToCaseInsensitive(other.characterName_);
     }
 
     void Save(const char* category) const override {

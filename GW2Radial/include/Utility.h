@@ -66,7 +66,7 @@ inline float frand()
 	return float(rand()) / RAND_MAX;
 }
 
-ComPtr<IDirect3DTexture9> CreateTextureFromResource(IDirect3DDevice9* pDev, HMODULE hModule, unsigned uResource);
+std::pair<ComPtr<ID3D11Resource>, ComPtr<ID3D11ShaderResourceView>> CreateTextureFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource);
 
 template<typename T>
 auto ConvertToVector4(const T& val) {
@@ -155,8 +155,6 @@ float Luma(const Vec& v)
     return v.x * 0.2126 + v.y * 0.7152 + v.z * 0.0722;
 }
 
-void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint bpp, const std::wstring& filename);
-
 constexpr uint operator "" _len(const char*, size_t len) {
     return uint(len);
 }
@@ -166,7 +164,7 @@ std::optional<std::filesystem::path> GetDocumentsFolder();
 std::optional<std::filesystem::path> GetAddonFolder();
 
 template<typename T>
-T safe_toupper(T c) {
+T SafeToUpper(T c) {
     if constexpr(std::is_same_v<T, char>)
 	    return std::toupper(uint8_t(c));
 	else
@@ -175,19 +173,19 @@ T safe_toupper(T c) {
 
 template<typename T>
 struct ci_char_traits : std::char_traits<T> {
-    static bool eq(T c1, T c2) { return safe_toupper(c1) == safe_toupper(c2); }
-    static bool ne(T c1, T c2) { return safe_toupper(c1) != safe_toupper(c2); }
-    static bool lt(T c1, T c2) { return safe_toupper(c1) <  safe_toupper(c2); }
+    static bool eq(T c1, T c2) { return SafeToUpper(c1) == SafeToUpper(c2); }
+    static bool ne(T c1, T c2) { return SafeToUpper(c1) != SafeToUpper(c2); }
+    static bool lt(T c1, T c2) { return SafeToUpper(c1) <  SafeToUpper(c2); }
     static int compare(const T* s1, const T* s2, size_t n) {
         while(n-- != 0) {
-            if(safe_toupper(*s1) < safe_toupper(*s2)) return -1;
-            if(safe_toupper(*s1) > safe_toupper(*s2)) return 1;
+            if(SafeToUpper(*s1) < SafeToUpper(*s2)) return -1;
+            if(SafeToUpper(*s1) > SafeToUpper(*s2)) return 1;
             ++s1; ++s2;
         }
         return 0;
     }
     static const T* find(const T* s, int n, char a) {
-        while(n-- > 0 && safe_toupper(*s) != toupper(a)) {
+        while(n-- > 0 && SafeToUpper(*s) != toupper(a)) {
             ++s;
         }
         return s;
@@ -202,7 +200,7 @@ concept string_like = requires(T&& t) {
 };
 
 template<string_like T>
-auto to_case_insensitive(const T& s) {
+auto ToCaseInsensitive(const T& s) {
 	using V = typename T::value_type;
     return std::basic_string_view<V, ci_char_traits<V>>(s.data(), s.size());
 }

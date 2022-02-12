@@ -52,13 +52,13 @@ ShaderManager::ShaderManager(ID3D11Device* dev)
     device_->GetImmediateContext(&context_);
 }
 
-void ShaderManager::SetShaders(ShaderIdx vs, ShaderIdx ps)
+void ShaderManager::SetShaders(ShaderId vs, ShaderId ps)
 {
     context_->PSSetShader(std::get<ComPtr<ID3D11PixelShader>>(shaders_[ps.id].shader).Get(), nullptr, 0);
     context_->VSSetShader(std::get<ComPtr<ID3D11VertexShader>>(shaders_[vs.id].shader).Get(), nullptr, 0);
 }
 
-ShaderIdx ShaderManager::GetShader(const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint)
+ShaderId ShaderManager::GetShader(const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint)
 {
     for (uint i = 0; i < shaders_.size(); i++)
     {
@@ -104,6 +104,28 @@ void ShaderManager::ReloadAll()
         file->CloseDecompressionStream();
         return std::string(reinterpret_cast<char*>(vec.data()), vec.size());
     }
+}
+
+ComPtr<ID3D11Buffer> ShaderManager::MakeConstantBuffer(size_t dataSize, const void* data)
+{
+    D3D11_BUFFER_DESC desc {
+        .ByteWidth = dataSize,
+        .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+        .MiscFlags = 0,
+        .StructureByteStride = 0
+    };
+    D3D11_SUBRESOURCE_DATA idata
+    {
+        .pSysMem = data,
+        .SysMemPitch = dataSize,
+        .SysMemSlicePitch = 0
+    };
+    ComPtr<ID3D11Buffer> buf;
+    device_->CreateBuffer(&desc, data ? &idata : nullptr, &buf);
+
+    return buf;
 }
 
 void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
@@ -199,6 +221,14 @@ void ShaderManager::CheckHotReload() {
 #ifdef HOT_RELOAD_SHADERS
     hotReloadFolderExists_ = std::filesystem::exists(SHADERS_DIR);
 #endif
+}
+
+void ConstantBufferBase::Upload(void* data, size_t size)
+{
+    D3D11_MAPPED_SUBRESOURCE map;
+    ctx->Map(buf.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
+    memcpy_s(map.pData, size, data, size);
+    ctx->Unmap(buf.Get(), 0);
 }
 
 }

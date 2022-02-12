@@ -11,12 +11,50 @@
 
 namespace GW2Radial {
 
-class ShaderIdx
+class ShaderId
 {
-	ShaderIdx() : id(std::numeric_limits<uint>::max()) {}
-	ShaderIdx(uint i) : id(i) {}
+	ShaderId() : id(std::numeric_limits<uint>::max()) {}
+	ShaderId(uint i) : id(i) {}
 	uint id;
+
 	friend class ShaderManager;
+};
+
+class ConstantBufferBase
+{
+	ConstantBufferBase(ComPtr<ID3D11DeviceContext> ctx, ComPtr<ID3D11Buffer> buf) : ctx(ctx), buf(buf) {}
+	ComPtr<ID3D11Buffer> buf;
+	ComPtr<ID3D11DeviceContext> ctx;
+
+	friend class ShaderManager;
+
+protected:
+	void Upload(void* data, size_t size);
+};
+
+template<typename T>
+class ConstantBuffer : public ConstantBufferBase
+{
+	ConstantBuffer(ComPtr<ID3D11DeviceContext> ctx, ComPtr<ID3D11Buffer> buf, std::optional<const T&> data) : ConstantBufferBase(ctx, buf)
+	{
+		if (data.has_value())
+			this->data = *data;
+	}
+
+	friend class ShaderManager;
+	T data;
+
+public:
+	ConstantBuffer(const ConstantBuffer&) = delete;
+	ConstantBuffer(ConstantBuffer&&) = default;
+	ConstantBuffer& operator=(const ConstantBuffer&) = delete;
+	ConstantBuffer& operator=(ConstantBuffer&&) = default;
+
+	T* operator->() { return &data; }
+	void Update()
+	{
+		Upload(&data, sizeof(T));
+	}
 };
 
 class ShaderManager : public Singleton<ShaderManager, false>
@@ -26,13 +64,31 @@ public:
 
     ShaderManager(ID3D11Device* dev);
 
-	void SetShaders(ShaderIdx vs, ShaderIdx ps);
-	ShaderIdx GetShader(const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint);
+	void SetShaders(ShaderId vs, ShaderId ps);
+	ShaderId GetShader(const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint);
+
+	template<typename T>
+	ConstantBuffer<T> MakeConstantBuffer(std::optional<const T&> data = std::nullopt_t)
+	{
+		auto buf = MakeConstantBuffer(sizeof(T), data.has_value() ? &data : nullptr);
+		return ConstantBuffer<T>(context_, buf, data);
+	}
+
+	template<typename... Args>
+	void SetConstantBuffers(Args& ...cbs)
+	{
+		auto getbuf = [](auto& cb) { return cb.buf.get(); };
+		ID3D11Buffer* cbPtrs[] = { getbuf(cbs)... };
+		context_->VSSetConstantBuffers(0, sizeof...(cbs), cbPtrs);
+		context_->PSSetConstantBuffers(0, sizeof...(cbs), cbPtrs);
+	}
 
 	void ReloadAll();
 
 protected:
 	[[nodiscard]] std::string LoadShaderFile(const std::wstring& filename);
+
+	ComPtr<ID3D11Buffer> MakeConstantBuffer(size_t dataSize, const void* data);
 
 	void LoadShadersArchive();
 

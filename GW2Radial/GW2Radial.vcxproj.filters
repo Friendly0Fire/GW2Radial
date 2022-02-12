@@ -88,9 +88,6 @@
     <ClCompile Include="src\WICTextureLoader.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="src\UnitQuad.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="src\Wheel.cpp">
       <Filter>Source Files\Radials</Filter>
     </ClCompile>
@@ -226,9 +223,6 @@
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\TGA.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\UnitQuad.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\Wheel.h">

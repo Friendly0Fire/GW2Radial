@@ -170,7 +170,6 @@ cd "$(ProjectDir)shaders"
     <ClCompile Include="src\Novelty.cpp" />
     <ClCompile Include="src\ScanCode.cpp" />
     <ClCompile Include="src\SettingsMenu.cpp" />
-    <ClCompile Include="src\UnitQuad.cpp" />
     <ClCompile Include="src\UpdateCheck.cpp" />
     <ClCompile Include="src\Utility.cpp" />
     <ClCompile Include="src\Wheel.cpp" />
@@ -222,7 +221,6 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\Singleton.h" />
     <ClInclude Include="include\Tag.h" />
     <ClInclude Include="include\TGA.h" />
-    <ClInclude Include="include\UnitQuad.h" />
     <ClInclude Include="include\UpdateCheck.h" />
     <ClInclude Include="include\Utility.h" />
     <ClInclude Include="include\Version.h" />
