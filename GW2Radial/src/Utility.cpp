@@ -77,7 +77,7 @@ std::span<byte> LoadResource(UINT resId)
     return {};
 }
 
-std::pair<ComPtr<ID3D11Resource>, ComPtr<ID3D11ShaderResourceView>> CreateTextureFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource)
+std::pair<ComPtr<ID3D11Resource>, ComPtr<ID3D11ShaderResourceView>> CreateResourceFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource)
 {
     const auto resourceSpan = LoadResource(uResource);
 	if(resourceSpan.data() == nullptr)

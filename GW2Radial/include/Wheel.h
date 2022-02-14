@@ -4,6 +4,7 @@
 #include <WheelElement.h>
 #include <ConfigurationOption.h>
 #include <SettingsMenu.h>
+#include <Utility.h>
 
 #include <Input.h>
 
@@ -29,11 +30,11 @@ public:
 		DIRECTION = 3
 	};
 
-	Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
+	Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, ID3D11Device* dev);
 	virtual ~Wheel();
 
 	template<typename T>
-	static std::unique_ptr<Wheel> Create(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev)
+	static std::unique_ptr<Wheel> Create(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, ID3D11Device* dev)
 	{
 		// TODO: Would be nice to somehow let wheel element .cpps determine these parameters as well
 		auto wheel = std::make_unique<Wheel>(bgResourceId, inkResourceId, std::move(nickname), std::move(displayName), dev);
@@ -42,11 +43,11 @@ public:
 	}
 
 	template<typename T>
-	void Setup(IDirect3DDevice9* dev); // Requires implementation for each wheel element type
+	void Setup(ID3D11Device* dev); // Requires implementation for each wheel element type
 
 	void UpdateHover();
 	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); Sort(); }
-	void Draw(IDirect3DDevice9* dev, Effect* fx, class UnitQuad* quad);
+	void Draw(ComPtr<ID3D11DeviceContext> ctx);
 	void OnFocusLost();
 	void OnUpdate();
 	void OnMapChange(uint prevId, uint newId);
@@ -154,8 +155,10 @@ protected:
 	WheelElement* currentHovered_ = nullptr;
 	WheelElement* previousUsed_ = nullptr;
 
-	ComPtr<IDirect3DTexture9> backgroundTexture_;
-	ComPtr<IDirect3DTexture9> wipeMaskTexture_;
+	Texture2D backgroundTexture_;
+	Texture2D wipeMaskTexture_;
+	ShaderId psBg_, psImg_, psCursor_, psTimer_, vs_;
+	ComPtr<ID3D11BlendState> blendState_;
 
 	std::unique_ptr<Input::MouseMoveCallback> mouseMoveCallback_;
 	std::unique_ptr<Input::MouseButtonCallback> mouseButtonCallback_;

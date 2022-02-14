@@ -2,7 +2,6 @@
 #include <Wheel.h>
 #include <Core.h>
 #include <Utility.h>
-#include <UnitQuad.h>
 #include <ImGuiExtensions.h>
 #include <imgui.h>
 #include <utility>
@@ -12,12 +11,12 @@
 #include <GFXSettings.h>
 #include <MumbleLink.h>
 #include "../shaders/registers.h"
-#include <Effect.h>
+#include <ShaderManager.h>
 
 namespace GW2Radial
 {
 
-Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, IDirect3DDevice9 * dev)
+Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, ID3D11Device* dev)
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
 	  keybind_(nickname_, "Show on mouse", nickname_), centralKeybind_(nickname_ + "_cl", "Show in center", nickname_),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
@@ -69,6 +68,17 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	Input::i().AddMouseButtonCallback(mouseButtonCallback_.get());
 
 	SettingsMenu::i().AddImplementer(this);
+
+	vs_ = ShaderManager::i().GetShader(L"Shader_vs.hlsl", D3D11_SHVER_VERTEX_SHADER, "ScreenQuad_VS");
+	psBg_ = ShaderManager::i().GetShader(L"Shader_ps.hlsl", D3D11_SHVER_PIXEL_SHADER, "BgImage_PS");
+	psImg_ = ShaderManager::i().GetShader(L"Shader_ps.hlsl", D3D11_SHVER_PIXEL_SHADER, "MountImage_PS");
+	psCursor_ = ShaderManager::i().GetShader(L"Shader_ps.hlsl", D3D11_SHVER_PIXEL_SHADER, "Cursor_PS");
+	psTimer_ = ShaderManager::i().GetShader(L"Shader_ps.hlsl", D3D11_SHVER_PIXEL_SHADER, "TimerCursor_PS");
+
+	CD3D11_BLEND_DESC blendDesc(D3D11_DEFAULT);
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	dev->CreateBlendState(&blendDesc, &blendState_);
 }
 
 Wheel::~Wheel()
@@ -363,7 +373,7 @@ void Wheel::OnCharacterChange(const std::wstring& prevCharacterName, const std::
 	ResetConditionallyDelayed(false);
 }
 
-void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
+void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 {
 	if (opacityMultiplierOption_.value() == 0)
 		return;
@@ -399,18 +409,13 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			if (resetCursorPositionToCenter_)
 				resetCursorPositionToCenter();
 
-			fx->Begin();
-			quad->Bind(fx);
-			fx->SetShader(ShaderType::VERTEX_SHADER, L"Shader_vs.hlsl", "ScreenQuad_VS");
-
-			// Setup viewport
-			D3DVIEWPORT9 vp;
-			vp.X = vp.Y = 0;
+			D3D11_VIEWPORT vp;
+			vp.TopLeftX = vp.TopLeftY = 0;
 			vp.Width = screenWidth;
 			vp.Height = screenHeight;
-			vp.MinZ = 0.0f;
-			vp.MaxZ = 1.0f;
-			dev->SetViewport(&vp);
+			vp.MinDepth = 0.0f;
+			vp.MaxDepth = 1.0f;
+			ctx->RSSetViewports(1, &vp);
 
 			auto activeElements = GetActiveElements();
 			if (!activeElements.empty())
@@ -447,11 +452,9 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 					break;
 				}
 
-				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "BgImage_PS");
-				fx->SetRenderStates({
-					{ D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
-					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
-				});
+
+				ShaderManager::i().SetShaders(vs_, psBg_);
+				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
 				{
 				    using namespace ShaderRegister::ShaderPS;
 				    using namespace ShaderRegister::ShaderVS;
@@ -472,18 +475,15 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 				}
 
 				fx->ApplyStates();
-				quad->Draw();
+				DrawScreenQuad(ctx);
 
-				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "MountImage_PS");
-				fx->SetRenderStates({
-					{ D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
-					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
-				});
+				ShaderManager::i().SetShaders(vs_, psImg_);
+				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
 
 				int n = 0;
 				for (auto it : activeElements)
 				{
-					it->Draw(n, baseSpriteDimensions, activeElements.size(), currentTime, currentHovered_, this);
+					it->Draw(ctx, n, baseSpriteDimensions, activeElements.size(), currentTime, currentHovered_, this);
 					n++;
 				}
 
@@ -492,20 +492,15 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			{
 				cref io = ImGui::GetIO();
 
-				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "Cursor_PS");
-				fx->SetRenderStates({
-					{ D3DRS_DESTBLEND, D3DBLEND_ONE },
-					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
-				});
+				ShaderManager::i().SetShaders(vs_, psCursor_);
+				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
 
 				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f  * screenSize.y * screenSize.z, 0.08f };
 				fx->SetVariable(ShaderType::VERTEX_SHADER, ShaderRegister::ShaderVS::float4_fSpriteDimensions, spriteDimensions);
 
 				fx->ApplyStates();
-				quad->Draw();
+				DrawScreenQuad(ctx);
 			}
-
-			fx->End();
 		}
 	} else if(showDelayTimerOption_.value() && !conditionallyDelayedCustom_ && (conditionallyDelayed_ != nullptr || currentTime < conditionallyDelayedTime_ + conditionallyDelayedFadeOutTime)) {
 		float dt = float(currentTime - conditionallyDelayedTime_) / 1000.f;
@@ -516,14 +511,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			timeLeft = 1.f - (currentTime - conditionallyDelayedTime_) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
 	    cref io = ImGui::GetIO();
 
-		fx->Begin();
-		quad->Bind(fx);
-		fx->SetShader(ShaderType::VERTEX_SHADER, L"Shader_vs.hlsl", "ScreenQuad_VS");
-		fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "TimerCursor_PS");
-		fx->SetRenderStates({
-			{ D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
-			{ D3DRS_SRCBLEND, D3DBLEND_ONE },
-		});
+		ShaderManager::i().SetShaders(vs_, psTimer_);
+		ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
 
 		float dpiScale = 1.f;
 		if(GFXSettings::i().dpiScaling())
@@ -595,9 +584,7 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		}
 
 		fx->ApplyStates();
-		quad->Draw();
-
-		fx->End();
+		DrawScreenQuad(ctx);
 	}
 }
 

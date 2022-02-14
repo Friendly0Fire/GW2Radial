@@ -173,7 +173,7 @@ float4 Cursor_PS(PS_INPUT In) : COLOR0
 	color *= pow(1.f - smoothstep(0.f, 1.f, polar.x), 4.f);
 	color *= 1 - lerp(0.1f, 1.f, smoothstep(0.2f, 0.6f, polar.x)) * smoothrandom;
 
-	return color * fGlobalOpacity;
+	return float4(color.rgb * fGlobalOpacity, 0.f);
 }
 
 float LogNormal(float x, float sigma)

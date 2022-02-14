@@ -66,12 +66,22 @@ inline float frand()
 	return float(rand()) / RAND_MAX;
 }
 
-std::pair<ComPtr<ID3D11Resource>, ComPtr<ID3D11ShaderResourceView>> CreateTextureFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource);
-
 template<typename T>
-std::pair<ComPtr<T>, ComPtr<ID3D11ShaderResourceView>> CreateTextureFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource)
+struct Texture
 {
-	auto [res, srv] = CreateTextureFromResource(pDev, hModule, uResource);
+	ComPtr<T> texture;
+	ComPtr<ID3D11ShaderResourceView> srv;
+};
+using Texture1D = Texture<ID3D11Texture1D>;
+using Texture2D = Texture<ID3D11Texture2D>;
+using Texture3D = Texture<ID3D11Texture3D>;
+
+std::pair<ComPtr<ID3D11Resource>, ComPtr<ID3D11ShaderResourceView>> CreateResourceFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource);
+
+template<typename T = ID3D11Texture2D>
+Texture<T> CreateTextureFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource)
+{
+	auto [res, srv] = CreateResourceFromResource(pDev, hModule, uResource);
 
 	ComPtr<T> tex;
 	res->QueryInterface(tex.GetAddressOf());
