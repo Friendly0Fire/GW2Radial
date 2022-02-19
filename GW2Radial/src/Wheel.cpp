@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <GFXSettings.h>
 #include <MumbleLink.h>
-#include "../shaders/registers.h"
 #include <ShaderManager.h>
 
 namespace GW2Radial
@@ -79,6 +78,16 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 	dev->CreateBlendState(&blendDesc, &blendState_);
+
+	CD3D11_SAMPLER_DESC sampDesc(D3D11_DEFAULT);
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	std::fill_n(sampDesc.BorderColor, std::size(sampDesc.BorderColor), 0.f);
+
+	dev->CreateSamplerState(&sampDesc, &borderSampler_);
+
+	if (!cb_s.IsValid())
+		cb_s = ShaderManager::i().MakeConstantBuffer<WheelCB>();
 }
 
 Wheel::~Wheel()
@@ -455,26 +464,14 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 
 				ShaderManager::i().SetShaders(vs_, psBg_);
 				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
-				{
-				    using namespace ShaderRegister::ShaderPS;
-				    using namespace ShaderRegister::ShaderVS;
+				UpdateConstantBuffer(ctx.Get(), baseSpriteDimensions, fadeTimer, fmod(currentTime / 1010.f, 55000.f), activeElements, hoveredFadeIns, 0.f, false);
 
-				    fx->SetVariable(ShaderType::PIXEL_SHADER, float3_fWipeMaskData, wipeMaskData_);
-				    fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, baseSpriteDimensions);
-				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, fadeTimer);
-				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fAnimationTimer, fmod(currentTime / 1010.f, 55000.f));
-				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fCenterScale, centerScaleOption_.value());
-				    fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementCount, activeElements.size());
-					fx->SetVariable(ShaderType::PIXEL_SHADER, float_fGlobalOpacity, opacityMultiplierOption_.value() * 0.01f);
-				    fx->SetVariableArray(ShaderType::PIXEL_SHADER, array_float4_fHoverFadeIns, (const std::span<float>&)hoveredFadeIns);
+				ID3D11ShaderResourceView* srvs[] = {
+					backgroundTexture_.srv.Get(),
+					wipeMaskTexture_.srv.Get()
+				};
+				ctx->PSSetShaderResources(0, 2, srvs);
 
-					fx->SetSamplerStates(sampler2D_texMainSampler, {});
-					fx->SetSamplerStates(sampler2D_texWipeMaskImageSampler, {});
-				    fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_.Get());
-				    fx->SetTexture(sampler2D_texWipeMaskImageSampler, wipeMaskTexture_.Get());
-				}
-
-				fx->ApplyStates();
 				DrawScreenQuad(ctx);
 
 				ShaderManager::i().SetShaders(vs_, psImg_);
@@ -496,9 +493,8 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
 
 				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f  * screenSize.y * screenSize.z, 0.08f };
-				fx->SetVariable(ShaderType::VERTEX_SHADER, ShaderRegister::ShaderVS::float4_fSpriteDimensions, spriteDimensions);
 
-				fx->ApplyStates();
+				UpdateConstantBuffer(ctx.Get(), spriteDimensions);
 				DrawScreenQuad(ctx);
 			}
 		}
@@ -559,33 +555,43 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 		spriteDimensions.x += spriteDimensions.z * 0.5f;
 		spriteDimensions.y += spriteDimensions.w * 0.5f;
 
-		{
-			using namespace ShaderRegister::ShaderPS;
-			using namespace ShaderRegister::ShaderVS;
-		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fAnimationTimer, fmod(currentTime / 1010.f, 55000.f));
-		    fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, spriteDimensions);
-		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, std::min(absDt * 2, 1.f));
-		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fTimeLeft, timeLeft);
-			fx->SetVariable(ShaderType::PIXEL_SHADER, bool_bShowIcon, conditionallyDelayed_ != nullptr);
-			fx->SetVariable(ShaderType::PIXEL_SHADER, float_fGlobalOpacity, opacityMultiplierOption_.value() * 0.01f);
+		UpdateConstantBuffer(ctx.Get(), spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, {}, timeLeft, conditionallyDelayed_ != nullptr);
 
-			fx->SetSamplerStates(sampler2D_texMainSampler, {});
-			fx->SetSamplerStates(sampler2D_texSecondarySampler, {
-				{ D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER },
-				{ D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER },
-				{ D3DSAMP_BORDERCOLOR, D3DCOLOR(0) }
-			});
-			fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_.Get());
+		ID3D11ShaderResourceView* srvs[] = {
+			backgroundTexture_.srv.Get(),
+			conditionallyDelayed_ ? conditionallyDelayed_->appearance() : nullptr
+		};
+		ctx->PSSetShaderResources(0, 2, srvs);
+		ctx->PSSetSamplers(1, 1, borderSampler_.GetAddressOf());
 
-			if(conditionallyDelayed_) {
-				fx->SetTexture(sampler2D_texSecondarySampler, conditionallyDelayed_->appearance());
-				conditionallyDelayed_->SetShaderState();
-			}
-		}
-
-		fx->ApplyStates();
 		DrawScreenQuad(ctx);
 	}
+}
+
+void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer,
+	const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon)
+{
+	cb_s->wipeMaskData = wipeMaskData_;
+	cb_s->spriteDimensions = spriteDimensions;
+	cb_s->wheelFadeIn = fadeIn;
+	cb_s->animationTimer = animationTimer;
+	cb_s->centerScale = centerScaleOption_.value();
+	cb_s->elementCount = activeElements.size();
+	cb_s->globalOpacity = opacityMultiplierOption_.value() * 0.01f;
+	cb_s->timeLeft = timeLeft;
+	cb_s->showIcon = showIcon;
+	memcpy_s(cb_s->hoverFadeIns, sizeof(cb_s->hoverFadeIns), hoveredFadeIns.data(), hoveredFadeIns.size() * sizeof(fVector4));
+
+	cb_s.Update();
+	ctx->VSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
+	ctx->PSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
+}
+
+void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions)
+{
+	cb_s->spriteDimensions = spriteDimensions;
+	cb_s.Update();
+	ctx->VSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
 }
 
 void Wheel::OnFocusLost()

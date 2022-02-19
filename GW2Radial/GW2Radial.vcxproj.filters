@@ -183,9 +183,6 @@
     <ClInclude Include="loader-core\include\gw2al_api.h">
       <Filter>External\Addon Loader</Filter>
     </ClInclude>
-    <ClInclude Include="shaders\registers.h">
-      <Filter>Resource Files\Shaders</Filter>
-    </ClInclude>
     <ClInclude Include="imgui\imstb_rectpack.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
@@ -340,6 +337,9 @@
     </None>
     <None Include="int\Shader_ps.cso">
       <Filter>Resource Files\Assets</Filter>
+    </None>
+    <None Include="shaders\cbuffers.hlsli">
+      <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

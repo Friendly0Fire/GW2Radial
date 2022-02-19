@@ -1,7 +1,3 @@
-#pragma warning(disable : 4717)
-#define SHADER_VS
-#include "registers.h"
-
 struct VS_SCREEN
 {
 	float4 Position : POSITION;

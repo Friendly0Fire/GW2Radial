@@ -5,28 +5,24 @@
 #include <IconFontCppHeaders/IconsFontAwesome5.h>
 #include <ShaderManager.h>
 
-#include "../shaders/registers.h"
-
 namespace GW2Radial
 {
 
 WheelElement::WheelElement(uint id, const std::string &nickname, const std::string &category,
-							const std::string &displayName, ID3D11Device* dev, ComPtr<ID3D11ShaderResourceView> srv)
+							const std::string &displayName, ID3D11Device* dev, const Texture2D& tex)
 	: nickname_(nickname), displayName_(displayName), elementId_(id),
 	  isShownOption_(displayName + " Visible", nickname + "_visible", category, true),
 	  sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, int(id)),
 	  keybind_(nickname, displayName, category),
-	  appearance_(srv)
+	  appearance_(tex)
 {
-	ComPtr<ID3D11Texture2D> tex;
-	if(srv == nullptr)
-	    std::tie(tex, appearance_) = CreateTextureFromResource<ID3D11Texture2D>(dev, Core::i().dllModule(), elementId_);
+	if (!appearance_.srv)
+		appearance_ = CreateTextureFromResource<ID3D11Texture2D>(dev, Core::i().dllModule(), elementId_);
 
-	GW2_ASSERT(tex != nullptr);
-	GW2_ASSERT(appearance_ != nullptr);
+	GW2_ASSERT(appearance_.srv);
 
 	D3D11_TEXTURE2D_DESC desc;
-	tex->GetDesc(&desc);
+	appearance_.texture->GetDesc(&desc);
 
 	aspectRatio_ = float(desc.Height) / float(desc.Width);
 	texWidth_ = float(desc.Width);
@@ -74,7 +70,7 @@ int WheelElement::DrawPriority(int extremumIndicator)
 	return rv;
 }
 
-void WheelElement::SetShaderState(const fVector4& spriteDimensions)
+void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions)
 {
 	fVector4 adjustedColor = color();
 	adjustedColor.x = Lerp(1, adjustedColor.x, colorizeAmount_);
@@ -94,6 +90,8 @@ void WheelElement::SetShaderState(const fVector4& spriteDimensions)
 	cb_s->spriteDimensions = spriteDimensions;
 
 	cb_s.Update();
+	ctx->VSSetConstantBuffers(1, 1, cb_s.buffer().GetAddressOf());
+	ctx->PSSetConstantBuffers(1, 1, cb_s.buffer().GetAddressOf());
 }
 
 void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const Wheel* parent)
@@ -141,9 +139,9 @@ void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 sprite
 	
 	spriteDimensions.w *= aspectRatio_;
 
-	SetShaderState(spriteDimensions);
+	SetShaderState(ctx.Get(), spriteDimensions);
 
-	ctx->PSSetShaderResources(0, 1, appearance_.GetAddressOf());
+	ctx->PSSetShaderResources(0, 1, appearance_.srv.GetAddressOf());
 
 	ctx->Draw(3, 0);
 }

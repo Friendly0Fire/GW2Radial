@@ -1,7 +1,4 @@
-#pragma warning(disable : 4717)
-#define SHADER_PS
 #include "noise.hlsl"
-#include "registers.h"
 
 struct PS_INPUT
 {

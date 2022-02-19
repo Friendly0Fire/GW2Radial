@@ -34,6 +34,7 @@ protected:
 public:
 	ConstantBufferBase() = default;
 	bool IsValid() const { return buf != nullptr; }
+	const ComPtr<ID3D11Buffer> buffer() const { return buf; }
 };
 
 template<typename T>

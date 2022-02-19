@@ -229,7 +229,6 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\WICTextureLoader.h" />
     <ClInclude Include="include\Win.h" />
     <ClInclude Include="loader-core\include\gw2al_api.h" />
-    <ClInclude Include="shaders\registers.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />
     <ClInclude Include="xxhash\xxhash.h" />
   </ItemGroup>
@@ -244,6 +243,7 @@ cd "$(ProjectDir)shaders"
     <None Include="int\Shader_vs.cso" />
     <None Include="Main.def" />
     <None Include="rt_rcdat.bin" />
+    <None Include="shaders\cbuffers.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

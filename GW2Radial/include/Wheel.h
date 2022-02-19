@@ -66,6 +66,9 @@ public:
 
 protected:
 	void Sort();
+	void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer,
+		const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon);
+	void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& baseSpriteDimensions);
 
 	static const mstime conditionallyDelayedFadeOutTime = 500;
 
@@ -159,6 +162,7 @@ protected:
 	Texture2D wipeMaskTexture_;
 	ShaderId psBg_, psImg_, psCursor_, psTimer_, vs_;
 	ComPtr<ID3D11BlendState> blendState_;
+	ComPtr<ID3D11SamplerState> borderSampler_;
 
 	std::unique_ptr<Input::MouseMoveCallback> mouseMoveCallback_;
 	std::unique_ptr<Input::MouseButtonCallback> mouseButtonCallback_;
@@ -179,6 +183,22 @@ protected:
 
 	friend class WheelElement;
 	friend class CustomWheelsManager;
+
+	struct WheelCB
+	{
+		fVector3 wipeMaskData;
+		float wheelFadeIn;
+		fVector4 spriteDimensions;
+		float animationTimer;
+		float centerScale;
+		int elementCount;
+		float globalOpacity;
+		fVector4 hoverFadeIns[12];
+		float timeLeft;
+		bool showIcon;
+	};
+
+	static ConstantBuffer<WheelCB> cb_s;
 };
 
 }

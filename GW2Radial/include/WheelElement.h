@@ -9,12 +9,13 @@ namespace GW2Radial
 class WheelElement
 {
 public:
-	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName, ID3D11Device* dev, ComPtr<ID3D11ShaderResourceView> srv = nullptr);
+	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName,
+		ID3D11Device* dev, const Texture2D& tex = {});
 	virtual ~WheelElement() = default;
 
 	int DrawPriority(int extremumIndicator);
 
-	void SetShaderState(const fVector4& spriteDimensions);
+	void SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions);
 	void Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
 
 	uint elementId() const { return elementId_; }
@@ -55,7 +56,7 @@ protected:
 	std::string nickname_, displayName_;
 	uint elementId_;
 	Keybind keybind_;
-	ComPtr<ID3D11ShaderResourceView> appearance_;
+	Texture2D appearance_;
 	mstime currentHoverTime_ = 0;
 	mstime currentExitTime_ = 0;
 	float aspectRatio_ = 1.f;
