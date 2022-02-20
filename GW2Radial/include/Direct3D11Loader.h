@@ -14,9 +14,8 @@ public:
 	Direct3D11Loader() = default;
 
 	void PrePresentSwapChain();
-	void PostCreateDevice(ID3D11Device* pDevice);
 	void PreCreateSwapChain(HWND hwnd);
-	void PostCreateSwapChain(IDXGISwapChain* swc);
+	void PostCreateSwapChain(ID3D11Device* dev, IDXGISwapChain* swc);
 
 	void Init(gw2al_core_vtable* gAPI);
 };

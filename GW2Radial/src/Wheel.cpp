@@ -11,10 +11,11 @@
 #include <GFXSettings.h>
 #include <MumbleLink.h>
 #include <ShaderManager.h>
+#include <VSCB.h>
 
 namespace GW2Radial
 {
-	ConstantBuffer<Wheel::WheelCB> Wheel::cb_s;
+ConstantBuffer<Wheel::WheelCB> Wheel::cb_s;
 
 Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, ID3D11Device* dev)
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
@@ -573,7 +574,6 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 	const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon)
 {
 	cb_s->wipeMaskData = wipeMaskData_;
-	cb_s->spriteDimensions = spriteDimensions;
 	cb_s->wheelFadeIn = fadeIn;
 	cb_s->animationTimer = animationTimer;
 	cb_s->centerScale = centerScaleOption_.value();
@@ -581,18 +581,23 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 	cb_s->globalOpacity = opacityMultiplierOption_.value() * 0.01f;
 	cb_s->timeLeft = timeLeft;
 	cb_s->showIcon = showIcon;
-	memcpy_s(cb_s->hoverFadeIns, sizeof(cb_s->hoverFadeIns), hoveredFadeIns.data(), hoveredFadeIns.size() * sizeof(fVector4));
+	memcpy_s(cb_s->hoverFadeIns, sizeof(cb_s->hoverFadeIns), hoveredFadeIns.data(), hoveredFadeIns.size() * sizeof(float));
 
 	cb_s.Update();
-	ctx->VSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
 	ctx->PSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
+
+	auto& vscb = GetVSCB();
+	vscb->spriteDimensions = spriteDimensions;
+	vscb.Update();
+	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
 
 void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions)
 {
-	cb_s->spriteDimensions = spriteDimensions;
-	cb_s.Update();
-	ctx->VSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
+	auto& vscb = GetVSCB();
+	vscb->spriteDimensions = spriteDimensions;
+	vscb.Update();
+	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
 
 void Wheel::OnFocusLost()

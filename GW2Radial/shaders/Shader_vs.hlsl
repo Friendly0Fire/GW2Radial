@@ -1,3 +1,5 @@
+#include "cbuffers.hlsli"
+
 struct VS_SCREEN
 {
 	float4 Position : POSITION;
@@ -10,10 +12,10 @@ VS_SCREEN ScreenQuad_VS(in uint id : SV_VertexID)
 
 	float2 UV = float2(id & 1, id >> 1);
 
-	float2 dims = (UV * 2 - 1) * fSpriteDimensions.zw;
+	float2 dims = (UV * 2 - 1) * spriteDimensions.zw;
 
     Out.UV = UV;
-    Out.Position = float4(dims + fSpriteDimensions.xy * 2 - 1, 0.5f, 1.f);
+    Out.Position = float4(dims + spriteDimensions.xy * 2 - 1, 0.5f, 1.f);
 	Out.Position.y *= -1;
 
     return Out;

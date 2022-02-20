@@ -59,7 +59,6 @@ Core::~Core()
 
 	Direct3D11Inject::i([&](auto& i) {
 		i.prePresentSwapChainCallback = nullptr;
-		i.postCreateDeviceCallback = nullptr;
 		i.preCreateSwapChainCallback = nullptr;
 		i.postCreateSwapChainCallback = nullptr;
 	});
@@ -73,8 +72,7 @@ void Core::OnInjectorCreated()
 	auto& inject = Direct3D11Inject::i();
 
 	inject.preCreateSwapChainCallback = [this](HWND hWnd) { PreCreateSwapChain(hWnd); };
-	inject.postCreateSwapChainCallback = [this](IDXGISwapChain* swc) { PostCreateSwapChain(swc); };
-	inject.postCreateDeviceCallback = [this](ID3D11Device* device){ PostCreateDevice(device); };
+	inject.postCreateSwapChainCallback = [this](ID3D11Device* dev, IDXGISwapChain* swc) { PostCreateDevice(dev); PostCreateSwapChain(swc); };
 	
 	inject.prePresentSwapChainCallback = [this](){ Draw(); };
 }

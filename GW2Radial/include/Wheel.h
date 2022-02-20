@@ -12,8 +12,6 @@
 namespace GW2Radial
 {
 
-class Effect;
-
 class Wheel : public SettingsMenu::Implementer
 {
 public:
@@ -189,12 +187,11 @@ protected:
 	{
 		fVector3 wipeMaskData;
 		float wheelFadeIn;
-		fVector4 spriteDimensions;
 		float animationTimer;
 		float centerScale;
 		int elementCount;
 		float globalOpacity;
-		fVector4 hoverFadeIns[12];
+		float hoverFadeIns[12];
 		float timeLeft;
 		bool showIcon;
 	};

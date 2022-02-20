@@ -1,5 +1,3 @@
-#pragma once
-
 //
 // float3  psrdnoise(float2 pos, float2 per, float rot)
 // float3  psrdnoise(float2 pos, float2 per)

@@ -8,17 +8,23 @@ typedef struct com_vtable
 {
 	void* methods[1024];
 } com_vtable;
-typedef struct wrapped_com_obj
+
+typedef struct com_orig_obj
 {
 	com_vtable* vtable;
 	union
 	{
-		IDirect3D9* orig_obj;
+		IDirect3D9* orig_d3d9;
 		IDirect3DDevice9* orig_dev;
 		ID3D11Device5* orig_dev11;
 		IDXGISwapChain4* orig_swc;
 		IDXGIFactory5* orig_dxgi;
 	};
+} com_orig_obj;
+
+typedef struct wrapped_com_obj
+{
+	com_orig_obj* orig_obj;
 	union
 	{
 		struct
@@ -66,7 +72,7 @@ typedef struct wrapped_com_obj
 typedef struct wrap_event_data
 {
 	void* ret;
-	wrapped_com_obj** stackPtr;
+	wrapped_com_obj* stackPtr;
 } wrap_event_data;
 
 namespace GW2Radial
@@ -82,14 +88,9 @@ void Direct3D11Loader::PreCreateSwapChain(HWND hwnd)
 	preCreateSwapChainCallback(hwnd);
 }
 
-void Direct3D11Loader::PostCreateSwapChain(IDXGISwapChain* swc)
+void Direct3D11Loader::PostCreateSwapChain(ID3D11Device* dev, IDXGISwapChain* swc)
 {
-	postCreateSwapChainCallback(swc);
-}
-
-void Direct3D11Loader::PostCreateDevice(ID3D11Device* pDevice)
-{
-	postCreateDeviceCallback(pDevice);
+	postCreateSwapChainCallback(dev, swc);
 }
 
 void OnSwapChainPrePresent(wrap_event_data* evd)
@@ -102,29 +103,32 @@ void OnSwapChainPrePresent1(wrap_event_data* evd)
 	GetD3D11Loader()->PrePresentSwapChain();
 }
 
-void OnPostCreateDevice(wrap_event_data* evd)
-{
-	GetD3D11Loader()->PostCreateDevice(*(*evd->stackPtr)->CreateDevice.ppDevice);
-}
-
 void OnDXGIPostCreateSwapChain(wrap_event_data* evd)
 {
-	GetD3D11Loader()->PostCreateSwapChain(*(*evd->stackPtr)->CreateSwapChain.ppSwapChain);
+	auto& params = (evd->stackPtr)->CreateSwapChain;
+	ID3D11Device* dev;
+	params.pDevice->QueryInterface(&dev);
+	if(dev)
+		GetD3D11Loader()->PostCreateSwapChain(dev, *params.ppSwapChain);
 }
 
 void OnDXGIPostCreateSwapChainForHwnd(wrap_event_data* evd)
 {
-	GetD3D11Loader()->PostCreateSwapChain(*(*evd->stackPtr)->CreateSwapChainForHwnd.ppSwapChain);
+	auto& params = (evd->stackPtr)->CreateSwapChainForHwnd;
+	ID3D11Device* dev;
+	params.pDevice->QueryInterface(&dev);
+	if (dev)
+		GetD3D11Loader()->PostCreateSwapChain(dev, *params.ppSwapChain);
 }
 
 void OnDXGIPreCreateSwapChain(wrap_event_data* evd)
 {
-	GetD3D11Loader()->PreCreateSwapChain((*evd->stackPtr)->CreateSwapChain.pDesc->OutputWindow);
+	GetD3D11Loader()->PreCreateSwapChain((evd->stackPtr)->CreateSwapChain.pDesc->OutputWindow);
 }
 
 void OnDXGIPreCreateSwapChainForHwnd(wrap_event_data* evd)
 {
-	GetD3D11Loader()->PreCreateSwapChain((*evd->stackPtr)->CreateSwapChainForHwnd.hWnd);
+	GetD3D11Loader()->PreCreateSwapChain((evd->stackPtr)->CreateSwapChainForHwnd.hWnd);
 }
 
 void Direct3D11Loader::Init(gw2al_core_vtable* gAPI)
@@ -144,7 +148,6 @@ void Direct3D11Loader::Init(gw2al_core_vtable* gAPI)
 
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_SWC_Present", OnSwapChainPrePresent, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_SWC_Present1", OnSwapChainPrePresent1, 0);
-	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_OBJ_CreateDevice", OnPostCreateDevice, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_DXGI_CreateSwapChain", OnDXGIPreCreateSwapChain, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_DXGI_CreateSwapChainForHwnd", OnDXGIPreCreateSwapChainForHwnd, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DXGI_CreateSwapChain", OnDXGIPostCreateSwapChain, 0);

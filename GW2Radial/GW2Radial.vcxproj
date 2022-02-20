@@ -171,6 +171,7 @@ cd "$(ProjectDir)shaders"
     <ClCompile Include="src\SettingsMenu.cpp" />
     <ClCompile Include="src\UpdateCheck.cpp" />
     <ClCompile Include="src\Utility.cpp" />
+    <ClCompile Include="src\VSCB.cpp" />
     <ClCompile Include="src\Wheel.cpp" />
     <ClCompile Include="src\WheelElement.cpp" />
     <ClCompile Include="xxhash\xxhash.c" />
@@ -219,6 +220,7 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\UpdateCheck.h" />
     <ClInclude Include="include\Utility.h" />
     <ClInclude Include="include\Version.h" />
+    <ClInclude Include="include\VSCB.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
     <ClInclude Include="include\Win.h" />

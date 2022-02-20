@@ -70,7 +70,6 @@ protected:
 	{
 		fVector4 adjustedColor;
 		fVector4 shadowData;
-		fVector4 spriteDimensions;
 		int elementId;
 		bool premultiplyAlpha;
 	};

@@ -4,10 +4,11 @@
 #include <Wheel.h>
 #include <IconFontCppHeaders/IconsFontAwesome5.h>
 #include <ShaderManager.h>
+#include <VSCB.h>
 
 namespace GW2Radial
 {
-	ConstantBuffer<WheelElement::WheelElementCB> WheelElement::cb_s;
+ConstantBuffer<WheelElement::WheelElementCB> WheelElement::cb_s;
 
 WheelElement::WheelElement(uint id, const std::string &nickname, const std::string &category,
 							const std::string &displayName, ID3D11Device* dev, const Texture2D& tex)
@@ -88,11 +89,14 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 	cb_s->adjustedColor = adjustedColor;
 	cb_s->shadowData = shadowData;
 	cb_s->premultiplyAlpha = premultiplyAlpha_;
-	cb_s->spriteDimensions = spriteDimensions;
 
 	cb_s.Update();
-	ctx->VSSetConstantBuffers(1, 1, cb_s.buffer().GetAddressOf());
 	ctx->PSSetConstantBuffers(1, 1, cb_s.buffer().GetAddressOf());
+
+	auto& vscb = GetVSCB();
+	vscb->spriteDimensions = spriteDimensions;
+	vscb.Update();
+	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
 
 void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const Wheel* parent)
@@ -142,7 +146,7 @@ void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 sprite
 
 	SetShaderState(ctx.Get(), spriteDimensions);
 
-	ctx->PSSetShaderResources(0, 1, appearance_.srv.GetAddressOf());
+	ctx->PSSetShaderResources(1, 1, appearance_.srv.GetAddressOf());
 
 	ctx->Draw(3, 0);
 }

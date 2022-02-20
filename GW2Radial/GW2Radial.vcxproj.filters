@@ -154,6 +154,9 @@
     <ClCompile Include="imgui\backends\imgui_impl_dx11.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="src\VSCB.cpp">
+      <Filter>Source Files\Radials</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -302,6 +305,9 @@
     </ClInclude>
     <ClInclude Include="imgui\backends\imgui_impl_dx11.h">
       <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\VSCB.h">
+      <Filter>Source Files\Radials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
