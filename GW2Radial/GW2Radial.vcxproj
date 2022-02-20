@@ -66,7 +66,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>D3D_DEBUG_INFO;_DEBUG;GW2Radial_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;SHADERS_DIR=LR"sd($(ProjectDir)shaders\)sd";$(GitHubDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -108,7 +108,7 @@ git describe --always --dirty --match "NOT A TAG" &gt;&gt; "$(ProjectDir)include
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;GW2Radial_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;SHADERS_DIR=LR"sd($(ProjectDir)shaders\)sd";$(GitHubDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -151,7 +151,6 @@ cd "$(ProjectDir)shaders"
     <ClCompile Include="src\ConfigurationFile.cpp" />
     <ClCompile Include="src\Core.cpp" />
     <ClCompile Include="src\CustomWheel.cpp" />
-    <ClCompile Include="src\DDSTextureLoader.cpp" />
     <ClCompile Include="src\Direct3D11Loader.cpp" />
     <ClCompile Include="src\ShaderManager.cpp" />
     <ClCompile Include="src\FileSystem.cpp" />
@@ -174,7 +173,6 @@ cd "$(ProjectDir)shaders"
     <ClCompile Include="src\Utility.cpp" />
     <ClCompile Include="src\Wheel.cpp" />
     <ClCompile Include="src\WheelElement.cpp" />
-    <ClCompile Include="src\WICTextureLoader.cpp" />
     <ClCompile Include="xxhash\xxhash.c" />
   </ItemGroup>
   <ItemGroup>
@@ -193,8 +191,6 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\ConfigurationOption.h" />
     <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\CustomWheel.h" />
-    <ClInclude Include="include\dds.h" />
-    <ClInclude Include="include\DDSTextureLoader.h" />
     <ClInclude Include="include\Defs.h" />
     <ClInclude Include="include\Direct3D11Inject.h" />
     <ClInclude Include="include\Direct3D11Loader.h" />
@@ -220,13 +216,11 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\SettingsMenu.h" />
     <ClInclude Include="include\Singleton.h" />
     <ClInclude Include="include\Tag.h" />
-    <ClInclude Include="include\TGA.h" />
     <ClInclude Include="include\UpdateCheck.h" />
     <ClInclude Include="include\Utility.h" />
     <ClInclude Include="include\Version.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
-    <ClInclude Include="include\WICTextureLoader.h" />
     <ClInclude Include="include\Win.h" />
     <ClInclude Include="loader-core\include\gw2al_api.h" />
     <ClInclude Include="simpleini\SimpleIni.h" />
@@ -242,6 +236,7 @@ cd "$(ProjectDir)shaders"
     <None Include="int\Shader_ps.cso" />
     <None Include="int\Shader_vs.cso" />
     <None Include="Main.def" />
+    <None Include="packages.config" />
     <None Include="rt_rcdat.bin" />
     <None Include="shaders\cbuffers.hlsli" />
   </ItemGroup>
@@ -333,5 +328,14 @@ cd "$(ProjectDir)shaders"
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.XAudio2.Redist.1.2.8\build\native\Microsoft.XAudio2.Redist.targets" Condition="Exists('..\packages\Microsoft.XAudio2.Redist.1.2.8\build\native\Microsoft.XAudio2.Redist.targets')" />
+    <Import Project="..\packages\directxtk_desktop_2017.2021.11.8.1\build\native\directxtk_desktop_2017.targets" Condition="Exists('..\packages\directxtk_desktop_2017.2021.11.8.1\build\native\directxtk_desktop_2017.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.XAudio2.Redist.1.2.8\build\native\Microsoft.XAudio2.Redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.XAudio2.Redist.1.2.8\build\native\Microsoft.XAudio2.Redist.targets'))" />
+    <Error Condition="!Exists('..\packages\directxtk_desktop_2017.2021.11.8.1\build\native\directxtk_desktop_2017.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk_desktop_2017.2021.11.8.1\build\native\directxtk_desktop_2017.targets'))" />
+  </Target>
 </Project>

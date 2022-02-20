@@ -5,6 +5,7 @@
 #include <ConfigurationOption.h>
 #include <SettingsMenu.h>
 #include <Utility.h>
+#include <ShaderManager.h>
 
 #include <Input.h>
 

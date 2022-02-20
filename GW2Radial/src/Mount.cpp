@@ -5,7 +5,7 @@
 namespace GW2Radial
 {
 
-Mount::Mount(MountType m, IDirect3DDevice9* dev)
+Mount::Mount(MountType m, ID3D11Device* dev)
 	: WheelElement(uint(m), std::string("mount_") + GetMountNicknameFromType(m), "Mounts", GetMountNameFromType(m), dev)
 { }
 
@@ -21,7 +21,7 @@ bool Mount::isActive() const
 }
 
 template<>
-void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
+void Wheel::Setup<Mount>(ID3D11Device* dev)
 {
 	struct MountExtraData : Wheel::ExtraData {
 	    ConfigurationOption<bool> enableUnderwaterSkimmer;

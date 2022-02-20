@@ -13,7 +13,10 @@ namespace GW2Radial {
 
 class ShaderId
 {
+public:
 	ShaderId() : id(std::numeric_limits<uint>::max()) {}
+
+private:
 	ShaderId(uint i) : id(i) {}
 	uint id;
 
@@ -22,13 +25,13 @@ class ShaderId
 
 class ConstantBufferBase
 {
+protected:
 	ConstantBufferBase(ComPtr<ID3D11DeviceContext> ctx, ComPtr<ID3D11Buffer> buf) : ctx(ctx), buf(buf) {}
 	ComPtr<ID3D11Buffer> buf;
 	ComPtr<ID3D11DeviceContext> ctx;
 
 	friend class ShaderManager;
 
-protected:
 	void Upload(void* data, size_t size);
 
 public:
@@ -40,7 +43,7 @@ public:
 template<typename T>
 class ConstantBuffer : public ConstantBufferBase
 {
-	ConstantBuffer(ComPtr<ID3D11DeviceContext> ctx, ComPtr<ID3D11Buffer> buf, std::optional<const T&> data) : ConstantBufferBase(ctx, buf)
+	ConstantBuffer(ComPtr<ID3D11DeviceContext> ctx, ComPtr<ID3D11Buffer> buf, std::optional<T>&& data) : ConstantBufferBase(ctx, buf)
 	{
 		if (data.has_value())
 			this->data = *data;
@@ -75,10 +78,10 @@ public:
 	ShaderId GetShader(const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint);
 
 	template<typename T>
-	ConstantBuffer<T> MakeConstantBuffer(std::optional<const T&> data = std::nullopt_t)
+	ConstantBuffer<T> MakeConstantBuffer(std::optional<T> data = std::nullopt)
 	{
-		auto buf = MakeConstantBuffer(sizeof(T), data.has_value() ? &data : nullptr);
-		return { context_, buf, data };
+		auto buf = MakeConstantBuffer(sizeof(T), data.has_value() ? &data.value() : nullptr);
+		return { context_, buf, std::move(data) };
 	}
 
 	template<typename... Args>

@@ -2,6 +2,7 @@
 #include <Main.h>
 #include <ImGuiExtensions.h>
 #include <SettingsMenu.h>
+#include <ShaderManager.h>
 
 namespace GW2Radial
 {
@@ -45,7 +46,7 @@ public:
 	bool isBound() const { return keybind_.isSet(); }
 	virtual bool isActive() const { return isBound() && isShownOption_.value(); }
 
-	ID3D11ShaderResourceView* appearance() const { return appearance_.Get(); }
+	const Texture2D& appearance() const { return appearance_; }
 
 protected:
 	virtual fVector4 color() = 0;

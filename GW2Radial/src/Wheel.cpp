@@ -14,6 +14,7 @@
 
 namespace GW2Radial
 {
+	ConstantBuffer<Wheel::WheelCB> Wheel::cb_s;
 
 Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, ID3D11Device* dev)
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
@@ -559,7 +560,7 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 
 		ID3D11ShaderResourceView* srvs[] = {
 			backgroundTexture_.srv.Get(),
-			conditionallyDelayed_ ? conditionallyDelayed_->appearance() : nullptr
+			conditionallyDelayed_ ? conditionallyDelayed_->appearance().srv.Get() : nullptr
 		};
 		ctx->PSSetShaderResources(0, 2, srvs);
 		ctx->PSSetSamplers(1, 1, borderSampler_.GetAddressOf());

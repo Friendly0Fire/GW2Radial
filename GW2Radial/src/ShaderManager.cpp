@@ -1,7 +1,6 @@
 #include "ShaderManager.h"
 #include <fstream>
 #include <sstream>
-#include <UnitQuad.h>
 #include "Utility.h"
 #include <d3dcompiler.h>
 
@@ -109,7 +108,7 @@ void ShaderManager::ReloadAll()
 ComPtr<ID3D11Buffer> ShaderManager::MakeConstantBuffer(size_t dataSize, const void* data)
 {
     D3D11_BUFFER_DESC desc {
-        .ByteWidth = dataSize,
+        .ByteWidth = uint(dataSize),
         .Usage = D3D11_USAGE_DYNAMIC,
         .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
         .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
@@ -119,7 +118,7 @@ ComPtr<ID3D11Buffer> ShaderManager::MakeConstantBuffer(size_t dataSize, const vo
     D3D11_SUBRESOURCE_DATA idata
     {
         .pSysMem = data,
-        .SysMemPitch = dataSize,
+        .SysMemPitch = uint(dataSize),
         .SysMemSlicePitch = 0
     };
     ComPtr<ID3D11Buffer> buf;

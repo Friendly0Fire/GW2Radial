@@ -3,7 +3,6 @@
 #include <Main.h>
 #include <Singleton.h>
 #include <Wheel.h>
-#include <UnitQuad.h>
 #include <CustomWheel.h>
 #include <Defs.h>
 #include <d3d11.h>
@@ -32,7 +31,6 @@ public:
 	WNDPROC baseWndProc() const { return baseWndProc_; }
 	uint screenWidth() const { return screenWidth_; }
 	uint screenHeight() const { return screenHeight_; }
-	const std::unique_ptr<UnitQuad>& quad() const { return quad_; }
 	ImFont* font() const { return font_; }
 	ImFont* fontBlack() const { return fontBlack_; }
 	ImFont* fontItalic() const { return fontItalic_; }
@@ -80,8 +78,6 @@ protected:
 	uint longTickSkip_ = 0;
 	const uint LongTickSkipCount = 600;
 	std::list<InputLanguageChangeListener*> ilcListeners_;
-
-	std::unique_ptr<UnitQuad> quad_;
 
 	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr, *fontDraw_ = nullptr, *fontIcon_ = nullptr, *fontMono_ = nullptr;
 

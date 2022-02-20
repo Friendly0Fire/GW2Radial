@@ -8,7 +8,7 @@ namespace GW2Radial
 class Mount : public WheelElement
 {
 public:
-	Mount(MountType m, IDirect3DDevice9* dev);
+	Mount(MountType m, ID3D11Device* dev);
 
 	bool isActive() const override;
 

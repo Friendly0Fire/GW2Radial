@@ -6,7 +6,7 @@
 #include <fstream>
 #include <ImGuiPopup.h>
 #include <FileSystem.h>
-#include <backends/imgui_impl_dx9.h>
+#include <backends/imgui_impl_dx11.h>
 
 namespace GW2Radial
 {
@@ -20,15 +20,38 @@ float CalcText(ImFont* font, const std::wstring& text)
 	return sz.x;
 }
 
-ComPtr<IDirect3DTexture9> MakeTextTexture(IDirect3DDevice9* dev, float fontSize)
+RenderTarget MakeTextTexture(ID3D11Device* dev, float fontSize)
 {
-	ComPtr<IDirect3DTexture9> tex = nullptr;
-	dev->CreateTexture(1024, uint(fontSize), 1,
-					   D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, nullptr);
-	return tex;
+	RenderTarget rt;
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Width = 1024;
+	desc.Height = uint(fontSize);
+	desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+	dev->CreateTexture2D(&desc, nullptr, &rt.texture);
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	dev->CreateShaderResourceView(rt.texture.Get(), &srvDesc, &rt.srv);
+
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.Texture2D.MipSlice = 0;
+	dev->CreateRenderTargetView(rt.texture.Get(), &rtvDesc, &rt.rtv);
+
+	return rt;
 }
 
-void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float fontSize, const std::wstring& text)
+void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ImFont* font, float fontSize, const std::wstring& text)
 {
 	const uint fgColor = 0xFFFFFFFF;
 	const uint bgColor = 0x00000000;
@@ -51,14 +74,13 @@ void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float
 	auto oldDisplaySize = io.DisplaySize;
 	io.DisplaySize = clip;
 
-	ComPtr<IDirect3DSurface9> surf;
-	tex->GetSurfaceLevel(0, &surf);
+	ID3D11RenderTargetView* oldRt;
+	ID3D11DepthStencilView* oldDs;
+	ctx->OMGetRenderTargets(1, &oldRt, &oldDs);
+	ctx->OMSetRenderTargets(1, &rt.rtv, nullptr);
 
-	ComPtr<IDirect3DSurface9> oldRt;
-	dev->GetRenderTarget(0, &oldRt);
-	dev->SetRenderTarget(0, surf.Get());
-
-	dev->Clear(1, nullptr, D3DCLEAR_TARGET, bgColor, 0.f, 0);
+	float clearBlack[] = { 0.f, 0.f, 0.f, 0.f };
+	ctx->ClearRenderTargetView(rt.rtv.Get(), clearBlack);
 
 	ImDrawList* imDraws[] = { &imDraw };
 	ImDrawData imData;
@@ -70,26 +92,29 @@ void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float
 	imData.DisplayPos = ImVec2(0.0f, 0.0f);
 	imData.DisplaySize = io.DisplaySize;
 
-	ImGui_ImplDX9_RenderDrawData(&imData);
-	
-	dev->SetRenderTarget(0, oldRt.Get());
+	ImGui_ImplDX11_RenderDrawData(&imData);
+
+	ctx->OMSetRenderTargets(1, &oldRt, oldDs);
 
 	io.DisplaySize = oldDisplaySize;
 }
 
-ComPtr<IDirect3DTexture9> LoadCustomTexture(IDirect3DDevice9* dev, const std::filesystem::path& path)
+Texture2D LoadCustomTexture(ID3D11Device* dev, const std::filesystem::path& path)
 {
 	cref data = FileSystem::ReadFile(path);
 	if(data.empty())
-		return nullptr;
+		return {};
 
 	try {
-	    ComPtr<IDirect3DTexture9> tex;
+		Texture2D tex;
+		ComPtr<ID3D11Resource> res;
 		HRESULT hr = S_OK;
 	    if(path.extension() == L".dds")
-            hr = DirectX::CreateDDSTextureFromMemory(dev, data.data(), data.size(), &tex);
+            hr = DirectX::CreateDDSTextureFromMemory(dev, data.data(), data.size(), &res, &tex.srv);
 	    else
-            hr = DirectX::CreateWICTextureFromMemory(dev, data.data(), data.size(), &tex);
+            hr = DirectX::CreateWICTextureFromMemory(dev, data.data(), data.size(), &res, &tex.srv);
+		if(res)
+			res->QueryInterface(tex.texture.GetAddressOf());
 
 		if(!SUCCEEDED(hr))
 		    FormattedMessageBox(L"Could not load custom radial menu image '%s': 0x%x.", L"Custom Menu Error", path.wstring().c_str(), hr);
@@ -97,7 +122,7 @@ ComPtr<IDirect3DTexture9> LoadCustomTexture(IDirect3DDevice9* dev, const std::fi
 	    return tex;
 	} catch(...) {
 		FormattedMessageBox(L"Could not load custom radial menu image '%s'.", L"Custom Menu Error", path.wstring().c_str());
-	    return nullptr;
+		return {};
 	}
 }
 
@@ -106,20 +131,20 @@ CustomWheelsManager::CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wh
 {
 }
 
-void CustomWheelsManager::DrawOffscreen(IDirect3DDevice9* dev)
+void CustomWheelsManager::DrawOffscreen(ID3D11Device* dev, ID3D11DeviceContext* ctx)
 {
 	if(!loaded_)
 		Reload(dev);
 	else if(!textDraws_.empty())
 	{
-		cref td = textDraws_.front();
-		DrawText(dev, td.tex.Get(), font_, td.size, td.text);
+		auto& td = textDraws_.front();
+		DrawText(ctx, td.rt, font_, td.size, td.text);
 	    textDraws_.pop_front();
 	}
 }
 
 
-void CustomWheelsManager::Draw(IDirect3DDevice9* dev)
+void CustomWheelsManager::Draw(ID3D11DeviceContext* ctx)
 {
 	if(failedLoads_.empty())
 		return;
@@ -135,7 +160,7 @@ void CustomWheelsManager::Draw(IDirect3DDevice9* dev)
 			}, [&]() { failedLoads_.pop_back(); });
 }
 
-std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::path& configPath, IDirect3DDevice9* dev)
+std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::path& configPath, ID3D11Device* dev)
 {
 	cref dataFolder = configPath.parent_path();
 
@@ -221,7 +246,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 				ces.premultiply = ini.GetBoolValue(sec.pItem, "premultiply_alpha", true);
 		}
 
-		if(!ces.texture)
+		if(!ces.texture.texture)
 			maxTextWidth = std::max(maxTextWidth, CalcText(font_, utf8_decode(ces.name)));
 
 		elements.push_back(ces);
@@ -233,7 +258,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 
 	for(auto& ces : elements)
 	{
-	    if(ces.texture == nullptr) {
+	    if(!ces.texture.texture) {
 		    ces.texture = MakeTextTexture(dev, desiredFontSize);
 			textDraws_.push_back({ desiredFontSize, utf8_decode(ces.name), ces.texture });
 		}
@@ -246,7 +271,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	return std::move(wheel);
 }
 
-void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
+void CustomWheelsManager::Reload(ID3D11Device* dev)
 {
 	{
 	    APTTYPE a;
@@ -313,7 +338,7 @@ void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
 	loaded_ = true;
 }
 
-CustomElement::CustomElement(const CustomElementSettings& ces, IDirect3DDevice9* dev)
+CustomElement::CustomElement(const CustomElementSettings& ces, ID3D11Device* dev)
 	: WheelElement(ces.id, ces.nickname, ces.category, ces.name, dev, ces.texture), color_(ces.color)
 {
     shadowStrength_ = ces.shadow;

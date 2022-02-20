@@ -5,7 +5,6 @@
 #include <backends/imgui_impl_win32.h>
 #include <Input.h>
 #include <ConfigurationFile.h>
-#include <UnitQuad.h>
 #include <Wheel.h>
 #include <Mount.h>
 #include <SettingsMenu.h>
@@ -124,7 +123,7 @@ void Core::OnFocusLost()
 }
 
 void Core::OnFocus() {
-	mainEffect_->ReloadAll();
+	ShaderManager::i().ReloadAll();
 
 	Input::i().OnFocus();
 
@@ -219,9 +218,6 @@ void Core::PostCreateDevice(ID3D11Device* device)
 
 	firstFrame_ = true;
 
-	try { quad_ = std::make_unique<UnitQuad>(device_); }
-	catch (...) { quad_ = nullptr; }
-
 	ShaderManager::i(std::make_unique<ShaderManager>(device_));
 
 	UpdateCheck::i().CheckForUpdates();
@@ -297,7 +293,7 @@ void Core::Draw()
 		ImGui::NewFrame();
 		
 		for (auto& wheel : wheels_)
-			wheel->Draw(context_, mainEffect_, quad_.get());
+			wheel->Draw(context_);
 		
 		customWheels_->Draw(context_);
 
@@ -342,7 +338,7 @@ void Core::Draw()
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-        customWheels_->DrawOffscreen(context_);
+        customWheels_->DrawOffscreen(device_, context_);
 	}
 	
 	if(forceReloadWheels_)

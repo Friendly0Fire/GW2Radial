@@ -7,6 +7,7 @@
 
 namespace GW2Radial
 {
+	ConstantBuffer<WheelElement::WheelElementCB> WheelElement::cb_s;
 
 WheelElement::WheelElement(uint id, const std::string &nickname, const std::string &category,
 							const std::string &displayName, ID3D11Device* dev, const Texture2D& tex)

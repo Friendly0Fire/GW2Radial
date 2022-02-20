@@ -6,7 +6,6 @@
 #include "DDSTextureLoader.h"
 #include <fstream>
 #include <sstream>
-#include <TGA.h>
 #include <shellapi.h>
 
 namespace GW2Radial

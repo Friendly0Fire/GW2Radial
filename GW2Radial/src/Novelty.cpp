@@ -4,12 +4,12 @@
 namespace GW2Radial
 {
 
-Novelty::Novelty(NoveltyType m, IDirect3DDevice9* dev)
+Novelty::Novelty(NoveltyType m, ID3D11Device* dev)
 	: WheelElement(uint(m), std::string("novelty_") + GetNoveltyNicknameFromType(m), "Novelties", GetNoveltyNameFromType(m), dev)
 { }
 
 template<>
-void Wheel::Setup<Novelty>(IDirect3DDevice9* dev)
+void Wheel::Setup<Novelty>(ID3D11Device* dev)
 {
 	for(auto i = NoveltyType::FIRST; i <= NoveltyType::LAST; i = NoveltyType(uint(i) + 1))
 		AddElement(std::make_unique<Novelty>(i, dev));

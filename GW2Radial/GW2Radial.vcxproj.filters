@@ -76,16 +76,10 @@
     <ClCompile Include="imgui\backends\imgui_impl_win32.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\DDSTextureLoader.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="src\Direct3D11Loader.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\ShaderManager.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\WICTextureLoader.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Wheel.cpp">
@@ -204,9 +198,6 @@
     <ClInclude Include="include\Main.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\DDSTextureLoader.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="include\Direct3D11Inject.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
@@ -214,12 +205,6 @@
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\ShaderManager.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\WICTextureLoader.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\TGA.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\Wheel.h">
@@ -257,9 +242,6 @@
     </ClInclude>
     <ClInclude Include="include\ImGuiPopup.h">
       <Filter>Source Files\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="include\dds.h">
-      <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\GFXSettings.h">
       <Filter>Source Files\Game Data</Filter>
@@ -341,6 +323,7 @@
     <None Include="shaders\cbuffers.hlsli">
       <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

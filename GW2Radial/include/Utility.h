@@ -76,6 +76,16 @@ using Texture1D = Texture<ID3D11Texture1D>;
 using Texture2D = Texture<ID3D11Texture2D>;
 using Texture3D = Texture<ID3D11Texture3D>;
 
+struct RenderTarget : public Texture<ID3D11Texture2D>
+{
+	ComPtr<ID3D11RenderTargetView> rtv;
+};
+
+struct DepthStencil : public Texture<ID3D11Texture2D>
+{
+	ComPtr<ID3D11DepthStencilView> rtv;
+};
+
 std::pair<ComPtr<ID3D11Resource>, ComPtr<ID3D11ShaderResourceView>> CreateResourceFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource);
 
 template<typename T = ID3D11Texture2D>
