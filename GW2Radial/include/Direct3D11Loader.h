@@ -17,6 +17,8 @@ public:
 	void PreCreateSwapChain(HWND hwnd);
 	void PostCreateSwapChain(ID3D11Device* dev, IDXGISwapChain* swc);
 
+	void DestroyDevice();
+
 	void Init(gw2al_core_vtable* gAPI);
 };
 

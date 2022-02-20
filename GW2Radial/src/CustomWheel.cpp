@@ -22,9 +22,11 @@ float CalcText(ImFont* font, const std::wstring& text)
 
 RenderTarget MakeTextTexture(ID3D11Device* dev, float fontSize)
 {
+	const auto fmt = DXGI_FORMAT_R8G8B8A8_UNORM;
+
 	RenderTarget rt;
 	D3D11_TEXTURE2D_DESC desc;
-	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Format = fmt;
 	desc.Width = 1024;
 	desc.Height = uint(fontSize);
 	desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
@@ -33,20 +35,20 @@ RenderTarget MakeTextTexture(ID3D11Device* dev, float fontSize)
 	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.CPUAccessFlags = 0;
 	desc.MiscFlags = 0;
-	dev->CreateTexture2D(&desc, nullptr, &rt.texture);
+	GW2_HASSERT(dev->CreateTexture2D(&desc, nullptr, &rt.texture));
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Format = fmt;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 	srvDesc.Texture2D.MostDetailedMip = 0;
-	dev->CreateShaderResourceView(rt.texture.Get(), &srvDesc, &rt.srv);
+	GW2_HASSERT(dev->CreateShaderResourceView(rt.texture.Get(), &srvDesc, &rt.srv));
 
 	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
-	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	rtvDesc.Format = fmt;
 	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	rtvDesc.Texture2D.MipSlice = 0;
-	dev->CreateRenderTargetView(rt.texture.Get(), &rtvDesc, &rt.rtv);
+	GW2_HASSERT(dev->CreateRenderTargetView(rt.texture.Get(), &rtvDesc, &rt.rtv));
 
 	return rt;
 }

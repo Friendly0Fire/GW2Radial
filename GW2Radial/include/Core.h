@@ -56,10 +56,8 @@ protected:
 
 	void Draw();
 
-	void PostCreateDevice(ID3D11Device* device);
-
 	void PreCreateSwapChain(HWND hwnd);
-	void PostCreateSwapChain(IDXGISwapChain* swc);
+	void PostCreateSwapChain(ID3D11Device* device, IDXGISwapChain* swc);
 	
 
 	HWND gameWindow_ = nullptr;
@@ -85,7 +83,6 @@ protected:
 	std::unique_ptr<CustomWheelsManager> customWheels_;
 	
 	std::unique_ptr<ConfigurationOption<bool>> firstMessageShown_;
-	std::unique_ptr<ConfigurationOption<bool>> ignoreRTSS_;
 
 	ImGuiContext* imguiContext_ = nullptr;
 

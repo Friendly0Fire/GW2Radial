@@ -72,7 +72,7 @@ void Core::OnInjectorCreated()
 	auto& inject = Direct3D11Inject::i();
 
 	inject.preCreateSwapChainCallback = [this](HWND hWnd) { PreCreateSwapChain(hWnd); };
-	inject.postCreateSwapChainCallback = [this](ID3D11Device* dev, IDXGISwapChain* swc) { PostCreateDevice(dev); PostCreateSwapChain(swc); };
+	inject.postCreateSwapChainCallback = [this](ID3D11Device* dev, IDXGISwapChain* swc) { PostCreateSwapChain(dev, swc); };
 	
 	inject.prePresentSwapChainCallback = [this](){ Draw(); };
 }
@@ -154,8 +154,29 @@ void Core::PreCreateSwapChain(HWND hwnd)
 	}
 }
 
-void Core::PostCreateSwapChain(IDXGISwapChain* swc)
+void Core::PostCreateSwapChain(ID3D11Device* device, IDXGISwapChain* swc)
 {
+	device_ = device;
+	device->GetImmediateContext(&context_);
+
+	DXGI_SWAP_CHAIN_DESC desc;
+	swc->GetDesc(&desc);
+
+	screenWidth_ = desc.BufferDesc.Width;
+	screenHeight_ = desc.BufferDesc.Height;
+
+	firstFrame_ = true;
+
+	ShaderManager::i(std::make_unique<ShaderManager>(device_));
+
+	UpdateCheck::i().CheckForUpdates();
+	MiscTab::i();
+
+	wheels_.emplace_back(Wheel::Create<Mount>(IDR_BG, IDR_WIPEMASK, "mounts", "Mounts", device_));
+	wheels_.emplace_back(Wheel::Create<Novelty>(IDR_BG, IDR_WIPEMASK, "novelties", "Novelties", device_));
+	wheels_.emplace_back(Wheel::Create<Marker>(IDR_BG, IDR_WIPEMASK, "markers", "Markers", device_));
+	wheels_.emplace_back(Wheel::Create<ObjectMarker>(IDR_BG, IDR_WIPEMASK, "object_markers", "Object Markers", device_));
+
 	// Init ImGui
 	auto &imio = ImGui::GetIO();
 	imio.IniFilename = nullptr;
@@ -183,52 +204,11 @@ void Core::PostCreateSwapChain(IDXGISwapChain* swc)
 		imio.FontDefault = font_;
 
 	ImGui_ImplWin32_Init(gameWindow_);
-
-	firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
-	ignoreRTSS_ = std::make_unique<ConfigurationOption<bool>>("", "ignore_rtss", "Core", false);
-
-	if(!ignoreRTSS_->value())
-	{
-		const auto rtss = GetModuleHandleA("RTSSHooks64.dll");
-		if(rtss)
-		{
-			const auto retval = MessageBox(nullptr, TEXT("WARNING: RivaTuner Statistics Server has been detected! GW2Radial is incompatible with RTSS, anomalous behavior may occur. Are you sure you want to continue? Continuing will prevent this message from showing again."), TEXT("RTSS Detected"), MB_ICONWARNING | MB_YESNO);
-			if(retval == IDNO)
-				exit(1);
-			else if(retval == IDYES)
-				ignoreRTSS_->value(true);
-		}
-	}
-
-	DXGI_SWAP_CHAIN_DESC desc;
-	swc->GetDesc(&desc);
-
-	screenWidth_ = desc.BufferDesc.Width;
-	screenHeight_ = desc.BufferDesc.Height;
-}
-
-void Core::PostCreateDevice(ID3D11Device* device)
-{
-	// Initialize graphics
-	device_ = device;
-	device_->AddRef();
-	device->GetImmediateContext(&context_);
-
-	firstFrame_ = true;
-
-	ShaderManager::i(std::make_unique<ShaderManager>(device_));
-
-	UpdateCheck::i().CheckForUpdates();
-	MiscTab::i();
-
-	wheels_.emplace_back(Wheel::Create<Mount>(IDR_BG, IDR_WIPEMASK, "mounts", "Mounts", device_));
-	wheels_.emplace_back(Wheel::Create<Novelty>(IDR_BG, IDR_WIPEMASK, "novelties", "Novelties", device_));
-	wheels_.emplace_back(Wheel::Create<Marker>(IDR_BG, IDR_WIPEMASK, "markers", "Markers", device_));
-	wheels_.emplace_back(Wheel::Create<ObjectMarker>(IDR_BG, IDR_WIPEMASK, "object_markers", "Object Markers", device_));
-
 	ImGui_ImplDX11_Init(device_, context_);
 
 	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, fontDraw_);
+
+	firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
 }
 
 void Core::OnUpdate()

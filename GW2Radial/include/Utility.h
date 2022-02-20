@@ -267,4 +267,11 @@ const wchar_t* GetCommandLineArg(const wchar_t* name);
 
 void DrawScreenQuad(ComPtr<ID3D11DeviceContext>& ctx);
 
+template<std::integral T, std::integral T2>
+auto RoundUp(T numToRound, T2 multiple) -> std::common_type_t<T, T2>
+{
+	GW2_ASSERT(multiple > 0);
+	return ((numToRound + multiple - 1) / multiple) * multiple;
+}
+
 }

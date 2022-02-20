@@ -48,7 +48,7 @@ public:
 ShaderManager::ShaderManager(ID3D11Device* dev)
     : device_(dev) {
     CheckHotReload();
-    device_->GetImmediateContext(&context_);
+    device_->GetImmediateContext(context_.GetAddressOf());
 }
 
 void ShaderManager::SetShaders(ShaderId vs, ShaderId ps)
@@ -107,6 +107,7 @@ void ShaderManager::ReloadAll()
 
 ComPtr<ID3D11Buffer> ShaderManager::MakeConstantBuffer(size_t dataSize, const void* data)
 {
+    dataSize = RoundUp(dataSize, 16);
     D3D11_BUFFER_DESC desc {
         .ByteWidth = uint(dataSize),
         .Usage = D3D11_USAGE_DYNAMIC,
@@ -122,7 +123,7 @@ ComPtr<ID3D11Buffer> ShaderManager::MakeConstantBuffer(size_t dataSize, const vo
         .SysMemSlicePitch = 0
     };
     ComPtr<ID3D11Buffer> buf;
-    device_->CreateBuffer(&desc, data ? &idata : nullptr, &buf);
+    GW2_HASSERT(device_->CreateBuffer(&desc, data ? &idata : nullptr, buf.GetAddressOf()));
 
     return buf;
 }
@@ -168,7 +169,7 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
                                              entrypoint.c_str(),
                                              st == D3D11_SHVER_PIXEL_SHADER ? "ps_4_0" : "vs_4_0",
                                              0, 0,
-                                             &blob, &errors);
+                                             blob.GetAddressOf(), errors.GetAddressOf());
 
         HandleFailedShaderCompile(hr, errors.Get());
         errors.Reset();
@@ -176,11 +177,11 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
 
     if (st == D3D11_SHVER_PIXEL_SHADER) {
         ComPtr<ID3D11PixelShader> ps;
-        device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &ps);
+        GW2_HASSERT(device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, ps.GetAddressOf()));
         return ps;
     } else {
         ComPtr<ID3D11VertexShader> vs;
-        device_->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vs);
+        GW2_HASSERT(device_->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, vs.GetAddressOf()));
         return vs;
     }
 }
