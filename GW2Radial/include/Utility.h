@@ -79,6 +79,14 @@ using Texture3D = Texture<ID3D11Texture3D>;
 struct RenderTarget : public Texture<ID3D11Texture2D>
 {
 	ComPtr<ID3D11RenderTargetView> rtv;
+
+	RenderTarget& operator=(const Texture2D& tex)
+	{
+		texture = tex.texture;
+		srv = tex.srv;
+
+		return *this;
+	}
 };
 
 struct DepthStencil : public Texture<ID3D11Texture2D>

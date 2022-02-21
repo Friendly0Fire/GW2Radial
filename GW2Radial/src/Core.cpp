@@ -59,7 +59,6 @@ Core::~Core()
 
 	Direct3D11Inject::i([&](auto& i) {
 		i.prePresentSwapChainCallback = nullptr;
-		i.preCreateSwapChainCallback = nullptr;
 		i.postCreateSwapChainCallback = nullptr;
 	});
 
@@ -71,8 +70,7 @@ void Core::OnInjectorCreated()
 {
 	auto& inject = Direct3D11Inject::i();
 
-	inject.preCreateSwapChainCallback = [this](HWND hWnd) { PreCreateSwapChain(hWnd); };
-	inject.postCreateSwapChainCallback = [this](ID3D11Device* dev, IDXGISwapChain* swc) { PostCreateSwapChain(dev, swc); };
+	inject.postCreateSwapChainCallback = [this](HWND hwnd, ID3D11Device* dev, IDXGISwapChain* swc) { PostCreateSwapChain(hwnd, dev, swc); };
 	
 	inject.prePresentSwapChainCallback = [this](){ Draw(); };
 }
@@ -142,7 +140,7 @@ LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return CallWindowProc(i().baseWndProc_, hWnd, msg, wParam, lParam);
 }
 
-void Core::PreCreateSwapChain(HWND hwnd)
+void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* swc)
 {
 	gameWindow_ = hwnd;
 
@@ -152,12 +150,9 @@ void Core::PreCreateSwapChain(HWND hwnd)
 		baseWndProc_ = WNDPROC(GetWindowLongPtr(hwnd, GWLP_WNDPROC));
 		SetWindowLongPtr(hwnd, GWLP_WNDPROC, LONG_PTR(&WndProc));
 	}
-}
 
-void Core::PostCreateSwapChain(ID3D11Device* device, IDXGISwapChain* swc)
-{
 	device_ = device;
-	device->GetImmediateContext(&context_);
+	device_->GetImmediateContext(&context_);
 
 	DXGI_SWAP_CHAIN_DESC desc;
 	swc->GetDesc(&desc);

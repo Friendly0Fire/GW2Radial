@@ -56,8 +56,7 @@ protected:
 
 	void Draw();
 
-	void PreCreateSwapChain(HWND hwnd);
-	void PostCreateSwapChain(ID3D11Device* device, IDXGISwapChain* swc);
+	void PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* swc);
 	
 
 	HWND gameWindow_ = nullptr;

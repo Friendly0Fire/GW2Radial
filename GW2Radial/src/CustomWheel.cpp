@@ -35,6 +35,8 @@ RenderTarget MakeTextTexture(ID3D11Device* dev, float fontSize)
 	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.CPUAccessFlags = 0;
 	desc.MiscFlags = 0;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
 	GW2_HASSERT(dev->CreateTexture2D(&desc, nullptr, &rt.texture));
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
@@ -79,7 +81,7 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ImFont* font, float fo
 	ID3D11RenderTargetView* oldRt;
 	ID3D11DepthStencilView* oldDs;
 	ctx->OMGetRenderTargets(1, &oldRt, &oldDs);
-	ctx->OMSetRenderTargets(1, &rt.rtv, nullptr);
+	ctx->OMSetRenderTargets(1, rt.rtv.GetAddressOf(), nullptr);
 
 	float clearBlack[] = { 0.f, 0.f, 0.f, 0.f };
 	ctx->ClearRenderTargetView(rt.rtv.Get(), clearBlack);
@@ -243,12 +245,12 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		ces.premultiply = false;
 
 		if(elementIcon != element.end()) {
-			ces.texture = LoadCustomTexture(dev, dataFolder / utf8_decode(elementIcon->second));
+			ces.rt = LoadCustomTexture(dev, dataFolder / utf8_decode(elementIcon->second));
 			if(elementPremultipliedAlpha != element.end())
 				ces.premultiply = ini.GetBoolValue(sec.pItem, "premultiply_alpha", true);
 		}
 
-		if(!ces.texture.texture)
+		if(!ces.rt.texture)
 			maxTextWidth = std::max(maxTextWidth, CalcText(font_, utf8_decode(ces.name)));
 
 		elements.push_back(ces);
@@ -260,9 +262,9 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 
 	for(auto& ces : elements)
 	{
-	    if(!ces.texture.texture) {
-		    ces.texture = MakeTextTexture(dev, desiredFontSize);
-			textDraws_.push_back({ desiredFontSize, utf8_decode(ces.name), ces.texture });
+	    if(!ces.rt.texture) {
+		    ces.rt = MakeTextTexture(dev, desiredFontSize);
+			textDraws_.push_back({ desiredFontSize, utf8_decode(ces.name), ces.rt });
 		}
 
 	    wheel->AddElement(std::make_unique<CustomElement>(ces, dev));
@@ -341,7 +343,7 @@ void CustomWheelsManager::Reload(ID3D11Device* dev)
 }
 
 CustomElement::CustomElement(const CustomElementSettings& ces, ID3D11Device* dev)
-	: WheelElement(ces.id, ces.nickname, ces.category, ces.name, dev, ces.texture), color_(ces.color)
+	: WheelElement(ces.id, ces.nickname, ces.category, ces.name, dev, ces.rt), color_(ces.color)
 {
     shadowStrength_ = ces.shadow;
 	colorizeAmount_ = ces.colorize;

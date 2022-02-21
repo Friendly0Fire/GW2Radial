@@ -47,7 +47,7 @@ namespace GW2Radial
         float shadow;
         float colorize;
 
-        Texture2D texture;
+        RenderTarget rt;
         bool premultiply;
     };
 
