@@ -64,6 +64,7 @@ protected:
 	WNDPROC baseWndProc_ = nullptr;
 	ID3D11Device* device_ = nullptr;
 	ID3D11DeviceContext* context_ = nullptr;
+	IDXGISwapChain* swc_ = nullptr;
 
 	uint screenWidth_ = 0, screenHeight_ = 0;
 	bool firstFrame_ = true;

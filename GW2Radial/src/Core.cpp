@@ -153,9 +153,10 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 
 	device_ = device;
 	device_->GetImmediateContext(&context_);
+	swc_ = swc;
 
 	DXGI_SWAP_CHAIN_DESC desc;
-	swc->GetDesc(&desc);
+	swc_->GetDesc(&desc);
 
 	screenWidth_ = desc.BufferDesc.Width;
 	screenHeight_ = desc.BufferDesc.Height;
@@ -204,6 +205,32 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, fontDraw_);
 
 	firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
+
+#ifdef _DEBUG
+	ID3D11Debug* d3dDebug = nullptr;
+	if (SUCCEEDED(device_->QueryInterface(__uuidof(ID3D11Debug), (void**)&d3dDebug)))
+	{
+		ID3D11InfoQueue* d3dInfoQueue = nullptr;
+		if (SUCCEEDED(d3dDebug->QueryInterface(__uuidof(ID3D11InfoQueue), (void**)&d3dInfoQueue)))
+		{
+			d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
+			d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
+			d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_WARNING, true);
+
+			D3D11_MESSAGE_ID hide[] =
+			{
+				D3D11_MESSAGE_ID_DEVICE_DRAW_RENDERTARGETVIEW_NOT_SET,
+			};
+
+			D3D11_INFO_QUEUE_FILTER filter = {};
+			filter.DenyList.NumIDs = std::size(hide);
+			filter.DenyList.pIDList = hide;
+			d3dInfoQueue->AddStorageFilterEntries(&filter);
+			d3dInfoQueue->Release();
+		}
+		d3dDebug->Release();
+	}
+#endif
 }
 
 void Core::OnUpdate()
@@ -264,6 +291,16 @@ void Core::Draw()
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
+
+		// Setup viewport
+		D3D11_VIEWPORT vp;
+		memset(&vp, 0, sizeof(D3D11_VIEWPORT));
+		vp.Width = screenWidth_;
+		vp.Height = screenHeight_;
+		vp.MinDepth = 0.0f;
+		vp.MaxDepth = 1.0f;
+		vp.TopLeftX = vp.TopLeftY = 0;
+		context_->RSSetViewports(1, &vp);
 		
 		for (auto& wheel : wheels_)
 			wheel->Draw(context_);

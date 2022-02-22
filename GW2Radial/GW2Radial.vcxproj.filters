@@ -326,7 +326,7 @@
     <None Include="int\Shader_ps.cso">
       <Filter>Resource Files\Assets</Filter>
     </None>
-    <None Include="shaders\cbuffers.hlsli">
+    <None Include="shaders\common.hlsli">
       <Filter>Resource Files\Shaders</Filter>
     </None>
     <None Include="packages.config" />
@@ -433,13 +433,22 @@
     </Font>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\Shader_ps.hlsl">
+    <FxCompile Include="shaders\WheelElement.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\Shader_vs.hlsl">
+    <FxCompile Include="shaders\ScreenQuad.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\noise.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\Wheel.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\Cursor.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DelayIndicator.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

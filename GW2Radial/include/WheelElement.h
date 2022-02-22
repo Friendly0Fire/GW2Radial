@@ -16,7 +16,7 @@ public:
 
 	int DrawPriority(int extremumIndicator);
 
-	void SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions);
+	void SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, ID3D11Buffer* wheelCb);
 	void Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
 
 	uint elementId() const { return elementId_; }

@@ -70,11 +70,11 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 
 	SettingsMenu::i().AddImplementer(this);
 
-	vs_ = ShaderManager::i().GetShader(L"Shader_vs.hlsl", D3D11_SHVER_VERTEX_SHADER, "ScreenQuad_VS");
-	psBg_ = ShaderManager::i().GetShader(L"Shader_ps.hlsl", D3D11_SHVER_PIXEL_SHADER, "BgImage_PS");
-	psImg_ = ShaderManager::i().GetShader(L"Shader_ps.hlsl", D3D11_SHVER_PIXEL_SHADER, "MountImage_PS");
-	psCursor_ = ShaderManager::i().GetShader(L"Shader_ps.hlsl", D3D11_SHVER_PIXEL_SHADER, "Cursor_PS");
-	psTimer_ = ShaderManager::i().GetShader(L"Shader_ps.hlsl", D3D11_SHVER_PIXEL_SHADER, "TimerCursor_PS");
+	vs_ = ShaderManager::i().GetShader(L"ScreenQuad.hlsl", D3D11_SHVER_VERTEX_SHADER, "ScreenQuad");
+	psWheel_ = ShaderManager::i().GetShader(L"Wheel.hlsl", D3D11_SHVER_PIXEL_SHADER, "Wheel");
+	psWheelElement_ = ShaderManager::i().GetShader(L"WheelElement.hlsl", D3D11_SHVER_PIXEL_SHADER, "WheelElement");
+	psCursor_ = ShaderManager::i().GetShader(L"Cursor.hlsl", D3D11_SHVER_PIXEL_SHADER, "Cursor");
+	psDelayIndicator_ = ShaderManager::i().GetShader(L"DelayIndicator.hlsl", D3D11_SHVER_PIXEL_SHADER, "DelayIndicator");
 
 	CD3D11_BLEND_DESC blendDesc(D3D11_DEFAULT);
 	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
@@ -463,7 +463,7 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 				}
 
 
-				ShaderManager::i().SetShaders(vs_, psBg_);
+				ShaderManager::i().SetShaders(vs_, psWheel_);
 				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
 				UpdateConstantBuffer(ctx.Get(), baseSpriteDimensions, fadeTimer, fmod(currentTime / 1010.f, 55000.f), activeElements, hoveredFadeIns, 0.f, false);
 
@@ -475,7 +475,7 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 
 				DrawScreenQuad(ctx);
 
-				ShaderManager::i().SetShaders(vs_, psImg_);
+				ShaderManager::i().SetShaders(vs_, psWheelElement_);
 				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
 
 				int n = 0;
@@ -484,7 +484,6 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 					it->Draw(ctx, n, baseSpriteDimensions, activeElements.size(), currentTime, currentHovered_, this);
 					n++;
 				}
-
 			}
 
 			{
@@ -508,7 +507,7 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 			timeLeft = 1.f - (currentTime - conditionallyDelayedTime_) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
 	    cref io = ImGui::GetIO();
 
-		ShaderManager::i().SetShaders(vs_, psTimer_);
+		ShaderManager::i().SetShaders(vs_, psDelayIndicator_);
 		ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
 
 		float dpiScale = 1.f;

@@ -190,7 +190,8 @@ const wchar_t* GetCommandLineArg(const wchar_t* name) {
 
 void DrawScreenQuad(ComPtr<ID3D11DeviceContext>& ctx)
 {
-    ctx->IASetInputLayout(nullptr);
+    ctx->IASetVertexBuffers(0, 0, NULL, NULL, NULL);
+    ctx->IASetInputLayout(NULL);
     ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     ctx->Draw(4, 0);
 }

@@ -63,6 +63,8 @@ public:
 
 	bool visible() override { return visibleInMenuOption_.value(); }
 
+	ID3D11Buffer* GetConstantBuffer() const { return cb_s.buffer().Get(); }
+
 protected:
 	void Sort();
 	void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer,
@@ -159,7 +161,7 @@ protected:
 
 	Texture2D backgroundTexture_;
 	Texture2D wipeMaskTexture_;
-	ShaderId psBg_, psImg_, psCursor_, psTimer_, vs_;
+	ShaderId psWheel_, psWheelElement_, psCursor_, psDelayIndicator_, vs_;
 	ComPtr<ID3D11BlendState> blendState_;
 	ComPtr<ID3D11SamplerState> borderSampler_;
 

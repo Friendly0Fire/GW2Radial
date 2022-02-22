@@ -72,7 +72,7 @@ int WheelElement::DrawPriority(int extremumIndicator)
 	return rv;
 }
 
-void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions)
+void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, ID3D11Buffer* wheelCb)
 {
 	fVector4 adjustedColor = color();
 	adjustedColor.x = Lerp(1, adjustedColor.x, colorizeAmount_);
@@ -91,7 +91,11 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 	cb_s->premultiplyAlpha = premultiplyAlpha_;
 
 	cb_s.Update();
-	ctx->PSSetConstantBuffers(1, 1, cb_s.buffer().GetAddressOf());
+	ID3D11Buffer* cbs[] = {
+		wheelCb,
+		cb_s.buffer().Get()
+	};
+	ctx->PSSetConstantBuffers(0, std::size(cbs), cbs);
 
 	auto& vscb = GetVSCB();
 	vscb->spriteDimensions = spriteDimensions;
@@ -144,7 +148,7 @@ void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 sprite
 	
 	spriteDimensions.w *= aspectRatio_;
 
-	SetShaderState(ctx.Get(), spriteDimensions);
+	SetShaderState(ctx.Get(), spriteDimensions, parent->GetConstantBuffer());
 
 	ctx->PSSetShaderResources(1, 1, appearance_.srv.GetAddressOf());
 

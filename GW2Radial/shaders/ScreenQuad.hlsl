@@ -1,12 +1,15 @@
-#include "cbuffers.hlsli"
+cbuffer VS : register(b0)
+{
+	float4 spriteDimensions;
+};
 
 struct VS_SCREEN
 {
-	float4 Position : POSITION;
+	float4 Position : SV_Position;
 	float2 UV : TEXCOORD0;
 };
 
-VS_SCREEN ScreenQuad_VS(in uint id : SV_VertexID)
+VS_SCREEN ScreenQuad(in uint id : SV_VertexID)
 {
     VS_SCREEN Out = (VS_SCREEN)0;
 
