@@ -71,8 +71,9 @@ void Core::OnInjectorCreated()
 	auto& inject = Direct3D11Inject::i();
 
 	inject.postCreateSwapChainCallback = [this](HWND hwnd, ID3D11Device* dev, IDXGISwapChain* swc) { PostCreateSwapChain(hwnd, dev, swc); };
-	
-	inject.prePresentSwapChainCallback = [this](){ Draw(); };
+	inject.prePresentSwapChainCallback = [this]() { drawnSincePresent_ = false; /*Draw();*/ };
+	inject.preResizeSwapChainCallback = [this]() { PreResizeSwapChain(); };
+	inject.postResizeSwapChainCallback = [this](uint w, uint h) { PostResizeSwapChain(w, h); };
 }
 
 void Core::OnInputLanguageChange()
@@ -140,6 +141,40 @@ LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return CallWindowProc(i().baseWndProc_, hWnd, msg, wParam, lParam);
 }
 
+FARPROC real_DrawIndexedHook = nullptr;
+void STDMETHODCALLTYPE DrawIndexedHook(
+	ID3D11DeviceContext* _this,
+	UINT IndexCount,
+	UINT StartIndexLocation,
+	INT  BaseVertexLocation
+)
+{
+	if (IndexCount == 4)
+	{
+		D3D11_PRIMITIVE_TOPOLOGY topo;
+		_this->IAGetPrimitiveTopology(&topo);
+		if(topo == D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP)
+			Core::i().Draw();
+	}
+
+	((decltype(DrawIndexedHook)*)real_DrawIndexedHook)(_this, IndexCount, StartIndexLocation, BaseVertexLocation);
+}
+
+void Core::PreResizeSwapChain()
+{
+	backBufferRTV_.Reset();
+}
+
+void Core::PostResizeSwapChain(uint w, uint h)
+{
+	screenWidth_ = w;
+	screenHeight_ = h;
+
+	ComPtr<ID3D11Texture2D> backbuffer;
+	swc_->GetBuffer(0, IID_PPV_ARGS(backbuffer.GetAddressOf()));
+	device_->CreateRenderTargetView(backbuffer.Get(), nullptr, backBufferRTV_.ReleaseAndGetAddressOf());
+}
+
 void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* swc)
 {
 	gameWindow_ = hwnd;
@@ -154,6 +189,20 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 	device_ = device;
 	device_->GetImmediateContext(&context_);
 	swc_ = swc;
+
+	ComPtr<ID3D11Texture2D> backbuffer;
+	swc_->GetBuffer(0, IID_PPV_ARGS(backbuffer.GetAddressOf()));
+	device_->CreateRenderTargetView(backbuffer.Get(), nullptr, backBufferRTV_.GetAddressOf());
+
+	if (real_DrawIndexedHook == nullptr)
+	{
+		FARPROC* ctxVtable = *((FARPROC**)context_);
+		real_DrawIndexedHook = ctxVtable[12];
+		DWORD oldProtect;
+		VirtualProtect(&ctxVtable[12], sizeof(FARPROC), PAGE_EXECUTE_READWRITE, &oldProtect);
+		ctxVtable[12] = (FARPROC)&DrawIndexedHook;
+		VirtualProtect(&ctxVtable[12], sizeof(FARPROC), oldProtect, &oldProtect);
+	}
 
 	DXGI_SWAP_CHAIN_DESC desc;
 	swc_->GetDesc(&desc);
@@ -215,7 +264,7 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 		{
 			d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
 			d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
-			d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_WARNING, true);
+			//d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_WARNING, true);
 
 			D3D11_MESSAGE_ID hide[] =
 			{
@@ -258,6 +307,14 @@ void Core::OnUpdate()
 
 void Core::Draw()
 {
+	if (drawnSincePresent_)
+		return;
+
+	StateBackupD3D11 d3dstate;
+	BackupD3D11State(context_, d3dstate);
+
+	context_->OMSetRenderTargets(1, backBufferRTV_.GetAddressOf(), nullptr);
+
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i().OnUpdate();
 	
@@ -356,6 +413,8 @@ void Core::Draw()
 	    forceReloadWheels_ = false;
 	    customWheels_->MarkReload();
 	}
+
+	RestoreD3D11State(context_, d3dstate);
 }
 
 }

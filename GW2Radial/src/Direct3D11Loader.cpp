@@ -66,6 +66,24 @@ typedef struct wrapped_com_obj
 			IDXGIOutput* pRestrictToOutput;
 			IDXGISwapChain1** ppSwapChain;
 		} CreateSwapChainForHwnd;
+		struct
+		{
+			UINT        BufferCount;
+			UINT        Width;
+			UINT        Height;
+			DXGI_FORMAT NewFormat;
+			UINT        SwapChainFlags;
+		} ResizeBuffers;
+		struct
+		{
+			UINT			 BufferCount;
+			UINT			 Width;
+			UINT			 Height;
+			DXGI_FORMAT		 Format;
+			UINT			 SwapChainFlags;
+			const UINT*		 pCreationNodeMask;
+			IUnknown* const* ppPresentQueue;
+		} ResizeBuffers1;
 	};
 } wrapped_com_obj;
 
@@ -86,6 +104,16 @@ void Direct3D11Loader::PrePresentSwapChain()
 void Direct3D11Loader::PostCreateSwapChain(HWND hwnd, ID3D11Device* dev, IDXGISwapChain* swc)
 {
 	postCreateSwapChainCallback(hwnd, dev, swc);
+}
+
+void Direct3D11Loader::PreResizeSwapChain()
+{
+	preResizeSwapChainCallback();
+}
+
+void Direct3D11Loader::PostResizeSwapChain(uint w, uint h)
+{
+	postResizeSwapChainCallback(w, h);
 }
 
 void OnSwapChainPrePresent(wrap_event_data* evd)
@@ -116,6 +144,26 @@ void OnDXGIPostCreateSwapChainForHwnd(wrap_event_data* evd)
 		GetD3D11Loader()->PostCreateSwapChain(params.hWnd, dev, *params.ppSwapChain);
 }
 
+void OnSwapChainPreResizeBuffers(wrap_event_data* evd)
+{
+	GetD3D11Loader()->PreResizeSwapChain();
+}
+
+void OnSwapChainPreResizeBuffers1(wrap_event_data* evd)
+{
+	GetD3D11Loader()->PreResizeSwapChain();
+}
+
+void OnSwapChainPostResizeBuffers(wrap_event_data* evd)
+{
+	GetD3D11Loader()->PostResizeSwapChain(evd->stackPtr->ResizeBuffers.Width, evd->stackPtr->ResizeBuffers.Height);
+}
+
+void OnSwapChainPostResizeBuffers1(wrap_event_data* evd)
+{
+	GetD3D11Loader()->PostResizeSwapChain(evd->stackPtr->ResizeBuffers.Width, evd->stackPtr->ResizeBuffers.Height);
+}
+
 void Direct3D11Loader::Init(gw2al_core_vtable* gAPI)
 {
 	D3D9_wrapper d3d9_wrap;
@@ -124,6 +172,8 @@ void Direct3D11Loader::Init(gw2al_core_vtable* gAPI)
 
 	d3d9_wrap.enable_event(METH_DEV11_Release, WRAP_CB_POST);
 	d3d9_wrap.enable_event(METH_SWC_Present, WRAP_CB_PRE);
+	d3d9_wrap.enable_event(METH_SWC_ResizeBuffers, WRAP_CB_PRE_POST);
+	d3d9_wrap.enable_event(METH_SWC_ResizeBuffers1, WRAP_CB_PRE_POST);
 	d3d9_wrap.enable_event(METH_SWC_Present1, WRAP_CB_PRE);
 	d3d9_wrap.enable_event(METH_DXGI_CreateSwapChain, WRAP_CB_POST);
 	d3d9_wrap.enable_event(METH_DXGI_CreateSwapChainForComposition, WRAP_CB_POST);
@@ -132,6 +182,12 @@ void Direct3D11Loader::Init(gw2al_core_vtable* gAPI)
 
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_SWC_Present", OnSwapChainPrePresent, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_SWC_Present1", OnSwapChainPrePresent1, 0);
+
+	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_SWC_ResizeBuffers", OnSwapChainPreResizeBuffers, 0);
+	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_SWC_ResizeBuffers1", OnSwapChainPreResizeBuffers1, 0);
+	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_SWC_ResizeBuffers", OnSwapChainPostResizeBuffers, 0);
+	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_SWC_ResizeBuffers1", OnSwapChainPostResizeBuffers1, 0);
+
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DXGI_CreateSwapChain", OnDXGIPostCreateSwapChain, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DXGI_CreateSwapChainForHwnd", OnDXGIPostCreateSwapChainForHwnd, 0);
 	

@@ -13,10 +13,14 @@ class Direct3D11Inject : public Singleton<Direct3D11Inject, false>
 {
 public:
 	using PrePresentSwapChainCallback = std::function<void()>;
+	using PreResizeSwapChainCallback = std::function<void()>;
+	using PostResizeSwapChainCallback = std::function<void(uint, uint)>;
 	using PostCreateSwapChainCallback = std::function<void(HWND, ID3D11Device*, IDXGISwapChain*)>;
 
 	PrePresentSwapChainCallback prePresentSwapChainCallback;
 	PostCreateSwapChainCallback postCreateSwapChainCallback;
+	PreResizeSwapChainCallback preResizeSwapChainCallback;
+	PostResizeSwapChainCallback postResizeSwapChainCallback;
 
 protected:
 	Direct3D11Inject() = default;

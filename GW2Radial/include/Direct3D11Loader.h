@@ -15,6 +15,8 @@ public:
 
 	void PrePresentSwapChain();
 	void PostCreateSwapChain(HWND hwnd, ID3D11Device* dev, IDXGISwapChain* swc);
+	void PreResizeSwapChain();
+	void PostResizeSwapChain(uint w, uint h);
 
 	void Init(gw2al_core_vtable* gAPI);
 };

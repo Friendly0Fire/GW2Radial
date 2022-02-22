@@ -48,15 +48,17 @@ public:
 
 	UINT GetDpiForWindow(HWND hwnd);
 
+	void Draw();
+
 protected:
 	void InternalInit();
 	void OnFocusLost();
 	void OnFocus();
 	void OnUpdate();
 
-	void Draw();
-
 	void PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* swc);
+	void PreResizeSwapChain();
+	void PostResizeSwapChain(uint w, uint h);
 	
 
 	HWND gameWindow_ = nullptr;
@@ -89,5 +91,9 @@ protected:
 	using GetDpiForWindow_t = decltype(::GetDpiForWindow)*;
 	HMODULE user32_ = 0;
 	GetDpiForWindow_t getDpiForWindow_ = nullptr;
+
+	ComPtr<ID3D11RenderTargetView> backBufferRTV_;
+
+	bool drawnSincePresent_ = false;
 };
 }
