@@ -71,7 +71,7 @@ void Core::OnInjectorCreated()
 	auto& inject = Direct3D11Inject::i();
 
 	inject.postCreateSwapChainCallback = [this](HWND hwnd, ID3D11Device* dev, IDXGISwapChain* swc) { PostCreateSwapChain(hwnd, dev, swc); };
-	inject.prePresentSwapChainCallback = [this]() { drawnSincePresent_ = false; /*Draw();*/ };
+	inject.prePresentSwapChainCallback = [this]() { Draw(); };
 	inject.preResizeSwapChainCallback = [this]() { PreResizeSwapChain(); };
 	inject.postResizeSwapChainCallback = [this](uint w, uint h) { PostResizeSwapChain(w, h); };
 }
@@ -106,7 +106,7 @@ void Core::InternalInit()
 	user32_ = LoadLibrary(L"User32.dll");
 	if(user32_)
 		getDpiForWindow_ = (GetDpiForWindow_t)GetProcAddress(user32_, "GetDpiForWindow");
-	
+
 	imguiContext_ = ImGui::CreateContext();
 }
 
@@ -141,25 +141,6 @@ LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return CallWindowProc(i().baseWndProc_, hWnd, msg, wParam, lParam);
 }
 
-FARPROC real_DrawIndexedHook = nullptr;
-void STDMETHODCALLTYPE DrawIndexedHook(
-	ID3D11DeviceContext* _this,
-	UINT IndexCount,
-	UINT StartIndexLocation,
-	INT  BaseVertexLocation
-)
-{
-	if (IndexCount == 4)
-	{
-		D3D11_PRIMITIVE_TOPOLOGY topo;
-		_this->IAGetPrimitiveTopology(&topo);
-		if(topo == D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP)
-			Core::i().Draw();
-	}
-
-	((decltype(DrawIndexedHook)*)real_DrawIndexedHook)(_this, IndexCount, StartIndexLocation, BaseVertexLocation);
-}
-
 void Core::PreResizeSwapChain()
 {
 	backBufferRTV_.Reset();
@@ -190,19 +171,11 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 	device_->GetImmediateContext(&context_);
 	swc_ = swc;
 
+	context_->QueryInterface(annotations_.ReleaseAndGetAddressOf());
+
 	ComPtr<ID3D11Texture2D> backbuffer;
 	swc_->GetBuffer(0, IID_PPV_ARGS(backbuffer.GetAddressOf()));
 	device_->CreateRenderTargetView(backbuffer.Get(), nullptr, backBufferRTV_.GetAddressOf());
-
-	if (real_DrawIndexedHook == nullptr)
-	{
-		FARPROC* ctxVtable = *((FARPROC**)context_);
-		real_DrawIndexedHook = ctxVtable[12];
-		DWORD oldProtect;
-		VirtualProtect(&ctxVtable[12], sizeof(FARPROC), PAGE_EXECUTE_READWRITE, &oldProtect);
-		ctxVtable[12] = (FARPROC)&DrawIndexedHook;
-		VirtualProtect(&ctxVtable[12], sizeof(FARPROC), oldProtect, &oldProtect);
-	}
 
 	DXGI_SWAP_CHAIN_DESC desc;
 	swc_->GetDesc(&desc);
@@ -307,8 +280,8 @@ void Core::OnUpdate()
 
 void Core::Draw()
 {
-	if (drawnSincePresent_)
-		return;
+	if (annotations_)
+		annotations_->BeginEvent(L"GW2Radial");
 
 	StateBackupD3D11 d3dstate;
 	BackupD3D11State(context_, d3dstate);
@@ -317,7 +290,7 @@ void Core::Draw()
 
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i().OnUpdate();
-	
+
 	tickSkip_++;
 	if(tickSkip_ >= TickSkipCount)
 	{
@@ -358,10 +331,10 @@ void Core::Draw()
 		vp.MaxDepth = 1.0f;
 		vp.TopLeftX = vp.TopLeftY = 0;
 		context_->RSSetViewports(1, &vp);
-		
+
 		for (auto& wheel : wheels_)
 			wheel->Draw(context_);
-		
+
 		customWheels_->Draw(context_);
 
 		SettingsMenu::i().Draw();
@@ -407,7 +380,7 @@ void Core::Draw()
 
         customWheels_->DrawOffscreen(device_, context_);
 	}
-	
+
 	if(forceReloadWheels_)
 	{
 	    forceReloadWheels_ = false;
@@ -415,6 +388,9 @@ void Core::Draw()
 	}
 
 	RestoreD3D11State(context_, d3dstate);
+
+	if(annotations_)
+		annotations_->EndEvent();
 }
 
 }

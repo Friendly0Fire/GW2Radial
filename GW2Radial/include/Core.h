@@ -5,7 +5,7 @@
 #include <Wheel.h>
 #include <CustomWheel.h>
 #include <Defs.h>
-#include <d3d11.h>
+#include <d3d11_1.h>
 #include <dxgi.h>
 
 namespace GW2Radial
@@ -59,7 +59,7 @@ protected:
 	void PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* swc);
 	void PreResizeSwapChain();
 	void PostResizeSwapChain(uint w, uint h);
-	
+
 
 	HWND gameWindow_ = nullptr;
 	HMODULE dllModule_ = nullptr;
@@ -83,7 +83,7 @@ protected:
 
 	std::vector<std::unique_ptr<Wheel>> wheels_;
 	std::unique_ptr<CustomWheelsManager> customWheels_;
-	
+
 	std::unique_ptr<ConfigurationOption<bool>> firstMessageShown_;
 
 	ImGuiContext* imguiContext_ = nullptr;
@@ -94,6 +94,6 @@ protected:
 
 	ComPtr<ID3D11RenderTargetView> backBufferRTV_;
 
-	bool drawnSincePresent_ = false;
+	ComPtr<ID3DUserDefinedAnnotation> annotations_;
 };
 }

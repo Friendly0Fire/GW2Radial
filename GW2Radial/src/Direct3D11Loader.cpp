@@ -69,9 +69,13 @@ typedef struct wrapped_com_obj
 		struct
 		{
 			UINT        BufferCount;
+			int _1;
 			UINT        Width;
+			int _2;
 			UINT        Height;
+			int _3;
 			DXGI_FORMAT NewFormat;
+			int _4;
 			UINT        SwapChainFlags;
 		} ResizeBuffers;
 		struct

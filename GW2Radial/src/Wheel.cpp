@@ -77,6 +77,7 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	psDelayIndicator_ = ShaderManager::i().GetShader(L"DelayIndicator.hlsl", D3D11_SHVER_PIXEL_SHADER, "DelayIndicator");
 
 	CD3D11_BLEND_DESC blendDesc(D3D11_DEFAULT);
+	blendDesc.RenderTarget[0].BlendEnable = true;
 	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 	GW2_HASSERT(dev->CreateBlendState(&blendDesc, blendState_.GetAddressOf()));
@@ -464,7 +465,7 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 
 
 				ShaderManager::i().SetShaders(vs_, psWheel_);
-				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
+				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 				UpdateConstantBuffer(ctx.Get(), baseSpriteDimensions, fadeTimer, fmod(currentTime / 1010.f, 55000.f), activeElements, hoveredFadeIns, 0.f, false);
 
 				ID3D11ShaderResourceView* srvs[] = {
@@ -476,7 +477,7 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 				DrawScreenQuad(ctx);
 
 				ShaderManager::i().SetShaders(vs_, psWheelElement_);
-				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
+				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 
 				int n = 0;
 				for (auto it : activeElements)
@@ -490,7 +491,7 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 				cref io = ImGui::GetIO();
 
 				ShaderManager::i().SetShaders(vs_, psCursor_);
-				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
+				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 
 				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f  * screenSize.y * screenSize.z, 0.08f };
 
@@ -508,7 +509,7 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 	    cref io = ImGui::GetIO();
 
 		ShaderManager::i().SetShaders(vs_, psDelayIndicator_);
-		ctx->OMSetBlendState(blendState_.Get(), nullptr, 0);
+		ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 
 		float dpiScale = 1.f;
 		if(GFXSettings::i().dpiScaling())
