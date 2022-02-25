@@ -12,7 +12,6 @@ float GetWipeValue(in float2 uv, in float3 data, in float offset)
 
 float4 Wheel(PS_INPUT In) : SV_Target0
 {
-	return 1.f;
 	float currentWheelFadeIn = GetWipeValue(In.UV, wipeMaskData, wheelFadeIn.x);
 
 	// Multiply by -3 rather than 2 to mirror and scale down

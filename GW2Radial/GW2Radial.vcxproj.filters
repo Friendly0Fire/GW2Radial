@@ -309,6 +309,9 @@
     <ClInclude Include="include\VSCB.h">
       <Filter>Source Files\Radials</Filter>
     </ClInclude>
+    <ClInclude Include="include\renderdoc_app.h">
+      <Filter>External</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="rt_rcdat.bin">

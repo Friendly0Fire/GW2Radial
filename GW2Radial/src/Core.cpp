@@ -23,6 +23,7 @@
 #include <Log.h>
 #include <IconFontCppHeaders/IconsFontAwesome5.h>
 #include <Version.h>
+#include <renderdoc_app.h>
 
 LONG WINAPI GW2RadialTopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
 
@@ -171,6 +172,18 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 	device_->GetImmediateContext(&context_);
 	swc_ = swc;
 
+#if _DEBUG
+	// At init, on windows
+	if (HMODULE mod = GetModuleHandleA("renderdoc.dll"))
+	{
+		pRENDERDOC_GetAPI RENDERDOC_GetAPI =
+			(pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
+		int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void**)&rdoc_);
+		if (ret != 1)
+			rdoc_ = nullptr;
+	}
+#endif
+
 	context_->QueryInterface(annotations_.ReleaseAndGetAddressOf());
 
 	ComPtr<ID3D11Texture2D> backbuffer;
@@ -224,7 +237,7 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 	ImGui_ImplWin32_Init(gameWindow_);
 	ImGui_ImplDX11_Init(device_, context_);
 
-	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, fontDraw_);
+	customWheels_ = std::make_unique<CustomWheelsManager>(device_, wheels_, fontDraw_);
 
 	firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
 

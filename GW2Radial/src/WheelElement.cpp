@@ -152,7 +152,7 @@ void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 sprite
 
 	ctx->PSSetShaderResources(1, 1, appearance_.srv.GetAddressOf());
 
-	ctx->Draw(3, 0);
+	DrawScreenQuad(ctx);
 }
 
 float WheelElement::hoverFadeIn(const mstime& currentTime, const Wheel* parent) const

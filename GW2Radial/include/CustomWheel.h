@@ -16,6 +16,7 @@ namespace GW2Radial
         uint customWheelNextId_ = CustomWheelStartId;
         ImFont* font_ = nullptr;
         bool loaded_ = false;
+        ComPtr<ID3D11BlendState> textBlendState_;
 
         std::unique_ptr<Wheel> BuildWheel(const std::filesystem::path& configPath, ID3D11Device* dev);
 
@@ -30,8 +31,8 @@ namespace GW2Radial
         void Reload(ID3D11Device* dev);
 
     public:
-        CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font);
-        
+        CustomWheelsManager(ID3D11Device* dev, std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font);
+
         void Draw(ID3D11DeviceContext* ctx);
         void DrawOffscreen(ID3D11Device* dev, ID3D11DeviceContext* ctx);
         void MarkReload() { loaded_ = false; }

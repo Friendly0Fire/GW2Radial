@@ -313,4 +313,16 @@ struct StateBackupD3D11
 void BackupD3D11State(ID3D11DeviceContext* ctx, StateBackupD3D11& old);
 void RestoreD3D11State(ID3D11DeviceContext* ctx, const StateBackupD3D11& old);
 
+struct RenderDocCapture
+{
+	RenderDocCapture();
+	~RenderDocCapture();
+};
+
+#if _DEBUG
+#define RDOC_CAPTURE() RenderDocCapture capture##__COUNTER__
+#else
+#define RDOC_CAPTURE()
+#endif
+
 }

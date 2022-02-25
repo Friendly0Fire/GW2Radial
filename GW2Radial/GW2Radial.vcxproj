@@ -195,6 +195,7 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\Defs.h" />
     <ClInclude Include="include\Direct3D11Inject.h" />
     <ClInclude Include="include\Direct3D11Loader.h" />
+    <ClInclude Include="include\renderdoc_app.h" />
     <ClInclude Include="include\ShaderManager.h" />
     <ClInclude Include="include\Enums.h" />
     <ClInclude Include="include\FileSystem.h" />

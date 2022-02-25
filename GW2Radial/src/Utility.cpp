@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <shellapi.h>
+#include <renderdoc_app.h>
 
 namespace GW2Radial
 {
@@ -240,6 +241,24 @@ void RestoreD3D11State(ID3D11DeviceContext* ctx, const StateBackupD3D11& old)
     ctx->IASetVertexBuffers(0, 1, &old.VertexBuffer, &old.VertexBufferStride, &old.VertexBufferOffset); if (old.VertexBuffer) old.VertexBuffer->Release();
     ctx->IASetInputLayout(old.InputLayout); if (old.InputLayout) old.InputLayout->Release();
     ctx->OMSetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, old.RenderTargets, old.DepthStencil);
+}
+
+RenderDocCapture::RenderDocCapture()
+{
+    auto* rdoc = Core::i().rdoc();
+    if (!rdoc)
+        return;
+
+    rdoc->StartFrameCapture(Core::i().device(), nullptr);
+}
+
+RenderDocCapture::~RenderDocCapture()
+{
+    auto* rdoc = Core::i().rdoc();
+    if (!rdoc)
+        return;
+
+    rdoc->EndFrameCapture(Core::i().device(), nullptr);
 }
 
 }

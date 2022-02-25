@@ -8,6 +8,8 @@
 #include <d3d11_1.h>
 #include <dxgi.h>
 
+struct RENDERDOC_API_1_5_0;
+
 namespace GW2Radial
 {
 
@@ -26,18 +28,21 @@ public:
 
 	void ForceReloadWheels() { forceReloadWheels_ = true; }
 
-	HWND gameWindow() const { return gameWindow_; }
-	HMODULE dllModule() const { return dllModule_; }
-	WNDPROC baseWndProc() const { return baseWndProc_; }
-	uint screenWidth() const { return screenWidth_; }
-	uint screenHeight() const { return screenHeight_; }
-	ImFont* font() const { return font_; }
-	ImFont* fontBlack() const { return fontBlack_; }
-	ImFont* fontItalic() const { return fontItalic_; }
-	ImFont* fontIcon() const { return fontIcon_; }
-	ImFont* fontMono() const { return fontMono_; }
+	auto gameWindow() const { return gameWindow_; }
+	auto dllModule() const { return dllModule_; }
+	auto baseWndProc() const { return baseWndProc_; }
+	auto screenWidth() const { return screenWidth_; }
+	auto screenHeight() const { return screenHeight_; }
+	auto font() const { return font_; }
+	auto fontBlack() const { return fontBlack_; }
+	auto fontItalic() const { return fontItalic_; }
+	auto fontIcon() const { return fontIcon_; }
+	auto fontMono() const { return fontMono_; }
 
-	const std::vector<std::unique_ptr<Wheel>>& wheels() const { return wheels_; }
+	auto rdoc() const { return rdoc_; }
+	auto device() const { return device_; }
+
+	const auto& wheels() const { return wheels_; }
 
 	void OnInjectorCreated();
 
@@ -95,5 +100,7 @@ protected:
 	ComPtr<ID3D11RenderTargetView> backBufferRTV_;
 
 	ComPtr<ID3DUserDefinedAnnotation> annotations_;
+
+	RENDERDOC_API_1_5_0* rdoc_ = nullptr;
 };
 }

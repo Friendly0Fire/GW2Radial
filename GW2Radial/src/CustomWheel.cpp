@@ -14,7 +14,7 @@ namespace GW2Radial
 float CalcText(ImFont* font, const std::wstring& text)
 {
 	cref txt = utf8_encode(text);
-	
+
 	auto sz = font->CalcTextSizeA(100.f, FLT_MAX, 0.f, txt.c_str());
 
 	return sz.x;
@@ -55,13 +55,13 @@ RenderTarget MakeTextTexture(ID3D11Device* dev, float fontSize)
 	return rt;
 }
 
-void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ImFont* font, float fontSize, const std::wstring& text)
+void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blendState, ImFont* font, float fontSize, const std::wstring& text)
 {
 	const uint fgColor = 0xFFFFFFFF;
 	const uint bgColor = 0x00000000;
 
 	cref txt = utf8_encode(text);
-	
+
 	auto sz = font->CalcTextSizeA(fontSize, FLT_MAX, 0.f, txt.c_str());
 
 	ImVec2 clip(1024.f, fontSize);
@@ -73,7 +73,7 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ImFont* font, float fo
 	imDraw.PushClipRect(ImVec2(0.f, 0.f), clip);
 	imDraw.PushTextureID(font->ContainerAtlas->TexID);
 	imDraw.AddText(font, fontSize, ImVec2(xOff, 0.f), fgColor, txt.c_str());
-	
+
 	auto& io = ImGui::GetIO();
 	auto oldDisplaySize = io.DisplaySize;
 	io.DisplaySize = clip;
@@ -96,7 +96,9 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ImFont* font, float fo
 	imData.DisplayPos = ImVec2(0.0f, 0.0f);
 	imData.DisplaySize = io.DisplaySize;
 
+	ImGui_ImplDX11_OverrideBlendState(blendState);
 	ImGui_ImplDX11_RenderDrawData(&imData);
+	ImGui_ImplDX11_OverrideBlendState();
 
 	ctx->OMSetRenderTargets(1, &oldRt, oldDs);
 
@@ -130,9 +132,16 @@ Texture2D LoadCustomTexture(ID3D11Device* dev, const std::filesystem::path& path
 	}
 }
 
-CustomWheelsManager::CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
+CustomWheelsManager::CustomWheelsManager(ID3D11Device* dev, std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
     : wheels_(wheels), font_(font)
 {
+	CD3D11_BLEND_DESC blendDesc(D3D11_DEFAULT);
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	GW2_HASSERT(dev->CreateBlendState(&blendDesc, textBlendState_.GetAddressOf()));
 }
 
 void CustomWheelsManager::DrawOffscreen(ID3D11Device* dev, ID3D11DeviceContext* ctx)
@@ -142,7 +151,7 @@ void CustomWheelsManager::DrawOffscreen(ID3D11Device* dev, ID3D11DeviceContext* 
 	else if(!textDraws_.empty())
 	{
 		auto& td = textDraws_.front();
-		DrawText(ctx, td.rt, font_, td.size, td.text);
+		DrawText(ctx, td.rt, textBlendState_.Get(), font_, td.size, td.text);
 	    textDraws_.pop_front();
 	}
 }
@@ -186,7 +195,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	cref general = *ini.GetSection("General");
 	cref wheelDisplayName = general.find("display_name");
 	cref wheelNickname = general.find("nickname");
-	
+
 	if(wheelDisplayName == general.end())
 		return fail(L"Missing field display_name");
 	if(wheelNickname == general.end())
@@ -207,7 +216,8 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	std::list<CSimpleIniA::Entry> sections;
 	ini.GetAllSections(sections);
 	sections.sort(CSimpleIniA::Entry::LoadOrder());
-	std::vector<CustomElementSettings> elements; elements.reserve(sections.size());
+	std::vector<CustomElementSettings> elements;
+	elements.reserve(sections.size());
 	float maxTextWidth = 0.f;
 	for(cref sec : sections)
 	{
@@ -215,7 +225,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 			continue;
 
 		cref element = *ini.GetSection(sec.pItem);
-		
+
 		cref elementName = element.find("name");
 		cref elementColor = element.find("color");
 		cref elementIcon = element.find("icon");
