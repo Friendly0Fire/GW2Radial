@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30225.117
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GW2Radial", "GW2Radial\GW2Radial.vcxproj", "{7EFE6DCC-544A-4116-9EF2-13C0431356E6}"
 EndProject
@@ -23,8 +23,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "GW2Radial\ziplib\Source\ZipLib\extlibs\zlib\zlib.vcxproj", "{BAEB16B3-DB4C-432F-9E6A-2ACADEA0691D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ZipLib Dependencies", "ZipLib Dependencies", "{C74AC87C-FD77-4C5E-BAB9-4B6713418B58}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libMinHook", "GW2Radial\minhook\build\VC15\libMinHook.vcxproj", "{F142A341-5EE0-442D-A15F-98AE9B48DBAE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml2", "GW2Radial\tinyxml2\tinyxml2\tinyxml2.vcxproj", "{D1C528B6-AA02-4D29-9D61-DC08E317A70D}"
 EndProject
@@ -54,10 +52,6 @@ Global
 		{BAEB16B3-DB4C-432F-9E6A-2ACADEA0691D}.Debug|x64.Build.0 = Debug|x64
 		{BAEB16B3-DB4C-432F-9E6A-2ACADEA0691D}.Release|x64.ActiveCfg = Release|x64
 		{BAEB16B3-DB4C-432F-9E6A-2ACADEA0691D}.Release|x64.Build.0 = Release|x64
-		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Debug|x64.ActiveCfg = Debug|x64
-		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Debug|x64.Build.0 = Debug|x64
-		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Release|x64.ActiveCfg = Release|x64
-		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Release|x64.Build.0 = Release|x64
 		{D1C528B6-AA02-4D29-9D61-DC08E317A70D}.Debug|x64.ActiveCfg = Debug-Lib|x64
 		{D1C528B6-AA02-4D29-9D61-DC08E317A70D}.Debug|x64.Build.0 = Debug-Lib|x64
 		{D1C528B6-AA02-4D29-9D61-DC08E317A70D}.Release|x64.ActiveCfg = Release-Lib|x64

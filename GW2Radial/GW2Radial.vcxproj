@@ -328,9 +328,6 @@ cd "$(ProjectDir)shaders"
     <Font Include="art\Fonts\SourceSansPro-Regular.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="minhook\build\VC15\libMinHook.vcxproj">
-      <Project>{f142a341-5ee0-442d-a15f-98ae9b48dbae}</Project>
-    </ProjectReference>
     <ProjectReference Include="tinyxml2\tinyxml2\tinyxml2.vcxproj">
       <Project>{d1c528b6-aa02-4d29-9d61-dc08e317a70d}</Project>
     </ProjectReference>
