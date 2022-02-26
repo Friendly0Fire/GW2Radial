@@ -50,6 +50,9 @@
     <Filter Include="Source Files\Utils">
       <UniqueIdentifier>{5066aeab-7442-4db0-8d6e-c7f444556d3b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External\DXTK">
+      <UniqueIdentifier>{a7b29cec-5f12-4d0b-8708-3e22109058b9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui_demo.cpp">
@@ -156,6 +159,12 @@
     </ClCompile>
     <ClCompile Include="src\VSCB.cpp">
       <Filter>Source Files\Radials</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXTK\Src\WICTextureLoader.cpp">
+      <Filter>External\DXTK</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXTK\Src\DDSTextureLoader.cpp">
+      <Filter>External\DXTK</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -332,7 +341,6 @@
     <None Include="shaders\common.hlsli">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

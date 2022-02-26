@@ -28,3 +28,6 @@
 [submodule "GW2Radial/IconFontCppHeaders"]
 	path = GW2Radial/IconFontCppHeaders
 	url = https://github.com/juliettef/IconFontCppHeaders
+[submodule "DirectXTK"]
+	path = GW2Radial/DirectXTK
+	url = https://github.com/microsoft/DirectXTK.git
