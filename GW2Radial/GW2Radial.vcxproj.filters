@@ -341,6 +341,24 @@
     <None Include="shaders\common.hlsli">
       <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="shaders\Cursor.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="shaders\DelayIndicator.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="shaders\noise.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="shaders\ScreenQuad.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="shaders\Wheel.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="shaders\WheelElement.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -442,25 +460,5 @@
     <Font Include="art\Fonts\consolas.ttf">
       <Filter>Resource Files\Assets</Filter>
     </Font>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="shaders\WheelElement.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\ScreenQuad.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\noise.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\Wheel.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\Cursor.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\DelayIndicator.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>
