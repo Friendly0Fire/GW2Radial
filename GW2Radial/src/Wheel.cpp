@@ -12,6 +12,7 @@
 #include <MumbleLink.h>
 #include <ShaderManager.h>
 #include <VSCB.h>
+#include <glm/gtx/euler_angles.hpp>
 
 namespace GW2Radial
 {
@@ -85,6 +86,8 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	GW2_HASSERT(dev->CreateBlendState(&blendDesc, blendState_.GetAddressOf()));
 
 	CD3D11_SAMPLER_DESC sampDesc(D3D11_DEFAULT);
+	GW2_HASSERT(dev->CreateSamplerState(&sampDesc, baseSampler_.GetAddressOf()));
+
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
 	std::fill_n(sampDesc.BorderColor, std::size(sampDesc.BorderColor), 0.f);
@@ -415,6 +418,12 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 	if (behaviorOnReleaseBeforeDelay_.value() == int(BehaviorBeforeDelay::DIRECTION) && resetCursorPositionToCenter_)
 		resetCursorPositionToCenter();
 
+	ID3D11SamplerState* samplers[] = {
+		baseSampler_.Get(),
+		baseSampler_.Get()
+	};
+	ctx->PSSetSamplers(0, 2, samplers);
+
 	if (isVisible_)
 	{
 		if (currentTime >= currentTriggerTime_ + displayDelayOption_.value())
@@ -559,6 +568,8 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 		spriteDimensions.y += spriteDimensions.w * 0.5f;
 
 		UpdateConstantBuffer(ctx.Get(), spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, {}, timeLeft, conditionallyDelayed_ != nullptr);
+		if (conditionallyDelayed_)
+			conditionallyDelayed_->SetShaderState(ctx.Get());
 
 		ID3D11ShaderResourceView* srvs[] = {
 			backgroundTexture_.srv.Get(),
@@ -587,8 +598,19 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 	cb_s.Update();
 	ctx->PSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
 
+	auto mousePos = ImGui::GetIO().MousePos;
+	glm::vec2 mouseDist{ currentPosition_.x - mousePos.x / float(Core::i().screenWidth()), currentPosition_.y - mousePos.y / float(Core::i().screenHeight()) };
+	mouseDist = -mouseDist / glm::vec2(spriteDimensions.z, spriteDimensions.w);
+	if (glm::length(mouseDist) > 0.2f)
+		mouseDist *= 0.2f / glm::length(mouseDist);
+	mouseDist *= 0.4f;
+
+	glm::mat4x4 tilt = glm::eulerAngleXY(-mouseDist.y, mouseDist.x);
+
 	auto& vscb = GetVSCB();
 	vscb->spriteDimensions = spriteDimensions;
+	vscb->tiltMatrix = tilt;
+	vscb->spriteZ = 0.f;
 	vscb.Update();
 	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
@@ -597,6 +619,7 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 {
 	auto& vscb = GetVSCB();
 	vscb->spriteDimensions = spriteDimensions;
+	vscb->spriteZ = 0.f;
 	vscb.Update();
 	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }

@@ -22,7 +22,6 @@ static float hoverFadeIns[WHEEL_MAX_ELEMENT_COUNT] = (float[WHEEL_MAX_ELEMENT_CO
 cbuffer WheelElement : register(b1)
 {
 	float4 adjustedColor;
-	float4 shadowData;
 	int elementId;
 	bool premultiplyAlpha;
 };
@@ -65,9 +64,6 @@ float4 BaseMountImage(float2 uv, texture2D tex, SamplerState samp, out float sha
 	if (premultiplyAlpha)
 		color.rgb *= color.a;
 	color *= adjustedColor;
-
-	if (shadowData.x > 0.f)
-		shadow = shadowData.x * tex.Sample(samp, uv + shadowData.yz).a;
 
 	return color;
 }

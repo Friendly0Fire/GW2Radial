@@ -9,6 +9,7 @@
 #include <d3d11.h>
 #include <fstream>
 #include <filesystem>
+#include <glm/glm.hpp>
 
 #include <Resource.h>
 #include <Log.h>
@@ -114,6 +115,10 @@ typedef struct iVector2 {
     int x;
     int y;
 }       iVector2;
+
+struct fMatrix44 {
+    float mat[3][3];
+};
 
 bool ExceptionHandlerMiniDump(
     struct _EXCEPTION_POINTERS* pExceptionInfo, const char* function, const char* file, int line);

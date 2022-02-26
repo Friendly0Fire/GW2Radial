@@ -164,6 +164,7 @@ protected:
 	ShaderId psWheel_, psWheelElement_, psCursor_, psDelayIndicator_, vs_;
 	ComPtr<ID3D11BlendState> blendState_;
 	ComPtr<ID3D11SamplerState> borderSampler_;
+	ComPtr<ID3D11SamplerState> baseSampler_;
 
 	std::unique_ptr<Input::MouseMoveCallback> mouseMoveCallback_;
 	std::unique_ptr<Input::MouseButtonCallback> mouseButtonCallback_;

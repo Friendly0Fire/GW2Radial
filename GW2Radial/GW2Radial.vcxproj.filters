@@ -359,6 +359,7 @@
     <None Include="shaders\WheelElement.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

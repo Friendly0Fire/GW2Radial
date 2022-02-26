@@ -72,23 +72,34 @@ int WheelElement::DrawPriority(int extremumIndicator)
 	return rv;
 }
 
-void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, ID3D11Buffer* wheelCb)
+void WheelElement::SetShaderState(ID3D11DeviceContext* ctx)
 {
 	fVector4 adjustedColor = color();
 	adjustedColor.x = Lerp(1, adjustedColor.x, colorizeAmount_);
 	adjustedColor.y = Lerp(1, adjustedColor.y, colorizeAmount_);
 	adjustedColor.z = Lerp(1, adjustedColor.z, colorizeAmount_);
 
-	const float shadowOffsetMultiplier = -0.02f / 1024.f;
+	auto& sm = ShaderManager::i();
 
-	fVector4 shadowData { shadowStrength_, shadowOffsetMultiplier * texWidth_, shadowOffsetMultiplier * texWidth_ * aspectRatio_, 1.f };
+	cb_s->adjustedColor = adjustedColor;
+	cb_s->premultiplyAlpha = premultiplyAlpha_;
+
+	cb_s.Update();
+	ctx->PSSetConstantBuffers(1, 1, cb_s.buffer().GetAddressOf());
+}
+
+void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, ID3D11Buffer* wheelCb, bool shadow)
+{
+	fVector4 adjustedColor = color();
+	adjustedColor.x = Lerp(1, adjustedColor.x, colorizeAmount_);
+	adjustedColor.y = Lerp(1, adjustedColor.y, colorizeAmount_);
+	adjustedColor.z = Lerp(1, adjustedColor.z, colorizeAmount_);
 	
 	auto& sm = ShaderManager::i();
 
 	cb_s->elementId = elementId();
-	cb_s->adjustedColor = adjustedColor;
-	cb_s->shadowData = shadowData;
-	cb_s->premultiplyAlpha = premultiplyAlpha_;
+	cb_s->adjustedColor = shadow ? fVector4 { 0.f, 0.f, 0.f, shadowStrength_ } : adjustedColor;
+	cb_s->premultiplyAlpha = shadow ? false : premultiplyAlpha_;
 
 	cb_s.Update();
 	ID3D11Buffer* cbs[] = {
@@ -99,6 +110,12 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 
 	auto& vscb = GetVSCB();
 	vscb->spriteDimensions = spriteDimensions;
+	if (shadow)
+	{
+		vscb->spriteDimensions.z *= 1.01f;
+		vscb->spriteDimensions.w *= 1.01f;
+	}
+	vscb->spriteZ = shadow ? 0.f : 0.02f;
 	vscb.Update();
 	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
@@ -148,9 +165,16 @@ void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 sprite
 	
 	spriteDimensions.w *= aspectRatio_;
 
-	SetShaderState(ctx.Get(), spriteDimensions, parent->GetConstantBuffer());
-
 	ctx->PSSetShaderResources(1, 1, appearance_.srv.GetAddressOf());
+
+	if (shadowStrength_ > 0.f)
+	{
+		SetShaderState(ctx.Get(), spriteDimensions, parent->GetConstantBuffer(), true);
+
+		DrawScreenQuad(ctx);
+	}
+
+	SetShaderState(ctx.Get(), spriteDimensions, parent->GetConstantBuffer(), false);
 
 	DrawScreenQuad(ctx);
 }

@@ -16,7 +16,8 @@ public:
 
 	int DrawPriority(int extremumIndicator);
 
-	void SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, ID3D11Buffer* wheelCb);
+	void SetShaderState(ID3D11DeviceContext* ctx);
+	void SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, ID3D11Buffer* wheelCb, bool shadow);
 	void Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
 
 	uint elementId() const { return elementId_; }
@@ -61,7 +62,7 @@ protected:
 	mstime currentHoverTime_ = 0;
 	mstime currentExitTime_ = 0;
 	float aspectRatio_ = 1.f;
-	float shadowStrength_ = 1.f;
+	float shadowStrength_ = 0.8f;
 	float colorizeAmount_ = 1.f;
 	float texWidth_ = 0.f;
 	bool premultiplyAlpha_ = false;
@@ -69,7 +70,6 @@ protected:
 	struct WheelElementCB
 	{
 		fVector4 adjustedColor;
-		fVector4 shadowData;
 		int elementId;
 		bool premultiplyAlpha;
 	};
