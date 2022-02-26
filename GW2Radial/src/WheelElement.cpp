@@ -88,7 +88,7 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx)
 	ctx->PSSetConstantBuffers(1, 1, cb_s.buffer().GetAddressOf());
 }
 
-void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, ID3D11Buffer* wheelCb, bool shadow)
+void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, ID3D11Buffer* wheelCb, bool shadow, float hoverRatio)
 {
 	fVector4 adjustedColor = color();
 	adjustedColor.x = Lerp(1, adjustedColor.x, colorizeAmount_);
@@ -112,17 +112,17 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 	vscb->spriteDimensions = spriteDimensions;
 	if (shadow)
 	{
-		vscb->spriteDimensions.z *= 1.01f;
-		vscb->spriteDimensions.w *= 1.01f;
+		vscb->spriteDimensions.z *= 1.01f + hoverRatio * 0.04f;
+		vscb->spriteDimensions.w *= 1.01f + hoverRatio * 0.04f;
 	}
-	vscb->spriteZ = shadow ? 0.f : 0.02f;
+	vscb->spriteZ = shadow ? 0.f : 0.02f + hoverRatio * 0.04f;
 	vscb.Update();
 	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
 
 void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const Wheel* parent)
 {
-	const float hoverTimer = hoverFadeIn(currentTime, parent);
+	const float hoverTimer = SmoothStep(hoverFadeIn(currentTime, parent));
 
 	float elementAngle = float(n) / float(activeElementsCount) * 2 * float(M_PI);
 	if (activeElementsCount == 1)
@@ -136,7 +136,7 @@ void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 sprite
 	if (activeElementsCount == 1)
 		elementDiameter = 2.f * 0.2f;
 	else
-		elementDiameter *= Lerp(1.f, 1.1f, SmoothStep(hoverTimer));
+		elementDiameter *= Lerp(1.f, 1.1f, hoverTimer);
 
 	switch (activeElementsCount)
 	{
@@ -169,12 +169,12 @@ void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 sprite
 
 	if (shadowStrength_ > 0.f)
 	{
-		SetShaderState(ctx.Get(), spriteDimensions, parent->GetConstantBuffer(), true);
+		SetShaderState(ctx.Get(), spriteDimensions, parent->GetConstantBuffer(), true, hoverTimer);
 
 		DrawScreenQuad(ctx);
 	}
 
-	SetShaderState(ctx.Get(), spriteDimensions, parent->GetConstantBuffer(), false);
+	SetShaderState(ctx.Get(), spriteDimensions, parent->GetConstantBuffer(), false, hoverTimer);
 
 	DrawScreenQuad(ctx);
 }
