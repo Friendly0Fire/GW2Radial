@@ -203,10 +203,11 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 	UpdateCheck::i().CheckForUpdates();
 	MiscTab::i();
 
-	wheels_.emplace_back(Wheel::Create<Mount>(IDR_BG, IDR_WIPEMASK, "mounts", "Mounts", device_));
-	wheels_.emplace_back(Wheel::Create<Novelty>(IDR_BG, IDR_WIPEMASK, "novelties", "Novelties", device_));
-	wheels_.emplace_back(Wheel::Create<Marker>(IDR_BG, IDR_WIPEMASK, "markers", "Markers", device_));
-	wheels_.emplace_back(Wheel::Create<ObjectMarker>(IDR_BG, IDR_WIPEMASK, "object_markers", "Object Markers", device_));
+	auto bgTex = std::make_shared<Texture2D>(std::move(CreateTextureFromResource(device_, Core::i().dllModule(), IDR_BG)));
+	wheels_.emplace_back(Wheel::Create<Mount>(bgTex, "mounts", "Mounts", device_));
+	wheels_.emplace_back(Wheel::Create<Novelty>(bgTex, "novelties", "Novelties", device_));
+	wheels_.emplace_back(Wheel::Create<Marker>(bgTex, "markers", "Markers", device_));
+	wheels_.emplace_back(Wheel::Create<ObjectMarker>(bgTex, "object_markers", "Object Markers", device_));
 
 	// Init ImGui
 	auto &imio = ImGui::GetIO();
@@ -237,7 +238,7 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 	ImGui_ImplWin32_Init(gameWindow_);
 	ImGui_ImplDX11_Init(device_, context_);
 
-	customWheels_ = std::make_unique<CustomWheelsManager>(device_, wheels_, fontDraw_);
+	customWheels_ = std::make_unique<CustomWheelsManager>(device_, bgTex, wheels_, fontDraw_);
 
 	firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
 

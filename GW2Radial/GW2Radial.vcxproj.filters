@@ -441,9 +441,6 @@
     <Image Include="art\Finals\Skyscale.dds">
       <Filter>Resource Files\Assets</Filter>
     </Image>
-    <Image Include="art\Finals\WipeMask.dds">
-      <Filter>Resource Files\Assets</Filter>
-    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="art\Fonts\SourceSansPro-Black.ttf">

@@ -132,8 +132,8 @@ Texture2D LoadCustomTexture(ID3D11Device* dev, const std::filesystem::path& path
 	}
 }
 
-CustomWheelsManager::CustomWheelsManager(ID3D11Device* dev, std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
-    : wheels_(wheels), font_(font)
+CustomWheelsManager::CustomWheelsManager(ID3D11Device* dev, std::shared_ptr<Texture2D> bgTex, std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
+    : wheels_(wheels), font_(font), backgroundTexture_(bgTex)
 {
 	CD3D11_BLEND_DESC blendDesc(D3D11_DEFAULT);
 	blendDesc.RenderTarget[0].BlendEnable = true;
@@ -207,7 +207,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	}))
 		return fail((L"Nickname " + utf8_decode(std::string(wheelNickname->second)) + L" already exists").c_str());
 
-	auto wheel = std::make_unique<Wheel>(IDR_BG, IDR_WIPEMASK, wheelNickname->second, wheelDisplayName->second, dev);
+	auto wheel = std::make_unique<Wheel>(backgroundTexture_, wheelNickname->second, wheelDisplayName->second, dev);
 	wheel->outOfCombat_.enabled = ini.GetBoolValue("General", "only_out_of_combat", false);
 	wheel->aboveWater_.enabled = ini.GetBoolValue("General", "only_above_water", false);
 

@@ -313,7 +313,6 @@ cd "$(ProjectDir)shaders"
     <Image Include="art\Finals\travel.dds" />
     <Image Include="art\Finals\triangle_marker.dds" />
     <Image Include="art\Finals\Warclaw.dds" />
-    <Image Include="art\Finals\WipeMask.dds" />
     <Image Include="art\Finals\x_marker.dds" />
   </ItemGroup>
   <ItemGroup>

@@ -18,7 +18,7 @@ namespace GW2Radial
 {
 ConstantBuffer<Wheel::WheelCB> Wheel::cb_s;
 
-Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, ID3D11Device* dev)
+Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName, ID3D11Device* dev)
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
 	  keybind_(nickname_, "Show on mouse", nickname_), centralKeybind_(nickname_ + "_cl", "Show in center", nickname_),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
@@ -35,14 +35,15 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  clickSelectOption_("Require click on option to select", "click_select", "wheel_" + nickname_, false),
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
-	maximumConditionalWaitTimeOption_("Expiration time of queued input", "max_wait_cond", "wheel_" + nickname_, 30),
-	conditionalDelayDelayOption_("Delay before sending queued input", "min_delay_cond", "wheel_" + nickname_, 200),
-	showDelayTimerOption_("Show timer next to skill bar when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
-    centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
-	enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false),
-	enableQueuingOption_("Enable input queuing", "queuing_enabled", "wheel_" + nickname_, true),
-    visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true),
-	opacityMultiplierOption_("Opacity multiplier", "opacity", "wheel_" + nickname_, 100)
+	  maximumConditionalWaitTimeOption_("Expiration time of queued input", "max_wait_cond", "wheel_" + nickname_, 30),
+	  conditionalDelayDelayOption_("Delay before sending queued input", "min_delay_cond", "wheel_" + nickname_, 200),
+	  showDelayTimerOption_("Show timer next to skill bar when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
+	  centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
+	  enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false),
+	  enableQueuingOption_("Enable input queuing", "queuing_enabled", "wheel_" + nickname_, true),
+	  visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true),
+	  opacityMultiplierOption_("Opacity multiplier", "opacity", "wheel_" + nickname_, 100),
+	  backgroundTexture_(bgTexture)
 {
 	conditions_ = std::make_shared<ConditionSet>("wheel_" + nickname_);
 	conditions_->enable(enableConditionsOption_.value());
@@ -59,9 +60,6 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	aboveWater_.toggleOffTest = outOfCombat_.toggleOffTest = []() { return MumbleLink::i().isMounted(); };
 	outOfCombat_.test = []() { return MumbleLink::i().isInCombat(); };
 	custom_.test = custom_.toggleOffTest = []() { return false; };
-
-	backgroundTexture_ = CreateTextureFromResource(dev, Core::i().dllModule(), bgResourceId);
-	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i().dllModule(), wipeMaskResourceId);
 
 	mouseMoveCallback_ = std::make_unique<Input::MouseMoveCallback>([this](bool& rv) { OnMouseMove(rv); });
 	Input::i().AddMouseMoveCallback(mouseMoveCallback_.get());
@@ -477,13 +475,9 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 
 				ShaderManager::i().SetShaders(vs_, psWheel_);
 				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
-				UpdateConstantBuffer(ctx.Get(), baseSpriteDimensions, fadeTimer, fmod(currentTime / 1010.f, 55000.f), activeElements, hoveredFadeIns, 0.f, false);
+				UpdateConstantBuffer(ctx.Get(), baseSpriteDimensions, fadeTimer, fmod(currentTime / 1010.f, 55000.f), activeElements, hoveredFadeIns, 0.f, false, true);
 
-				ID3D11ShaderResourceView* srvs[] = {
-					backgroundTexture_.srv.Get(),
-					wipeMaskTexture_.srv.Get()
-				};
-				ctx->PSSetShaderResources(0, 2, srvs);
+				ctx->PSSetShaderResources(0, 1, backgroundTexture_->srv.GetAddressOf());
 
 				DrawScreenQuad(ctx);
 
@@ -567,12 +561,12 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 		spriteDimensions.x += spriteDimensions.z * 0.5f;
 		spriteDimensions.y += spriteDimensions.w * 0.5f;
 
-		UpdateConstantBuffer(ctx.Get(), spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, {}, timeLeft, conditionallyDelayed_ != nullptr);
+		UpdateConstantBuffer(ctx.Get(), spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, {}, timeLeft, conditionallyDelayed_ != nullptr, false);
 		if (conditionallyDelayed_)
 			conditionallyDelayed_->SetShaderState(ctx.Get());
 
 		ID3D11ShaderResourceView* srvs[] = {
-			backgroundTexture_.srv.Get(),
+			backgroundTexture_->srv.Get(),
 			conditionallyDelayed_ ? conditionallyDelayed_->appearance().srv.Get() : nullptr
 		};
 		ctx->PSSetShaderResources(0, 2, srvs);
@@ -583,7 +577,7 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 }
 
 void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer,
-	const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon)
+	const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt)
 {
 	cb_s->wipeMaskData = wipeMaskData_;
 	cb_s->wheelFadeIn = fadeIn;
@@ -598,18 +592,24 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 	cb_s.Update();
 	ctx->PSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
 
-	auto mousePos = ImGui::GetIO().MousePos;
-	glm::vec2 mouseDist{ currentPosition_.x - mousePos.x / float(Core::i().screenWidth()), currentPosition_.y - mousePos.y / float(Core::i().screenHeight()) };
-	mouseDist = -mouseDist / glm::vec2(spriteDimensions.z, spriteDimensions.w);
-	if (glm::length(mouseDist) > 0.2f)
-		mouseDist *= 0.2f / glm::length(mouseDist);
-	mouseDist *= 0.4f;
+	glm::mat4x4 tiltMatrix;
+	if (tilt)
+	{
+		auto mousePos = ImGui::GetIO().MousePos;
+		glm::vec2 mouseDist{ currentPosition_.x - mousePos.x / float(Core::i().screenWidth()), currentPosition_.y - mousePos.y / float(Core::i().screenHeight()) };
+		mouseDist = -mouseDist / glm::vec2(spriteDimensions.z, spriteDimensions.w);
+		if (glm::length(mouseDist) > 0.2f)
+			mouseDist *= 0.2f / glm::length(mouseDist);
+		mouseDist *= 0.4f;
 
-	glm::mat4x4 tilt = glm::eulerAngleXY(-mouseDist.y, mouseDist.x);
+		tiltMatrix = glm::eulerAngleXY(-mouseDist.y, mouseDist.x);
+	}
+	else
+		tiltMatrix = glm::identity<glm::mat4x4>();
 
 	auto& vscb = GetVSCB();
 	vscb->spriteDimensions = spriteDimensions;
-	vscb->tiltMatrix = tilt;
+	vscb->tiltMatrix = tiltMatrix;
 	vscb->spriteZ = 0.f;
 	vscb.Update();
 	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());

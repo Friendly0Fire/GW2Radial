@@ -29,14 +29,14 @@ public:
 		DIRECTION = 3
 	};
 
-	Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, ID3D11Device* dev);
+	Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName, ID3D11Device* dev);
 	virtual ~Wheel();
 
 	template<typename T>
-	static std::unique_ptr<Wheel> Create(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, ID3D11Device* dev)
+	static std::unique_ptr<Wheel> Create(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName, ID3D11Device* dev)
 	{
 		// TODO: Would be nice to somehow let wheel element .cpps determine these parameters as well
-		auto wheel = std::make_unique<Wheel>(bgResourceId, inkResourceId, std::move(nickname), std::move(displayName), dev);
+		auto wheel = std::make_unique<Wheel>(bgTexture, std::move(nickname), std::move(displayName), dev);
 		wheel->Setup<T>(dev);
 		return std::move(wheel);
 	}
@@ -68,7 +68,7 @@ public:
 protected:
 	void Sort();
 	void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer,
-		const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon);
+		const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt);
 	void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& baseSpriteDimensions);
 
 	static const mstime conditionallyDelayedFadeOutTime = 500;
@@ -159,8 +159,7 @@ protected:
 	WheelElement* currentHovered_ = nullptr;
 	WheelElement* previousUsed_ = nullptr;
 
-	Texture2D backgroundTexture_;
-	Texture2D wipeMaskTexture_;
+	std::shared_ptr<Texture2D> backgroundTexture_;
 	ShaderId psWheel_, psWheelElement_, psCursor_, psDelayIndicator_, vs_;
 	ComPtr<ID3D11BlendState> blendState_;
 	ComPtr<ID3D11SamplerState> borderSampler_;

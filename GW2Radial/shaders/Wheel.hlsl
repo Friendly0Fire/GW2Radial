@@ -1,18 +1,13 @@
 #include "common.hlsli"
 
-float GetWipeValue(in float2 uv, in float3 data, in float offset)
+float GetWipeValue(in float2 uv, in float progress)
 {
-	uv -= 0.5f;
-	uv /= 0.75f + pow(offset, 0.3f);
-	uv += 0.5f + (rotate(0.5f, data.z) * pow(offset, 0.1f) - 0.5f) * 0.25f;
-
-	float3 wipe = WipeMaskTexture.Sample(SecondarySampler, uv).rgb;
-	return lerp(wipe.b, 1.f, pow(offset, 0.6f));
+	return saturate(progress + 1.f - length(uv - 0.5f) * 2);
 }
 
 float4 Wheel(PS_INPUT In) : SV_Target0
 {
-	float currentWheelFadeIn = GetWipeValue(In.UV, wipeMaskData, wheelFadeIn.x);
+	float currentWheelFadeIn = GetWipeValue(In.UV, wheelFadeIn.x);
 
 	// Multiply by -3 rather than 2 to mirror and scale down
 	float2 coords = -3 * (In.UV - 0.5f);
