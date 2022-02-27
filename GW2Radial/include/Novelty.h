@@ -8,7 +8,7 @@ namespace GW2Radial
 class Novelty : public WheelElement
 {
 public:
-	Novelty(NoveltyType m, IDirect3DDevice9* dev);
+	Novelty(NoveltyType m, ID3D11Device* dev);
 
 protected:
 	static const char* GetNoveltyNameFromType(NoveltyType m)

@@ -50,6 +50,9 @@
     <Filter Include="Source Files\Utils">
       <UniqueIdentifier>{5066aeab-7442-4db0-8d6e-c7f444556d3b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External\DXTK">
+      <UniqueIdentifier>{a7b29cec-5f12-4d0b-8708-3e22109058b9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui_demo.cpp">
@@ -70,37 +73,16 @@
     <ClCompile Include="src\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\imgui_impl_dx9_custom.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="imgui\imgui_widgets.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="imgui\backends\imgui_impl_win32.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\DDSTextureLoader.cpp">
+    <ClCompile Include="src\Direct3D11Loader.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Direct3D9Hooks.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Direct3D9Loader.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Direct3DVirtualFunctionTable.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Effect.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Effect_dx12.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\WICTextureLoader.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\UnitQuad.cpp">
+    <ClCompile Include="src\ShaderManager.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Wheel.cpp">
@@ -172,6 +154,18 @@
     <ClCompile Include="src\Log.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="imgui\backends\imgui_impl_dx11.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VSCB.cpp">
+      <Filter>Source Files\Radials</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXTK\Src\WICTextureLoader.cpp">
+      <Filter>External\DXTK</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXTK\Src\DDSTextureLoader.cpp">
+      <Filter>External\DXTK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_internal.h">
@@ -192,14 +186,8 @@
     <ClInclude Include="include\Resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h">
-      <Filter>External\Addon Loader</Filter>
-    </ClInclude>
     <ClInclude Include="loader-core\include\gw2al_api.h">
       <Filter>External\Addon Loader</Filter>
-    </ClInclude>
-    <ClInclude Include="shaders\registers.h">
-      <Filter>Resource Files\Shaders</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imstb_rectpack.h">
       <Filter>External\imgui</Filter>
@@ -208,9 +196,6 @@
       <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imstb_truetype.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\backends\imgui_impl_dx9.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="imgui\backends\imgui_impl_win32.h">
@@ -225,37 +210,13 @@
     <ClInclude Include="include\Main.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\d912pxy.h">
+    <ClInclude Include="include\Direct3D11Inject.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="include\DDSTextureLoader.h">
+    <ClInclude Include="include\Direct3D11Loader.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="include\Direct3D9Hooks.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Direct3D9Inject.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Direct3D9Loader.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Direct3DVirtualFunctionTable.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Effect.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Effect_dx12.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\WICTextureLoader.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\TGA.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\UnitQuad.h">
+    <ClInclude Include="include\ShaderManager.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\Wheel.h">
@@ -293,9 +254,6 @@
     </ClInclude>
     <ClInclude Include="include\ImGuiPopup.h">
       <Filter>Source Files\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="include\dds.h">
-      <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\GFXSettings.h">
       <Filter>Source Files\Game Data</Filter>
@@ -351,6 +309,18 @@
     <ClInclude Include="include\Version.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h">
+      <Filter>External\Addon Loader</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\backends\imgui_impl_dx11.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\VSCB.h">
+      <Filter>Source Files\Radials</Filter>
+    </ClInclude>
+    <ClInclude Include="include\renderdoc_app.h">
+      <Filter>External</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="rt_rcdat.bin">
@@ -362,12 +332,28 @@
     <None Include="art\finals\rcdata1.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="int\Shader_vs.cso">
-      <Filter>Resource Files\Assets</Filter>
+    <None Include="shaders\common.hlsli">
+      <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="int\Shader_ps.cso">
-      <Filter>Resource Files\Assets</Filter>
+    <None Include="shaders\Cursor.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="shaders\DelayIndicator.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="shaders\noise.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="shaders\ScreenQuad.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="shaders\Wheel.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="shaders\WheelElement.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -449,7 +435,7 @@
     <Image Include="art\Finals\Skyscale.dds">
       <Filter>Resource Files\Assets</Filter>
     </Image>
-    <Image Include="art\Finals\WipeMask.dds">
+    <Image Include="art\Finals\Turtle.dds">
       <Filter>Resource Files\Assets</Filter>
     </Image>
   </ItemGroup>
@@ -469,16 +455,5 @@
     <Font Include="art\Fonts\consolas.ttf">
       <Filter>Resource Files\Assets</Filter>
     </Font>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="shaders\Shader_ps.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\Shader_vs.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\noise.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

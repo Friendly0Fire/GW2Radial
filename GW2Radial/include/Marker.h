@@ -8,7 +8,7 @@ namespace GW2Radial
 class Marker : public WheelElement
 {
 public:
-	Marker(MarkerType m, IDirect3DDevice9* dev);
+	Marker(MarkerType m, ID3D11Device* dev);
 
 	fVector4 color() override;
 };
@@ -16,7 +16,7 @@ public:
 class ObjectMarker : public WheelElement
 {
 public:
-	ObjectMarker(MarkerType m, IDirect3DDevice9* dev);
+	ObjectMarker(MarkerType m, ID3D11Device* dev);
 
 	fVector4 color() override;
 };

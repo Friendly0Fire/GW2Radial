@@ -6,13 +6,15 @@
 #include <memory>
 #include <span>
 #include <wrl.h>
-#include <d3d9.h>
+#include <d3d11.h>
 #include <fstream>
 #include <filesystem>
+#include <glm/glm.hpp>
 
 #include <Resource.h>
 #include <Log.h>
 
+#define COM_RELEASE(x) if(x) { x->Release(); x = nullptr; }
 #define NULL_COALESCE(a, b) ((a) != nullptr ? (a) : (b))
 #define OPT_COALESCE(a, b) ((a) ? (a) : (b))
 #define SQUARE(x) ((x) * (x))
@@ -31,8 +33,8 @@ void CriticalMessageBox(const wchar_t* contents, Args&&...args) {
     exit(1);
 }
 
+#ifdef _DEBUG
 #define GW2_ASSERT(test) GW2Assert(test, L#test)
-
 __forceinline void GW2Assert(bool test, const wchar_t* testText) {
     if (test)
         return;
@@ -42,6 +44,15 @@ __forceinline void GW2Assert(bool test, const wchar_t* testText) {
     else
         CriticalMessageBox(L"Assertion failure: \"%s\"!", testText);
 }
+
+__forceinline void GW2Assert(HRESULT hr, const wchar_t* testText) {
+    GW2Assert(SUCCEEDED(hr), std::format(L"{} -> 0x{:x}", testText, (unsigned int)hr).c_str());
+}
+#define GW2_HASSERT(call) GW2Assert(HRESULT(call), L#call)
+#else
+#define GW2_ASSERT(test) test
+#define GW2_HASSERT(call) call
+#endif
 
 using Microsoft::WRL::ComPtr;
 
@@ -104,6 +115,10 @@ typedef struct iVector2 {
     int x;
     int y;
 }       iVector2;
+
+struct fMatrix44 {
+    float mat[3][3];
+};
 
 bool ExceptionHandlerMiniDump(
     struct _EXCEPTION_POINTERS* pExceptionInfo, const char* function, const char* file, int line);

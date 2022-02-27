@@ -68,7 +68,7 @@ void Log::Draw()
     if(!lines_.empty())
     {
         std::lock_guard guard{ linesMutex_ };
-        int filtered_size = lines_.size();
+        int filtered_size = int(lines_.size());
         if ((filter_ & uint8_t(Severity::MaxVal)) != uint8_t(Severity::MaxVal)) {
             for (cref l : lines_)
                 if ((uint8_t(l.sev) & filter_) == 0)

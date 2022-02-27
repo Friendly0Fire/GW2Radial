@@ -2,7 +2,6 @@
 #include <Wheel.h>
 #include <Core.h>
 #include <Utility.h>
-#include <UnitQuad.h>
 #include <ImGuiExtensions.h>
 #include <imgui.h>
 #include <utility>
@@ -11,13 +10,15 @@
 #include <algorithm>
 #include <GFXSettings.h>
 #include <MumbleLink.h>
-#include "../shaders/registers.h"
-#include <Effect.h>
+#include <ShaderManager.h>
+#include <VSCB.h>
+#include <glm/gtx/euler_angles.hpp>
 
 namespace GW2Radial
 {
+ConstantBuffer<Wheel::WheelCB> Wheel::cb_s;
 
-Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, IDirect3DDevice9 * dev)
+Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName, ID3D11Device* dev)
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
 	  keybind_(nickname_, "Show on mouse", nickname_), centralKeybind_(nickname_ + "_cl", "Show in center", nickname_),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
@@ -34,14 +35,15 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	  clickSelectOption_("Require click on option to select", "click_select", "wheel_" + nickname_, false),
 	  behaviorOnReleaseBeforeDelay_("Behavior when released before delay has lapsed", "behavior_before_delay", "wheel_" + nickname_),
 	  resetCursorAfterKeybindOption_("Move cursor to original location after release", "reset_cursor_after", "wheel_" + nickname_, true),
-	maximumConditionalWaitTimeOption_("Expiration time of queued input", "max_wait_cond", "wheel_" + nickname_, 30),
-	conditionalDelayDelayOption_("Delay before sending queued input", "min_delay_cond", "wheel_" + nickname_, 200),
-	showDelayTimerOption_("Show timer next to skill bar when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
-    centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
-	enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false),
-	enableQueuingOption_("Enable input queuing", "queuing_enabled", "wheel_" + nickname_, true),
-    visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true),
-	opacityMultiplierOption_("Opacity multiplier", "opacity", "wheel_" + nickname_, 100)
+	  maximumConditionalWaitTimeOption_("Expiration time of queued input", "max_wait_cond", "wheel_" + nickname_, 30),
+	  conditionalDelayDelayOption_("Delay before sending queued input", "min_delay_cond", "wheel_" + nickname_, 200),
+	  showDelayTimerOption_("Show timer next to skill bar when waiting to send input", "timer_ooc", "wheel_" + nickname_, true),
+	  centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
+	  enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false),
+	  enableQueuingOption_("Enable input queuing", "queuing_enabled", "wheel_" + nickname_, true),
+	  visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true),
+	  opacityMultiplierOption_("Opacity multiplier", "opacity", "wheel_" + nickname_, 100),
+	  backgroundTexture_(bgTexture)
 {
 	conditions_ = std::make_shared<ConditionSet>("wheel_" + nickname_);
 	conditions_->enable(enableConditionsOption_.value());
@@ -59,9 +61,6 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	outOfCombat_.test = []() { return MumbleLink::i().isInCombat(); };
 	custom_.test = custom_.toggleOffTest = []() { return false; };
 
-	backgroundTexture_ = CreateTextureFromResource(dev, Core::i().dllModule(), bgResourceId);
-	wipeMaskTexture_ = CreateTextureFromResource(dev, Core::i().dllModule(), wipeMaskResourceId);
-
 	mouseMoveCallback_ = std::make_unique<Input::MouseMoveCallback>([this](bool& rv) { OnMouseMove(rv); });
 	Input::i().AddMouseMoveCallback(mouseMoveCallback_.get());
 
@@ -69,6 +68,31 @@ Wheel::Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, s
 	Input::i().AddMouseButtonCallback(mouseButtonCallback_.get());
 
 	SettingsMenu::i().AddImplementer(this);
+
+	vs_ = ShaderManager::i().GetShader(L"ScreenQuad.hlsl", D3D11_SHVER_VERTEX_SHADER, "ScreenQuad");
+	psWheel_ = ShaderManager::i().GetShader(L"Wheel.hlsl", D3D11_SHVER_PIXEL_SHADER, "Wheel");
+	psWheelElement_ = ShaderManager::i().GetShader(L"WheelElement.hlsl", D3D11_SHVER_PIXEL_SHADER, "WheelElement");
+	psCursor_ = ShaderManager::i().GetShader(L"Cursor.hlsl", D3D11_SHVER_PIXEL_SHADER, "Cursor");
+	psDelayIndicator_ = ShaderManager::i().GetShader(L"DelayIndicator.hlsl", D3D11_SHVER_PIXEL_SHADER, "DelayIndicator");
+
+	CD3D11_BLEND_DESC blendDesc(D3D11_DEFAULT);
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+	GW2_HASSERT(dev->CreateBlendState(&blendDesc, blendState_.GetAddressOf()));
+
+	CD3D11_SAMPLER_DESC sampDesc(D3D11_DEFAULT);
+	GW2_HASSERT(dev->CreateSamplerState(&sampDesc, baseSampler_.GetAddressOf()));
+
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	std::fill_n(sampDesc.BorderColor, std::size(sampDesc.BorderColor), 0.f);
+	GW2_HASSERT(dev->CreateSamplerState(&sampDesc, borderSampler_.GetAddressOf()));
+
+	if (!cb_s.IsValid())
+		cb_s = ShaderManager::i().MakeConstantBuffer<WheelCB>();
 }
 
 Wheel::~Wheel()
@@ -363,7 +387,7 @@ void Wheel::OnCharacterChange(const std::wstring& prevCharacterName, const std::
 	ResetConditionallyDelayed(false);
 }
 
-void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
+void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 {
 	if (opacityMultiplierOption_.value() == 0)
 		return;
@@ -392,6 +416,12 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 	if (behaviorOnReleaseBeforeDelay_.value() == int(BehaviorBeforeDelay::DIRECTION) && resetCursorPositionToCenter_)
 		resetCursorPositionToCenter();
 
+	ID3D11SamplerState* samplers[] = {
+		baseSampler_.Get(),
+		baseSampler_.Get()
+	};
+	ctx->PSSetSamplers(0, 2, samplers);
+
 	if (isVisible_)
 	{
 		if (currentTime >= currentTriggerTime_ + displayDelayOption_.value())
@@ -399,18 +429,13 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			if (resetCursorPositionToCenter_)
 				resetCursorPositionToCenter();
 
-			fx->Begin();
-			quad->Bind(fx);
-			fx->SetShader(ShaderType::VERTEX_SHADER, L"Shader_vs.hlsl", "ScreenQuad_VS");
-
-			// Setup viewport
-			D3DVIEWPORT9 vp;
-			vp.X = vp.Y = 0;
+			D3D11_VIEWPORT vp;
+			vp.TopLeftX = vp.TopLeftY = 0;
 			vp.Width = screenWidth;
 			vp.Height = screenHeight;
-			vp.MinZ = 0.0f;
-			vp.MaxZ = 1.0f;
-			dev->SetViewport(&vp);
+			vp.MinDepth = 0.0f;
+			vp.MaxDepth = 1.0f;
+			ctx->RSSetViewports(1, &vp);
 
 			auto activeElements = GetActiveElements();
 			if (!activeElements.empty())
@@ -447,65 +472,37 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 					break;
 				}
 
-				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "BgImage_PS");
-				fx->SetRenderStates({
-					{ D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
-					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
-				});
-				{
-				    using namespace ShaderRegister::ShaderPS;
-				    using namespace ShaderRegister::ShaderVS;
 
-				    fx->SetVariable(ShaderType::PIXEL_SHADER, float3_fWipeMaskData, wipeMaskData_);
-				    fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, baseSpriteDimensions);
-				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, fadeTimer);
-				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fAnimationTimer, fmod(currentTime / 1010.f, 55000.f));
-				    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fCenterScale, centerScaleOption_.value());
-				    fx->SetVariable(ShaderType::PIXEL_SHADER, int_iElementCount, activeElements.size());
-					fx->SetVariable(ShaderType::PIXEL_SHADER, float_fGlobalOpacity, opacityMultiplierOption_.value() * 0.01f);
-				    fx->SetVariableArray(ShaderType::PIXEL_SHADER, array_float4_fHoverFadeIns, (const std::span<float>&)hoveredFadeIns);
+				ShaderManager::i().SetShaders(vs_, psWheel_);
+				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
+				UpdateConstantBuffer(ctx.Get(), baseSpriteDimensions, fadeTimer, fmod(currentTime / 1010.f, 55000.f), activeElements, hoveredFadeIns, 0.f, false, true);
 
-					fx->SetSamplerStates(sampler2D_texMainSampler, {});
-					fx->SetSamplerStates(sampler2D_texWipeMaskImageSampler, {});
-				    fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_.Get());
-				    fx->SetTexture(sampler2D_texWipeMaskImageSampler, wipeMaskTexture_.Get());
-				}
+				ctx->PSSetShaderResources(0, 1, backgroundTexture_->srv.GetAddressOf());
 
-				fx->ApplyStates();
-				quad->Draw();
+				DrawScreenQuad(ctx);
 
-				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "MountImage_PS");
-				fx->SetRenderStates({
-					{ D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
-					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
-				});
+				ShaderManager::i().SetShaders(vs_, psWheelElement_);
+				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 
 				int n = 0;
 				for (auto it : activeElements)
 				{
-					it->Draw(n, baseSpriteDimensions, activeElements.size(), currentTime, currentHovered_, this);
+					it->Draw(ctx, n, baseSpriteDimensions, activeElements.size(), currentTime, currentHovered_, this);
 					n++;
 				}
-
 			}
 
 			{
 				cref io = ImGui::GetIO();
 
-				fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "Cursor_PS");
-				fx->SetRenderStates({
-					{ D3DRS_DESTBLEND, D3DBLEND_ONE },
-					{ D3DRS_SRCBLEND, D3DBLEND_ONE },
-				});
+				ShaderManager::i().SetShaders(vs_, psCursor_);
+				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 
 				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f  * screenSize.y * screenSize.z, 0.08f };
-				fx->SetVariable(ShaderType::VERTEX_SHADER, ShaderRegister::ShaderVS::float4_fSpriteDimensions, spriteDimensions);
 
-				fx->ApplyStates();
-				quad->Draw();
+				UpdateConstantBuffer(ctx.Get(), spriteDimensions);
+				DrawScreenQuad(ctx);
 			}
-
-			fx->End();
 		}
 	} else if(showDelayTimerOption_.value() && !conditionallyDelayedCustom_ && (conditionallyDelayed_ != nullptr || currentTime < conditionallyDelayedTime_ + conditionallyDelayedFadeOutTime)) {
 		float dt = float(currentTime - conditionallyDelayedTime_) / 1000.f;
@@ -516,14 +513,8 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 			timeLeft = 1.f - (currentTime - conditionallyDelayedTime_) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
 	    cref io = ImGui::GetIO();
 
-		fx->Begin();
-		quad->Bind(fx);
-		fx->SetShader(ShaderType::VERTEX_SHADER, L"Shader_vs.hlsl", "ScreenQuad_VS");
-		fx->SetShader(ShaderType::PIXEL_SHADER, L"Shader_ps.hlsl", "TimerCursor_PS");
-		fx->SetRenderStates({
-			{ D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA },
-			{ D3DRS_SRCBLEND, D3DBLEND_ONE },
-		});
+		ShaderManager::i().SetShaders(vs_, psDelayIndicator_);
+		ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 
 		float dpiScale = 1.f;
 		if(GFXSettings::i().dpiScaling())
@@ -570,35 +561,67 @@ void Wheel::Draw(IDirect3DDevice9* dev, Effect* fx, UnitQuad* quad)
 		spriteDimensions.x += spriteDimensions.z * 0.5f;
 		spriteDimensions.y += spriteDimensions.w * 0.5f;
 
-		{
-			using namespace ShaderRegister::ShaderPS;
-			using namespace ShaderRegister::ShaderVS;
-		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fAnimationTimer, fmod(currentTime / 1010.f, 55000.f));
-		    fx->SetVariable(ShaderType::VERTEX_SHADER, float4_fSpriteDimensions, spriteDimensions);
-		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fWheelFadeIn, std::min(absDt * 2, 1.f));
-		    fx->SetVariable(ShaderType::PIXEL_SHADER, float_fTimeLeft, timeLeft);
-			fx->SetVariable(ShaderType::PIXEL_SHADER, bool_bShowIcon, conditionallyDelayed_ != nullptr);
-			fx->SetVariable(ShaderType::PIXEL_SHADER, float_fGlobalOpacity, opacityMultiplierOption_.value() * 0.01f);
+		UpdateConstantBuffer(ctx.Get(), spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, {}, timeLeft, conditionallyDelayed_ != nullptr, false);
+		if (conditionallyDelayed_)
+			conditionallyDelayed_->SetShaderState(ctx.Get());
 
-			fx->SetSamplerStates(sampler2D_texMainSampler, {});
-			fx->SetSamplerStates(sampler2D_texSecondarySampler, {
-				{ D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER },
-				{ D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER },
-				{ D3DSAMP_BORDERCOLOR, D3DCOLOR(0) }
-			});
-			fx->SetTexture(sampler2D_texMainSampler, backgroundTexture_.Get());
+		ID3D11ShaderResourceView* srvs[] = {
+			backgroundTexture_->srv.Get(),
+			conditionallyDelayed_ ? conditionallyDelayed_->appearance().srv.Get() : nullptr
+		};
+		ctx->PSSetShaderResources(0, 2, srvs);
+		ctx->PSSetSamplers(1, 1, borderSampler_.GetAddressOf());
 
-			if(conditionallyDelayed_) {
-				fx->SetTexture(sampler2D_texSecondarySampler, conditionallyDelayed_->appearance());
-				conditionallyDelayed_->SetShaderState();
-			}
-		}
-
-		fx->ApplyStates();
-		quad->Draw();
-
-		fx->End();
+		DrawScreenQuad(ctx);
 	}
+}
+
+void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer,
+	const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt)
+{
+	cb_s->wipeMaskData = wipeMaskData_;
+	cb_s->wheelFadeIn = fadeIn;
+	cb_s->animationTimer = animationTimer;
+	cb_s->centerScale = centerScaleOption_.value();
+	cb_s->elementCount = activeElements.size();
+	cb_s->globalOpacity = opacityMultiplierOption_.value() * 0.01f;
+	cb_s->timeLeft = timeLeft;
+	cb_s->showIcon = showIcon;
+	memcpy_s(cb_s->hoverFadeIns, sizeof(cb_s->hoverFadeIns), hoveredFadeIns.data(), hoveredFadeIns.size() * sizeof(float));
+
+	cb_s.Update();
+	ctx->PSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
+
+	glm::mat4x4 tiltMatrix;
+	if (tilt)
+	{
+		auto mousePos = ImGui::GetIO().MousePos;
+		glm::vec2 mouseDist{ currentPosition_.x - mousePos.x / float(Core::i().screenWidth()), currentPosition_.y - mousePos.y / float(Core::i().screenHeight()) };
+		mouseDist = -mouseDist / glm::vec2(spriteDimensions.z, spriteDimensions.w);
+		if (glm::length(mouseDist) > 0.2f)
+			mouseDist *= 0.2f / glm::length(mouseDist);
+		mouseDist *= 0.4f;
+
+		tiltMatrix = glm::eulerAngleXY(-mouseDist.y, mouseDist.x);
+	}
+	else
+		tiltMatrix = glm::identity<glm::mat4x4>();
+
+	auto& vscb = GetVSCB();
+	vscb->spriteDimensions = spriteDimensions;
+	vscb->tiltMatrix = tiltMatrix;
+	vscb->spriteZ = 0.f;
+	vscb.Update();
+	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
+}
+
+void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions)
+{
+	auto& vscb = GetVSCB();
+	vscb->spriteDimensions = spriteDimensions;
+	vscb->spriteZ = 0.f;
+	vscb.Update();
+	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
 
 void Wheel::OnFocusLost()

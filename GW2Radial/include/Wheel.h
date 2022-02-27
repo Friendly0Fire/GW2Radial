@@ -4,13 +4,13 @@
 #include <WheelElement.h>
 #include <ConfigurationOption.h>
 #include <SettingsMenu.h>
+#include <Utility.h>
+#include <ShaderManager.h>
 
 #include <Input.h>
 
 namespace GW2Radial
 {
-
-class Effect;
 
 class Wheel : public SettingsMenu::Implementer
 {
@@ -29,24 +29,24 @@ public:
 		DIRECTION = 3
 	};
 
-	Wheel(uint bgResourceId, uint wipeMaskResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev);
+	Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName, ID3D11Device* dev);
 	virtual ~Wheel();
 
 	template<typename T>
-	static std::unique_ptr<Wheel> Create(uint bgResourceId, uint inkResourceId, std::string nickname, std::string displayName, IDirect3DDevice9* dev)
+	static std::unique_ptr<Wheel> Create(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName, ID3D11Device* dev)
 	{
 		// TODO: Would be nice to somehow let wheel element .cpps determine these parameters as well
-		auto wheel = std::make_unique<Wheel>(bgResourceId, inkResourceId, std::move(nickname), std::move(displayName), dev);
+		auto wheel = std::make_unique<Wheel>(bgTexture, std::move(nickname), std::move(displayName), dev);
 		wheel->Setup<T>(dev);
 		return std::move(wheel);
 	}
 
 	template<typename T>
-	void Setup(IDirect3DDevice9* dev); // Requires implementation for each wheel element type
+	void Setup(ID3D11Device* dev); // Requires implementation for each wheel element type
 
 	void UpdateHover();
 	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); Sort(); }
-	void Draw(IDirect3DDevice9* dev, Effect* fx, class UnitQuad* quad);
+	void Draw(ComPtr<ID3D11DeviceContext> ctx);
 	void OnFocusLost();
 	void OnUpdate();
 	void OnMapChange(uint prevId, uint newId);
@@ -63,8 +63,13 @@ public:
 
 	bool visible() override { return visibleInMenuOption_.value(); }
 
+	ID3D11Buffer* GetConstantBuffer() const { return cb_s.buffer().Get(); }
+
 protected:
 	void Sort();
+	void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer,
+		const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt);
+	void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& baseSpriteDimensions);
 
 	static const mstime conditionallyDelayedFadeOutTime = 500;
 
@@ -154,8 +159,11 @@ protected:
 	WheelElement* currentHovered_ = nullptr;
 	WheelElement* previousUsed_ = nullptr;
 
-	ComPtr<IDirect3DTexture9> backgroundTexture_;
-	ComPtr<IDirect3DTexture9> wipeMaskTexture_;
+	std::shared_ptr<Texture2D> backgroundTexture_;
+	ShaderId psWheel_, psWheelElement_, psCursor_, psDelayIndicator_, vs_;
+	ComPtr<ID3D11BlendState> blendState_;
+	ComPtr<ID3D11SamplerState> borderSampler_;
+	ComPtr<ID3D11SamplerState> baseSampler_;
 
 	std::unique_ptr<Input::MouseMoveCallback> mouseMoveCallback_;
 	std::unique_ptr<Input::MouseButtonCallback> mouseButtonCallback_;
@@ -176,6 +184,21 @@ protected:
 
 	friend class WheelElement;
 	friend class CustomWheelsManager;
+
+	struct WheelCB
+	{
+		fVector3 wipeMaskData;
+		float wheelFadeIn;
+		float animationTimer;
+		float centerScale;
+		int elementCount;
+		float globalOpacity;
+		float hoverFadeIns[12];
+		float timeLeft;
+		bool showIcon;
+	};
+
+	static ConstantBuffer<WheelCB> cb_s;
 };
 
 }

@@ -1,7 +1,6 @@
 #include <Main.h>
 #include <Core.h>
-#include <Direct3D9Loader.h>
-#include <Direct3D9Hooks.h>
+#include <Direct3D11Loader.h>
 #include <gw2al_api.h>
 #include <gw2al_d3d9_wrapper.h>
 
@@ -27,33 +26,17 @@ gw2al_addon_dsc* gw2addon_get_description()
 
 gw2al_api_ret gw2addon_load(gw2al_core_vtable* core_api)
 {
-	GW2Radial::Direct3D9Inject::reset();
-	GW2Radial::Direct3D9Inject::i(std::make_unique<GW2Radial::Direct3D9Loader>());
+	GW2Radial::Direct3D11Inject::reset();
+	GW2Radial::Direct3D11Inject::i(std::make_unique<GW2Radial::Direct3D11Loader>());
     GW2Radial::Core::i().OnInjectorCreated();
 
-	GW2Radial::GetD3D9Loader()->Init(core_api);
+	GW2Radial::GetD3D11Loader()->Init(core_api);
 	return GW2AL_OK;
 }
 
 gw2al_api_ret gw2addon_unload(int gameExiting)
 {
 	return GW2AL_OK;
-}
-
-IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
-{
-	GW2Radial::Direct3D9Inject::i(std::move(std::make_unique<GW2Radial::Direct3D9Hooks>()));
-    GW2Radial::Core::i().OnInjectorCreated();
-
-	return GW2Radial::GetD3D9Hooks()->Direct3DCreate9(SDKVersion);
-}
-
-HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** d3d9ex)
-{
-	GW2Radial::Direct3D9Inject::i(std::move(std::make_unique<GW2Radial::Direct3D9Hooks>()));
-    GW2Radial::Core::i().OnInjectorCreated();
-
-	return GW2Radial::GetD3D9Hooks()->Direct3DCreate9Ex(SDKVersion, d3d9ex);
 }
 
 std::ofstream g_logStream;

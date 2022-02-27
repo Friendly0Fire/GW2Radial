@@ -66,7 +66,47 @@ inline float frand()
 	return float(rand()) / RAND_MAX;
 }
 
-ComPtr<IDirect3DTexture9> CreateTextureFromResource(IDirect3DDevice9* pDev, HMODULE hModule, unsigned uResource);
+template<typename T>
+struct Texture
+{
+	ComPtr<T> texture;
+	ComPtr<ID3D11ShaderResourceView> srv;
+};
+using Texture1D = Texture<ID3D11Texture1D>;
+using Texture2D = Texture<ID3D11Texture2D>;
+using Texture3D = Texture<ID3D11Texture3D>;
+
+struct RenderTarget : public Texture<ID3D11Texture2D>
+{
+	ComPtr<ID3D11RenderTargetView> rtv;
+
+	RenderTarget& operator=(const Texture2D& tex)
+	{
+		texture = tex.texture;
+		srv = tex.srv;
+
+		return *this;
+	}
+};
+
+struct DepthStencil : public Texture<ID3D11Texture2D>
+{
+	ComPtr<ID3D11DepthStencilView> rtv;
+};
+
+std::pair<ComPtr<ID3D11Resource>, ComPtr<ID3D11ShaderResourceView>> CreateResourceFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource);
+
+template<typename T = ID3D11Texture2D>
+Texture<T> CreateTextureFromResource(ID3D11Device* pDev, HMODULE hModule, unsigned uResource)
+{
+	auto [res, srv] = CreateResourceFromResource(pDev, hModule, uResource);
+
+	ComPtr<T> tex;
+	res->QueryInterface(tex.GetAddressOf());
+	GW2_ASSERT(tex != nullptr);
+
+	return { tex, srv };
+}
 
 template<typename T>
 auto ConvertToVector4(const T& val) {
@@ -155,8 +195,6 @@ float Luma(const Vec& v)
     return v.x * 0.2126 + v.y * 0.7152 + v.z * 0.0722;
 }
 
-void DumpSurfaceToDiskTGA(IDirect3DDevice9* dev, IDirect3DSurface9* surf, uint bpp, const std::wstring& filename);
-
 constexpr uint operator "" _len(const char*, size_t len) {
     return uint(len);
 }
@@ -166,7 +204,7 @@ std::optional<std::filesystem::path> GetDocumentsFolder();
 std::optional<std::filesystem::path> GetAddonFolder();
 
 template<typename T>
-T safe_toupper(T c) {
+T SafeToUpper(T c) {
     if constexpr(std::is_same_v<T, char>)
 	    return std::toupper(uint8_t(c));
 	else
@@ -175,19 +213,19 @@ T safe_toupper(T c) {
 
 template<typename T>
 struct ci_char_traits : std::char_traits<T> {
-    static bool eq(T c1, T c2) { return safe_toupper(c1) == safe_toupper(c2); }
-    static bool ne(T c1, T c2) { return safe_toupper(c1) != safe_toupper(c2); }
-    static bool lt(T c1, T c2) { return safe_toupper(c1) <  safe_toupper(c2); }
+    static bool eq(T c1, T c2) { return SafeToUpper(c1) == SafeToUpper(c2); }
+    static bool ne(T c1, T c2) { return SafeToUpper(c1) != SafeToUpper(c2); }
+    static bool lt(T c1, T c2) { return SafeToUpper(c1) <  SafeToUpper(c2); }
     static int compare(const T* s1, const T* s2, size_t n) {
         while(n-- != 0) {
-            if(safe_toupper(*s1) < safe_toupper(*s2)) return -1;
-            if(safe_toupper(*s1) > safe_toupper(*s2)) return 1;
+            if(SafeToUpper(*s1) < SafeToUpper(*s2)) return -1;
+            if(SafeToUpper(*s1) > SafeToUpper(*s2)) return 1;
             ++s1; ++s2;
         }
         return 0;
     }
     static const T* find(const T* s, int n, char a) {
-        while(n-- > 0 && safe_toupper(*s) != toupper(a)) {
+        while(n-- > 0 && SafeToUpper(*s) != toupper(a)) {
             ++s;
         }
         return s;
@@ -202,12 +240,13 @@ concept string_like = requires(T&& t) {
 };
 
 template<string_like T>
-auto to_case_insensitive(const T& s) {
+auto ToCaseInsensitive(const T& s) {
 	using V = typename T::value_type;
     return std::basic_string_view<V, ci_char_traits<V>>(s.data(), s.size());
 }
 
-template <typename Str> Str Trim(const Str &scIn) {
+template <typename Str>
+Str Trim(const Str &scIn) {
     using Char = typename Str::value_type;
     constexpr auto trimmable = []() constexpr {
         if constexpr (std::is_same_v<Char, char>)
@@ -232,25 +271,58 @@ struct PtrComparator {
 
 std::span<const wchar_t*> GetCommandLineArgs();
 
-inline const wchar_t* GetCommandLineArg(const wchar_t* name) {
-	bool saveNextArg = false;
-	for (auto* arg : GetCommandLineArgs()) {
-		if (saveNextArg) {
-			return arg;
-		}
+const wchar_t* GetCommandLineArg(const wchar_t* name);
 
-		auto l = wcslen(arg);
-		if (l > 1 && (arg[0] == L'/' || arg[0] == L'-') && _wcsnicmp(name, &arg[1], 6) == 0) {
-			if (l > 7 && arg[7] == L':') {
-				return &arg[8];
-				break;
-			}
-			else
-				saveNextArg = true;
-		}
-	}
+void DrawScreenQuad(ComPtr<ID3D11DeviceContext>& ctx);
 
-	return nullptr;
+template<std::integral T, std::integral T2>
+auto RoundUp(T numToRound, T2 multiple) -> std::common_type_t<T, T2>
+{
+	GW2_ASSERT(multiple > 0);
+	return ((numToRound + multiple - 1) / multiple) * multiple;
 }
+
+
+struct StateBackupD3D11
+{
+	UINT                        ScissorRectsCount, ViewportsCount;
+	D3D11_RECT                  ScissorRects[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+	D3D11_VIEWPORT              Viewports[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+	ID3D11RasterizerState* RS;
+	ID3D11BlendState* BlendState;
+	FLOAT                       BlendFactor[4];
+	UINT                        SampleMask;
+	UINT                        StencilRef;
+	ID3D11DepthStencilState* DepthStencilState;
+	ID3D11ShaderResourceView* PSShaderResource;
+	ID3D11SamplerState* PSSampler;
+	ID3D11PixelShader* PS;
+	ID3D11VertexShader* VS;
+	ID3D11GeometryShader* GS;
+	UINT                        PSInstancesCount, VSInstancesCount, GSInstancesCount;
+	ID3D11ClassInstance* PSInstances[256], * VSInstances[256], * GSInstances[256];   // 256 is max according to PSSetShader documentation
+	D3D11_PRIMITIVE_TOPOLOGY    PrimitiveTopology;
+	ID3D11Buffer* IndexBuffer, * VertexBuffer, * VSConstantBuffer;
+	UINT                        IndexBufferOffset, VertexBufferStride, VertexBufferOffset;
+	DXGI_FORMAT                 IndexBufferFormat;
+	ID3D11InputLayout* InputLayout;
+	ID3D11RenderTargetView* RenderTargets[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
+	ID3D11DepthStencilView* DepthStencil;
+};
+
+void BackupD3D11State(ID3D11DeviceContext* ctx, StateBackupD3D11& old);
+void RestoreD3D11State(ID3D11DeviceContext* ctx, const StateBackupD3D11& old);
+
+struct RenderDocCapture
+{
+	RenderDocCapture();
+	~RenderDocCapture();
+};
+
+#if _DEBUG
+#define RDOC_CAPTURE() RenderDocCapture capture##__COUNTER__
+#else
+#define RDOC_CAPTURE()
+#endif
 
 }

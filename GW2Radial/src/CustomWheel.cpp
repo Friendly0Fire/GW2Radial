@@ -6,7 +6,7 @@
 #include <fstream>
 #include <ImGuiPopup.h>
 #include <FileSystem.h>
-#include <backends/imgui_impl_dx9.h>
+#include <backends/imgui_impl_dx11.h>
 
 namespace GW2Radial
 {
@@ -14,27 +14,54 @@ namespace GW2Radial
 float CalcText(ImFont* font, const std::wstring& text)
 {
 	cref txt = utf8_encode(text);
-	
+
 	auto sz = font->CalcTextSizeA(100.f, FLT_MAX, 0.f, txt.c_str());
 
 	return sz.x;
 }
 
-ComPtr<IDirect3DTexture9> MakeTextTexture(IDirect3DDevice9* dev, float fontSize)
+RenderTarget MakeTextTexture(ID3D11Device* dev, float fontSize)
 {
-	ComPtr<IDirect3DTexture9> tex = nullptr;
-	dev->CreateTexture(1024, uint(fontSize), 1,
-					   D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, nullptr);
-	return tex;
+	const auto fmt = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	RenderTarget rt;
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Format = fmt;
+	desc.Width = 1024;
+	desc.Height = uint(fontSize);
+	desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	GW2_HASSERT(dev->CreateTexture2D(&desc, nullptr, &rt.texture));
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = fmt;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	GW2_HASSERT(dev->CreateShaderResourceView(rt.texture.Get(), &srvDesc, &rt.srv));
+
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+	rtvDesc.Format = fmt;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.Texture2D.MipSlice = 0;
+	GW2_HASSERT(dev->CreateRenderTargetView(rt.texture.Get(), &rtvDesc, &rt.rtv));
+
+	return rt;
 }
 
-void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float fontSize, const std::wstring& text)
+void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blendState, ImFont* font, float fontSize, const std::wstring& text)
 {
 	const uint fgColor = 0xFFFFFFFF;
 	const uint bgColor = 0x00000000;
 
 	cref txt = utf8_encode(text);
-	
+
 	auto sz = font->CalcTextSizeA(fontSize, FLT_MAX, 0.f, txt.c_str());
 
 	ImVec2 clip(1024.f, fontSize);
@@ -46,19 +73,18 @@ void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float
 	imDraw.PushClipRect(ImVec2(0.f, 0.f), clip);
 	imDraw.PushTextureID(font->ContainerAtlas->TexID);
 	imDraw.AddText(font, fontSize, ImVec2(xOff, 0.f), fgColor, txt.c_str());
-	
+
 	auto& io = ImGui::GetIO();
 	auto oldDisplaySize = io.DisplaySize;
 	io.DisplaySize = clip;
 
-	ComPtr<IDirect3DSurface9> surf;
-	tex->GetSurfaceLevel(0, &surf);
+	ID3D11RenderTargetView* oldRt;
+	ID3D11DepthStencilView* oldDs;
+	ctx->OMGetRenderTargets(1, &oldRt, &oldDs);
+	ctx->OMSetRenderTargets(1, rt.rtv.GetAddressOf(), nullptr);
 
-	ComPtr<IDirect3DSurface9> oldRt;
-	dev->GetRenderTarget(0, &oldRt);
-	dev->SetRenderTarget(0, surf.Get());
-
-	dev->Clear(1, nullptr, D3DCLEAR_TARGET, bgColor, 0.f, 0);
+	float clearBlack[] = { 0.f, 0.f, 0.f, 0.f };
+	ctx->ClearRenderTargetView(rt.rtv.Get(), clearBlack);
 
 	ImDrawList* imDraws[] = { &imDraw };
 	ImDrawData imData;
@@ -70,26 +96,31 @@ void DrawText(IDirect3DDevice9* dev, IDirect3DTexture9* tex, ImFont* font, float
 	imData.DisplayPos = ImVec2(0.0f, 0.0f);
 	imData.DisplaySize = io.DisplaySize;
 
-	ImGui_ImplDX9_RenderDrawData(&imData);
-	
-	dev->SetRenderTarget(0, oldRt.Get());
+	ImGui_ImplDX11_OverrideBlendState(blendState);
+	ImGui_ImplDX11_RenderDrawData(&imData);
+	ImGui_ImplDX11_OverrideBlendState();
+
+	ctx->OMSetRenderTargets(1, &oldRt, oldDs);
 
 	io.DisplaySize = oldDisplaySize;
 }
 
-ComPtr<IDirect3DTexture9> LoadCustomTexture(IDirect3DDevice9* dev, const std::filesystem::path& path)
+Texture2D LoadCustomTexture(ID3D11Device* dev, const std::filesystem::path& path)
 {
 	cref data = FileSystem::ReadFile(path);
 	if(data.empty())
-		return nullptr;
+		return {};
 
 	try {
-	    ComPtr<IDirect3DTexture9> tex;
+		Texture2D tex;
+		ComPtr<ID3D11Resource> res;
 		HRESULT hr = S_OK;
 	    if(path.extension() == L".dds")
-            hr = DirectX::CreateDDSTextureFromMemory(dev, data.data(), data.size(), &tex);
+            hr = DirectX::CreateDDSTextureFromMemory(dev, data.data(), data.size(), &res, &tex.srv);
 	    else
-            hr = DirectX::CreateWICTextureFromMemory(dev, data.data(), data.size(), &tex);
+            hr = DirectX::CreateWICTextureFromMemory(dev, data.data(), data.size(), &res, &tex.srv);
+		if(res)
+			res->QueryInterface(tex.texture.GetAddressOf());
 
 		if(!SUCCEEDED(hr))
 		    FormattedMessageBox(L"Could not load custom radial menu image '%s': 0x%x.", L"Custom Menu Error", path.wstring().c_str(), hr);
@@ -97,29 +128,36 @@ ComPtr<IDirect3DTexture9> LoadCustomTexture(IDirect3DDevice9* dev, const std::fi
 	    return tex;
 	} catch(...) {
 		FormattedMessageBox(L"Could not load custom radial menu image '%s'.", L"Custom Menu Error", path.wstring().c_str());
-	    return nullptr;
+		return {};
 	}
 }
 
-CustomWheelsManager::CustomWheelsManager(std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
-    : wheels_(wheels), font_(font)
+CustomWheelsManager::CustomWheelsManager(ID3D11Device* dev, std::shared_ptr<Texture2D> bgTex, std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
+    : wheels_(wheels), font_(font), backgroundTexture_(bgTex)
 {
+	CD3D11_BLEND_DESC blendDesc(D3D11_DEFAULT);
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	GW2_HASSERT(dev->CreateBlendState(&blendDesc, textBlendState_.GetAddressOf()));
 }
 
-void CustomWheelsManager::DrawOffscreen(IDirect3DDevice9* dev)
+void CustomWheelsManager::DrawOffscreen(ID3D11Device* dev, ID3D11DeviceContext* ctx)
 {
 	if(!loaded_)
 		Reload(dev);
 	else if(!textDraws_.empty())
 	{
-		cref td = textDraws_.front();
-		DrawText(dev, td.tex.Get(), font_, td.size, td.text);
+		auto& td = textDraws_.front();
+		DrawText(ctx, td.rt, textBlendState_.Get(), font_, td.size, td.text);
 	    textDraws_.pop_front();
 	}
 }
 
 
-void CustomWheelsManager::Draw(IDirect3DDevice9* dev)
+void CustomWheelsManager::Draw(ID3D11DeviceContext* ctx)
 {
 	if(failedLoads_.empty())
 		return;
@@ -135,7 +173,7 @@ void CustomWheelsManager::Draw(IDirect3DDevice9* dev)
 			}, [&]() { failedLoads_.pop_back(); });
 }
 
-std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::path& configPath, IDirect3DDevice9* dev)
+std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::path& configPath, ID3D11Device* dev)
 {
 	cref dataFolder = configPath.parent_path();
 
@@ -157,7 +195,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	cref general = *ini.GetSection("General");
 	cref wheelDisplayName = general.find("display_name");
 	cref wheelNickname = general.find("nickname");
-	
+
 	if(wheelDisplayName == general.end())
 		return fail(L"Missing field display_name");
 	if(wheelNickname == general.end())
@@ -169,7 +207,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	}))
 		return fail((L"Nickname " + utf8_decode(std::string(wheelNickname->second)) + L" already exists").c_str());
 
-	auto wheel = std::make_unique<Wheel>(IDR_BG, IDR_WIPEMASK, wheelNickname->second, wheelDisplayName->second, dev);
+	auto wheel = std::make_unique<Wheel>(backgroundTexture_, wheelNickname->second, wheelDisplayName->second, dev);
 	wheel->outOfCombat_.enabled = ini.GetBoolValue("General", "only_out_of_combat", false);
 	wheel->aboveWater_.enabled = ini.GetBoolValue("General", "only_above_water", false);
 
@@ -178,7 +216,8 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	std::list<CSimpleIniA::Entry> sections;
 	ini.GetAllSections(sections);
 	sections.sort(CSimpleIniA::Entry::LoadOrder());
-	std::vector<CustomElementSettings> elements; elements.reserve(sections.size());
+	std::vector<CustomElementSettings> elements;
+	elements.reserve(sections.size());
 	float maxTextWidth = 0.f;
 	for(cref sec : sections)
 	{
@@ -186,7 +225,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 			continue;
 
 		cref element = *ini.GetSection(sec.pItem);
-		
+
 		cref elementName = element.find("name");
 		cref elementColor = element.find("color");
 		cref elementIcon = element.find("icon");
@@ -216,12 +255,12 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		ces.premultiply = false;
 
 		if(elementIcon != element.end()) {
-			ces.texture = LoadCustomTexture(dev, dataFolder / utf8_decode(elementIcon->second));
+			ces.rt = LoadCustomTexture(dev, dataFolder / utf8_decode(elementIcon->second));
 			if(elementPremultipliedAlpha != element.end())
 				ces.premultiply = ini.GetBoolValue(sec.pItem, "premultiply_alpha", true);
 		}
 
-		if(!ces.texture)
+		if(!ces.rt.texture)
 			maxTextWidth = std::max(maxTextWidth, CalcText(font_, utf8_decode(ces.name)));
 
 		elements.push_back(ces);
@@ -233,9 +272,9 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 
 	for(auto& ces : elements)
 	{
-	    if(ces.texture == nullptr) {
-		    ces.texture = MakeTextTexture(dev, desiredFontSize);
-			textDraws_.push_back({ desiredFontSize, utf8_decode(ces.name), ces.texture });
+	    if(!ces.rt.texture) {
+		    ces.rt = MakeTextTexture(dev, desiredFontSize);
+			textDraws_.push_back({ desiredFontSize, utf8_decode(ces.name), ces.rt });
 		}
 
 	    wheel->AddElement(std::make_unique<CustomElement>(ces, dev));
@@ -246,7 +285,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	return std::move(wheel);
 }
 
-void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
+void CustomWheelsManager::Reload(ID3D11Device* dev)
 {
 	{
 	    APTTYPE a;
@@ -313,8 +352,8 @@ void CustomWheelsManager::Reload(IDirect3DDevice9* dev)
 	loaded_ = true;
 }
 
-CustomElement::CustomElement(const CustomElementSettings& ces, IDirect3DDevice9* dev)
-	: WheelElement(ces.id, ces.nickname, ces.category, ces.name, dev, ces.texture), color_(ces.color)
+CustomElement::CustomElement(const CustomElementSettings& ces, ID3D11Device* dev)
+	: WheelElement(ces.id, ces.nickname, ces.category, ces.name, dev, ces.rt), color_(ces.color)
 {
     shadowStrength_ = ces.shadow;
 	colorizeAmount_ = ces.colorize;

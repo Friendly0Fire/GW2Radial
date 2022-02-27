@@ -1,11 +1,10 @@
 #include <Core.h>
-#include <Direct3D9Loader.h>
+#include <Direct3D11Loader.h>
 #include <imgui.h>
-#include <backends/imgui_impl_dx9.h>
+#include <backends/imgui_impl_dx11.h>
 #include <backends/imgui_impl_win32.h>
 #include <Input.h>
 #include <ConfigurationFile.h>
-#include <UnitQuad.h>
 #include <Wheel.h>
 #include <Mount.h>
 #include <SettingsMenu.h>
@@ -18,13 +17,13 @@
 #include <Marker.h>
 #include <MiscTab.h>
 #include <MumbleLink.h>
-#include <Effect.h>
-#include <Effect_dx12.h>
+#include <ShaderManager.h>
 #include <CustomWheel.h>
 #include <GFXSettings.h>
 #include <Log.h>
 #include <IconFontCppHeaders/IconsFontAwesome5.h>
 #include <Version.h>
+#include <renderdoc_app.h>
 
 LONG WINAPI GW2RadialTopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
 
@@ -56,15 +55,12 @@ Core::~Core()
 {
 	ImGui::DestroyContext();
 
-	Direct3D9Inject::i([&](auto& i) {
-		i.preCreateDeviceCallback = nullptr;
-		i.postCreateDeviceCallback = nullptr;
+	COM_RELEASE(device_);
+	COM_RELEASE(context_);
 
-		i.preResetCallback = nullptr;
-		i.postResetCallback = nullptr;
-
-		i.drawOverCallback = nullptr;
-		i.drawUnderCallback = nullptr;
+	Direct3D11Inject::i([&](auto& i) {
+		i.prePresentSwapChainCallback = nullptr;
+		i.postCreateSwapChainCallback = nullptr;
 	});
 
 	if(user32_)
@@ -73,16 +69,12 @@ Core::~Core()
 
 void Core::OnInjectorCreated()
 {
-	auto& inject = Direct3D9Inject::i();
-	
-	inject.preCreateDeviceCallback = [this](HWND hWnd){ PreCreateDevice(hWnd); };
-	inject.postCreateDeviceCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostCreateDevice(d, pp); };
-	
-	inject.preResetCallback = [this](){ PreReset(); };
-	inject.postResetCallback = [this](IDirect3DDevice9* d, D3DPRESENT_PARAMETERS* pp){ PostReset(d, pp); };
-	
-	inject.drawOverCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawOver(d, frameDrawn, sceneEnded); };
-	inject.drawUnderCallback = [this](IDirect3DDevice9* d, bool frameDrawn, bool sceneEnded){ DrawUnder(d, frameDrawn, sceneEnded); };
+	auto& inject = Direct3D11Inject::i();
+
+	inject.postCreateSwapChainCallback = [this](HWND hwnd, ID3D11Device* dev, IDXGISwapChain* swc) { PostCreateSwapChain(hwnd, dev, swc); };
+	inject.prePresentSwapChainCallback = [this]() { Draw(); };
+	inject.preResizeSwapChainCallback = [this]() { PreResizeSwapChain(); };
+	inject.postResizeSwapChainCallback = [this](uint w, uint h) { PostResizeSwapChain(w, h); };
 }
 
 void Core::OnInputLanguageChange()
@@ -115,7 +107,7 @@ void Core::InternalInit()
 	user32_ = LoadLibrary(L"User32.dll");
 	if(user32_)
 		getDpiForWindow_ = (GetDpiForWindow_t)GetProcAddress(user32_, "GetDpiForWindow");
-	
+
 	imguiContext_ = ImGui::CreateContext();
 }
 
@@ -129,7 +121,7 @@ void Core::OnFocusLost()
 }
 
 void Core::OnFocus() {
-	mainEffect_->Clear();
+	ShaderManager::i().ReloadAll();
 
 	Input::i().OnFocus();
 
@@ -150,20 +142,73 @@ LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return CallWindowProc(i().baseWndProc_, hWnd, msg, wParam, lParam);
 }
 
-void Core::PreCreateDevice(HWND hFocusWindow)
+void Core::PreResizeSwapChain()
 {
-	gameWindow_ = hFocusWindow;
+	backBufferRTV_.Reset();
+}
+
+void Core::PostResizeSwapChain(uint w, uint h)
+{
+	screenWidth_ = w;
+	screenHeight_ = h;
+
+	ComPtr<ID3D11Texture2D> backbuffer;
+	swc_->GetBuffer(0, IID_PPV_ARGS(backbuffer.GetAddressOf()));
+	device_->CreateRenderTargetView(backbuffer.Get(), nullptr, backBufferRTV_.ReleaseAndGetAddressOf());
+}
+
+void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* swc)
+{
+	gameWindow_ = hwnd;
 
 	// Hook WndProc
 	if (!baseWndProc_)
 	{
-		baseWndProc_ = WNDPROC(GetWindowLongPtr(hFocusWindow, GWLP_WNDPROC));
-		SetWindowLongPtr(hFocusWindow, GWLP_WNDPROC, LONG_PTR(&WndProc));
+		baseWndProc_ = WNDPROC(GetWindowLongPtr(hwnd, GWLP_WNDPROC));
+		SetWindowLongPtr(hwnd, GWLP_WNDPROC, LONG_PTR(&WndProc));
 	}
-}
 
-void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters)
-{
+	device_ = device;
+	device_->GetImmediateContext(&context_);
+	swc_ = swc;
+
+#if _DEBUG
+	// At init, on windows
+	if (HMODULE mod = GetModuleHandleA("renderdoc.dll"))
+	{
+		pRENDERDOC_GetAPI RENDERDOC_GetAPI =
+			(pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
+		int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void**)&rdoc_);
+		if (ret != 1)
+			rdoc_ = nullptr;
+	}
+#endif
+
+	context_->QueryInterface(annotations_.ReleaseAndGetAddressOf());
+
+	ComPtr<ID3D11Texture2D> backbuffer;
+	swc_->GetBuffer(0, IID_PPV_ARGS(backbuffer.GetAddressOf()));
+	device_->CreateRenderTargetView(backbuffer.Get(), nullptr, backBufferRTV_.GetAddressOf());
+
+	DXGI_SWAP_CHAIN_DESC desc;
+	swc_->GetDesc(&desc);
+
+	screenWidth_ = desc.BufferDesc.Width;
+	screenHeight_ = desc.BufferDesc.Height;
+
+	firstFrame_ = true;
+
+	ShaderManager::i(std::make_unique<ShaderManager>(device_));
+
+	UpdateCheck::i().CheckForUpdates();
+	MiscTab::i();
+
+	auto bgTex = std::make_shared<Texture2D>(std::move(CreateTextureFromResource(device_, Core::i().dllModule(), IDR_BG)));
+	wheels_.emplace_back(Wheel::Create<Mount>(bgTex, "mounts", "Mounts", device_));
+	wheels_.emplace_back(Wheel::Create<Novelty>(bgTex, "novelties", "Novelties", device_));
+	wheels_.emplace_back(Wheel::Create<Marker>(bgTex, "markers", "Markers", device_));
+	wheels_.emplace_back(Wheel::Create<ObjectMarker>(bgTex, "object_markers", "Object Markers", device_));
+
 	// Init ImGui
 	auto &imio = ImGui::GetIO();
 	imio.IniFilename = nullptr;
@@ -191,93 +236,37 @@ void Core::PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *pre
 		imio.FontDefault = font_;
 
 	ImGui_ImplWin32_Init(gameWindow_);
+	ImGui_ImplDX11_Init(device_, context_);
+
+	customWheels_ = std::make_unique<CustomWheelsManager>(device_, bgTex, wheels_, fontDraw_);
 
 	firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
-	ignoreRTSS_ = std::make_unique<ConfigurationOption<bool>>("", "ignore_rtss", "Core", false);
 
-	if(!ignoreRTSS_->value())
+#ifdef _DEBUG
+	ID3D11Debug* d3dDebug = nullptr;
+	if (SUCCEEDED(device_->QueryInterface(__uuidof(ID3D11Debug), (void**)&d3dDebug)))
 	{
-		const auto rtss = GetModuleHandleA("RTSSHooks64.dll");
-		if(rtss)
+		ID3D11InfoQueue* d3dInfoQueue = nullptr;
+		if (SUCCEEDED(d3dDebug->QueryInterface(__uuidof(ID3D11InfoQueue), (void**)&d3dInfoQueue)))
 		{
-			const auto retval = MessageBox(nullptr, TEXT("WARNING: RivaTuner Statistics Server has been detected! GW2Radial is incompatible with RTSS, anomalous behavior may occur. Are you sure you want to continue? Continuing will prevent this message from showing again."), TEXT("RTSS Detected"), MB_ICONWARNING | MB_YESNO);
-			if(retval == IDNO)
-				exit(1);
-			else if(retval == IDYES)
-				ignoreRTSS_->value(true);
+			d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
+			d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
+			//d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_WARNING, true);
+
+			D3D11_MESSAGE_ID hide[] =
+			{
+				D3D11_MESSAGE_ID_DEVICE_DRAW_RENDERTARGETVIEW_NOT_SET,
+			};
+
+			D3D11_INFO_QUEUE_FILTER filter = {};
+			filter.DenyList.NumIDs = std::size(hide);
+			filter.DenyList.pIDList = hide;
+			d3dInfoQueue->AddStorageFilterEntries(&filter);
+			d3dInfoQueue->Release();
 		}
+		d3dDebug->Release();
 	}
-
-	OnDeviceSet(device, presentationParameters);
-}
-
-void Core::OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters)
-{
-	// Initialize graphics
-	screenWidth_ = presentationParameters->BackBufferWidth;
-	screenHeight_ = presentationParameters->BackBufferHeight;
-	firstFrame_ = true;
-
-	try { quad_ = std::make_unique<UnitQuad>(device); }
-	catch (...) { quad_ = nullptr; }
-
-	//megai2: check for d912pxy
-	//D3DRS_ENABLE_D912PXY_API_HACKS == 220
-	if (IsD912Pxy(device))
-		mainEffect_ = new Effect_dx12(device);
-	else 
-		mainEffect_ = new Effect(device);
-
-	UpdateCheck::i().CheckForUpdates();
-	MiscTab::i();
-
-	wheels_.emplace_back(Wheel::Create<Mount>(IDR_BG, IDR_WIPEMASK, "mounts", "Mounts", device));
-	wheels_.emplace_back(Wheel::Create<Novelty>(IDR_BG, IDR_WIPEMASK, "novelties", "Novelties", device));
-	wheels_.emplace_back(Wheel::Create<Marker>(IDR_BG, IDR_WIPEMASK, "markers", "Markers", device));
-	wheels_.emplace_back(Wheel::Create<ObjectMarker>(IDR_BG, IDR_WIPEMASK, "object_markers", "Object Markers", device));
-
-	ImGui_ImplDX9_Init(device);
-
-	customWheels_ = std::make_unique<CustomWheelsManager>(wheels_, fontDraw_);
-}
-
-void Core::OnDeviceUnset()
-{
-	ImGui_ImplDX9_InvalidateDeviceObjects();
-	quad_.reset();
-	customWheels_.reset();
-	wheels_.clear();
-	if (mainEffect_)
-	{
-		delete mainEffect_;
-		mainEffect_ = NULL;
-	}
-}
-
-void Core::PreReset()
-{
-	OnDeviceUnset();
-}
-
-void Core::PostReset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS *presentationParameters)
-{
-	OnDeviceSet(device, presentationParameters);
-}
-
-void Core::DrawUnder(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
-{
-	if (!firstFrame_ && !frameDrawn)
-	{
-		if (sceneEnded)
-			device->BeginScene();
-		
-		for (auto& wheel : wheels_)
-			if (!wheel->drawOverUI())
-				wheel->Draw(device, mainEffect_, quad_.get());
-
-		if (sceneEnded)
-			device->EndScene();
-	}
+#endif
 }
 
 void Core::OnUpdate()
@@ -303,11 +292,19 @@ void Core::OnUpdate()
 }
 
 
-void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
+void Core::Draw()
 {
+	if (annotations_)
+		annotations_->BeginEvent(L"GW2Radial");
+
+	StateBackupD3D11 d3dstate;
+	BackupD3D11State(context_, d3dstate);
+
+	context_->OMSetRenderTargets(1, backBufferRTV_.GetAddressOf(), nullptr);
+
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i().OnUpdate();
-	
+
 	tickSkip_++;
 	if(tickSkip_ >= TickSkipCount)
 	{
@@ -335,20 +332,24 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 	}
 	else
 	{
-		// We have to use Present rather than hooking EndScene because the game seems to do final UI compositing after EndScene
-		// This unfortunately means that we have to call Begin/EndScene before Present so we can render things, but thankfully for modern GPUs that doesn't cause bugs
-		if (sceneEnded)
-			device->BeginScene();
-
-		ImGui_ImplDX9_NewFrame();
+		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
-		
+
+		// Setup viewport
+		D3D11_VIEWPORT vp;
+		memset(&vp, 0, sizeof(D3D11_VIEWPORT));
+		vp.Width = screenWidth_;
+		vp.Height = screenHeight_;
+		vp.MinDepth = 0.0f;
+		vp.MaxDepth = 1.0f;
+		vp.TopLeftX = vp.TopLeftY = 0;
+		context_->RSSetViewports(1, &vp);
+
 		for (auto& wheel : wheels_)
-			if (wheel->drawOverUI() || !frameDrawn)
-				wheel->Draw(device, mainEffect_, quad_.get());
-		
-		customWheels_->Draw(device);
+			wheel->Draw(context_);
+
+		customWheels_->Draw(context_);
 
 		SettingsMenu::i().Draw();
 		Log::i().Draw();
@@ -389,19 +390,21 @@ void Core::DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded)
 			}, []() { UpdateCheck::i().updateDismissed(true); });
 
 		ImGui::Render();
-		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-        customWheels_->DrawOffscreen(device);
-
-		if (sceneEnded)
-			device->EndScene();
+        customWheels_->DrawOffscreen(device_, context_);
 	}
-	
+
 	if(forceReloadWheels_)
 	{
 	    forceReloadWheels_ = false;
 	    customWheels_->MarkReload();
 	}
+
+	RestoreD3D11State(context_, d3dstate);
+
+	if(annotations_)
+		annotations_->EndEvent();
 }
 
 }

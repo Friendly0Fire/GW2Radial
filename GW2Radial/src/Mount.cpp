@@ -5,7 +5,7 @@
 namespace GW2Radial
 {
 
-Mount::Mount(MountType m, IDirect3DDevice9* dev)
+Mount::Mount(MountType m, ID3D11Device* dev)
 	: WheelElement(uint(m), std::string("mount_") + GetMountNicknameFromType(m), "Mounts", GetMountNameFromType(m), dev)
 { }
 
@@ -21,7 +21,7 @@ bool Mount::isActive() const
 }
 
 template<>
-void Wheel::Setup<Mount>(IDirect3DDevice9* dev)
+void Wheel::Setup<Mount>(ID3D11Device* dev)
 {
 	struct MountExtraData : Wheel::ExtraData {
 	    ConfigurationOption<bool> enableUnderwaterSkimmer;
@@ -135,8 +135,12 @@ fVector4 Mount::color()
 		return { 199 / 255.f, 131 / 255.f, 68 / 255.f, 1 };
     case MountType::WARCLAW:
         return { 181 / 255.f, 255 / 255.f, 244 / 255.f, 1 };
-    case MountType::SKYSCALE:
-        return { 211 / 255.f, 142 / 255.f, 244 / 255.f, 1 };
+	case MountType::SKYSCALE:
+		return { 211 / 255.f, 142 / 255.f, 244 / 255.f, 1 };
+	case MountType::SKIFF:
+		return { 255 / 255.f, 255 / 255.f, 255 / 255.f, 1 };
+	case MountType::TURTLE:
+		return { 56 / 255.f, 228 / 255.f, 85 / 255.f, 1 };
 	default:
 		return { 1, 1, 1, 1 };
 	}

@@ -17,12 +17,12 @@ std::map<MarkerType, std::tuple<std::string, std::string, fVector4>> data
 	{ MarkerType::CLEAR,    { "clear_all",  "Clear All",    { 128 / 255.f, 128 / 255.f, 128 / 255.f, 1 } } },
 };
 
-Marker::Marker(MarkerType m, IDirect3DDevice9* dev)
+Marker::Marker(MarkerType m, ID3D11Device* dev)
 	: WheelElement(uint(m), "marker_" + std::get<0>(data.at(m)), "Markers", std::get<1>(data.at(m)), dev)
 { }
 
 template<>
-void Wheel::Setup<Marker>(IDirect3DDevice9* dev)
+void Wheel::Setup<Marker>(ID3D11Device* dev)
 {
 	SetAlwaysResetCursorPositionBeforeKeyPress(true);
 	for (cref type : data)
@@ -34,12 +34,12 @@ fVector4 Marker::color()
 	return std::get<2>(data.at(static_cast<MarkerType>(elementId_)));
 }
 
-ObjectMarker::ObjectMarker(MarkerType m, IDirect3DDevice9* dev)
+ObjectMarker::ObjectMarker(MarkerType m, ID3D11Device* dev)
 	: WheelElement(uint(m), "object_marker_" + std::get<0>(data.at(m)), "ObjectMarkers", std::get<1>(data.at(m)), dev)
 { }
 
 template<>
-void Wheel::Setup<ObjectMarker>(IDirect3DDevice9* dev)
+void Wheel::Setup<ObjectMarker>(ID3D11Device* dev)
 {
 	for (cref type : data)
 		AddElement(std::make_unique<ObjectMarker>(type.first, dev));

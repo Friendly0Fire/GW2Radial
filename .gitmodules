@@ -22,12 +22,12 @@
 [submodule "GW2Radial/ziplib"]
 	path = GW2Radial/ziplib
 	url = https://github.com/Friendly0Fire/ziplib.git
-[submodule "GW2Radial/minhook"]
-	path = GW2Radial/minhook
-	url = https://github.com/Friendly0Fire/minhook.git
 [submodule "GW2Radial/tinyxml2"]
 	path = GW2Radial/tinyxml2
 	url = https://github.com/Friendly0Fire/tinyxml2.git
 [submodule "GW2Radial/IconFontCppHeaders"]
 	path = GW2Radial/IconFontCppHeaders
 	url = https://github.com/juliettef/IconFontCppHeaders
+[submodule "DirectXTK"]
+	path = GW2Radial/DirectXTK
+	url = https://github.com/microsoft/DirectXTK.git

@@ -1,7 +1,6 @@
-#include "Effect.h"
+#include "ShaderManager.h"
 #include <fstream>
 #include <sstream>
-#include <UnitQuad.h>
 #include "Utility.h"
 #include <d3dcompiler.h>
 
@@ -10,12 +9,11 @@
 namespace GW2Radial {
 
 class ShaderInclude final : public ID3DInclude {
-    Effect*                              parent_ = nullptr;
     std::map<LPCVOID, std::vector<byte>> openFiles_;
 
 public:
     virtual  ~ShaderInclude() = default;
-    explicit ShaderInclude(Effect* parent) : parent_(parent) {}
+    ShaderInclude() = default;
 
     HRESULT COM_DECLSPEC_NOTHROW Open(
         [[maybe_unused]] D3D_INCLUDE_TYPE includeType,
@@ -23,7 +21,7 @@ public:
         [[maybe_unused]] LPCVOID          pParentData,
         LPCVOID*                          ppData,
         UINT*                             pBytes) override {
-        auto file = parent_->shadersZip_->GetEntry(pFileName);
+        auto file = ShaderManager::i().shadersZip_->GetEntry(pFileName);
         if (!file)
             return E_INVALIDARG;
 
@@ -47,13 +45,48 @@ public:
     }
 };
 
-Effect::Effect(IDirect3DDevice9* dev)
+ShaderManager::ShaderManager(ID3D11Device* dev)
     : device_(dev) {
-    device_->CreateStateBlock(D3DSBT_ALL, &stateBlock_);
     CheckHotReload();
+    device_->GetImmediateContext(context_.GetAddressOf());
 }
 
-[[nodiscard]] std::string Effect::LoadShaderFile(const std::wstring& filename) {
+void ShaderManager::SetShaders(ShaderId vs, ShaderId ps)
+{
+    context_->PSSetShader(std::get<ComPtr<ID3D11PixelShader>>(shaders_[ps.id].shader).Get(), nullptr, 0);
+    context_->VSSetShader(std::get<ComPtr<ID3D11VertexShader>>(shaders_[vs.id].shader).Get(), nullptr, 0);
+}
+
+ShaderId ShaderManager::GetShader(const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint)
+{
+    for (uint i = 0; i < shaders_.size(); i++)
+    {
+        auto& sd = shaders_[i];
+        if (sd.filename == filename && sd.entrypoint == entrypoint)
+            return { i };
+    }
+
+    auto shader = CompileShader(filename, st, entrypoint);
+    uint id = uint(shaders_.size());
+    shaders_.push_back({
+        .shader = shader,
+        .filename = filename,
+        .st = st,
+        .entrypoint = entrypoint
+        });
+
+    return { id };
+}
+
+void ShaderManager::ReloadAll()
+{
+#ifdef HOT_RELOAD_SHADERS
+    for (auto& sd : shaders_)
+        sd.shader = CompileShader(sd.filename, sd.st, sd.entrypoint);
+#endif
+}
+
+[[nodiscard]] std::string ShaderManager::LoadShaderFile(const std::wstring& filename) {
     LoadShadersArchive();
 
     if(hotReloadFolderExists_ && FileSystem::Exists(GetShaderFilename(filename))) {
@@ -70,6 +103,29 @@ Effect::Effect(IDirect3DDevice9* dev)
         file->CloseDecompressionStream();
         return std::string(reinterpret_cast<char*>(vec.data()), vec.size());
     }
+}
+
+ComPtr<ID3D11Buffer> ShaderManager::MakeConstantBuffer(size_t dataSize, const void* data)
+{
+    dataSize = RoundUp(dataSize, 16);
+    D3D11_BUFFER_DESC desc {
+        .ByteWidth = uint(dataSize),
+        .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+        .MiscFlags = 0,
+        .StructureByteStride = 0
+    };
+    D3D11_SUBRESOURCE_DATA idata
+    {
+        .pSysMem = data,
+        .SysMemPitch = uint(dataSize),
+        .SysMemSlicePitch = 0
+    };
+    ComPtr<ID3D11Buffer> buf;
+    GW2_HASSERT(device_->CreateBuffer(&desc, data ? &idata : nullptr, buf.GetAddressOf()));
+
+    return buf;
 }
 
 void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
@@ -95,8 +151,8 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
     GW2_ASSERT(errors == nullptr);
 }
 
-[[nodiscard]] std::variant<ComPtr<IDirect3DPixelShader9>, ComPtr<IDirect3DVertexShader9>> Effect::CompileShader(
-    const std::wstring& filename, ShaderType st, const std::string& entrypoint) {
+[[nodiscard]] ShaderManager::AnyShaderComPtr ShaderManager::CompileShader(
+    const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint) {
     ComPtr<ID3DBlob> blob = nullptr;
     while (blob == nullptr) {
         auto shaderContents = LoadShaderFile(filename);
@@ -111,34 +167,26 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
                                              nullptr,
                                              includePtr,
                                              entrypoint.c_str(),
-                                             st == ShaderType::PIXEL_SHADER ? "ps_3_0" : "vs_3_0",
+                                             st == D3D11_SHVER_PIXEL_SHADER ? "ps_4_0" : "vs_4_0",
                                              0, 0,
-                                             &blob, &errors);
+                                             blob.GetAddressOf(), errors.GetAddressOf());
 
         HandleFailedShaderCompile(hr, errors.Get());
         errors.Reset();
     }
 
-    if (st == ShaderType::PIXEL_SHADER) {
-        ComPtr<IDirect3DPixelShader9> ps;
-        device_->CreatePixelShader(static_cast<DWORD*>(blob->GetBufferPointer()), &ps);
+    if (st == D3D11_SHVER_PIXEL_SHADER) {
+        ComPtr<ID3D11PixelShader> ps;
+        GW2_HASSERT(device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, ps.GetAddressOf()));
         return ps;
     } else {
-        ComPtr<IDirect3DVertexShader9> vs;
-        device_->CreateVertexShader(static_cast<DWORD*>(blob->GetBufferPointer()), &vs);
+        ComPtr<ID3D11VertexShader> vs;
+        GW2_HASSERT(device_->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, vs.GetAddressOf()));
         return vs;
     }
 }
 
-void Effect::ApplyPixelShader(IDirect3DPixelShader9* ps) {
-    device_->SetPixelShader(ps);
-}
-
-void Effect::ApplyVertexShader(IDirect3DVertexShader9* vs) {
-    device_->SetVertexShader(vs);
-}
-
-void Effect::LoadShadersArchive() {
+void ShaderManager::LoadShadersArchive() {
     if (shadersZip_)
         return;
 
@@ -150,10 +198,10 @@ void Effect::LoadShadersArchive() {
 
     shadersZip_ = ZipArchive::Create(iss, true);
 
-    shaderIncludeManager_    = std::make_unique<ShaderInclude>(this);
+    shaderIncludeManager_ = std::make_unique<ShaderInclude>();
 }
 
-std::wstring Effect::GetShaderFilename(const std::wstring& filename) const {
+std::wstring ShaderManager::GetShaderFilename(const std::wstring& filename) const {
 #ifdef HOT_RELOAD_SHADERS
     if (hotReloadFolderExists_)
         return SHADERS_DIR + filename;
@@ -161,7 +209,7 @@ std::wstring Effect::GetShaderFilename(const std::wstring& filename) const {
     return filename;
 }
 
-ID3DInclude* Effect::GetIncludeManager() const {
+ID3DInclude* ShaderManager::GetIncludeManager() const {
 #ifdef HOT_RELOAD_SHADERS
     if (hotReloadFolderExists_)
         return D3D_COMPILE_STANDARD_FILE_INCLUDE;
@@ -169,93 +217,18 @@ ID3DInclude* Effect::GetIncludeManager() const {
     return shaderIncludeManager_.get();
 }
 
-void Effect::CheckHotReload() {
+void ShaderManager::CheckHotReload() {
 #ifdef HOT_RELOAD_SHADERS
     hotReloadFolderExists_ = std::filesystem::exists(SHADERS_DIR);
 #endif
 }
 
-void Effect::SetShader(const ShaderType st, const std::wstring& filename, const std::string& entrypoint) {
-    std::string key = utf8_encode(filename) + "::" + entrypoint;
-
-    if (st == ShaderType::PIXEL_SHADER) {
-        auto itPs = pixelShaders_.find(key);
-        if (itPs == pixelShaders_.end()) {
-            auto ps = std::get<ComPtr<IDirect3DPixelShader9>>(CompileShader(filename, st, entrypoint));
-            itPs    = pixelShaders_.insert({key, ps}).first;
-        }
-
-        GW2_ASSERT(itPs != pixelShaders_.end());
-        ApplyPixelShader(itPs->second.Get());
-    } else {
-        auto itVs = vertexShaders_.find(key);
-        if (itVs == vertexShaders_.end()) {
-            auto vs = std::get<ComPtr<IDirect3DVertexShader9>>(CompileShader(filename, st, entrypoint));
-            itVs    = vertexShaders_.insert({key, vs}).first;
-        }
-
-        GW2_ASSERT(itVs != vertexShaders_.end());
-        ApplyVertexShader(itVs->second.Get());
-    }
+void ConstantBufferBase::Upload(void* data, size_t size)
+{
+    D3D11_MAPPED_SUBRESOURCE map;
+    ctx->Map(buf.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
+    memcpy_s(map.pData, size, data, size);
+    ctx->Unmap(buf.Get(), 0);
 }
-
-
-void Effect::SetRenderStates(std::initializer_list<ShaderState> states) {
-    SetDefaultRenderStates();
-
-    for (cref s : states)
-        device_->SetRenderState(static_cast<D3DRENDERSTATETYPE>(s.stateId), s.stateValue);
-}
-
-void Effect::SetSamplerStates(uint slot, std::initializer_list<ShaderState> states) {
-    SetDefaultSamplerStates(slot);
-
-    for (cref s : states)
-        device_->SetSamplerState(slot, static_cast<D3DSAMPLERSTATETYPE>(s.stateId), s.stateValue);
-}
-
-void Effect::SetTexture(uint slot, IDirect3DTexture9* val) {
-    device_->SetTexture(slot, val);
-}
-
-void Effect::Begin() {
-    // Save current device state to reapply at the end
-    stateBlock_->Capture();
-}
-
-void Effect::OnBind(IDirect3DVertexDeclaration9* vd) {
-    device_->SetVertexDeclaration(vd);
-}
-
-void Effect::SetDefaultSamplerStates(uint slot) const {
-    device_->SetSamplerState(slot, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-    device_->SetSamplerState(slot, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-    device_->SetSamplerState(slot, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-    device_->SetSamplerState(slot, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-    device_->SetSamplerState(slot, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-}
-
-void Effect::SetDefaultRenderStates() const {
-    // Reset render states to most common overlay-style defaults
-    device_->SetRenderState(D3DRS_ZENABLE, false);
-    device_->SetRenderState(D3DRS_ZWRITEENABLE, false);
-    device_->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-    device_->SetRenderState(D3DRS_ALPHATESTENABLE, false);
-    device_->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-    device_->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-}
-
-void Effect::End() {
-    // Restore prior device state
-    stateBlock_->Apply();
-}
-
-void Effect::Clear() {
-#ifdef HOT_RELOAD_SHADERS
-    pixelShaders_.clear();
-    vertexShaders_.clear();
-#endif
-}
-
 
 }

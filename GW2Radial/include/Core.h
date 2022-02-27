@@ -3,14 +3,17 @@
 #include <Main.h>
 #include <Singleton.h>
 #include <Wheel.h>
-#include <UnitQuad.h>
 #include <CustomWheel.h>
 #include <Defs.h>
+#include <d3d11_1.h>
+#include <dxgi.h>
+
+struct RENDERDOC_API_1_5_0;
 
 namespace GW2Radial
 {
 
-class Effect;
+class ShaderManager;
 
 class Core : public Singleton<Core>
 {
@@ -25,20 +28,21 @@ public:
 
 	void ForceReloadWheels() { forceReloadWheels_ = true; }
 
-	HWND gameWindow() const { return gameWindow_; }
-	HMODULE dllModule() const { return dllModule_; }
-	WNDPROC baseWndProc() const { return baseWndProc_; }
-	uint screenWidth() const { return screenWidth_; }
-	uint screenHeight() const { return screenHeight_; }
-	const std::unique_ptr<UnitQuad>& quad() const { return quad_; }
-	Effect* mainEffect() const { return mainEffect_; }
-	ImFont* font() const { return font_; }
-	ImFont* fontBlack() const { return fontBlack_; }
-	ImFont* fontItalic() const { return fontItalic_; }
-	ImFont* fontIcon() const { return fontIcon_; }
-	ImFont* fontMono() const { return fontMono_; }
+	auto gameWindow() const { return gameWindow_; }
+	auto dllModule() const { return dllModule_; }
+	auto baseWndProc() const { return baseWndProc_; }
+	auto screenWidth() const { return screenWidth_; }
+	auto screenHeight() const { return screenHeight_; }
+	auto font() const { return font_; }
+	auto fontBlack() const { return fontBlack_; }
+	auto fontItalic() const { return fontItalic_; }
+	auto fontIcon() const { return fontIcon_; }
+	auto fontMono() const { return fontMono_; }
 
-	const std::vector<std::unique_ptr<Wheel>>& wheels() const { return wheels_; }
+	auto rdoc() const { return rdoc_; }
+	auto device() const { return device_; }
+
+	const auto& wheels() const { return wheels_; }
 
 	void OnInjectorCreated();
 
@@ -49,27 +53,25 @@ public:
 
 	UINT GetDpiForWindow(HWND hwnd);
 
+	void Draw();
+
 protected:
 	void InternalInit();
 	void OnFocusLost();
 	void OnFocus();
 	void OnUpdate();
 
-	void OnDeviceSet(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters);
-	void OnDeviceUnset();
+	void PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* swc);
+	void PreResizeSwapChain();
+	void PostResizeSwapChain(uint w, uint h);
 
-	void PreCreateDevice(HWND hFocusWindow);
-	void PostCreateDevice(IDirect3DDevice9 *device, D3DPRESENT_PARAMETERS *presentationParameters);
-
-	void PreReset();
-	void PostReset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS *presentationParameters);
-	
-	void DrawUnder(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded);
-	void DrawOver(IDirect3DDevice9* device, bool frameDrawn, bool sceneEnded);
 
 	HWND gameWindow_ = nullptr;
 	HMODULE dllModule_ = nullptr;
 	WNDPROC baseWndProc_ = nullptr;
+	ID3D11Device* device_ = nullptr;
+	ID3D11DeviceContext* context_ = nullptr;
+	IDXGISwapChain* swc_ = nullptr;
 
 	uint screenWidth_ = 0, screenHeight_ = 0;
 	bool firstFrame_ = true;
@@ -82,21 +84,23 @@ protected:
 	const uint LongTickSkipCount = 600;
 	std::list<InputLanguageChangeListener*> ilcListeners_;
 
-	std::unique_ptr<UnitQuad> quad_;
-	Effect* mainEffect_ = nullptr;
-
 	ImFont *font_ = nullptr, *fontBlack_ = nullptr, *fontItalic_ = nullptr, *fontDraw_ = nullptr, *fontIcon_ = nullptr, *fontMono_ = nullptr;
 
 	std::vector<std::unique_ptr<Wheel>> wheels_;
 	std::unique_ptr<CustomWheelsManager> customWheels_;
-	
+
 	std::unique_ptr<ConfigurationOption<bool>> firstMessageShown_;
-	std::unique_ptr<ConfigurationOption<bool>> ignoreRTSS_;
 
 	ImGuiContext* imguiContext_ = nullptr;
 
 	using GetDpiForWindow_t = decltype(::GetDpiForWindow)*;
 	HMODULE user32_ = 0;
 	GetDpiForWindow_t getDpiForWindow_ = nullptr;
+
+	ComPtr<ID3D11RenderTargetView> backBufferRTV_;
+
+	ComPtr<ID3DUserDefinedAnnotation> annotations_;
+
+	RENDERDOC_API_1_5_0* rdoc_ = nullptr;
 };
 }

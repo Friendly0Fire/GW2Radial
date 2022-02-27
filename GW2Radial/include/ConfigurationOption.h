@@ -40,82 +40,40 @@ public:
 	}
 
 protected:
-
-	// ReSharper disable once CppMemberFunctionMayBeStatic
-	// ReSharper disable once CppMemberFunctionMayBeConst
 	void LoadValue()
 	{
-		static_assert(false, "Unsupported value type");
+		if constexpr (std::is_same_v<T, int>)
+			value_ = ConfigurationFile::i().ini().GetLongValue(category_.c_str(), nickname_.c_str(), value());
+		else if constexpr (std::is_same_v<T, double>)
+			value_ = ConfigurationFile::i().ini().GetDoubleValue(category_.c_str(), nickname_.c_str(), value());
+		else if constexpr (std::is_same_v<T, float>)
+			value_ = float(ConfigurationFile::i().ini().GetDoubleValue(category_.c_str(), nickname_.c_str(), value()));
+		else if constexpr (std::is_same_v<T, bool>)
+			value_ = ConfigurationFile::i().ini().GetBoolValue(category_.c_str(), nickname_.c_str(), value());
+		else if constexpr (std::is_same_v<T, const char*>)
+			value_ = ConfigurationFile::i().ini().GetValue(category_.c_str(), nickname_.c_str(), value());
+		else
+			static_assert(!sizeof(T), "Unsupported value type");
 	}
 
-	// ReSharper disable once CppMemberFunctionMayBeStatic
 	void SaveValue() const
 	{
-		static_assert(false, "Unsupported value type");
+		if constexpr (std::is_same_v<T, int>)
+			ConfigurationFile::i().ini().SetLongValue(category_.c_str(), nickname_.c_str(), value());
+		else if constexpr (std::is_same_v<T, double>)
+			ConfigurationFile::i().ini().SetDoubleValue(category_.c_str(), nickname_.c_str(), value());
+		else if constexpr (std::is_same_v<T, float>)
+			ConfigurationFile::i().ini().SetDoubleValue(category_.c_str(), nickname_.c_str(), double(value()));
+		else if constexpr (std::is_same_v<T, bool>)
+			ConfigurationFile::i().ini().SetBoolValue(category_.c_str(), nickname_.c_str(), value());
+		else if constexpr (std::is_same_v<T, const char*>)
+			ConfigurationFile::i().ini().SetValue(category_.c_str(), nickname_.c_str(), value());
+		else
+			static_assert(!sizeof(T), "Unsupported value type");
 	}
 
 	std::string displayName_, nickname_, category_;
 	T value_;
 };
-
-template<>
-inline void ConfigurationOption<int>::LoadValue()
-{
-	value_ = ConfigurationFile::i().ini().GetLongValue(category_.c_str(), nickname_.c_str(), value());
-}
-
-template<>
-inline void ConfigurationOption<double>::LoadValue()
-{
-	value_ = ConfigurationFile::i().ini().GetDoubleValue(category_.c_str(), nickname_.c_str(), value());
-}
-
-template<>
-inline void ConfigurationOption<float>::LoadValue()
-{
-	value_ = float(ConfigurationFile::i().ini().GetDoubleValue(category_.c_str(), nickname_.c_str(), value()));
-}
-
-template<>
-inline void ConfigurationOption<bool>::LoadValue()
-{
-	value_ = ConfigurationFile::i().ini().GetBoolValue(category_.c_str(), nickname_.c_str(), value());
-}
-
-template<>
-inline void ConfigurationOption<const char*>::LoadValue()
-{
-	value_ = ConfigurationFile::i().ini().GetValue(category_.c_str(), nickname_.c_str(), value());
-}
-
-template<>
-inline void ConfigurationOption<int>::SaveValue() const
-{
-	ConfigurationFile::i().ini().SetLongValue(category_.c_str(), nickname_.c_str(), value());
-}
-
-template<>
-inline void ConfigurationOption<double>::SaveValue() const
-{
-	ConfigurationFile::i().ini().SetDoubleValue(category_.c_str(), nickname_.c_str(), value());
-}
-
-template<>
-inline void ConfigurationOption<float>::SaveValue() const
-{
-	ConfigurationFile::i().ini().SetDoubleValue(category_.c_str(), nickname_.c_str(), double(value()));
-}
-
-template<>
-inline void ConfigurationOption<bool>::SaveValue() const
-{
-	ConfigurationFile::i().ini().SetBoolValue(category_.c_str(), nickname_.c_str(), value());
-}
-
-template<>
-inline void ConfigurationOption<const char*>::SaveValue() const
-{
-	ConfigurationFile::i().ini().SetValue(category_.c_str(), nickname_.c_str(), value());
-}
 
 }

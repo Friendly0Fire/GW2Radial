@@ -8,7 +8,7 @@ namespace GW2Radial
 class Mount : public WheelElement
 {
 public:
-	Mount(MountType m, IDirect3DDevice9* dev);
+	Mount(MountType m, ID3D11Device* dev);
 
 	bool isActive() const override;
 
@@ -31,8 +31,12 @@ protected:
 			return "Roller Beetle";
         case MountType::WARCLAW:
             return "Warclaw";
-        case MountType::SKYSCALE:
-            return "Skyscale";
+		case MountType::SKYSCALE:
+			return "Skyscale";
+		case MountType::SKIFF:
+			return "Skiff";
+		case MountType::TURTLE:
+			return "Turtle";
 		default:
 			return "[Unknown]";
 		}
@@ -55,8 +59,12 @@ protected:
 			return "beetle";
 		case MountType::WARCLAW:
 			return "warclaw";
-        case MountType::SKYSCALE:
-            return "skyscale";
+		case MountType::SKYSCALE:
+			return "skyscale";
+		case MountType::SKIFF:
+			return "skiff";
+		case MountType::TURTLE:
+			return "turtle";
 		default:
 			return "unknown";
 		}
