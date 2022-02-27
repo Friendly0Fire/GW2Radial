@@ -22,6 +22,8 @@ Keybind::Keybind(std::string nickname, std::string displayName, std::string cate
 	else {
 		keys = ConfigurationFile::i().ini().GetValue("Keybinds", nickname_.c_str());
 		if(keys) ParseKeys(keys);
+		else
+			keyCombo({ ScanCode::NONE, Modifier::NONE });
 	}
 	Core::i().RegisterOnInputLanguageChange(this);
 }

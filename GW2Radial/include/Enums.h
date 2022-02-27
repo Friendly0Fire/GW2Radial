@@ -13,10 +13,12 @@ enum class MountType : uint
 	GRIFFON = IDR_MOUNT5,
 	BEETLE = IDR_MOUNT6,
 	WARCLAW = IDR_MOUNT7,
-    SKYSCALE = IDR_MOUNT8,
+	SKYSCALE = IDR_MOUNT8,
+	SKIFF = IDR_MOUNT9,
+	TURTLE = IDR_MOUNT10,
 
 	FIRST = RAPTOR,
-	LAST = SKYSCALE
+	LAST = TURTLE
 };
 const unsigned int MountTypeCount = 7;
 

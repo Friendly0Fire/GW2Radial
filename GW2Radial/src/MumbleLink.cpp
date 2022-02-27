@@ -248,6 +248,8 @@ MountType MumbleLink::currentMount() const {
 		RollerBeetle,
 		Warclaw,
 		Dragon,
+		Skiff,
+		SiegeTurtle
 	};
 
 	switch ((AnetMountType)context()->mountIndex) {
@@ -268,6 +270,10 @@ MountType MumbleLink::currentMount() const {
 		return MountType::WARCLAW;
 	case AnetMountType::Dragon:
 		return MountType::SKYSCALE;
+	case AnetMountType::Skiff:
+		return MountType::SKIFF;
+	case AnetMountType::SiegeTurtle:
+		return MountType::TURTLE;
 	}
 }
 
