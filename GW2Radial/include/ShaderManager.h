@@ -26,24 +26,23 @@ private:
 class ConstantBufferBase
 {
 protected:
-	ConstantBufferBase(ComPtr<ID3D11DeviceContext> ctx, ComPtr<ID3D11Buffer> buf) : ctx(ctx), buf(buf) {}
+	ConstantBufferBase(ComPtr<ID3D11Buffer> buf) : buf(buf) {}
 	ComPtr<ID3D11Buffer> buf;
-	ComPtr<ID3D11DeviceContext> ctx;
 
 	friend class ShaderManager;
 
-	void Upload(void* data, size_t size);
+	void Upload(ID3D11DeviceContext* ctx, void* data, size_t size);
 
 public:
 	ConstantBufferBase() = default;
 	bool IsValid() const { return buf != nullptr; }
-	const ComPtr<ID3D11Buffer> buffer() const { return buf; }
+	const ComPtr<ID3D11Buffer>& buffer() const { return buf; }
 };
 
 template<typename T>
 class ConstantBuffer : public ConstantBufferBase
 {
-	ConstantBuffer(ComPtr<ID3D11DeviceContext> ctx, ComPtr<ID3D11Buffer> buf, std::optional<T>&& data) : ConstantBufferBase(ctx, buf)
+	ConstantBuffer(ComPtr<ID3D11Buffer> buf, std::optional<T>&& data) : ConstantBufferBase(buf)
 	{
 		if (data.has_value())
 			this->data = *data;
@@ -61,9 +60,9 @@ public:
 	ConstantBuffer& operator=(ConstantBuffer&&) = default;
 
 	T* operator->() { return &data; }
-	void Update()
+	void Update(ID3D11DeviceContext* ctx)
 	{
-		Upload(&data, sizeof(T));
+		Upload(ctx, &data, sizeof(T));
 	}
 };
 
@@ -72,25 +71,25 @@ class ShaderManager : public Singleton<ShaderManager, false>
 public:
 	using AnyShaderComPtr = std::variant<ComPtr<ID3D11VertexShader>, ComPtr<ID3D11PixelShader>>;
 
-    ShaderManager(ID3D11Device* dev);
+    ShaderManager();
 
-	void SetShaders(ShaderId vs, ShaderId ps);
+	void SetShaders(ID3D11DeviceContext* ctx, ShaderId vs, ShaderId ps);
 	ShaderId GetShader(const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint);
 
 	template<typename T>
 	ConstantBuffer<T> MakeConstantBuffer(std::optional<T> data = std::nullopt)
 	{
 		auto buf = MakeConstantBuffer(sizeof(T), data.has_value() ? &data.value() : nullptr);
-		return { context_, buf, std::move(data) };
+		return { buf, std::move(data) };
 	}
 
 	template<typename... Args>
-	void SetConstantBuffers(Args& ...cbs)
+	void SetConstantBuffers(ID3D11DeviceContext* ctx, Args& ...cbs)
 	{
-		auto getbuf = [](auto& cb) { return cb.buf.get(); };
+		auto getbuf = [](auto& cb) { return cb.buf.Get(); };
 		ID3D11Buffer* cbPtrs[] = { getbuf(cbs)... };
-		context_->VSSetConstantBuffers(0, sizeof...(cbs), cbPtrs);
-		context_->PSSetConstantBuffers(0, sizeof...(cbs), cbPtrs);
+		ctx->VSSetConstantBuffers(0, sizeof...(cbs), cbPtrs);
+		ctx->PSSetConstantBuffers(0, sizeof...(cbs), cbPtrs);
 	}
 
 	void ReloadAll();
@@ -112,9 +111,6 @@ protected:
 	void CheckHotReload();
 
 	bool hotReloadFolderExists_ = false;
-
-	ComPtr<ID3D11Device> device_;
-	ComPtr<ID3D11DeviceContext> context_;
 
 	struct ShaderData
 	{

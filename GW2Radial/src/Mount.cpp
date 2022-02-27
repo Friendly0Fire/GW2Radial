@@ -5,8 +5,8 @@
 namespace GW2Radial
 {
 
-Mount::Mount(MountType m, ID3D11Device* dev)
-	: WheelElement(uint(m), std::string("mount_") + GetMountNicknameFromType(m), "Mounts", GetMountNameFromType(m), dev)
+Mount::Mount(MountType m)
+	: WheelElement(uint(m), std::string("mount_") + GetMountNicknameFromType(m), "Mounts", GetMountNameFromType(m))
 { }
 
 bool Mount::isActive() const
@@ -21,7 +21,7 @@ bool Mount::isActive() const
 }
 
 template<>
-void Wheel::Setup<Mount>(ID3D11Device* dev)
+void Wheel::Setup<Mount>()
 {
 	struct MountExtraData : Wheel::ExtraData {
 	    ConfigurationOption<bool> enableUnderwaterSkimmer;
@@ -113,7 +113,7 @@ void Wheel::Setup<Mount>(ID3D11Device* dev)
 	};
 
 	for(auto i = MountType::FIRST; i <= MountType::LAST; i = MountType(uint(i) + 1))
-		AddElement(std::make_unique<Mount>(i, dev));
+		AddElement(std::make_unique<Mount>(i));
 }
 
 fVector4 Mount::color()

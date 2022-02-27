@@ -273,7 +273,7 @@ std::span<const wchar_t*> GetCommandLineArgs();
 
 const wchar_t* GetCommandLineArg(const wchar_t* name);
 
-void DrawScreenQuad(ComPtr<ID3D11DeviceContext>& ctx);
+void DrawScreenQuad(ID3D11DeviceContext* ctx);
 
 template<std::integral T, std::integral T2>
 auto RoundUp(T numToRound, T2 multiple) -> std::common_type_t<T, T2>

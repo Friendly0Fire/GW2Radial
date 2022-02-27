@@ -10,15 +10,14 @@ namespace GW2Radial
 class WheelElement
 {
 public:
-	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName,
-		ID3D11Device* dev, const Texture2D& tex = {});
+	WheelElement(uint id, const std::string &nickname, const std::string &category, const std::string &displayName, const Texture2D& tex = {});
 	virtual ~WheelElement() = default;
 
 	int DrawPriority(int extremumIndicator);
 
 	void SetShaderState(ID3D11DeviceContext* ctx);
-	void SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, ID3D11Buffer* wheelCb, bool shadow, float hoverRatio);
-	void Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
+	void SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio);
+	void Draw(ID3D11DeviceContext* ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const class Wheel* parent);
 
 	uint elementId() const { return elementId_; }
 	

@@ -206,7 +206,7 @@ const wchar_t* GetCommandLineArg(const wchar_t* name) {
     return nullptr;
 }
 
-void DrawScreenQuad(ComPtr<ID3D11DeviceContext>& ctx)
+void DrawScreenQuad(ID3D11DeviceContext* ctx)
 {
     ctx->IASetVertexBuffers(0, 0, NULL, NULL, NULL);
     ctx->IASetInputLayout(NULL);
@@ -257,7 +257,11 @@ void RestoreD3D11State(ID3D11DeviceContext* ctx, const StateBackupD3D11& old)
     ctx->IASetIndexBuffer(old.IndexBuffer, old.IndexBufferFormat, old.IndexBufferOffset); if (old.IndexBuffer) old.IndexBuffer->Release();
     ctx->IASetVertexBuffers(0, 1, &old.VertexBuffer, &old.VertexBufferStride, &old.VertexBufferOffset); if (old.VertexBuffer) old.VertexBuffer->Release();
     ctx->IASetInputLayout(old.InputLayout); if (old.InputLayout) old.InputLayout->Release();
-    ctx->OMSetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, old.RenderTargets, old.DepthStencil);
+
+    ctx->OMSetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, old.RenderTargets, old.DepthStencil); if (old.DepthStencil) old.DepthStencil->Release();
+    for (int i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
+        if (old.RenderTargets[i])
+            old.RenderTargets[i]->Release();
 }
 
 RenderDocCapture::RenderDocCapture()
@@ -266,7 +270,7 @@ RenderDocCapture::RenderDocCapture()
     if (!rdoc)
         return;
 
-    rdoc->StartFrameCapture(Core::i().device(), nullptr);
+    rdoc->StartFrameCapture(Core::i().device().Get(), nullptr);
 }
 
 RenderDocCapture::~RenderDocCapture()
@@ -275,7 +279,7 @@ RenderDocCapture::~RenderDocCapture()
     if (!rdoc)
         return;
 
-    rdoc->EndFrameCapture(Core::i().device(), nullptr);
+    rdoc->EndFrameCapture(Core::i().device().Get(), nullptr);
 }
 
 }

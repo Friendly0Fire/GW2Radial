@@ -18,7 +18,7 @@ namespace GW2Radial
 {
 ConstantBuffer<Wheel::WheelCB> Wheel::cb_s;
 
-Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName, ID3D11Device* dev)
+Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName)
 	: nickname_(std::move(nickname)), displayName_(std::move(displayName)),
 	  keybind_(nickname_, "Show on mouse", nickname_), centralKeybind_(nickname_ + "_cl", "Show in center", nickname_),
 	  centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_),
@@ -74,6 +74,8 @@ Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::st
 	psWheelElement_ = ShaderManager::i().GetShader(L"WheelElement.hlsl", D3D11_SHVER_PIXEL_SHADER, "WheelElement");
 	psCursor_ = ShaderManager::i().GetShader(L"Cursor.hlsl", D3D11_SHVER_PIXEL_SHADER, "Cursor");
 	psDelayIndicator_ = ShaderManager::i().GetShader(L"DelayIndicator.hlsl", D3D11_SHVER_PIXEL_SHADER, "DelayIndicator");
+
+	auto dev = Core::i().device();
 
 	CD3D11_BLEND_DESC blendDesc(D3D11_DEFAULT);
 	blendDesc.RenderTarget[0].BlendEnable = true;
@@ -387,7 +389,7 @@ void Wheel::OnCharacterChange(const std::wstring& prevCharacterName, const std::
 	ResetConditionallyDelayed(false);
 }
 
-void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
+void Wheel::Draw(ID3D11DeviceContext* ctx)
 {
 	if (opacityMultiplierOption_.value() == 0)
 		return;
@@ -473,15 +475,15 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 				}
 
 
-				ShaderManager::i().SetShaders(vs_, psWheel_);
+				ShaderManager::i().SetShaders(ctx, vs_, psWheel_);
 				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
-				UpdateConstantBuffer(ctx.Get(), baseSpriteDimensions, fadeTimer, fmod(currentTime / 1010.f, 55000.f), activeElements, hoveredFadeIns, 0.f, false, true);
+				UpdateConstantBuffer(ctx, baseSpriteDimensions, fadeTimer, fmod(currentTime / 1010.f, 55000.f), activeElements, hoveredFadeIns, 0.f, false, true);
 
 				ctx->PSSetShaderResources(0, 1, backgroundTexture_->srv.GetAddressOf());
 
 				DrawScreenQuad(ctx);
 
-				ShaderManager::i().SetShaders(vs_, psWheelElement_);
+				ShaderManager::i().SetShaders(ctx, vs_, psWheelElement_);
 				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 
 				int n = 0;
@@ -495,12 +497,12 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 			{
 				cref io = ImGui::GetIO();
 
-				ShaderManager::i().SetShaders(vs_, psCursor_);
+				ShaderManager::i().SetShaders(ctx, vs_, psCursor_);
 				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 
 				fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f  * screenSize.y * screenSize.z, 0.08f };
 
-				UpdateConstantBuffer(ctx.Get(), spriteDimensions);
+				UpdateConstantBuffer(ctx, spriteDimensions);
 				DrawScreenQuad(ctx);
 			}
 		}
@@ -513,7 +515,7 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 			timeLeft = 1.f - (currentTime - conditionallyDelayedTime_) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
 	    cref io = ImGui::GetIO();
 
-		ShaderManager::i().SetShaders(vs_, psDelayIndicator_);
+		ShaderManager::i().SetShaders(ctx, vs_, psDelayIndicator_);
 		ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 
 		float dpiScale = 1.f;
@@ -561,9 +563,9 @@ void Wheel::Draw(ComPtr<ID3D11DeviceContext> ctx)
 		spriteDimensions.x += spriteDimensions.z * 0.5f;
 		spriteDimensions.y += spriteDimensions.w * 0.5f;
 
-		UpdateConstantBuffer(ctx.Get(), spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, {}, timeLeft, conditionallyDelayed_ != nullptr, false);
+		UpdateConstantBuffer(ctx, spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, {}, timeLeft, conditionallyDelayed_ != nullptr, false);
 		if (conditionallyDelayed_)
-			conditionallyDelayed_->SetShaderState(ctx.Get());
+			conditionallyDelayed_->SetShaderState(ctx);
 
 		ID3D11ShaderResourceView* srvs[] = {
 			backgroundTexture_->srv.Get(),
@@ -589,7 +591,7 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 	cb_s->showIcon = showIcon;
 	memcpy_s(cb_s->hoverFadeIns, sizeof(cb_s->hoverFadeIns), hoveredFadeIns.data(), hoveredFadeIns.size() * sizeof(float));
 
-	cb_s.Update();
+	cb_s.Update(ctx);
 	ctx->PSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
 
 	glm::mat4x4 tiltMatrix;
@@ -611,7 +613,7 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 	vscb->spriteDimensions = spriteDimensions;
 	vscb->tiltMatrix = tiltMatrix;
 	vscb->spriteZ = 0.f;
-	vscb.Update();
+	vscb.Update(ctx);
 	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
 
@@ -620,7 +622,7 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 	auto& vscb = GetVSCB();
 	vscb->spriteDimensions = spriteDimensions;
 	vscb->spriteZ = 0.f;
-	vscb.Update();
+	vscb.Update(ctx);
 	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
 

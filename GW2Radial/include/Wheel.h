@@ -29,24 +29,24 @@ public:
 		DIRECTION = 3
 	};
 
-	Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName, ID3D11Device* dev);
+	Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName);
 	virtual ~Wheel();
 
 	template<typename T>
-	static std::unique_ptr<Wheel> Create(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName, ID3D11Device* dev)
+	static std::unique_ptr<Wheel> Create(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName)
 	{
 		// TODO: Would be nice to somehow let wheel element .cpps determine these parameters as well
-		auto wheel = std::make_unique<Wheel>(bgTexture, std::move(nickname), std::move(displayName), dev);
-		wheel->Setup<T>(dev);
+		auto wheel = std::make_unique<Wheel>(bgTexture, std::move(nickname), std::move(displayName));
+		wheel->Setup<T>();
 		return std::move(wheel);
 	}
 
 	template<typename T>
-	void Setup(ID3D11Device* dev); // Requires implementation for each wheel element type
+	void Setup(); // Requires implementation for each wheel element type
 
 	void UpdateHover();
 	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); Sort(); }
-	void Draw(ComPtr<ID3D11DeviceContext> ctx);
+	void Draw(ID3D11DeviceContext* ctx);
 	void OnFocusLost();
 	void OnUpdate();
 	void OnMapChange(uint prevId, uint newId);
@@ -63,7 +63,7 @@ public:
 
 	bool visible() override { return visibleInMenuOption_.value(); }
 
-	ID3D11Buffer* GetConstantBuffer() const { return cb_s.buffer().Get(); }
+	const ComPtr<ID3D11Buffer>& GetConstantBuffer() const { return cb_s.buffer(); }
 
 protected:
 	void Sort();

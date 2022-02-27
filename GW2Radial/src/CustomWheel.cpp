@@ -7,6 +7,7 @@
 #include <ImGuiPopup.h>
 #include <FileSystem.h>
 #include <backends/imgui_impl_dx11.h>
+#include <Core.h>
 
 namespace GW2Radial
 {
@@ -20,8 +21,9 @@ float CalcText(ImFont* font, const std::wstring& text)
 	return sz.x;
 }
 
-RenderTarget MakeTextTexture(ID3D11Device* dev, float fontSize)
+RenderTarget MakeTextTexture(float fontSize)
 {
+	auto dev = Core::i().device();
 	const auto fmt = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	RenderTarget rt;
@@ -78,9 +80,9 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blen
 	auto oldDisplaySize = io.DisplaySize;
 	io.DisplaySize = clip;
 
-	ID3D11RenderTargetView* oldRt;
-	ID3D11DepthStencilView* oldDs;
-	ctx->OMGetRenderTargets(1, &oldRt, &oldDs);
+	ComPtr<ID3D11RenderTargetView> oldRt;
+	ComPtr<ID3D11DepthStencilView> oldDs;
+	ctx->OMGetRenderTargets(1, oldRt.GetAddressOf(), oldDs.GetAddressOf());
 	ctx->OMSetRenderTargets(1, rt.rtv.GetAddressOf(), nullptr);
 
 	float clearBlack[] = { 0.f, 0.f, 0.f, 0.f };
@@ -100,25 +102,26 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blen
 	ImGui_ImplDX11_RenderDrawData(&imData);
 	ImGui_ImplDX11_OverrideBlendState();
 
-	ctx->OMSetRenderTargets(1, &oldRt, oldDs);
+	ctx->OMSetRenderTargets(1, oldRt.GetAddressOf(), oldDs.Get());
 
 	io.DisplaySize = oldDisplaySize;
 }
 
-Texture2D LoadCustomTexture(ID3D11Device* dev, const std::filesystem::path& path)
+Texture2D LoadCustomTexture(const std::filesystem::path& path)
 {
 	cref data = FileSystem::ReadFile(path);
 	if(data.empty())
 		return {};
 
 	try {
+		auto dev = Core::i().device();
 		Texture2D tex;
 		ComPtr<ID3D11Resource> res;
 		HRESULT hr = S_OK;
 	    if(path.extension() == L".dds")
-            hr = DirectX::CreateDDSTextureFromMemory(dev, data.data(), data.size(), &res, &tex.srv);
+            hr = DirectX::CreateDDSTextureFromMemory(dev.Get(), data.data(), data.size(), &res, &tex.srv);
 	    else
-            hr = DirectX::CreateWICTextureFromMemory(dev, data.data(), data.size(), &res, &tex.srv);
+            hr = DirectX::CreateWICTextureFromMemory(dev.Get(), data.data(), data.size(), &res, &tex.srv);
 		if(res)
 			res->QueryInterface(tex.texture.GetAddressOf());
 
@@ -132,7 +135,7 @@ Texture2D LoadCustomTexture(ID3D11Device* dev, const std::filesystem::path& path
 	}
 }
 
-CustomWheelsManager::CustomWheelsManager(ID3D11Device* dev, std::shared_ptr<Texture2D> bgTex, std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
+CustomWheelsManager::CustomWheelsManager(std::shared_ptr<Texture2D> bgTex, std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
     : wheels_(wheels), font_(font), backgroundTexture_(bgTex)
 {
 	CD3D11_BLEND_DESC blendDesc(D3D11_DEFAULT);
@@ -141,13 +144,13 @@ CustomWheelsManager::CustomWheelsManager(ID3D11Device* dev, std::shared_ptr<Text
 	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
 	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	GW2_HASSERT(dev->CreateBlendState(&blendDesc, textBlendState_.GetAddressOf()));
+	GW2_HASSERT(Core::i().device()->CreateBlendState(&blendDesc, textBlendState_.GetAddressOf()));
 }
 
-void CustomWheelsManager::DrawOffscreen(ID3D11Device* dev, ID3D11DeviceContext* ctx)
+void CustomWheelsManager::DrawOffscreen(ID3D11DeviceContext* ctx)
 {
 	if(!loaded_)
-		Reload(dev);
+		Reload();
 	else if(!textDraws_.empty())
 	{
 		auto& td = textDraws_.front();
@@ -173,7 +176,7 @@ void CustomWheelsManager::Draw(ID3D11DeviceContext* ctx)
 			}, [&]() { failedLoads_.pop_back(); });
 }
 
-std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::path& configPath, ID3D11Device* dev)
+std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::path& configPath)
 {
 	cref dataFolder = configPath.parent_path();
 
@@ -207,7 +210,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	}))
 		return fail((L"Nickname " + utf8_decode(std::string(wheelNickname->second)) + L" already exists").c_str());
 
-	auto wheel = std::make_unique<Wheel>(backgroundTexture_, wheelNickname->second, wheelDisplayName->second, dev);
+	auto wheel = std::make_unique<Wheel>(backgroundTexture_, wheelNickname->second, wheelDisplayName->second);
 	wheel->outOfCombat_.enabled = ini.GetBoolValue("General", "only_out_of_combat", false);
 	wheel->aboveWater_.enabled = ini.GetBoolValue("General", "only_above_water", false);
 
@@ -255,7 +258,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		ces.premultiply = false;
 
 		if(elementIcon != element.end()) {
-			ces.rt = LoadCustomTexture(dev, dataFolder / utf8_decode(elementIcon->second));
+			ces.rt = LoadCustomTexture(dataFolder / utf8_decode(elementIcon->second));
 			if(elementPremultipliedAlpha != element.end())
 				ces.premultiply = ini.GetBoolValue(sec.pItem, "premultiply_alpha", true);
 		}
@@ -273,11 +276,11 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	for(auto& ces : elements)
 	{
 	    if(!ces.rt.texture) {
-		    ces.rt = MakeTextTexture(dev, desiredFontSize);
+		    ces.rt = MakeTextTexture(desiredFontSize);
 			textDraws_.push_back({ desiredFontSize, utf8_decode(ces.name), ces.rt });
 		}
 
-	    wheel->AddElement(std::make_unique<CustomElement>(ces, dev));
+	    wheel->AddElement(std::make_unique<CustomElement>(ces));
 	}
 
 	customWheelNextId_ += CustomWheelIdStep;
@@ -285,7 +288,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	return std::move(wheel);
 }
 
-void CustomWheelsManager::Reload(ID3D11Device* dev)
+void CustomWheelsManager::Reload()
 {
 	{
 		ULONG_PTR contextToken;
@@ -318,7 +321,7 @@ void CustomWheelsManager::Reload(ID3D11Device* dev)
 		{
 			auto addWheel = [&](const std::filesystem::path& configFile)
 			{
-				auto wheel = BuildWheel(configFile, dev);
+				auto wheel = BuildWheel(configFile);
 				if (wheel)
 				{
 					wheels_.push_back(std::move(wheel));
@@ -351,8 +354,8 @@ void CustomWheelsManager::Reload(ID3D11Device* dev)
 	loaded_ = true;
 }
 
-CustomElement::CustomElement(const CustomElementSettings& ces, ID3D11Device* dev)
-	: WheelElement(ces.id, ces.nickname, ces.category, ces.name, dev, ces.rt), color_(ces.color)
+CustomElement::CustomElement(const CustomElementSettings& ces)
+	: WheelElement(ces.id, ces.nickname, ces.category, ces.name, ces.rt), color_(ces.color)
 {
     shadowStrength_ = ces.shadow;
 	colorizeAmount_ = ces.colorize;

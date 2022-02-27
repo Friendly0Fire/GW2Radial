@@ -1,10 +1,11 @@
-#include "ShaderManager.h"
+#include <ShaderManager.h>
 #include <fstream>
 #include <sstream>
-#include "Utility.h"
 #include <d3dcompiler.h>
 
-#include "FileSystem.h"
+#include <Utility.h>
+#include <FileSystem.h>
+#include <Core.h>
 
 namespace GW2Radial {
 
@@ -45,16 +46,15 @@ public:
     }
 };
 
-ShaderManager::ShaderManager(ID3D11Device* dev)
-    : device_(dev) {
+ShaderManager::ShaderManager()
+{
     CheckHotReload();
-    device_->GetImmediateContext(context_.GetAddressOf());
 }
 
-void ShaderManager::SetShaders(ShaderId vs, ShaderId ps)
+void ShaderManager::SetShaders(ID3D11DeviceContext* ctx, ShaderId vs, ShaderId ps)
 {
-    context_->PSSetShader(std::get<ComPtr<ID3D11PixelShader>>(shaders_[ps.id].shader).Get(), nullptr, 0);
-    context_->VSSetShader(std::get<ComPtr<ID3D11VertexShader>>(shaders_[vs.id].shader).Get(), nullptr, 0);
+    ctx->PSSetShader(std::get<ComPtr<ID3D11PixelShader>>(shaders_[ps.id].shader).Get(), nullptr, 0);
+    ctx->VSSetShader(std::get<ComPtr<ID3D11VertexShader>>(shaders_[vs.id].shader).Get(), nullptr, 0);
 }
 
 ShaderId ShaderManager::GetShader(const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint)
@@ -123,7 +123,7 @@ ComPtr<ID3D11Buffer> ShaderManager::MakeConstantBuffer(size_t dataSize, const vo
         .SysMemSlicePitch = 0
     };
     ComPtr<ID3D11Buffer> buf;
-    GW2_HASSERT(device_->CreateBuffer(&desc, data ? &idata : nullptr, buf.GetAddressOf()));
+    GW2_HASSERT(Core::i().device()->CreateBuffer(&desc, data ? &idata : nullptr, buf.GetAddressOf()));
 
     return buf;
 }
@@ -175,13 +175,15 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
         errors.Reset();
     }
 
+    auto dev = Core::i().device();
+
     if (st == D3D11_SHVER_PIXEL_SHADER) {
         ComPtr<ID3D11PixelShader> ps;
-        GW2_HASSERT(device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, ps.GetAddressOf()));
+        GW2_HASSERT(dev->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, ps.GetAddressOf()));
         return ps;
     } else {
         ComPtr<ID3D11VertexShader> vs;
-        GW2_HASSERT(device_->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, vs.GetAddressOf()));
+        GW2_HASSERT(dev->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, vs.GetAddressOf()));
         return vs;
     }
 }
@@ -223,7 +225,7 @@ void ShaderManager::CheckHotReload() {
 #endif
 }
 
-void ConstantBufferBase::Upload(void* data, size_t size)
+void ConstantBufferBase::Upload(ID3D11DeviceContext* ctx, void* data, size_t size)
 {
     D3D11_MAPPED_SUBRESOURCE map;
     ctx->Map(buf.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &map);

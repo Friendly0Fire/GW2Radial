@@ -144,17 +144,13 @@ LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void Core::PreResizeSwapChain()
 {
-	backBufferRTV_.Reset();
+
 }
 
 void Core::PostResizeSwapChain(uint w, uint h)
 {
 	screenWidth_ = w;
 	screenHeight_ = h;
-
-	ComPtr<ID3D11Texture2D> backbuffer;
-	swc_->GetBuffer(0, IID_PPV_ARGS(backbuffer.GetAddressOf()));
-	device_->CreateRenderTargetView(backbuffer.Get(), nullptr, backBufferRTV_.ReleaseAndGetAddressOf());
 }
 
 void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* swc)
@@ -173,7 +169,6 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 	swc_ = swc;
 
 #if _DEBUG
-	// At init, on windows
 	if (HMODULE mod = GetModuleHandleA("renderdoc.dll"))
 	{
 		pRENDERDOC_GetAPI RENDERDOC_GetAPI =
@@ -186,10 +181,6 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 
 	context_->QueryInterface(annotations_.ReleaseAndGetAddressOf());
 
-	ComPtr<ID3D11Texture2D> backbuffer;
-	swc_->GetBuffer(0, IID_PPV_ARGS(backbuffer.GetAddressOf()));
-	device_->CreateRenderTargetView(backbuffer.Get(), nullptr, backBufferRTV_.GetAddressOf());
-
 	DXGI_SWAP_CHAIN_DESC desc;
 	swc_->GetDesc(&desc);
 
@@ -198,16 +189,16 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 
 	firstFrame_ = true;
 
-	ShaderManager::i(std::make_unique<ShaderManager>(device_));
+	ShaderManager::i(std::make_unique<ShaderManager>());
 
 	UpdateCheck::i().CheckForUpdates();
 	MiscTab::i();
 
-	auto bgTex = std::make_shared<Texture2D>(std::move(CreateTextureFromResource(device_, Core::i().dllModule(), IDR_BG)));
-	wheels_.emplace_back(Wheel::Create<Mount>(bgTex, "mounts", "Mounts", device_));
-	wheels_.emplace_back(Wheel::Create<Novelty>(bgTex, "novelties", "Novelties", device_));
-	wheels_.emplace_back(Wheel::Create<Marker>(bgTex, "markers", "Markers", device_));
-	wheels_.emplace_back(Wheel::Create<ObjectMarker>(bgTex, "object_markers", "Object Markers", device_));
+	auto bgTex = std::make_shared<Texture2D>(std::move(CreateTextureFromResource(device_.Get(), Core::i().dllModule(), IDR_BG)));
+	wheels_.emplace_back(Wheel::Create<Mount>(bgTex, "mounts", "Mounts"));
+	wheels_.emplace_back(Wheel::Create<Novelty>(bgTex, "novelties", "Novelties"));
+	wheels_.emplace_back(Wheel::Create<Marker>(bgTex, "markers", "Markers"));
+	wheels_.emplace_back(Wheel::Create<ObjectMarker>(bgTex, "object_markers", "Object Markers"));
 
 	// Init ImGui
 	auto &imio = ImGui::GetIO();
@@ -236,9 +227,9 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 		imio.FontDefault = font_;
 
 	ImGui_ImplWin32_Init(gameWindow_);
-	ImGui_ImplDX11_Init(device_, context_);
+	ImGui_ImplDX11_Init(device_.Get(), context_.Get());
 
-	customWheels_ = std::make_unique<CustomWheelsManager>(device_, bgTex, wheels_, fontDraw_);
+	customWheels_ = std::make_unique<CustomWheelsManager>(bgTex, wheels_, fontDraw_);
 
 	firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
 
@@ -291,16 +282,26 @@ void Core::OnUpdate()
 	}
 }
 
-
+#ifdef _DEBUG
+#define DUMP_FIRST_RENDER
+#endif
 void Core::Draw()
 {
+#ifdef DUMP_FIRST_RENDER
+	static bool s_dumpRender = true;
+	bool isDumping = false;
+	if (GetAsyncKeyState(VK_F8) && rdoc())
+	{
+		isDumping = true;
+		rdoc()->StartFrameCapture(device_.Get(), nullptr);
+	}
+#endif
+
 	if (annotations_)
 		annotations_->BeginEvent(L"GW2Radial");
 
 	StateBackupD3D11 d3dstate;
-	BackupD3D11State(context_, d3dstate);
-
-	context_->OMSetRenderTargets(1, backBufferRTV_.GetAddressOf(), nullptr);
+	BackupD3D11State(context_.Get(), d3dstate);
 
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i().OnUpdate();
@@ -347,9 +348,9 @@ void Core::Draw()
 		context_->RSSetViewports(1, &vp);
 
 		for (auto& wheel : wheels_)
-			wheel->Draw(context_);
+			wheel->Draw(context_.Get());
 
-		customWheels_->Draw(context_);
+		customWheels_->Draw(context_.Get());
 
 		SettingsMenu::i().Draw();
 		Log::i().Draw();
@@ -392,7 +393,7 @@ void Core::Draw()
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-        customWheels_->DrawOffscreen(device_, context_);
+        customWheels_->DrawOffscreen(context_.Get());
 	}
 
 	if(forceReloadWheels_)
@@ -401,10 +402,18 @@ void Core::Draw()
 	    customWheels_->MarkReload();
 	}
 
-	RestoreD3D11State(context_, d3dstate);
+	RestoreD3D11State(context_.Get(), d3dstate);
 
 	if(annotations_)
 		annotations_->EndEvent();
+
+#ifdef DUMP_FIRST_RENDER
+	if (isDumping)
+	{
+		s_dumpRender = false;
+		rdoc()->EndFrameCapture(device_.Get(), nullptr);
+	}
+#endif
 }
 
 }

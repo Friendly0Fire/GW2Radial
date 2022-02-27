@@ -11,15 +11,16 @@ namespace GW2Radial
 ConstantBuffer<WheelElement::WheelElementCB> WheelElement::cb_s;
 
 WheelElement::WheelElement(uint id, const std::string &nickname, const std::string &category,
-							const std::string &displayName, ID3D11Device* dev, const Texture2D& tex)
+							const std::string &displayName, const Texture2D& tex)
 	: nickname_(nickname), displayName_(displayName), elementId_(id),
 	  isShownOption_(displayName + " Visible", nickname + "_visible", category, true),
 	  sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, int(id)),
 	  keybind_(nickname, displayName, category),
 	  appearance_(tex)
 {
+	auto dev = Core::i().device();
 	if (!appearance_.srv)
-		appearance_ = CreateTextureFromResource<ID3D11Texture2D>(dev, Core::i().dllModule(), elementId_);
+		appearance_ = CreateTextureFromResource<ID3D11Texture2D>(dev.Get(), Core::i().dllModule(), elementId_);
 
 	GW2_ASSERT(appearance_.srv);
 
@@ -84,11 +85,11 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx)
 	cb_s->adjustedColor = adjustedColor;
 	cb_s->premultiplyAlpha = premultiplyAlpha_;
 
-	cb_s.Update();
+	cb_s.Update(ctx);
 	ctx->PSSetConstantBuffers(1, 1, cb_s.buffer().GetAddressOf());
 }
 
-void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, ID3D11Buffer* wheelCb, bool shadow, float hoverRatio)
+void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio)
 {
 	fVector4 adjustedColor = color();
 	adjustedColor.x = Lerp(1, adjustedColor.x, colorizeAmount_);
@@ -101,9 +102,9 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 	cb_s->adjustedColor = shadow ? fVector4 { 0.f, 0.f, 0.f, shadowStrength_ } : adjustedColor;
 	cb_s->premultiplyAlpha = shadow ? false : premultiplyAlpha_;
 
-	cb_s.Update();
+	cb_s.Update(ctx);
 	ID3D11Buffer* cbs[] = {
-		wheelCb,
+		wheelCb.Get(),
 		cb_s.buffer().Get()
 	};
 	ctx->PSSetConstantBuffers(0, std::size(cbs), cbs);
@@ -116,11 +117,11 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 		vscb->spriteDimensions.w *= 1.01f + hoverRatio * 0.04f;
 	}
 	vscb->spriteZ = shadow ? 0.f : 0.02f + hoverRatio * 0.04f;
-	vscb.Update();
+	vscb.Update(ctx);
 	ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
 
-void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const Wheel* parent)
+void WheelElement::Draw(ID3D11DeviceContext* ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered, const Wheel* parent)
 {
 	const float hoverTimer = SmoothStep(hoverFadeIn(currentTime, parent));
 
@@ -169,12 +170,12 @@ void WheelElement::Draw(ComPtr<ID3D11DeviceContext>& ctx, int n, fVector4 sprite
 
 	if (shadowStrength_ > 0.f)
 	{
-		SetShaderState(ctx.Get(), spriteDimensions, parent->GetConstantBuffer(), true, hoverTimer);
+		SetShaderState(ctx, spriteDimensions, parent->GetConstantBuffer(), true, hoverTimer);
 
 		DrawScreenQuad(ctx);
 	}
 
-	SetShaderState(ctx.Get(), spriteDimensions, parent->GetConstantBuffer(), false, hoverTimer);
+	SetShaderState(ctx, spriteDimensions, parent->GetConstantBuffer(), false, hoverTimer);
 
 	DrawScreenQuad(ctx);
 }

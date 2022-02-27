@@ -69,9 +69,9 @@ protected:
 	HWND gameWindow_ = nullptr;
 	HMODULE dllModule_ = nullptr;
 	WNDPROC baseWndProc_ = nullptr;
-	ID3D11Device* device_ = nullptr;
-	ID3D11DeviceContext* context_ = nullptr;
-	IDXGISwapChain* swc_ = nullptr;
+	ComPtr<ID3D11Device> device_;
+	ComPtr<ID3D11DeviceContext> context_;
+	ComPtr<IDXGISwapChain> swc_;
 
 	uint screenWidth_ = 0, screenHeight_ = 0;
 	bool firstFrame_ = true;
@@ -96,8 +96,6 @@ protected:
 	using GetDpiForWindow_t = UINT (WINAPI *)(HWND hwnd);
 	HMODULE user32_ = 0;
 	GetDpiForWindow_t getDpiForWindow_ = nullptr;
-
-	ComPtr<ID3D11RenderTargetView> backBufferRTV_;
 
 	ComPtr<ID3DUserDefinedAnnotation> annotations_;
 

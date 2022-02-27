@@ -19,7 +19,7 @@ namespace GW2Radial
         ComPtr<ID3D11BlendState> textBlendState_;
         std::shared_ptr<Texture2D> backgroundTexture_;
 
-        std::unique_ptr<Wheel> BuildWheel(const std::filesystem::path& configPath, ID3D11Device* dev);
+        std::unique_ptr<Wheel> BuildWheel(const std::filesystem::path& configPath);
 
         struct QueuedTextDraw
         {
@@ -29,13 +29,13 @@ namespace GW2Radial
         };
         std::list<QueuedTextDraw> textDraws_;
 
-        void Reload(ID3D11Device* dev);
+        void Reload();
 
     public:
-        CustomWheelsManager(ID3D11Device* dev, std::shared_ptr<Texture2D> bgTexture, std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font);
+        CustomWheelsManager(std::shared_ptr<Texture2D> bgTexture, std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font);
 
         void Draw(ID3D11DeviceContext* ctx);
-        void DrawOffscreen(ID3D11Device* dev, ID3D11DeviceContext* ctx);
+        void DrawOffscreen(ID3D11DeviceContext* ctx);
         void MarkReload() { loaded_ = false; }
     };
 
@@ -58,7 +58,7 @@ namespace GW2Radial
         fVector4 color_;
 
     public:
-        CustomElement(const CustomElementSettings& ces, ID3D11Device* dev);
+        CustomElement(const CustomElementSettings& ces);
 
     protected:
 	    fVector4 color() override;
