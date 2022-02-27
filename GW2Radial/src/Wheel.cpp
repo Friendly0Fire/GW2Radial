@@ -450,30 +450,33 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
 
 				const float fadeTimer = std::min(1.f, (currentTime - (currentTriggerTime_ + displayDelayOption_.value())) / float(animationTimeOption_.value() * 0.5f));
 
-				std::vector<float> hoveredFadeIns;
-				std::transform(activeElements.begin(), activeElements.end(), std::back_inserter(hoveredFadeIns),
+				std::array<float, MaxHoverFadeIns> hoveredFadeIns;
+				std::transform(activeElements.begin(), activeElements.end(), hoveredFadeIns.begin(),
 					[&](const WheelElement* elem) { return elem->hoverFadeIn(currentTime, this); });
 
+				auto& lastHoverFadeIn = hoveredFadeIns[activeElements.size()];
 				switch(CenterBehavior(centerBehaviorOption_.value()))
 				{
 				case CenterBehavior::PREVIOUS:
 					if(previousUsed_)
-						hoveredFadeIns.push_back(previousUsed_->hoverFadeIn(currentTime, this));
+						lastHoverFadeIn = previousUsed_->hoverFadeIn(currentTime, this);
 					break;
 				case CenterBehavior::FAVORITE:
 				{
 					auto fav = centerFavoriteOption_.value();
 					if (fav >= 0 && fav < wheelElements_.size()) {
-						hoveredFadeIns.push_back(wheelElements_[fav]->hoverFadeIn(currentTime, this));
+						lastHoverFadeIn = wheelElements_[fav]->hoverFadeIn(currentTime, this);
 						break;
 					}
 				}
 				[[fallthrough]];
 				default:
-					hoveredFadeIns.push_back(0.f);
+					lastHoverFadeIn = 0.f;
 					break;
 				}
 
+				for (uint i = activeElements.size() + 1; i < MaxHoverFadeIns; i++)
+					hoveredFadeIns[i] = 0.f;
 
 				ShaderManager::i().SetShaders(ctx, vs_, psWheel_);
 				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
@@ -563,7 +566,9 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
 		spriteDimensions.x += spriteDimensions.z * 0.5f;
 		spriteDimensions.y += spriteDimensions.w * 0.5f;
 
-		UpdateConstantBuffer(ctx, spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, {}, timeLeft, conditionallyDelayed_ != nullptr, false);
+		std::array<float, MaxHoverFadeIns> hoveredFadeIns;
+		std::fill(hoveredFadeIns.begin(), hoveredFadeIns.end(), 0.f);
+		UpdateConstantBuffer(ctx, spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, hoveredFadeIns, timeLeft, conditionallyDelayed_ != nullptr, false);
 		if (conditionallyDelayed_)
 			conditionallyDelayed_->SetShaderState(ctx);
 
@@ -579,7 +584,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
 }
 
 void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer,
-	const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt)
+	const std::vector<WheelElement*>& activeElements, const std::span<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt)
 {
 	cb_s->wipeMaskData = wipeMaskData_;
 	cb_s->wheelFadeIn = fadeIn;
@@ -589,7 +594,7 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 	cb_s->globalOpacity = opacityMultiplierOption_.value() * 0.01f;
 	cb_s->timeLeft = timeLeft;
 	cb_s->showIcon = showIcon;
-	memcpy_s(cb_s->hoverFadeIns, sizeof(cb_s->hoverFadeIns), hoveredFadeIns.data(), hoveredFadeIns.size() * sizeof(float));
+	memcpy_s(cb_s->hoverFadeIns, sizeof(cb_s->hoverFadeIns), hoveredFadeIns.data(), MaxHoverFadeIns * sizeof(float));
 
 	cb_s.Update(ctx);
 	ctx->PSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());

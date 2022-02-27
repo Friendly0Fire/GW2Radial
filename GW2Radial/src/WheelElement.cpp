@@ -98,7 +98,7 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 	
 	auto& sm = ShaderManager::i();
 
-	cb_s->elementId = elementId();
+	cb_s->elementHoverFadeIn = hoverRatio;
 	cb_s->adjustedColor = shadow ? fVector4 { 0.f, 0.f, 0.f, shadowStrength_ } : adjustedColor;
 	cb_s->premultiplyAlpha = shadow ? false : premultiplyAlpha_;
 

@@ -68,7 +68,7 @@ public:
 protected:
 	void Sort();
 	void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer,
-		const std::vector<WheelElement*>& activeElements, const std::vector<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt);
+		const std::vector<WheelElement*>& activeElements, const std::span<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt);
 	void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& baseSpriteDimensions);
 
 	static const mstime conditionallyDelayedFadeOutTime = 500;
@@ -185,6 +185,7 @@ protected:
 	friend class WheelElement;
 	friend class CustomWheelsManager;
 
+	static inline const uint MaxHoverFadeIns = 12;
 	struct WheelCB
 	{
 		fVector3 wipeMaskData;
@@ -193,7 +194,7 @@ protected:
 		float centerScale;
 		int elementCount;
 		float globalOpacity;
-		float hoverFadeIns[12];
+		float hoverFadeIns[MaxHoverFadeIns];
 		float timeLeft;
 		bool showIcon;
 	};

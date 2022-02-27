@@ -17,12 +17,15 @@ cbuffer Wheel : register(b0)
 	bool showIcon;
 };
 
-static float hoverFadeIns[WHEEL_MAX_ELEMENT_COUNT] = (float[WHEEL_MAX_ELEMENT_COUNT])hoverFadeIns_;
+float GetHoverFadeIn(int i)
+{
+	return hoverFadeIns_[i >> 2][i & 3];
+}
 
 cbuffer WheelElement : register(b1)
 {
 	float4 adjustedColor;
-	int elementId;
+	float elementHoverFadeIn;
 	bool premultiplyAlpha;
 };
 

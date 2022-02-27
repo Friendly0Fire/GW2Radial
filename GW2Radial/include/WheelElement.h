@@ -69,7 +69,7 @@ protected:
 	struct WheelElementCB
 	{
 		fVector4 adjustedColor;
-		int elementId;
+		float elementHoverFadeIn;
 		bool premultiplyAlpha;
 	};
 

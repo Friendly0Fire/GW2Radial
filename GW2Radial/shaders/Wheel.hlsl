@@ -22,7 +22,7 @@ float4 Wheel(PS_INPUT In) : SV_Target0
     int localMountId = (int) round(coordsPolar.y / singleMountAngle);
     if (localMountId >= elementCount)
         localMountId -= elementCount;
-	float hoverFadeIn = hoverFadeIns[localMountId];
+	float hoverFadeIn = GetHoverFadeIn(localMountId);
     bool isLocalMountHovered = hoverFadeIn > 0.f;
 
 	hoverFadeIn = min(hoverFadeIn, wheelFadeIn.x);
@@ -72,10 +72,11 @@ float4 Wheel(PS_INPUT In) : SV_Target0
 	border_mask *= 2.f - smoothstep(centerScale + 0.01f, centerScale + 0.1f, coordsPolar.x);
 
 	// Also brighten when the dead zone is hovered and has an action assigned to it
-	if (hoverFadeIns[elementCount] > 0.f)
+	float centerHoverFadeIn = GetHoverFadeIn(elementCount);
+	if (centerHoverFadeIn > 0.f)
 	{
-		color.rgb *= lerp(lerp(1.f, 1.5f, hoverFadeIns[elementCount]), 1.f, center_mask);
-		center_mask = lerp(center_mask, 1 - luma * 0.2f, hoverFadeIns[elementCount]);
+		color.rgb *= lerp(lerp(1.f, 1.5f, centerHoverFadeIn), 1.f, center_mask);
+		center_mask = lerp(center_mask, 1 - luma * 0.2f, centerHoverFadeIn);
 	}
 
 	// Combine all masks, ensuring that the edge and center masks never increase brightness when combined and that the border mask never darkens the circle
