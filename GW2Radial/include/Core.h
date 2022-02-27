@@ -93,7 +93,7 @@ protected:
 
 	ImGuiContext* imguiContext_ = nullptr;
 
-	using GetDpiForWindow_t = decltype(::GetDpiForWindow)*;
+	using GetDpiForWindow_t = UINT (WINAPI *)(HWND hwnd);
 	HMODULE user32_ = 0;
 	GetDpiForWindow_t getDpiForWindow_ = nullptr;
 

@@ -288,9 +288,8 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 void CustomWheelsManager::Reload(ID3D11Device* dev)
 {
 	{
-	    APTTYPE a;
-	    APTTYPEQUALIFIER b;
-	    if(CoGetApartmentType(&a, &b) == CO_E_NOTINITIALIZED) {
+		ULONG_PTR contextToken;
+	    if(CoGetContextToken(&contextToken) == CO_E_NOTINITIALIZED) {
 	        HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
             if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
 	            CriticalMessageBox(L"Could not initialize COM library: error code 0x%X.", hr);

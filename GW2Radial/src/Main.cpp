@@ -14,8 +14,8 @@ gw2al_addon_dsc gAddonDsc = {
 	L"gw2radial",
 	L"Radial menu overlay to select mount, novelty and more on fly",
 	2,
-	1,
-	1,
+	2,
+	0,
 	gAddonDeps
 };
 

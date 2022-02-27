@@ -111,6 +111,10 @@ std::filesystem::path GetGameFolder()
     std::wstring exeFolder;
     SplitFilename(exeFullPath, &exeFolder, nullptr);
 
+#if _DEBUG
+    Log::i().Print(Severity::Debug, L"Game folder path: {}", exeFolder.c_str());
+#endif
+
     return exeFolder;
 }
 
@@ -123,8 +127,17 @@ std::optional<std::filesystem::path> GetDocumentsFolder()
     std::filesystem::path documentsGW2 = myDocuments;
     documentsGW2 /= L"GUILD WARS 2";
 
+#if _DEBUG
+    Log::i().Print(Severity::Debug, L"Documents folder path: {}", documentsGW2.c_str());
+#endif
+
     if (std::filesystem::is_directory(documentsGW2))
         return documentsGW2;
+
+    if (SUCCEEDED(SHCreateDirectoryExW(nullptr, documentsGW2.c_str(), nullptr)))
+        return documentsGW2;
+
+    Log::i().Print(Severity::Warn, L"Could not open or create documents folder '{}'.", documentsGW2.wstring());
 
     return std::nullopt;
 }
@@ -132,6 +145,10 @@ std::optional<std::filesystem::path> GetDocumentsFolder()
 std::optional<std::filesystem::path> GetAddonFolder()
 {
     auto folder = (GetGameFolder() / "addons/gw2radial").make_preferred();
+
+#if _DEBUG
+    Log::i().Print(Severity::Debug, L"Addons folder path: {}", folder.c_str());
+#endif
 
     if (std::filesystem::is_directory(folder))
         return folder;
