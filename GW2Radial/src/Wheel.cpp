@@ -43,6 +43,7 @@ Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::st
 	  enableQueuingOption_("Enable input queuing", "queuing_enabled", "wheel_" + nickname_, true),
 	  visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true),
 	  opacityMultiplierOption_("Opacity multiplier", "opacity", "wheel_" + nickname_, 100),
+	  animationScale_("Animation scale", "anim_scale", "wheel_" + nickname_, 1.f),
 	  backgroundTexture_(bgTexture)
 {
 	conditions_ = std::make_shared<ConditionSet>("wheel_" + nickname_);
@@ -184,6 +185,9 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 	ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Amount of time, in milliseconds, for the radial menu to fade in.");
+
+	ImGuiConfigurationWrapper(&ImGui::SliderFloat, animationScale_, 0.f, 1.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+	ImGuiHelpTooltip("Intensity of the 3D animations.");
 
 	ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.25f, 4.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 	ImGuiHelpTooltip("Scale factor for the size of the whole radial menu.");
@@ -607,7 +611,7 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 		mouseDist = -mouseDist / glm::vec2(spriteDimensions.z, spriteDimensions.w);
 		if (glm::length(mouseDist) > 0.2f)
 			mouseDist *= 0.2f / glm::length(mouseDist);
-		mouseDist *= 0.4f;
+		mouseDist *= 0.4f * animationScale_.value();
 
 		tiltMatrix = glm::eulerAngleXY(-mouseDist.y, mouseDist.x);
 	}

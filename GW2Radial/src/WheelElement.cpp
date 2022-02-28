@@ -113,8 +113,8 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 	vscb->spriteDimensions = spriteDimensions;
 	if (shadow)
 	{
-		vscb->spriteDimensions.z *= 1.01f + hoverRatio * 0.04f;
-		vscb->spriteDimensions.w *= 1.01f + hoverRatio * 0.04f;
+		vscb->spriteDimensions.z *= 1.05f + hoverRatio * 0.04f;
+		vscb->spriteDimensions.w *= 1.05f + hoverRatio * 0.04f;
 	}
 	vscb->spriteZ = shadow ? 0.f : 0.02f + hoverRatio * 0.04f;
 	vscb.Update(ctx);

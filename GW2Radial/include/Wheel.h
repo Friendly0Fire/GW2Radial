@@ -152,6 +152,8 @@ protected:
 
 	ConfigurationOption<bool> visibleInMenuOption_;
 
+	ConfigurationOption<float> animationScale_;
+
 	std::optional<Point> cursorResetPosition_;
 	fVector2 currentPosition_;
 	mstime currentTriggerTime_ = 0;
