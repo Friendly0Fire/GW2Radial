@@ -99,6 +99,8 @@ protected:
 
 	ComPtr<ID3DUserDefinedAnnotation> annotations_;
 
+	ComPtr<ID3D11RenderTargetView> backBufferRTV_;
+
 	RENDERDOC_API_1_5_0* rdoc_ = nullptr;
 };
 }

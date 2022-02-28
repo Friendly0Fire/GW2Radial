@@ -144,13 +144,17 @@ LRESULT Core::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void Core::PreResizeSwapChain()
 {
-
+	backBufferRTV_.Reset();
 }
 
 void Core::PostResizeSwapChain(uint w, uint h)
 {
 	screenWidth_ = w;
 	screenHeight_ = h;
+
+	ComPtr<ID3D11Texture2D> backbuffer;
+	swc_->GetBuffer(0, IID_PPV_ARGS(backbuffer.GetAddressOf()));
+	device_->CreateRenderTargetView(backbuffer.Get(), nullptr, backBufferRTV_.ReleaseAndGetAddressOf());
 }
 
 void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* swc)
@@ -180,6 +184,10 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 #endif
 
 	context_->QueryInterface(annotations_.ReleaseAndGetAddressOf());
+
+	ComPtr<ID3D11Texture2D> backbuffer;
+	swc_->GetBuffer(0, IID_PPV_ARGS(backbuffer.GetAddressOf()));
+	device_->CreateRenderTargetView(backbuffer.Get(), nullptr, backBufferRTV_.GetAddressOf());
 
 	DXGI_SWAP_CHAIN_DESC desc;
 	swc_->GetDesc(&desc);
@@ -302,6 +310,8 @@ void Core::Draw()
 
 	StateBackupD3D11 d3dstate;
 	BackupD3D11State(context_.Get(), d3dstate);
+
+	context_->OMSetRenderTargets(1, backBufferRTV_.GetAddressOf(), nullptr);
 
 	// This is the closest we have to a reliable "update" function, so use it as one
 	Input::i().OnUpdate();
