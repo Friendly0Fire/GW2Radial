@@ -168,8 +168,16 @@ void OnSwapChainPostResizeBuffers1(wrap_event_data* evd)
 	GetD3D11Loader()->PostResizeSwapChain(evd->stackPtr->ResizeBuffers.Width, evd->stackPtr->ResizeBuffers.Height);
 }
 
+gw2al_core_vtable* g_al_API = nullptr;
+void OnD3D9CreateDevice(wrap_event_data* evd)
+{
+	g_al_API->log_text(LL_WARN, L"gw2radial", L"Addon unable to load in D3D9 mode, activate D3D11 in game options to enable!");
+}
+
 void Direct3D11Loader::Init(gw2al_core_vtable* gAPI)
 {
+	g_al_API = gAPI;
+
 	D3D9_wrapper d3d9_wrap;
 	d3d9_wrap.enable_event = static_cast<pD3D9_wrapper_enable_event>(gAPI->query_function(
         gAPI->hash_name(const_cast<wchar_t*>(D3D9_WRAPPER_ENABLE_EVENT_FNAME))));
@@ -183,7 +191,9 @@ void Direct3D11Loader::Init(gw2al_core_vtable* gAPI)
 	d3d9_wrap.enable_event(METH_DXGI_CreateSwapChainForComposition, WRAP_CB_POST);
 	d3d9_wrap.enable_event(METH_DXGI_CreateSwapChainForCoreWindow, WRAP_CB_POST);
 	d3d9_wrap.enable_event(METH_DXGI_CreateSwapChainForHwnd, WRAP_CB_POST);
+	d3d9_wrap.enable_event(METH_OBJ_CreateDevice, WRAP_CB_POST);
 
+	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_OBJ_CreateDevice", OnD3D9CreateDevice, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_SWC_Present", OnSwapChainPrePresent, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_PRE_SWC_Present1", OnSwapChainPrePresent1, 0);
 
