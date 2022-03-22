@@ -96,14 +96,6 @@ UINT Core::GetDpiForWindow(HWND hwnd)
 
 void Core::InternalInit()
 {
-	// Add an extra reference count to the library so it persists through GW2's load-unload routine
-	// without which problems start arising with ReShade
-	{
-		TCHAR selfpath[MAX_PATH];
-		GetModuleFileName(dllModule_, selfpath, MAX_PATH);
-		LoadLibrary(selfpath);
-	}
-
 	user32_ = LoadLibrary(L"User32.dll");
 	if(user32_)
 		getDpiForWindow_ = (GetDpiForWindow_t)GetProcAddress(user32_, "GetDpiForWindow");
@@ -168,7 +160,7 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 		SetWindowLongPtr(hwnd, GWLP_WNDPROC, LONG_PTR(&WndProc));
 	}
 
-	device_ = device;
+	device_.Attach(device);
 	device_->GetImmediateContext(&context_);
 	swc_ = swc;
 

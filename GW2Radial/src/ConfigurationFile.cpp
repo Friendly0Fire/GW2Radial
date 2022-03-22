@@ -19,29 +19,43 @@ ConfigurationFile::ConfigurationFile()
 
 void ConfigurationFile::Reload()
 {
+	LogDebug("Reloading configuration files");
+	readOnlyWarned_ = false;
+
 	auto folder = GetAddonFolder();
 	if (!folder)
 	{
+		LogWarn("Could not find addon folder");
 		folder_ = std::nullopt;
+		readOnly_ = false;
 		return;
 	}
 
+	auto cfgFile = *folder / g_configName;
 	FILE* fp = nullptr;
-	if (_wfopen_s(&fp, (*folder / g_configName).c_str(), L"ab") != 0)
+	if (_wfopen_s(&fp, cfgFile.c_str(), L"ab") != 0)
 	{
-		Log::i().Print(Severity::Error, L"Could write to config file '{}'.", (*folder / g_configName).wstring());
-		folder_ = std::nullopt;
-		return;
+		LogWarn(L"Could not write to config file '{}'", cfgFile.wstring());
+		if (_wfopen_s(&fp, cfgFile.c_str(), L"rb") != 0)
+		{
+			LogError(L"Could read config file '{}'", cfgFile.wstring());
+			folder_ = std::nullopt;
+			readOnly_ = false;
+			return;
+		}
+		else if(fp)
+			fclose(fp);
+		readOnly_ = true;
 	}
 	else if (fp)
 		fclose(fp);
 	
 	ini_.SetUnicode();
-	ini_.LoadFile((*folder / g_configName).c_str());
+	ini_.LoadFile(cfgFile.c_str());
 	LoadImGuiSettings(*folder / g_imguiConfigName);
 	folder_ = folder;
 
-	Log::i().Print(Severity::Info, L"Config folder is now '{}'.", folder_->wstring());
+	LogInfo(L"Config folder is now '{}'", folder_->wstring());
 }
 
 void ConfigurationFile::Save()
@@ -51,6 +65,16 @@ void ConfigurationFile::Save()
 		const auto prevSaveError = lastSaveError_;
 		lastSaveError_ = "No configuration folder could be located.";
 		lastSaveErrorChanged_ |= prevSaveError != lastSaveError_;
+		return;
+	}
+
+	if (readOnly_)
+	{
+		if (!readOnlyWarned_)
+		{
+			LogWarn("Configuration files in read-only mode, changes will not be saved!");
+			readOnlyWarned_ = true;
+		}
 		return;
 	}
 

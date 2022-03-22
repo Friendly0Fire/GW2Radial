@@ -135,6 +135,7 @@ void OnDXGIPostCreateSwapChain(wrap_event_data* evd)
 	auto& params = (evd->stackPtr)->CreateSwapChain;
 	ID3D11Device* dev;
 	GW2_HASSERT(params.pDevice->QueryInterface(&dev));
+	LogDebug("Called OnDXGIPostCreateSwapChain(hwnd: {}, iunk: {}, device: {}, swc: {})", LogPtr | params.pDesc->OutputWindow, LogPtr | params.pDevice, LogPtr | dev, LogPtr | *params.ppSwapChain);
 	if(dev)
 		GetD3D11Loader()->PostCreateSwapChain(params.pDesc->OutputWindow, dev, *params.ppSwapChain);
 }
@@ -142,29 +143,35 @@ void OnDXGIPostCreateSwapChain(wrap_event_data* evd)
 void OnDXGIPostCreateSwapChainForHwnd(wrap_event_data* evd)
 {
 	auto& params = (evd->stackPtr)->CreateSwapChainForHwnd;
+
 	ID3D11Device* dev;
 	GW2_HASSERT(params.pDevice->QueryInterface(&dev));
+	LogDebug("Called OnDXGIPostCreateSwapChainForHwnd(hwnd: {}, iunk: {}, device: {}, swc: {})", LogPtr | params.hWnd, LogPtr | params.pDevice, LogPtr | dev, LogPtr | *params.ppSwapChain);
 	if (dev)
 		GetD3D11Loader()->PostCreateSwapChain(params.hWnd, dev, *params.ppSwapChain);
 }
 
 void OnSwapChainPreResizeBuffers(wrap_event_data* evd)
 {
+	LogDebug("Called OnSwapChainPreResizeBuffers(width: {}, height: {})", evd->stackPtr->ResizeBuffers.Width, evd->stackPtr->ResizeBuffers.Height);
 	GetD3D11Loader()->PreResizeSwapChain();
 }
 
 void OnSwapChainPreResizeBuffers1(wrap_event_data* evd)
 {
+	LogDebug("Called OnSwapChainPreResizeBuffers1(width: {}, height: {})", evd->stackPtr->ResizeBuffers.Width, evd->stackPtr->ResizeBuffers.Height);
 	GetD3D11Loader()->PreResizeSwapChain();
 }
 
 void OnSwapChainPostResizeBuffers(wrap_event_data* evd)
 {
+	LogDebug("Called OnSwapChainPostResizeBuffers(width: {}, height: {})", evd->stackPtr->ResizeBuffers.Width, evd->stackPtr->ResizeBuffers.Height);
 	GetD3D11Loader()->PostResizeSwapChain(evd->stackPtr->ResizeBuffers.Width, evd->stackPtr->ResizeBuffers.Height);
 }
 
 void OnSwapChainPostResizeBuffers1(wrap_event_data* evd)
 {
+	LogDebug("Called OnSwapChainPostResizeBuffers1(width: {}, height: {})", evd->stackPtr->ResizeBuffers.Width, evd->stackPtr->ResizeBuffers.Height);
 	GetD3D11Loader()->PostResizeSwapChain(evd->stackPtr->ResizeBuffers.Width, evd->stackPtr->ResizeBuffers.Height);
 }
 
@@ -204,7 +211,6 @@ void Direct3D11Loader::Init(gw2al_core_vtable* gAPI)
 
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DXGI_CreateSwapChain", OnDXGIPostCreateSwapChain, 0);
 	D3D9_WRAPPER_WATCH_EVENT(L"gw2radial", L"D3D9_POST_DXGI_CreateSwapChainForHwnd", OnDXGIPostCreateSwapChainForHwnd, 0);
-	
 }
 
 }

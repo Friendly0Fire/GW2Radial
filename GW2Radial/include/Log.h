@@ -82,4 +82,50 @@ private:
     std::mutex linesMutex_;
 };
 
+#define DEFINE_LOG(sev, name) \
+template<typename T, typename... Args> \
+void name(const T& fmt, Args&& ...args) \
+{ \
+    Log::i().Print(sev, fmt, std::forward<Args>(args)...); \
+}
+
+#ifdef _DEBUG
+DEFINE_LOG(Severity::Debug, LogDebug);
+#else
+#define LogDebug(...)
+#endif
+
+DEFINE_LOG(Severity::Info, LogInfo);
+DEFINE_LOG(Severity::Warn, LogWarn);
+DEFINE_LOG(Severity::Error, LogError);
+
+struct LogPtr_
+{
+    template<typename T>
+    const void* operator|(const T* ptr) const
+    {
+        return static_cast<const void*>(ptr);
+    }
+};
+
+inline static const LogPtr_ LogPtr;
+
+template<typename T>
+auto LogGUID(const GUID& guid)
+{
+    std::basic_stringstream<T> ss;
+    ss << std::hex << std::setw(2) << std::setfill<T>('0');
+
+    for (int i = 0; i < 2; i++)
+        ss << guid.Data4[i];
+    ss << "-";
+    for (int i = 2; i < 8; i++)
+        ss << guid.Data4[i];
+
+    if constexpr (std::is_same_v<char, T>)
+        return std::format("{{{:x}-{:x}-{:x}-{}}}", guid.Data1, guid.Data2, guid.Data3, ss.str());
+    else
+        return std::format(L"{{{:x}-{:x}-{:x}-{}}}", guid.Data1, guid.Data2, guid.Data3, ss.str());
+}
+
 }

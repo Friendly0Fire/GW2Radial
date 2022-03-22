@@ -1,6 +1,7 @@
 ﻿#include <FileSystem.h>
 #include <optional>
 #include <fstream>
+#include <Utility.h>
 
 namespace fs = std::filesystem;
 
@@ -28,12 +29,15 @@ namespace GW2Radial
         }
         while (p2.has_relative_path() && !fs::exists(p2));
 
+        LogDebug(L"Looking for path '{}'; path '{}' is the closest existing parent", p.wstring(), p2.wstring());
+
         if (p2.has_extension() && p2.extension() == L".zip")
         {
             auto& fs = i();
 
             auto z = fs.FindOrCache(p2.string());
             if(z) {
+                LogDebug(L"Found and loaded zip file '{}'", p2.wstring());
                 if(zip) *zip = z;
                 return { p2, fs::relative(p, p2) };
             }
@@ -61,6 +65,8 @@ namespace GW2Radial
 
     std::vector<std::filesystem::path> FileSystem::IterateZipFolders(const std::filesystem::path& zipPath)
     {
+        LogDebug(L"Iterating files in archive '{}'", zipPath.wstring());
+
         auto& fs = i();
         ZipArchive::Ptr zip = fs.FindOrCache(zipPath);
         if (!zip)
@@ -73,7 +79,11 @@ namespace GW2Radial
             if (!p->IsDirectory())
                 continue;
 
-            paths.push_back((zipPath / p->GetFullName()).lexically_normal());
+            auto filepath = (zipPath / p->GetFullName()).lexically_normal();
+
+            LogDebug(L"Found file '{}', mapping to '{}'", utf8_decode(p->GetFullName()), filepath.wstring());
+
+            paths.push_back(filepath);
         }
 
         return paths;
@@ -101,6 +111,7 @@ namespace GW2Radial
         SHGetKnownFolderPath(id, flags, nullptr, &path);
 
         std::filesystem::path p(path);
+        LogDebug(L"Mapped system path {} to '{}'", LogGUID<wchar_t>(id), p.wstring());
         CoTaskMemFree(path);
         return p;
     }

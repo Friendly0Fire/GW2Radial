@@ -29,6 +29,8 @@ protected:
 
 	CSimpleIniA ini_;
 	std::optional<std::filesystem::path> folder_;
+	bool readOnly_ = false;
+	bool readOnlyWarned_ = false;
 
 	bool lastSaveErrorChanged_ = false;
 	std::string lastSaveError_;

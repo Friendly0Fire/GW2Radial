@@ -36,6 +36,7 @@ gw2al_api_ret gw2addon_load(gw2al_core_vtable* core_api)
 
 gw2al_api_ret gw2addon_unload(int gameExiting)
 {
+	GW2Radial::Core::Shutdown();
 	return GW2AL_OK;
 }
 
@@ -77,7 +78,6 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		GW2Radial::Core::Init(hModule);
 		break;
 	case DLL_PROCESS_DETACH:
-		GW2Radial::Core::Shutdown();
 		break;
 	}
 

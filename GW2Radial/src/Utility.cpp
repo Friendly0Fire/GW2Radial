@@ -146,9 +146,7 @@ std::optional<std::filesystem::path> GetAddonFolder()
 {
     auto folder = (GetGameFolder() / "addons/gw2radial").make_preferred();
 
-#if _DEBUG
-    Log::i().Print(Severity::Debug, L"Addons folder path: {}", folder.c_str());
-#endif
+    LogDebug(L"Addons folder path: {}", folder.c_str());
 
     if (std::filesystem::is_directory(folder))
         return folder;
@@ -156,11 +154,11 @@ std::optional<std::filesystem::path> GetAddonFolder()
     if (SUCCEEDED(SHCreateDirectoryExW(nullptr, folder.c_str(), nullptr)))
         return folder;
 
-    Log::i().Print(Severity::Warn, L"Could not open or create configuration folder '{}'.", folder.wstring());
+    LogWarn(L"Could not open or create configuration folder '{}'.", folder.wstring());
 
     auto docs = GetDocumentsFolder();
     if (!docs) {
-        Log::i().Print(Severity::Error, L"Could not locate Documents folder (fallback).");
+        LogError(L"Could not locate Documents folder (fallback).");
         return std::nullopt;
     }
 
@@ -172,7 +170,7 @@ std::optional<std::filesystem::path> GetAddonFolder()
     if (SUCCEEDED(SHCreateDirectoryExW(nullptr, folder.c_str(), nullptr)))
         return folder;
 
-    Log::i().Print(Severity::Error, L"Could not open or create configuration folder '{}'.", folder.wstring());
+    LogError(L"Could not open or create configuration folder '{}'.", folder.wstring());
 
     return std::nullopt;
 }
@@ -269,6 +267,7 @@ RenderDocCapture::RenderDocCapture()
     auto* rdoc = Core::i().rdoc();
     if (!rdoc)
         return;
+    LogDebug("Beginning RenderDoc frame capture...");
 
     rdoc->StartFrameCapture(Core::i().device().Get(), nullptr);
 }
@@ -278,6 +277,7 @@ RenderDocCapture::~RenderDocCapture()
     auto* rdoc = Core::i().rdoc();
     if (!rdoc)
         return;
+    LogDebug("Ending RenderDoc frame capture...");
 
     rdoc->EndFrameCapture(Core::i().device().Get(), nullptr);
 }

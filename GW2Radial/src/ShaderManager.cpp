@@ -22,9 +22,13 @@ public:
         [[maybe_unused]] LPCVOID          pParentData,
         LPCVOID*                          ppData,
         UINT*                             pBytes) override {
+        LogDebug("Opening shader include '{}'...", pFileName);
         auto file = ShaderManager::i().shadersZip_->GetEntry(pFileName);
         if (!file)
+        {
+            LogDebug("Include '{}' not found in archive!", pFileName);
             return E_INVALIDARG;
+        }
 
         auto* const contentStream = file->GetDecompressionStream();
         if (contentStream) {
@@ -59,6 +63,8 @@ void ShaderManager::SetShaders(ID3D11DeviceContext* ctx, ShaderId vs, ShaderId p
 
 ShaderId ShaderManager::GetShader(const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint)
 {
+    LogDebug(L"Looking for shader {}:{} (type #{})", filename, utf8_decode(entrypoint), int(st));
+
     for (uint i = 0; i < shaders_.size(); i++)
     {
         auto& sd = shaders_[i];
@@ -81,6 +87,9 @@ ShaderId ShaderManager::GetShader(const std::wstring& filename, D3D11_SHADER_VER
 void ShaderManager::ReloadAll()
 {
 #ifdef HOT_RELOAD_SHADERS
+    if (!IsDebuggerPresent())
+        return;
+
     for (auto& sd : shaders_)
         sd.shader = CompileShader(sd.filename, sd.st, sd.entrypoint);
 #endif
@@ -90,11 +99,14 @@ void ShaderManager::ReloadAll()
     LoadShadersArchive();
 
     if(hotReloadFolderExists_ && FileSystem::Exists(GetShaderFilename(filename))) {
+        LogDebug(L"Hot reloading shader file {}", filename);
         std::ifstream      file(GetShaderFilename(filename));
         auto               vec = FileSystem::ReadFile(file);
         return std::string(reinterpret_cast<char*>(vec.data()), vec.size());
     } else {
+        LogDebug(L"Looking for shader {} in archive", filename);
         auto file = shadersZip_->GetEntry(EncodeShaderFilename(filename));
+        if(!file) LogError(L"Shader file {} not found in archive!", filename);
         GW2_ASSERT(file != nullptr);
         auto* const contentStream = file->GetDecompressionStream();
         GW2_ASSERT(contentStream != nullptr);
@@ -107,6 +119,8 @@ void ShaderManager::ReloadAll()
 
 ComPtr<ID3D11Buffer> ShaderManager::MakeConstantBuffer(size_t dataSize, const void* data)
 {
+    LogDebug("Creating constant buffer of {} bytes (initial data: {})", dataSize, data ? "yes" : "no");
+
     dataSize = RoundUp(dataSize, 16);
     D3D11_BUFFER_DESC desc {
         .ByteWidth = uint(dataSize),
@@ -132,12 +146,12 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
     if(SUCCEEDED(hr))
         return;
 
-    Log::i().Print(Severity::Error, L"Compilation failed: 0x{:x}", uint(hr));
+    LogError(L"Compilation failed: 0x{:x}", uint(hr));
 
     if (errors) {
         const char* errorsText = static_cast<const char*>(errors->GetBufferPointer());
 
-        Log::i().Print(Severity::Error, "Compilation errors:\n{}", errorsText);
+        LogError("Compilation errors:\n{}", errorsText);
     }
 
 #ifndef _DEBUG
@@ -153,6 +167,8 @@ void HandleFailedShaderCompile(HRESULT hr, ID3DBlob* errors) {
 
 [[nodiscard]] ShaderManager::AnyShaderComPtr ShaderManager::CompileShader(
     const std::wstring& filename, D3D11_SHADER_VERSION_TYPE st, const std::string& entrypoint) {
+    LogDebug(L"Compiling shader {}:{} (type #{})", filename, utf8_decode(entrypoint), int(st));
+
     ComPtr<ID3DBlob> blob = nullptr;
     while (blob == nullptr) {
         auto shaderContents = LoadShaderFile(filename);
@@ -192,6 +208,7 @@ void ShaderManager::LoadShadersArchive() {
     if (shadersZip_)
         return;
 
+    LogDebug("Loading shader archive...");
     const auto data = LoadResource(IDR_SHADERS);
 
     auto* const iss = new std::istringstream(
