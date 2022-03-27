@@ -265,3 +265,5 @@ temp/
 
 GW2Radial/include/git.h
 GW2Radial/include/github.h
+
+vcpkg_installed

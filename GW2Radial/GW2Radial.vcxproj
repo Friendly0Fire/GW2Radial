@@ -46,17 +46,20 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)ZipLib\Source\ZipLib;$(ProjectDir)DirectXTK\Inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)imgui\;$(ProjectDir)json\include;$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)ZipLib\Source\ZipLib;$(ProjectDir)DirectXTK\Inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -140,96 +143,54 @@ cd "$(ProjectDir)shaders"
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DirectXTK\Src\DDSTextureLoader.cpp" />
-    <ClCompile Include="DirectXTK\Src\WICTextureLoader.cpp" />
-    <ClCompile Include="imgui\backends\imgui_impl_dx11.cpp" />
-    <ClCompile Include="imgui\backends\imgui_impl_win32.cpp" />
-    <ClCompile Include="imgui\imgui.cpp" />
-    <ClCompile Include="imgui\imgui_demo.cpp" />
-    <ClCompile Include="imgui\imgui_draw.cpp" />
-    <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\ActivationKeybind.cpp" />
     <ClCompile Include="src\Condition.cpp" />
-    <ClCompile Include="src\ConfigurationFile.cpp" />
     <ClCompile Include="src\Core.cpp" />
     <ClCompile Include="src\CustomWheel.cpp" />
     <ClCompile Include="src\Direct3D11Loader.cpp" />
-    <ClCompile Include="src\ShaderManager.cpp" />
-    <ClCompile Include="src\FileSystem.cpp" />
-    <ClCompile Include="src\GFXSettings.cpp" />
-    <ClCompile Include="src\ImGuiExtensions.cpp" />
-    <ClCompile Include="src\ImGuiPopup.cpp" />
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Keybind.cpp" />
-    <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Marker.cpp" />
-    <ClCompile Include="src\Minidump.cpp" />
     <ClCompile Include="src\MiscTab.cpp" />
     <ClCompile Include="src\Mount.cpp" />
-    <ClCompile Include="src\MumbleLink.cpp" />
     <ClCompile Include="src\Novelty.cpp" />
     <ClCompile Include="src\ScanCode.cpp" />
     <ClCompile Include="src\SettingsMenu.cpp" />
     <ClCompile Include="src\UpdateCheck.cpp" />
-    <ClCompile Include="src\Utility.cpp" />
     <ClCompile Include="src\VSCB.cpp" />
     <ClCompile Include="src\Wheel.cpp" />
     <ClCompile Include="src\WheelElement.cpp" />
-    <ClCompile Include="xxhash\xxhash.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h" />
-    <ClInclude Include="imgui\backends\imgui_impl_dx11.h" />
-    <ClInclude Include="imgui\backends\imgui_impl_win32.h" />
-    <ClInclude Include="imgui\imconfig.h" />
-    <ClInclude Include="imgui\imgui.h" />
-    <ClInclude Include="imgui\imgui_internal.h" />
-    <ClInclude Include="imgui\imstb_rectpack.h" />
-    <ClInclude Include="imgui\imstb_textedit.h" />
-    <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="include\ActivationKeybind.h" />
     <ClInclude Include="include\Condition.h" />
-    <ClInclude Include="include\ConfigurationFile.h" />
-    <ClInclude Include="include\ConfigurationOption.h" />
     <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\CustomWheel.h" />
     <ClInclude Include="include\Defs.h" />
     <ClInclude Include="include\Direct3D11Inject.h" />
     <ClInclude Include="include\Direct3D11Loader.h" />
-    <ClInclude Include="include\renderdoc_app.h" />
-    <ClInclude Include="include\ShaderManager.h" />
     <ClInclude Include="include\Enums.h" />
-    <ClInclude Include="include\FileSystem.h" />
-    <ClInclude Include="include\GFXSettings.h" />
-    <ClInclude Include="include\ImGuiExtensions.h" />
-    <ClInclude Include="include\ImGuiPopup.h" />
     <ClInclude Include="include\Input.h" />
     <ClInclude Include="include\Keybind.h" />
     <ClInclude Include="include\KeyCombo.h" />
-    <ClInclude Include="include\Log.h" />
     <ClInclude Include="include\Main.h" />
     <ClInclude Include="include\Marker.h" />
     <ClInclude Include="include\Misc.h" />
     <ClInclude Include="include\MiscTab.h" />
     <ClInclude Include="include\Mount.h" />
-    <ClInclude Include="include\MumbleLink.h" />
     <ClInclude Include="include\Novelty.h" />
     <ClInclude Include="include\Resource.h" />
     <ClInclude Include="include\ScanCode.h" />
     <ClInclude Include="include\SettingsMenu.h" />
-    <ClInclude Include="include\Singleton.h" />
     <ClInclude Include="include\Tag.h" />
     <ClInclude Include="include\UpdateCheck.h" />
-    <ClInclude Include="include\Utility.h" />
     <ClInclude Include="include\Version.h" />
     <ClInclude Include="include\VSCB.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
-    <ClInclude Include="include\Win.h" />
     <ClInclude Include="loader-core\include\gw2al_api.h" />
-    <ClInclude Include="simpleini\SimpleIni.h" />
-    <ClInclude Include="xxhash\xxhash.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\readme.md">
@@ -239,9 +200,9 @@ cd "$(ProjectDir)shaders"
     </CopyFileToFolders>
     <None Include="art\finals\rcdata1.bin" />
     <None Include="Main.def" />
-    <None Include="packages.config" />
     <None Include="rt_rcdat.bin" />
     <None Include="shaders\common.hlsli" />
+    <None Include="vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
@@ -322,21 +283,10 @@ cd "$(ProjectDir)shaders"
     <Font Include="art\Fonts\SourceSansPro-Regular.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="tinyxml2\tinyxml2\tinyxml2.vcxproj">
-      <Project>{d1c528b6-aa02-4d29-9d61-dc08e317a70d}</Project>
-    </ProjectReference>
-    <ProjectReference Include="ziplib\Source\ZipLib\ZipLib.vcxproj">
-      <Project>{5c9fd859-ddf9-4510-8397-b329b0ae8c48}</Project>
+    <ProjectReference Include="common\GW2Common.vcxproj">
+      <Project>{1ad7929b-fe1e-4fa2-be57-df9b0fc1526d}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\glm.0.9.9.800\build\native\glm.targets" Condition="Exists('..\packages\glm.0.9.9.800\build\native\glm.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\glm.0.9.9.800\build\native\glm.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\glm.0.9.9.800\build\native\glm.targets'))" />
-  </Target>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

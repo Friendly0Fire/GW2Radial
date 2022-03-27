@@ -3,6 +3,7 @@
 #include <ImGuiExtensions.h>
 #include <SettingsMenu.h>
 #include <ShaderManager.h>
+#include <Graphics.h>
 
 namespace GW2Radial
 {

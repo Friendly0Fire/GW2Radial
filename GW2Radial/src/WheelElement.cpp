@@ -2,7 +2,7 @@
 #include <Core.h>
 #include <Utility.h>
 #include <Wheel.h>
-#include <IconFontCppHeaders/IconsFontAwesome5.h>
+#include <common/IconFontCppHeaders/IconsFontAwesome5.h>
 #include <ShaderManager.h>
 #include <VSCB.h>
 

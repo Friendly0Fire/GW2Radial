@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <Main.h>
-#include <xxhash/xxhash.h>
+#include <xxhash.h>
 #include <d3d11.h>
 #include <functional>
 #include <Singleton.h>

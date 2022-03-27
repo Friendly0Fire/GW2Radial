@@ -1,7 +1,7 @@
 #include <MiscTab.h>
 #include <UpdateCheck.h>
 #include <ImGuiExtensions.h>
-#include <imgui/imgui.h>
+#include <imgui.h>
 #include <Core.h>
 #include <GFXSettings.h>
 #include <MumbleLink.h>

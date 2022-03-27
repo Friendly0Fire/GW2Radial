@@ -1,6 +1,6 @@
 #include <Condition.h>
 #include <MumbleLink.h>
-#include <IconFontCppHeaders/IconsFontAwesome5.h>
+#include <common/IconFontCppHeaders/IconsFontAwesome5.h>
 
 #include <utility>
 #include <sstream>

@@ -1,15 +1,3 @@
-[submodule "GW2Radial/imgui"]
-	path = GW2Radial/imgui
-	url = https://github.com/Friendly0Fire/imgui.git
-[submodule "GW2Radial/simpleini"]
-	path = GW2Radial/simpleini
-	url = https://github.com/brofield/simpleini.git
-[submodule "GW2Radial/xxhash"]
-	path = GW2Radial/xxhash
-	url = https://github.com/Cyan4973/xxHash.git
-[submodule "GW2Radial/json"]
-	path = GW2Radial/json
-	url = https://github.com/nlohmann/json.git
 [submodule "GW2Radial/cpp-semver"]
 	path = GW2Radial/cpp-semver
 	url = https://github.com/easz/cpp-semver.git
@@ -19,15 +7,6 @@
 [submodule "GW2Radial/d3d9_wrapper"]
 	path = GW2Radial/d3d9_wrapper
 	url = https://github.com/gw2-addon-loader/d3d9_wrapper.git
-[submodule "GW2Radial/ziplib"]
-	path = GW2Radial/ziplib
-	url = https://github.com/Friendly0Fire/ziplib.git
-[submodule "GW2Radial/tinyxml2"]
-	path = GW2Radial/tinyxml2
-	url = https://github.com/Friendly0Fire/tinyxml2.git
-[submodule "GW2Radial/IconFontCppHeaders"]
-	path = GW2Radial/IconFontCppHeaders
-	url = https://github.com/juliettef/IconFontCppHeaders
-[submodule "DirectXTK"]
-	path = GW2Radial/DirectXTK
-	url = https://github.com/microsoft/DirectXTK.git
+[submodule "GW2Radial/common"]
+	path = GW2Radial/common
+	url = git@github.com:Friendly0Fire/GW2Common.git

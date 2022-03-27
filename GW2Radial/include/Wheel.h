@@ -6,7 +6,7 @@
 #include <SettingsMenu.h>
 #include <Utility.h>
 #include <ShaderManager.h>
-
+#include <Graphics.h>
 #include <Input.h>
 
 namespace GW2Radial

@@ -1,12 +1,12 @@
 ﻿#include <CustomWheel.h>
 #include <Wheel.h>
-#include "DDSTextureLoader.h"
-#include "WICTextureLoader.h"
+#include <DirectXTK/DDSTextureLoader.h>
+#include <DirectXTK/WICTextureLoader.h>
 #include <filesystem>
 #include <fstream>
 #include <ImGuiPopup.h>
 #include <FileSystem.h>
-#include <backends/imgui_impl_dx11.h>
+#include <imgui_impl_dx11.h>
 #include <Core.h>
 
 namespace GW2Radial

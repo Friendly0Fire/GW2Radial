@@ -10,10 +10,10 @@
 
 struct RENDERDOC_API_1_5_0;
 
+class ShaderManager;
+
 namespace GW2Radial
 {
-
-class ShaderManager;
 
 class Core : public Singleton<Core>
 {

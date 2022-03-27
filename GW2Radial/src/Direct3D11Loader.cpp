@@ -14,8 +14,6 @@ typedef struct com_orig_obj
 	com_vtable* vtable;
 	union
 	{
-		IDirect3D9* orig_d3d9;
-		IDirect3DDevice9* orig_dev;
 		ID3D11Device5* orig_dev11;
 		IDXGISwapChain4* orig_swc;
 		IDXGIFactory5* orig_dxgi;

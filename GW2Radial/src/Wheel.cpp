@@ -6,7 +6,7 @@
 #include <imgui.h>
 #include <utility>
 #include <Input.h>
-#include "../imgui/imgui_internal.h"
+#include <imgui_internal.h>
 #include <algorithm>
 #include <GFXSettings.h>
 #include <MumbleLink.h>

@@ -20,7 +20,7 @@ enum class MountType : uint
 	FIRST = RAPTOR,
 	LAST = TURTLE
 };
-const unsigned int MountTypeCount = 7;
+const unsigned int MountTypeCount = std::underlying_type_t<MountType>(MountType::LAST) + 1;
 
 enum class MarkerType : uint
 {
@@ -47,22 +47,6 @@ enum class NoveltyType : uint
 	FIRST = CHAIR,
 	LAST = TONIC
 };
-const unsigned int NoveltyTypeCount = 6;
-
-template<typename T>
-concept enum_with_none = requires(T && t) {
-	requires std::is_enum_v<T>;
-	T::NONE;
-};
-
-template<enum_with_none Enum>
-constexpr bool notNone(Enum e) {
-	return e != Enum::NONE;
-}
-
-template<enum_with_none Enum>
-constexpr bool isNone(Enum e) {
-	return e == Enum::NONE;
-}
+const unsigned int NoveltyTypeCount = std::underlying_type_t<NoveltyType>(NoveltyType::LAST) + 1;
 
 }
