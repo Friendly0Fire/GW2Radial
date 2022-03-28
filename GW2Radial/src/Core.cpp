@@ -1,8 +1,8 @@
 #include <Core.h>
 #include <Direct3D11Loader.h>
 #include <imgui.h>
-#include <imgui_impl_dx11.h>
-#include <imgui_impl_win32.h>
+#include <backends/imgui_impl_dx11.h>
+#include <backends/imgui_impl_win32.h>
 #include <Input.h>
 #include <ConfigurationFile.h>
 #include <Wheel.h>

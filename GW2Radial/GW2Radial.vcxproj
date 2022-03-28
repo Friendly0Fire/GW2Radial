@@ -46,14 +46,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(ProjectDir)common\imgui;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(ProjectDir)common\imgui;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>

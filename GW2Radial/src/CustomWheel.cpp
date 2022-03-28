@@ -6,7 +6,8 @@
 #include <fstream>
 #include <ImGuiPopup.h>
 #include <FileSystem.h>
-#include <imgui_impl_dx11.h>
+#include <ImGuiExtensions.h>
+#include <backends/imgui_impl_dx11.h>
 #include <Core.h>
 
 namespace GW2Radial
@@ -98,9 +99,10 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blen
 	imData.DisplayPos = ImVec2(0.0f, 0.0f);
 	imData.DisplaySize = io.DisplaySize;
 
-	ImGui_ImplDX11_OverrideBlendState(blendState);
-	ImGui_ImplDX11_RenderDrawData(&imData);
-	ImGui_ImplDX11_OverrideBlendState();
+	{
+		ImGuiBlendStateOverride ov(blendState);
+		ImGui_ImplDX11_RenderDrawData(&imData);
+	}
 
 	ctx->OMSetRenderTargets(1, oldRt.GetAddressOf(), oldDs.Get());
 

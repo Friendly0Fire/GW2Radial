@@ -210,18 +210,18 @@ bool Condition::DrawMenu(const char* category, MenuResult& mr, bool isFirst, boo
 
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() * 0.75f);
 
-    if(ImGui::Button(reinterpret_cast<const char*>((ICON_FA_TIMES + suffixu8).c_str())))
+    if(ImGui::Button(reinterpret_cast<const char*>((reinterpret_cast<const char8_t*>(ICON_FA_TIMES) + suffixu8).c_str())))
         mr = MenuResult::DELETE_ITEM;
 
     if(!isFirst) {
         ImGui::SameLine();
-        if(ImGui::Button(reinterpret_cast<const char*>((ICON_FA_ARROW_UP + suffixu8).c_str())))
+        if(ImGui::Button(reinterpret_cast<const char*>((reinterpret_cast<const char8_t*>(ICON_FA_ARROW_UP) + suffixu8).c_str())))
             mr = MenuResult::MOVE_UP;
     }
 
     if(!isLast) {
         ImGui::SameLine();
-        if(ImGui::Button(reinterpret_cast<const char*>((ICON_FA_ARROW_DOWN + suffixu8).c_str())))
+        if(ImGui::Button(reinterpret_cast<const char*>((reinterpret_cast<const char8_t*>(ICON_FA_ARROW_DOWN) + suffixu8).c_str())))
             mr = MenuResult::MOVE_DOWN;
     }
 
