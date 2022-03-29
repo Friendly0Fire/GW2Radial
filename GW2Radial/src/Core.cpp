@@ -23,9 +23,8 @@
 #include <Log.h>
 #include <common/IconFontCppHeaders/IconsFontAwesome5.h>
 #include <Version.h>
-#include <renderdoc_app.h>
 
-LONG WINAPI GW2RadialTopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
+LONG WINAPI GW2TopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
 
 namespace GW2Radial
 {
@@ -38,8 +37,8 @@ void Core::Init(HMODULE dll)
 #endif
 	{
         // Install our own exception handler to automatically log minidumps.
-        AddVectoredExceptionHandler(1, GW2RadialTopLevelFilter);
-	    SetUnhandledExceptionFilter(GW2RadialTopLevelFilter);
+        AddVectoredExceptionHandler(1, GW2TopLevelFilter);
+	    SetUnhandledExceptionFilter(GW2TopLevelFilter);
 	}
 
 	i().dllModule_ = dll;
@@ -164,16 +163,7 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 	device_->GetImmediateContext(&context_);
 	swc_ = swc;
 
-#if _DEBUG
-	if (HMODULE mod = GetModuleHandleA("renderdoc.dll"))
-	{
-		pRENDERDOC_GetAPI RENDERDOC_GetAPI =
-			(pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
-		int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void**)&rdoc_);
-		if (ret != 1)
-			rdoc_ = nullptr;
-	}
-#endif
+	RenderDocCapture::Init(device_);
 
 	context_->QueryInterface(annotations_.ReleaseAndGetAddressOf());
 

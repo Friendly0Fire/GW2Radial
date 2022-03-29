@@ -143,19 +143,14 @@ cd "$(ProjectDir)shaders"
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\ActivationKeybind.cpp" />
-    <ClCompile Include="src\Condition.cpp" />
     <ClCompile Include="src\Core.cpp" />
     <ClCompile Include="src\CustomWheel.cpp" />
     <ClCompile Include="src\Direct3D11Loader.cpp" />
-    <ClCompile Include="src\Input.cpp" />
-    <ClCompile Include="src\Keybind.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Marker.cpp" />
     <ClCompile Include="src\MiscTab.cpp" />
     <ClCompile Include="src\Mount.cpp" />
     <ClCompile Include="src\Novelty.cpp" />
-    <ClCompile Include="src\ScanCode.cpp" />
     <ClCompile Include="src\SettingsMenu.cpp" />
     <ClCompile Include="src\UpdateCheck.cpp" />
     <ClCompile Include="src\VSCB.cpp" />
@@ -164,17 +159,11 @@ cd "$(ProjectDir)shaders"
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h" />
-    <ClInclude Include="include\ActivationKeybind.h" />
-    <ClInclude Include="include\Condition.h" />
     <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\CustomWheel.h" />
-    <ClInclude Include="include\Defs.h" />
     <ClInclude Include="include\Direct3D11Inject.h" />
     <ClInclude Include="include\Direct3D11Loader.h" />
     <ClInclude Include="include\Enums.h" />
-    <ClInclude Include="include\Input.h" />
-    <ClInclude Include="include\Keybind.h" />
-    <ClInclude Include="include\KeyCombo.h" />
     <ClInclude Include="include\Main.h" />
     <ClInclude Include="include\Marker.h" />
     <ClInclude Include="include\Misc.h" />
@@ -182,7 +171,6 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\Mount.h" />
     <ClInclude Include="include\Novelty.h" />
     <ClInclude Include="include\Resource.h" />
-    <ClInclude Include="include\ScanCode.h" />
     <ClInclude Include="include\SettingsMenu.h" />
     <ClInclude Include="include\Tag.h" />
     <ClInclude Include="include\UpdateCheck.h" />

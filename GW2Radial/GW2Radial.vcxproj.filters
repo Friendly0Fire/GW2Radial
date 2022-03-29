@@ -26,14 +26,11 @@
     <Filter Include="Source Files\Radials">
       <UniqueIdentifier>{8fa92bfb-91a9-4631-9e79-04259d80efbd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Input">
-      <UniqueIdentifier>{0f39780e-489a-4709-ac5b-d8ad1345dc44}</UniqueIdentifier>
+    <Filter Include="Source Files\Utils">
+      <UniqueIdentifier>{5066aeab-7442-4db0-8d6e-c7f444556d3b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\UI">
       <UniqueIdentifier>{3f857490-1fdb-48ad-9d0a-38a1e2772fda}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Utils">
-      <UniqueIdentifier>{5066aeab-7442-4db0-8d6e-c7f444556d3b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -64,29 +61,14 @@
     <ClCompile Include="src\CustomWheel.cpp">
       <Filter>Source Files\Radials</Filter>
     </ClCompile>
-    <ClCompile Include="src\Input.cpp">
-      <Filter>Source Files\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Keybind.cpp">
-      <Filter>Source Files\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ScanCode.cpp">
-      <Filter>Source Files\Input</Filter>
-    </ClCompile>
     <ClCompile Include="src\SettingsMenu.cpp">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
     <ClCompile Include="src\MiscTab.cpp">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
-    <ClCompile Include="src\Condition.cpp">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="src\UpdateCheck.cpp">
       <Filter>Source Files\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ActivationKeybind.cpp">
-      <Filter>Source Files\Input</Filter>
     </ClCompile>
     <ClCompile Include="src\VSCB.cpp">
       <Filter>Source Files\Radials</Filter>
@@ -132,26 +114,11 @@
     <ClInclude Include="include\CustomWheel.h">
       <Filter>Source Files\Radials</Filter>
     </ClInclude>
-    <ClInclude Include="include\Input.h">
-      <Filter>Source Files\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Keybind.h">
-      <Filter>Source Files\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ActivationKeybind.h">
-      <Filter>Source Files\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ScanCode.h">
-      <Filter>Source Files\Input</Filter>
-    </ClInclude>
     <ClInclude Include="include\SettingsMenu.h">
       <Filter>Source Files\UI</Filter>
     </ClInclude>
     <ClInclude Include="include\MiscTab.h">
       <Filter>Source Files\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Condition.h">
-      <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="include\Misc.h">
       <Filter>Source Files\Utils</Filter>
@@ -161,12 +128,6 @@
     </ClInclude>
     <ClInclude Include="include\Tag.h">
       <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="include\KeyCombo.h">
-      <Filter>Source Files\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Defs.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Version.h">
       <Filter>Source Files\Utils</Filter>

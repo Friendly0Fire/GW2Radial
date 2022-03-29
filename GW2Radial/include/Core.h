@@ -8,8 +8,6 @@
 #include <d3d11_1.h>
 #include <dxgi.h>
 
-struct RENDERDOC_API_1_5_0;
-
 class ShaderManager;
 
 namespace GW2Radial
@@ -100,7 +98,5 @@ protected:
 	ComPtr<ID3DUserDefinedAnnotation> annotations_;
 
 	ComPtr<ID3D11RenderTargetView> backBufferRTV_;
-
-	RENDERDOC_API_1_5_0* rdoc_ = nullptr;
 };
 }
