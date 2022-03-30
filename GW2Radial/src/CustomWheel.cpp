@@ -15,7 +15,7 @@ namespace GW2Radial
 
 float CalcText(ImFont* font, const std::wstring& text)
 {
-	cref txt = utf8_encode(text);
+	const auto& txt = utf8_encode(text);
 
 	auto sz = font->CalcTextSizeA(100.f, FLT_MAX, 0.f, txt.c_str());
 
@@ -63,7 +63,7 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blen
 	const uint fgColor = 0xFFFFFFFF;
 	const uint bgColor = 0x00000000;
 
-	cref txt = utf8_encode(text);
+	const auto& txt = utf8_encode(text);
 
 	auto sz = font->CalcTextSizeA(fontSize, FLT_MAX, 0.f, txt.c_str());
 
@@ -111,7 +111,7 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blen
 
 Texture2D LoadCustomTexture(const std::filesystem::path& path)
 {
-	cref data = FileSystem::ReadFile(path);
+	const auto& data = FileSystem::ReadFile(path);
 	if(data.empty())
 		return {};
 
@@ -167,7 +167,7 @@ void CustomWheelsManager::Draw(ID3D11DeviceContext* ctx)
 	if(failedLoads_.empty())
 		return;
 
-	cref err = failedLoads_.back();
+	const auto& err = failedLoads_.back();
 
 	ImGuiPopup("Custom wheel configuration could not be loaded!")
         .Position({0.5f, 0.45f}).Size({0.35f, 0.2f})
@@ -180,7 +180,7 @@ void CustomWheelsManager::Draw(ID3D11DeviceContext* ctx)
 
 std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::path& configPath)
 {
-	cref dataFolder = configPath.parent_path();
+	const auto& dataFolder = configPath.parent_path();
 
 	auto fail = [&](const wchar_t* error)
 	{
@@ -188,25 +188,25 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 		return nullptr;
 	};
 
-	cref cfgSource = FileSystem::ReadFile(configPath);
+	const auto& cfgSource = FileSystem::ReadFile(configPath);
 	if(cfgSource.empty())
 		return nullptr;
 
 	CSimpleIniA ini(true);
-	cref loadResult = ini.LoadData(reinterpret_cast<const char*>(cfgSource.data()), cfgSource.size());
+	const auto& loadResult = ini.LoadData(reinterpret_cast<const char*>(cfgSource.data()), cfgSource.size());
 	if(loadResult != SI_OK)
 		return fail(L"Invalid INI file");
 
-	cref general = *ini.GetSection("General");
-	cref wheelDisplayName = general.find("display_name");
-	cref wheelNickname = general.find("nickname");
+	const auto& general = *ini.GetSection("General");
+	const auto& wheelDisplayName = general.find("display_name");
+	const auto& wheelNickname = general.find("nickname");
 
 	if(wheelDisplayName == general.end())
 		return fail(L"Missing field display_name");
 	if(wheelNickname == general.end())
 		return fail(L"Missing field nickname");
 
-	if(std::any_of(customWheels_.begin(), customWheels_.end(), [&](cref w)
+	if(std::any_of(customWheels_.begin(), customWheels_.end(), [&](const auto& w)
 	{
 	    return w->nickname() == wheelNickname->second;
 	}))
@@ -224,19 +224,19 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 	std::vector<CustomElementSettings> elements;
 	elements.reserve(sections.size());
 	float maxTextWidth = 0.f;
-	for(cref sec : sections)
+	for(const auto& sec : sections)
 	{
 	    if(_stricmp(sec.pItem, "General") == 0)
 			continue;
 
-		cref element = *ini.GetSection(sec.pItem);
+		const auto& element = *ini.GetSection(sec.pItem);
 
-		cref elementName = element.find("name");
-		cref elementColor = element.find("color");
-		cref elementIcon = element.find("icon");
-		cref elementShadow = element.find("shadow_strength");
-		cref elementColorize = element.find("colorize_strength");
-		cref elementPremultipliedAlpha = element.find("premultiply_alpha");
+		const auto& elementName = element.find("name");
+		const auto& elementColor = element.find("color");
+		const auto& elementIcon = element.find("icon");
+		const auto& elementShadow = element.find("shadow_strength");
+		const auto& elementColorize = element.find("colorize_strength");
+		const auto& elementPremultipliedAlpha = element.find("premultiply_alpha");
 
 		fVector4 color { 1.f, 1.f, 1.f, 1.f };
 		if(elementColor != element.end())
@@ -245,7 +245,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 			SplitString(elementColor->second, ",", colorElems.begin());
 
 			size_t i = 0;
-			for(cref c : colorElems)
+			for(const auto& c : colorElems)
 				reinterpret_cast<float*>(&color)[i++] = float(atof(c.c_str()) / 255.f);
 		}
 
@@ -306,7 +306,7 @@ void CustomWheelsManager::Reload()
 	customWheelNextId_ = CustomWheelStartId;
 
     if(!customWheels_.empty()) {
-	    wheels_.erase(std::remove_if(wheels_.begin(), wheels_.end(), [&](cref ptr)
+	    wheels_.erase(std::remove_if(wheels_.begin(), wheels_.end(), [&](const auto& ptr)
 	    {
 		    return std::find(customWheels_.begin(), customWheels_.end(), ptr.get()) != customWheels_.end();
 	    }), wheels_.end());
@@ -331,7 +331,7 @@ void CustomWheelsManager::Reload()
 				}
 			};
 
-			for (cref entry : std::filesystem::directory_iterator(folderBase))
+			for (const auto& entry : std::filesystem::directory_iterator(folderBase))
 			{
 				if (!entry.is_directory() && entry.path().extension() != L".zip")
 					continue;
@@ -341,7 +341,7 @@ void CustomWheelsManager::Reload()
 					addWheel(configFile);
 				else if (auto dirs = FileSystem::IterateZipFolders(entry.path()); !dirs.empty())
 				{
-					for (cref subdir : dirs)
+					for (const auto& subdir : dirs)
 					{
 						std::filesystem::path subdirCfgFile = subdir / L"config.ini";
 						if (FileSystem::Exists(subdirCfgFile))

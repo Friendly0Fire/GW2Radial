@@ -25,7 +25,7 @@ template<>
 void Wheel::Setup<Marker>()
 {
 	SetAlwaysResetCursorPositionBeforeKeyPress(true);
-	for (cref type : data)
+	for (const auto& type : data)
 		AddElement(std::make_unique<Marker>(type.first));
 }
 
@@ -41,7 +41,7 @@ ObjectMarker::ObjectMarker(MarkerType m)
 template<>
 void Wheel::Setup<ObjectMarker>()
 {
-	for (cref type : data)
+	for (const auto& type : data)
 		AddElement(std::make_unique<ObjectMarker>(type.first));
 }
 

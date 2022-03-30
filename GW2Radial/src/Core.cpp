@@ -26,6 +26,11 @@
 
 LONG WINAPI GW2TopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
 
+BaseCore& GetBaseCore()
+{
+	return GW2Radial::Core::i();
+}
+
 namespace GW2Radial
 {
 void Core::Init(HMODULE dll)
@@ -252,7 +257,7 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 
 void Core::OnUpdate()
 {
-    cref mumble = MumbleLink::i();
+	const auto& mumble = MumbleLink::i();
 
 	uint map = mumble.mapId();
 	if(map != mapId_)

@@ -78,7 +78,7 @@ void Wheel::Setup<Mount>()
 
 	doBypassWheel_ = [this](WheelElement*& we) {
 		MountExtraData* data = static_cast<MountExtraData*>(extraData_.get());
-		cref mumble = MumbleLink::i();
+		const auto& mumble = MumbleLink::i();
 		if(data->quickDismountOption.value() && mumble.isMounted()) {
 			if (previousUsed_ != nullptr)
 				we = previousUsed_;

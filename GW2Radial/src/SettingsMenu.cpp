@@ -50,7 +50,7 @@ void SettingsMenu::Draw()
 				currentTab_ = implementers_.front();
 
 			if(ImGui::BeginTabBar("GW2RadialMainTabBar", ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_FittingPolicyScroll)) {
-			    for (cref i : implementers_)
+			    for (const auto& i : implementers_)
 			    {
 					if(!i->visible())
 						continue;

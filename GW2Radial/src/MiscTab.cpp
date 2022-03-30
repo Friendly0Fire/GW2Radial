@@ -44,7 +44,7 @@ void MiscTab::DrawMenu(Keybind**)
 		Core::i().ForceReloadWheels();
 
 #ifdef _DEBUG
-	cref pos = MumbleLink::i().position();
+	const auto& pos = MumbleLink::i().position();
 	ImGui::Text("position = %f, %f, %f", pos.x, pos.y, pos.z);
 
 	bool dpiScaling = GFXSettings::i().dpiScaling();

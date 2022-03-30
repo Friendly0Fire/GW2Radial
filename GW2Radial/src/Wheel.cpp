@@ -354,7 +354,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 void Wheel::OnUpdate() {
 	if (conditionallyDelayed_) {
 		if (conditionallyDelayedCustom_) {
-			cref mumble = MumbleLink::i();
+			const auto& mumble = MumbleLink::i();
 			if (mumble.gameHasFocus() && !mumble.isMapOpen()
 				&& aboveWater_.passes() && outOfCombat_.passes() && custom_.passes()) {
 				Input::i().SendKeybind(conditionallyDelayed_->keybind().keyCombo(), std::nullopt);
@@ -363,7 +363,7 @@ void Wheel::OnUpdate() {
 		} else {
 			const auto currentTime = TimeInMilliseconds();
 			if (currentTime <= conditionallyDelayedTime_ + maximumConditionalWaitTimeOption_.value() * 1000ull) {
-				cref mumble = MumbleLink::i();
+				const auto& mumble = MumbleLink::i();
 				if (mumble.gameHasFocus() && !mumble.isMapOpen()
 					&& aboveWater_.passes() && outOfCombat_.passes() && custom_.passes()) {
 					if (!conditionallyDelayedTestPasses_)
@@ -502,7 +502,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
 			}
 
 			{
-				cref io = ImGui::GetIO();
+				const auto& io = ImGui::GetIO();
 
 				ShaderManager::i().SetShaders(ctx, vs_, psCursor_);
 				ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
@@ -520,7 +520,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
 		if(conditionallyDelayed_ == nullptr) absDt = 0.5f - dt;
 		else
 			timeLeft = 1.f - (currentTime - conditionallyDelayedTime_) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
-	    cref io = ImGui::GetIO();
+		const auto& io = ImGui::GetIO();
 
 		ShaderManager::i().SetShaders(ctx, vs_, psDelayIndicator_);
 		ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
@@ -771,7 +771,7 @@ void Wheel::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<
 	if (SettingsMenu::i().isVisible()) {
 		bool isAnyElementBeingModified = keybind_.isBeingModified() || centralKeybind_.isBeingModified() ||
 			std::any_of(wheelElements_.begin(), wheelElements_.end(),
-													[](cref we) { return we->keybind().isBeingModified(); });
+													[](const auto& we) { return we->keybind().isBeingModified(); });
 
 		if (isAnyElementBeingModified) 	{
 			// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
@@ -781,7 +781,7 @@ void Wheel::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<
 			// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
 			fullKeybind.erase(ScanCode::LBUTTON);
 
-			for (cref ek : changedKeys) {
+			for (const auto& ek : changedKeys) {
 				if (IsSame(ek.sc, ScanCode::LBUTTON))
 					continue;
 
