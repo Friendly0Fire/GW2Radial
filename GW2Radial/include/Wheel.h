@@ -167,8 +167,8 @@ protected:
 	ComPtr<ID3D11SamplerState> borderSampler_;
 	ComPtr<ID3D11SamplerState> baseSampler_;
 
-	std::unique_ptr<Input::MouseMoveCallback> mouseMoveCallback_;
-	std::unique_ptr<Input::MouseButtonCallback> mouseButtonCallback_;
+	EventCallbackHandle mouseMoveCallbackID_;
+	EventCallbackHandle mouseButtonCallbackID_;
 
 	struct ExtraUI {
 	    std::function<void()> display, interaction, queuing, misc;

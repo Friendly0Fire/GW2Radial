@@ -61,6 +61,12 @@
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>
@@ -109,7 +115,7 @@ git describe --always --dirty --match "NOT A TAG" &gt;&gt; "$(ProjectDir)include
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;GW2Radial_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;SHADERS_DIR=LR"sd($(ProjectDir)shaders\)sd";_WIN32_WINNT=0x0600;$(GitHubDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IMGUI_USER_CONFIG=&lt;imcfg.h&gt;;NDEBUG;GW2Radial_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;SHADERS_DIR=LR"sd($(ProjectDir)shaders\)sd";_WIN32_WINNT=0x0600;$(GitHubDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -154,7 +160,9 @@ cd "$(ProjectDir)shaders"
     <ClCompile Include="src\SettingsMenu.cpp" />
     <ClCompile Include="src\UpdateCheck.cpp" />
     <ClCompile Include="src\VSCB.cpp" />
-    <ClCompile Include="src\Wheel.cpp" />
+    <ClCompile Include="src\Wheel.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_USER_CONFIG=&lt;imcfg.h&gt;;D3D_DEBUG_INFO;_DEBUG;GW2Radial_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;SHADERS_DIR=LR"sd($(ProjectDir)shaders\)sd";_WIN32_WINNT=0x0600;$(GitHubDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="src\WheelElement.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -273,6 +281,9 @@ cd "$(ProjectDir)shaders"
   <ItemGroup>
     <ProjectReference Include="common\GW2Common.vcxproj">
       <Project>{1ad7929b-fe1e-4fa2-be57-df9b0fc1526d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="common\ziplib\Source\ZipLib\ZipLib.vcxproj">
+      <Project>{5c9fd859-ddf9-4510-8397-b329b0ae8c48}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

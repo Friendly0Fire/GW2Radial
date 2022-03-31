@@ -86,8 +86,7 @@ void Core::OnInputLanguageChange()
 	Log::i().Print(Severity::Info, "Input language change detected, reloading...");
 	SettingsMenu::i().OnInputLanguageChange();
 
-	for (auto* ilcl : ilcListeners_)
-		ilcl->OnInputLanguageChange();
+	languageChangeEvent_();
 }
 
 UINT Core::GetDpiForWindow(HWND hwnd)
@@ -277,21 +276,8 @@ void Core::OnUpdate()
 	}
 }
 
-#ifdef _DEBUG
-#define DUMP_FIRST_RENDER
-#endif
 void Core::Draw()
 {
-#ifdef DUMP_FIRST_RENDER
-	static bool s_dumpRender = true;
-	bool isDumping = false;
-	if (GetAsyncKeyState(VK_F8) && rdoc())
-	{
-		isDumping = true;
-		rdoc()->StartFrameCapture(device_.Get(), nullptr);
-	}
-#endif
-
 	if (annotations_)
 		annotations_->BeginEvent(L"GW2Radial");
 

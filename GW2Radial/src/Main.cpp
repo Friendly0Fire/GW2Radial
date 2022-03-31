@@ -4,6 +4,16 @@
 #include <gw2al_api.h>
 #include <gw2al_d3d9_wrapper.h>
 
+const char* GetAddonName()
+{
+	return "GW2Radial";
+}
+
+const wchar_t* GetAddonNameW()
+{
+	return L"GW2Radial";
+}
+
 gw2al_addon_dsc gAddonDeps[] = {
 	GW2AL_CORE_DEP_ENTRY,
 	D3D_WRAPPER_DEP_ENTRY,

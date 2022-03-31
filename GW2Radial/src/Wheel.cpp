@@ -62,11 +62,8 @@ Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::st
 	outOfCombat_.test = []() { return MumbleLink::i().isInCombat(); };
 	custom_.test = custom_.toggleOffTest = []() { return false; };
 
-	mouseMoveCallback_ = std::make_unique<Input::MouseMoveCallback>([this](bool& rv) { OnMouseMove(rv); });
-	Input::i().AddMouseMoveCallback(mouseMoveCallback_.get());
-
-	mouseButtonCallback_ = std::make_unique<Input::MouseButtonCallback>([this](EventKey ek, bool& rv) { OnMouseButton(ek.sc, ek.down, rv); });
-	Input::i().AddMouseButtonCallback(mouseButtonCallback_.get());
+	mouseMoveCallbackID_ = Input::i().mouseMoveEvent().AddCallback([this](bool& rv) { OnMouseMove(rv); });
+	mouseButtonCallbackID_ = Input::i().mouseButtonEvent().AddCallback([this](EventKey ek, bool& rv) { OnMouseButton(ek.sc, ek.down, rv); });
 
 	SettingsMenu::i().AddImplementer(this);
 
@@ -101,8 +98,8 @@ Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::st
 Wheel::~Wheel()
 {
 	Input::i([&](auto& i) {
-		i.RemoveMouseMoveCallback(mouseMoveCallback_.get());
-		i.RemoveMouseButtonCallback(mouseButtonCallback_.get());
+		i.mouseMoveEvent().RemoveCallback(std::move(mouseMoveCallbackID_));
+		i.mouseButtonEvent().RemoveCallback(std::move(mouseButtonCallbackID_));
 	});
 	SettingsMenu::i([&](auto& i) { i.RemoveImplementer(this); });
 }
