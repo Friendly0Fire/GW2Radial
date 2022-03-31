@@ -104,6 +104,7 @@ void Core::InternalInit()
 		getDpiForWindow_ = (GetDpiForWindow_t)GetProcAddress(user32_, "GetDpiForWindow");
 
 	imguiContext_ = ImGui::CreateContext();
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 }
 
 void Core::OnFocusLost()
