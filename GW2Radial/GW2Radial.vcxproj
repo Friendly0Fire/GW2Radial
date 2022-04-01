@@ -260,13 +260,6 @@ cd "$(ProjectDir)shaders"
     <Image Include="art\Finals\x_marker.dds" />
   </ItemGroup>
   <ItemGroup>
-    <Font Include="art\Fonts\consolas.ttf" />
-    <Font Include="art\Fonts\fa-solid-900.ttf" />
-    <Font Include="art\Fonts\SourceSansPro-Black.ttf" />
-    <Font Include="art\Fonts\SourceSansPro-Italic.ttf" />
-    <Font Include="art\Fonts\SourceSansPro-Regular.ttf" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="common\GW2Common.vcxproj">
       <Project>{1ad7929b-fe1e-4fa2-be57-df9b0fc1526d}</Project>
     </ProjectReference>
