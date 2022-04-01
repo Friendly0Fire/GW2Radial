@@ -8,20 +8,11 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{cad8217e-51ec-44e9-9e81-95b3f68e501c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="External">
-      <UniqueIdentifier>{01e91929-46f3-49cd-aa62-18460fc48da0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\Addon Loader">
-      <UniqueIdentifier>{8e9a2f2e-98d0-4f9f-bd9e-71a04511ed25}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files\Assets">
       <UniqueIdentifier>{8aecf9fe-356d-4cc7-bf13-297bcef89f0f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource Files\Shaders">
       <UniqueIdentifier>{8ca3937f-5abb-4da6-a977-a0b326981260}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Graphics">
-      <UniqueIdentifier>{4cea065f-6844-493a-92bf-7b167c95b700}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Radials">
       <UniqueIdentifier>{8fa92bfb-91a9-4631-9e79-04259d80efbd}</UniqueIdentifier>
@@ -36,9 +27,6 @@
     </ClCompile>
     <ClCompile Include="src\Main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Direct3D11Loader.cpp">
-      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Wheel.cpp">
       <Filter>Source Files\Radials</Filter>
@@ -66,9 +54,6 @@
     <ClInclude Include="include\Resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="loader-core\include\gw2al_api.h">
-      <Filter>External\Addon Loader</Filter>
-    </ClInclude>
     <ClInclude Include="include\Core.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -77,12 +62,6 @@
     </ClInclude>
     <ClInclude Include="include\Main.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Direct3D11Inject.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Direct3D11Loader.h">
-      <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\Wheel.h">
       <Filter>Source Files\Radials</Filter>
@@ -107,9 +86,6 @@
     </ClInclude>
     <ClInclude Include="include\Version.h">
       <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h">
-      <Filter>External\Addon Loader</Filter>
     </ClInclude>
     <ClInclude Include="include\VSCB.h">
       <Filter>Source Files\Radials</Filter>

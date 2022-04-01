@@ -7,6 +7,7 @@
 #include <Defs.h>
 #include <d3d11_1.h>
 #include <dxgi.h>
+#include <Direct3D11Loader.h>
 
 class ShaderManager;
 
@@ -69,5 +70,17 @@ protected:
 	ComPtr<ID3DUserDefinedAnnotation> annotations_;
 
 	ComPtr<ID3D11RenderTargetView> backBufferRTV_;
+
+	friend class RDirect3D11Loader;
+};
+
+class RDirect3D11Loader : public Direct3D11Loader
+{
+public:
+	// Inherited via Direct3D11Loader
+	virtual void PrePresentSwapChain() override;
+	virtual void PostCreateSwapChain(HWND hwnd, ID3D11Device* dev, IDXGISwapChain* swc) override;
+	virtual void PreResizeSwapChain() override;
+	virtual void PostResizeSwapChain(uint w, uint h) override;
 };
 }

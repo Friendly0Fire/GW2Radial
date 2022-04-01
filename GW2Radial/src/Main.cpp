@@ -33,11 +33,9 @@ gw2al_addon_dsc* gw2addon_get_description()
 
 gw2al_api_ret gw2addon_load(gw2al_core_vtable* core_api)
 {
-	GW2Radial::Direct3D11Inject::reset();
-	GW2Radial::Direct3D11Inject::i<GW2Radial::Direct3D11Loader>();
-    GW2Radial::Core::i().OnInjectorCreated();
-
-	GW2Radial::GetD3D11Loader()->Init(core_api);
+	Direct3D11Loader::reset();
+	Direct3D11Loader::i<GW2Radial::RDirect3D11Loader>();
+	Direct3D11Loader::i().Init(core_api);
 	return GW2AL_OK;
 }
 

@@ -46,14 +46,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(ProjectDir)common\imgui;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(ProjectDir)common\imgui;$(ProjectDir)common\d3d9_wrapper\include;$(ProjectDir)common\loader-core\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)cpp-semver\include;$(ProjectDir)loader-core\include;$(ProjectDir)d3d9_wrapper\include;$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(ProjectDir)common\imgui;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(ProjectDir)common\imgui;$(ProjectDir)common\d3d9_wrapper\include;$(ProjectDir)common\loader-core\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
     <TargetName>gw2addon_gw2radial</TargetName>
@@ -151,7 +151,6 @@ cd "$(ProjectDir)shaders"
   <ItemGroup>
     <ClCompile Include="src\Core.cpp" />
     <ClCompile Include="src\CustomWheel.cpp" />
-    <ClCompile Include="src\Direct3D11Loader.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Marker.cpp" />
     <ClCompile Include="src\Mount.cpp" />
@@ -163,11 +162,8 @@ cd "$(ProjectDir)shaders"
     <ClCompile Include="src\WheelElement.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="d3d9_wrapper\include\gw2al_d3d9_wrapper.h" />
     <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\CustomWheel.h" />
-    <ClInclude Include="include\Direct3D11Inject.h" />
-    <ClInclude Include="include\Direct3D11Loader.h" />
     <ClInclude Include="include\Enums.h" />
     <ClInclude Include="include\Main.h" />
     <ClInclude Include="include\Marker.h" />
@@ -179,7 +175,6 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\VSCB.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
-    <ClInclude Include="loader-core\include\gw2al_api.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\readme.md">

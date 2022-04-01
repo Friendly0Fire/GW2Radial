@@ -87,23 +87,8 @@ Core::~Core()
 	COM_RELEASE(device_);
 	COM_RELEASE(context_);
 
-	Direct3D11Inject::f([&](auto& i) {
-		i.prePresentSwapChainCallback = nullptr;
-		i.postCreateSwapChainCallback = nullptr;
-	});
-
 	if(user32_)
 		FreeLibrary(user32_);
-}
-
-void Core::OnInjectorCreated()
-{
-	auto& inject = Direct3D11Inject::i();
-
-	inject.postCreateSwapChainCallback = [this](HWND hwnd, ID3D11Device* dev, IDXGISwapChain* swc) { PostCreateSwapChain(hwnd, dev, swc); };
-	inject.prePresentSwapChainCallback = [this]() { Draw(); };
-	inject.preResizeSwapChainCallback = [this]() { PreResizeSwapChain(); };
-	inject.postResizeSwapChainCallback = [this](uint w, uint h) { PostResizeSwapChain(w, h); };
 }
 
 void Core::OnInputLanguageChange()
@@ -425,6 +410,26 @@ void Core::Draw()
 		rdoc()->EndFrameCapture(device_.Get(), nullptr);
 	}
 #endif
+}
+
+void RDirect3D11Loader::PrePresentSwapChain()
+{
+	Core::i().Draw();
+}
+
+void RDirect3D11Loader::PostCreateSwapChain(HWND hwnd, ID3D11Device* dev, IDXGISwapChain* swc)
+{
+	Core::i().PostCreateSwapChain(hwnd, dev, swc);
+}
+
+void RDirect3D11Loader::PreResizeSwapChain()
+{
+	Core::i().PreResizeSwapChain();
+}
+
+void RDirect3D11Loader::PostResizeSwapChain(uint w, uint h)
+{
+	Core::i().PostResizeSwapChain(w, h);
 }
 
 }
