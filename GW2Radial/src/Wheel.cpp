@@ -97,11 +97,11 @@ Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::st
 
 Wheel::~Wheel()
 {
-	Input::i([&](auto& i) {
+	Input::f([&](auto& i) {
 		i.mouseMoveEvent().RemoveCallback(std::move(mouseMoveCallbackID_));
 		i.mouseButtonEvent().RemoveCallback(std::move(mouseButtonCallbackID_));
 	});
-	SettingsMenu::i([&](auto& i) { i.RemoveImplementer(this); });
+	SettingsMenu::f([&](auto& i) { i.RemoveImplementer(this); });
 }
 
 void Wheel::UpdateHover()

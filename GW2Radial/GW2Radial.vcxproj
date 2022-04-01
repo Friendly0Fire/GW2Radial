@@ -154,11 +154,8 @@ cd "$(ProjectDir)shaders"
     <ClCompile Include="src\Direct3D11Loader.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Marker.cpp" />
-    <ClCompile Include="src\MiscTab.cpp" />
     <ClCompile Include="src\Mount.cpp" />
     <ClCompile Include="src\Novelty.cpp" />
-    <ClCompile Include="src\SettingsMenu.cpp" />
-    <ClCompile Include="src\UpdateCheck.cpp" />
     <ClCompile Include="src\VSCB.cpp" />
     <ClCompile Include="src\Wheel.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_USER_CONFIG=&lt;imcfg.h&gt;;D3D_DEBUG_INFO;_DEBUG;GW2Radial_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;SHADERS_DIR=LR"sd($(ProjectDir)shaders\)sd";_WIN32_WINNT=0x0600;$(GitHubDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -174,14 +171,10 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\Enums.h" />
     <ClInclude Include="include\Main.h" />
     <ClInclude Include="include\Marker.h" />
-    <ClInclude Include="include\Misc.h" />
-    <ClInclude Include="include\MiscTab.h" />
     <ClInclude Include="include\Mount.h" />
     <ClInclude Include="include\Novelty.h" />
     <ClInclude Include="include\Resource.h" />
-    <ClInclude Include="include\SettingsMenu.h" />
     <ClInclude Include="include\Tag.h" />
-    <ClInclude Include="include\UpdateCheck.h" />
     <ClInclude Include="include\Version.h" />
     <ClInclude Include="include\VSCB.h" />
     <ClInclude Include="include\Wheel.h" />

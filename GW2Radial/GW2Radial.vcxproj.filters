@@ -29,9 +29,6 @@
     <Filter Include="Source Files\Utils">
       <UniqueIdentifier>{5066aeab-7442-4db0-8d6e-c7f444556d3b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\UI">
-      <UniqueIdentifier>{3f857490-1fdb-48ad-9d0a-38a1e2772fda}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core.cpp">
@@ -60,15 +57,6 @@
     </ClCompile>
     <ClCompile Include="src\CustomWheel.cpp">
       <Filter>Source Files\Radials</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SettingsMenu.cpp">
-      <Filter>Source Files\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MiscTab.cpp">
-      <Filter>Source Files\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="src\UpdateCheck.cpp">
-      <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="src\VSCB.cpp">
       <Filter>Source Files\Radials</Filter>
@@ -113,18 +101,6 @@
     </ClInclude>
     <ClInclude Include="include\CustomWheel.h">
       <Filter>Source Files\Radials</Filter>
-    </ClInclude>
-    <ClInclude Include="include\SettingsMenu.h">
-      <Filter>Source Files\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="include\MiscTab.h">
-      <Filter>Source Files\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Misc.h">
-      <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="include\UpdateCheck.h">
-      <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="include\Tag.h">
       <Filter>Source Files\Utils</Filter>

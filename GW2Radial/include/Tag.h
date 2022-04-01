@@ -1,4 +1,4 @@
 #pragma once
-#include <string>
+#include <neargye/semver.hpp>
 
-static const std::string CurrentVersion = "v2.2.1";
+static constexpr semver::version CurrentVersion{ 2, 2, 1 };

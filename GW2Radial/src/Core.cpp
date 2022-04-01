@@ -23,6 +23,7 @@
 #include <Log.h>
 #include <common/IconFontCppHeaders/IconsFontAwesome5.h>
 #include <Version.h>
+#include <MiscTab.h>
 
 LONG WINAPI GW2TopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionInfo);
 
@@ -33,6 +34,30 @@ BaseCore& GetBaseCore()
 
 namespace GW2Radial
 {
+
+class RadialMiscTab : public ::MiscTab
+{
+	bool reloadOnFocus_ = false;
+public:
+	void AdditionalGUI() override
+	{
+		ImGuiTitle("Toggle Menu Visibility");
+
+		for (auto& wheel : Core::i().wheels()) {
+			ImGuiConfigurationWrapper(ImGui::Checkbox, wheel->visibleInMenuOption());
+		}
+
+		ImGuiTitle("Custom Wheel Tools");
+
+		ImGui::Checkbox("Reload custom wheels on focus", &reloadOnFocus_);
+
+		if (ImGui::Button("Reload custom wheels"))
+			Core::i().ForceReloadWheels();
+	}
+
+	bool reloadOnFocus() const { return reloadOnFocus_; }
+};
+
 void Core::Init(HMODULE dll)
 {
 	Log::i().Print(Severity::Info, "This is GW2Radial {}", GW2RADIAL_VER);
@@ -62,7 +87,7 @@ Core::~Core()
 	COM_RELEASE(device_);
 	COM_RELEASE(context_);
 
-	Direct3D11Inject::i([&](auto& i) {
+	Direct3D11Inject::f([&](auto& i) {
 		i.prePresentSwapChainCallback = nullptr;
 		i.postCreateSwapChainCallback = nullptr;
 	});
@@ -105,6 +130,8 @@ void Core::InternalInit()
 
 	imguiContext_ = ImGui::CreateContext();
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+
+	UpdateCheck::init(L"Friendly0Fire/GW2Radial");
 }
 
 void Core::OnFocusLost()
@@ -121,7 +148,7 @@ void Core::OnFocus() {
 
 	Input::i().OnFocus();
 
-	if(MiscTab::i().reloadOnFocus())
+	if(RadialMiscTab::i<RadialMiscTab>().reloadOnFocus())
 		forceReloadWheels_ = true;
 }
 
@@ -184,10 +211,10 @@ void Core::PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* 
 
 	firstFrame_ = true;
 
-	ShaderManager::i(std::make_unique<ShaderManager>(device_, IDR_SHADERS, dllModule_, SHADERS_DIR));
+	ShaderManager::init(device_, IDR_SHADERS, dllModule_, SHADERS_DIR);
 
 	UpdateCheck::i().CheckForUpdates();
-	MiscTab::i();
+	MiscTab::init();
 
 	auto bgTex = std::make_shared<Texture2D>(std::move(CreateTextureFromResource(device_.Get(), Core::i().dllModule(), IDR_BG)));
 	wheels_.emplace_back(Wheel::Create<Mount>(bgTex, "mounts", "Mounts"));

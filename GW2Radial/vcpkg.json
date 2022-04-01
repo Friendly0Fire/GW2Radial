@@ -8,6 +8,7 @@
     "nlohmann-json",
     "simpleini",
     "tinyxml2",
-    "xxhash"
+    "xxhash",
+    "neargye-semver"
   ]
 }
