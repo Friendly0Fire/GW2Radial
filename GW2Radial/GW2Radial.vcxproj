@@ -83,7 +83,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
-      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(ProjectDir)common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (
@@ -127,7 +127,7 @@ git describe --always --dirty --match "NOT A TAG" &gt;&gt; "$(ProjectDir)include
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
-      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(ProjectDir)common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (

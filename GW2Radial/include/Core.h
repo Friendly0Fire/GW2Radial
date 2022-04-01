@@ -17,70 +17,32 @@ namespace GW2Radial
 class Core : public BaseCore, public Singleton<Core>
 {
 public:
-	static void Init(HMODULE dll);
-	static void Shutdown();
-
-	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-	Core() = default;
-	~Core();
-
 	void ForceReloadWheels() { forceReloadWheels_ = true; }
 
 	const auto& wheels() const { return wheels_; }
 
-	void OnInjectorCreated();
-
-	void OnInputLanguageChange();
-
-	UINT GetDpiForWindow(HWND hwnd);
-
-	void Draw();
-
 protected:
-	void InternalInit();
-	void OnFocusLost();
-	void OnFocus();
-	void OnUpdate();
+	void InnerDraw() override;
+	void InnerUpdate() override;
+	void InnerFrequentUpdate() override;
+	void InnerOnFocus() override;
+	void InnerOnFocusLost() override;
+	void InnerInitPreImGui() override;
+	void InnerInitPostImGui() override;
 
-	void PostCreateSwapChain(HWND hwnd, ID3D11Device* device, IDXGISwapChain* swc);
-	void PreResizeSwapChain();
-	void PostResizeSwapChain(uint w, uint h);
+	uint GetShaderArchiveID() const override { return IDR_SHADERS; }
+	const wchar_t* GetShaderDirectory() const override { return SHADERS_DIR; }
+	const wchar_t* GetGithubRepoSubUrl() const override { return L"Friendly0Fire/GW2Radial"; }
 
-	bool firstFrame_ = true;
 	bool forceReloadWheels_ = false;
 	uint mapId_ = 0;
 	std::wstring characterName_;
-	uint tickSkip_ = 0;
-	const uint TickSkipCount = 10;
-	uint longTickSkip_ = 0;
-	const uint LongTickSkipCount = 600;
 
 	std::vector<std::unique_ptr<Wheel>> wheels_;
 	std::unique_ptr<CustomWheelsManager> customWheels_;
 
 	std::unique_ptr<ConfigurationOption<bool>> firstMessageShown_;
 
-	ImGuiContext* imguiContext_ = nullptr;
-
-	using GetDpiForWindow_t = UINT (WINAPI *)(HWND hwnd);
-	HMODULE user32_ = 0;
-	GetDpiForWindow_t getDpiForWindow_ = nullptr;
-
-	ComPtr<ID3DUserDefinedAnnotation> annotations_;
-
-	ComPtr<ID3D11RenderTargetView> backBufferRTV_;
-
-	friend class RDirect3D11Loader;
-};
-
-class RDirect3D11Loader : public Direct3D11Loader
-{
-public:
-	// Inherited via Direct3D11Loader
-	virtual void PrePresentSwapChain() override;
-	virtual void PostCreateSwapChain(HWND hwnd, ID3D11Device* dev, IDXGISwapChain* swc) override;
-	virtual void PreResizeSwapChain() override;
-	virtual void PostResizeSwapChain(uint w, uint h) override;
+	std::shared_ptr<Texture2D> bgTex_;
 };
 }

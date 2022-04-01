@@ -10,6 +10,10 @@ const char* GetAddonName() { return "GW2Radial"; }
 const wchar_t* GetAddonNameW() { return L"GW2Radial"; }
 const char* GetAddonVersionString() { return GW2RADIAL_VER; }
 const semver::version& GetAddonVersion() { return CurrentVersion; }
+BaseCore& GetBaseCore()
+{
+	return GW2Radial::Core::i();
+}
 
 gw2al_addon_dsc gAddonDeps[] = {
 	GW2AL_CORE_DEP_ENTRY,
@@ -34,7 +38,6 @@ gw2al_addon_dsc* gw2addon_get_description()
 gw2al_api_ret gw2addon_load(gw2al_core_vtable* core_api)
 {
 	Direct3D11Loader::reset();
-	Direct3D11Loader::i<GW2Radial::RDirect3D11Loader>();
 	Direct3D11Loader::i().Init(core_api);
 	return GW2AL_OK;
 }

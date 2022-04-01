@@ -36,10 +36,3 @@
 #define IDR_MARKER7		267
 #define IDR_MARKER8		268
 #define IDR_MARKER9		269
-
-#define IDR_FONT		300
-#define IDR_FONT_BLACK	301
-#define IDR_FONT_ITALIC	302
-#define IDR_FONT_DRAW	303
-#define IDR_FONT_ICON	304
-#define IDR_FONT_MONO	305
