@@ -269,4 +269,5 @@ cd "$(ProjectDir)shaders"
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
+  <Import Condition=" '$(VCPKG_INSTALLATION_ROOT)' != '' " Project="$(VCPKG_INSTALLATION_ROOT)\scripts\buildsystems\msbuild\vcpkg.targets" />
 </Project>
