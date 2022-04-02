@@ -103,6 +103,21 @@ void Core::InnerInitPostImGui()
 	firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
 }
 
+void Core::InnerInternalInit()
+{
+	ULONG_PTR contextToken;
+	if (CoGetContextToken(&contextToken) == CO_E_NOTINITIALIZED) {
+		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+		if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
+			CriticalMessageBox(L"Could not initialize COM library: error code 0x%X.", hr);
+	}
+}
+
+void Core::InnerShutdown()
+{
+	CoUninitialize();
+}
+
 void Core::InnerUpdate()
 {
 	for (auto& wheel : wheels_)

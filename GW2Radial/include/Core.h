@@ -29,6 +29,8 @@ protected:
 	void InnerOnFocusLost() override;
 	void InnerInitPreImGui() override;
 	void InnerInitPostImGui() override;
+	void InnerInternalInit() override;
+	void InnerShutdown() override;
 
 	uint GetShaderArchiveID() const override { return IDR_SHADERS; }
 	const wchar_t* GetShaderDirectory() const override { return SHADERS_DIR; }

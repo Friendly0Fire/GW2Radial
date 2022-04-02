@@ -44,7 +44,6 @@ gw2al_api_ret gw2addon_load(gw2al_core_vtable* core_api)
 
 gw2al_api_ret gw2addon_unload(int gameExiting)
 {
-	GW2Radial::Core::Shutdown();
 	return GW2AL_OK;
 }
 
