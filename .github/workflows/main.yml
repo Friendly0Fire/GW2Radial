@@ -36,11 +36,6 @@ jobs:
       - name: Generate version information
         run: powershell "${env:GITHUB_WORKSPACE}\Version.ps1" -ref "${{github.ref}}" -sha "${{github.sha}}"
 
-      - uses: nuget/setup-nuget@v1
-        with:
-          nuget-version: '5.x'
-      - run: nuget restore "${env:GITHUB_WORKSPACE}\GW2Radial.sln"
-
       - name: Build
         run: msbuild.exe "${env:GITHUB_WORKSPACE}\GW2Radial.sln" /t:Build /p:Configuration=Release /p:Platform=x64 /p:GitHubDefs=USE_GITHUB_VER
 

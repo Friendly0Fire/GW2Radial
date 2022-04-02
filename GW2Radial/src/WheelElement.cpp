@@ -56,14 +56,14 @@ int WheelElement::DrawPriority(int extremumIndicator)
 	if(extremumIndicator != 1)
 	{
 		ImGui::SameLine();
-		ImGui::SetCursorPosX(ImGui::GetWindowContentRegionWidth() - 2 * ImGui::GetFrameHeightWithSpacing());
+		ImGui::SetCursorPosX(ImGuiGetWindowContentRegionWidth() - 2 * ImGui::GetFrameHeightWithSpacing());
 		if(ImGui::Button((reinterpret_cast<const char*>(ICON_FA_ARROW_UP) + std::string("##PriorityValueUp") + nickname_).c_str()))
 			rv = 1;
 	}
 	if(extremumIndicator != -1)
 	{
 		ImGui::SameLine();
-		ImGui::SetCursorPosX(ImGui::GetWindowContentRegionWidth() - ImGui::GetFrameHeightWithSpacing());
+		ImGui::SetCursorPosX(ImGuiGetWindowContentRegionWidth() - ImGui::GetFrameHeightWithSpacing());
 		if(ImGui::Button((reinterpret_cast<const char*>(ICON_FA_ARROW_DOWN) + std::string("##PriorityValueDown") + nickname_).c_str()))
 			rv = -1;
 	}
