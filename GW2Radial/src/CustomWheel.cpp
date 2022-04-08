@@ -305,7 +305,7 @@ void CustomWheelsManager::Reload()
 		customWheels_.clear();
 	}
 
-	auto folderBaseOpt = ConfigurationFile::i().folder();
+	auto folderBaseOpt = INIConfigurationFile::i().folder();
 	if (folderBaseOpt)
 	{
 		auto folderBase = *folderBaseOpt / L"custom";

@@ -24,6 +24,11 @@
 #include <Version.h>
 #include <MiscTab.h>
 
+KeyCombo GetSettingsKeyCombo()
+{
+	return { GetScanCodeFromVirtualKey('M'), Modifier::SHIFT | Modifier::ALT };
+}
+
 namespace GW2Radial
 {
 
