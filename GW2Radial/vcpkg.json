@@ -9,6 +9,7 @@
     "simpleini",
     "tinyxml2",
     "xxhash",
-    "neargye-semver"
+    "neargye-semver",
+    "atomic-queue"
   ]
 }
