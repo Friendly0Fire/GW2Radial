@@ -106,7 +106,7 @@ Wheel::~Wheel()
 
 void Wheel::UpdateHover()
 {
-	const auto io = ImGui::GetIO();
+	const auto& io = ImGui::GetIO();
 
 	fVector2 mousePos;
 	mousePos.x = io.MousePos.x / float(Core::i().screenWidth());

@@ -25,6 +25,10 @@ protected:
 			return "Travel toy";
 		case NoveltyType::TONIC:
 			return "Tonic";
+		case NoveltyType::JADE_WAYPOINT:
+			return "Jade waypoint";
+		case NoveltyType::FISHING:
+			return "Start fishing";
 		default:
 			return "[Unknown]";
 		}
@@ -43,6 +47,10 @@ protected:
 			return "travel_toy";
 		case NoveltyType::TONIC:
 			return "tonic";
+		case NoveltyType::JADE_WAYPOINT:
+			return "jade_waypoint";
+		case NoveltyType::FISHING:
+			return "fishing";
 		default:
 			return "unknown";
 		}
