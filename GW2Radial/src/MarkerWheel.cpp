@@ -1,10 +1,10 @@
-#include <Marker.h>
+#include <MarkerWheel.h>
 #include <Wheel.h>
 
 namespace GW2Radial
 {
 
-std::map<MarkerType, std::tuple<std::string, std::string, fVector4>> data
+std::map<MarkerType, std::tuple<std::string, std::string, glm::vec4>> data
 {
 	{ MarkerType::ARROW,    { "arrow",      "Arrow",        { 186 / 255.f, 237 / 255.f, 126 / 255.f, 1 } } },
 	{ MarkerType::CIRCLE,   { "circle",     "Circle",       { 107 / 255.f,  24 / 255.f, 181 / 255.f, 1 } } },
@@ -17,37 +17,32 @@ std::map<MarkerType, std::tuple<std::string, std::string, fVector4>> data
 	{ MarkerType::CLEAR,    { "clear_all",  "Clear All",    { 128 / 255.f, 128 / 255.f, 128 / 255.f, 1 } } },
 };
 
-Marker::Marker(MarkerType m)
-	: WheelElement(uint(m), "marker_" + std::get<0>(data.at(m)), "Markers", std::get<1>(data.at(m)))
-{ }
-
-template<>
-void Wheel::Setup<Marker>()
-{
+MarkerWheel::MarkerWheel(std::shared_ptr<Texture2D> bgTexture)
+	: Wheel(std::move(bgTexture), "markers", "Markers") {
+	
 	SetAlwaysResetCursorPositionBeforeKeyPress(true);
-	for (const auto& type : data)
-		AddElement(std::make_unique<Marker>(type.first));
+	for (const auto& [id, val] : data) {
+		const auto& [ nick, name, color ] = val;
+		AddElement(std::make_unique<WheelElement>(uint(id), "marker_" + nick, "Markers", name, GetMarkerColorFromType(id)));
+	}
 }
 
-fVector4 Marker::color()
+glm::vec4 MarkerWheel::GetMarkerColorFromType(MarkerType m)
 {
-	return std::get<2>(data.at(static_cast<MarkerType>(elementId_)));
+	return std::get<2>(data.at(m));
 }
 
-ObjectMarker::ObjectMarker(MarkerType m)
-	: WheelElement(uint(m), "object_marker_" + std::get<0>(data.at(m)), "ObjectMarkers", std::get<1>(data.at(m)))
-{ }
-
-template<>
-void Wheel::Setup<ObjectMarker>()
-{
-	for (const auto& type : data)
-		AddElement(std::make_unique<ObjectMarker>(type.first));
+ObjectMarkerWheel::ObjectMarkerWheel(std::shared_ptr<Texture2D> bgTexture)
+	: Wheel(std::move(bgTexture), "object_markers", "Object Markers") {;
+	for (const auto& [id, val] : data) {
+		const auto& [ nick, name, color ] = val;
+		AddElement(std::make_unique<WheelElement>(uint(id), "object_marker_" + nick, "ObjectMarkers", name, GetObjectMarkerColorFromType(id)));
+	}
 }
 
-fVector4 ObjectMarker::color()
+glm::vec4 ObjectMarkerWheel::GetObjectMarkerColorFromType(MarkerType m)
 {
-	return std::get<2>(data.at(static_cast<MarkerType>(elementId_)));
+	return std::get<2>(data.at(m));
 }
 
 }

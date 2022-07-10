@@ -1,14 +1,14 @@
 #pragma once
 #include <Main.h>
-#include <WheelElement.h>
+#include <Wheel.h>
 
 namespace GW2Radial
 {
 
-class Novelty : public WheelElement
+class NoveltyWheel : public Wheel
 {
 public:
-	Novelty(NoveltyType m);
+	NoveltyWheel(std::shared_ptr<Texture2D> bgTexture);
 
 protected:
 	static const char* GetNoveltyNameFromType(NoveltyType m)
@@ -55,8 +55,8 @@ protected:
 			return "unknown";
 		}
 	}
-
-	fVector4 color() override;
+	
+	static glm::vec4 GetNoveltyColorFromType(NoveltyType n);
 };
 
 }

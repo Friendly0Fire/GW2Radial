@@ -45,7 +45,7 @@ namespace GW2Radial
         std::string nickname;
         std::string category;
         std::string name;
-        fVector4 color;
+        glm::vec4 color;
         float shadow;
         float colorize;
 
@@ -53,14 +53,9 @@ namespace GW2Radial
         bool premultiply;
     };
 
-    class CustomElement : public WheelElement
+    class CustomWheel : public Wheel
     {
-        fVector4 color_;
-
     public:
-        CustomElement(const CustomElementSettings& ces);
-
-    protected:
-	    fVector4 color() override;
+		CustomWheel(std::shared_ptr<Texture2D> bgTexture);
     };
 }

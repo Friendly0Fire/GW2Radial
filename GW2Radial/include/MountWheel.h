@@ -1,16 +1,14 @@
 #pragma once
 #include <Main.h>
-#include <WheelElement.h>
+#include <Wheel.h>
 
 namespace GW2Radial
 {
 
-class Mount : public WheelElement
+class MountWheel : public Wheel
 {
 public:
-	Mount(MountType m);
-
-	bool isActive() const override;
+	MountWheel(std::shared_ptr<Texture2D> bgTexture);
 
 protected:
 	static const char* GetMountNameFromType(MountType m)
@@ -70,7 +68,7 @@ protected:
 		}
 	}
 
-	fVector4 color() override;
+	static glm::vec4 GetMountColorFromType(MountType m);
 };
 
 }

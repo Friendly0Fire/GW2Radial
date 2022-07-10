@@ -34,13 +34,13 @@
     <ClCompile Include="src\WheelElement.cpp">
       <Filter>Source Files\Radials</Filter>
     </ClCompile>
-    <ClCompile Include="src\Mount.cpp">
+    <ClCompile Include="src\MountWheel.cpp">
       <Filter>Source Files\Radials</Filter>
     </ClCompile>
-    <ClCompile Include="src\Novelty.cpp">
+    <ClCompile Include="src\NoveltyWheel.cpp">
       <Filter>Source Files\Radials</Filter>
     </ClCompile>
-    <ClCompile Include="src\Marker.cpp">
+    <ClCompile Include="src\MarkerWheel.cpp">
       <Filter>Source Files\Radials</Filter>
     </ClCompile>
     <ClCompile Include="src\CustomWheel.cpp">
@@ -69,13 +69,13 @@
     <ClInclude Include="include\WheelElement.h">
       <Filter>Source Files\Radials</Filter>
     </ClInclude>
-    <ClInclude Include="include\Mount.h">
+    <ClInclude Include="include\MountWheel.h">
       <Filter>Source Files\Radials</Filter>
     </ClInclude>
-    <ClInclude Include="include\Novelty.h">
+    <ClInclude Include="include\NoveltyWheel.h">
       <Filter>Source Files\Radials</Filter>
     </ClInclude>
-    <ClInclude Include="include\Marker.h">
+    <ClInclude Include="include\MarkerWheel.h">
       <Filter>Source Files\Radials</Filter>
     </ClInclude>
     <ClInclude Include="include\CustomWheel.h">

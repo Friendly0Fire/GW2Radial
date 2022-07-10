@@ -32,18 +32,6 @@ public:
 	Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName);
 	virtual ~Wheel();
 
-	template<typename T>
-	static std::unique_ptr<Wheel> Create(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName)
-	{
-		// TODO: Would be nice to somehow let wheel element .cpps determine these parameters as well
-		auto wheel = std::make_unique<Wheel>(bgTexture, std::move(nickname), std::move(displayName));
-		wheel->Setup<T>();
-		return std::move(wheel);
-	}
-
-	template<typename T>
-	void Setup(); // Requires implementation for each wheel element type
-
 	void UpdateHover();
 	void AddElement(std::unique_ptr<WheelElement>&& we) { wheelElements_.push_back(std::move(we)); Sort(); }
 	void Draw(ID3D11DeviceContext* ctx);
@@ -65,6 +53,35 @@ public:
 
 	const ComPtr<ID3D11Buffer>& GetConstantBuffer() const { return cb_s.buffer(); }
 
+	// Get current state, ignoring flags we don't want when *skipping* the wheel:
+	// e.g. no skip in WvW -> we're never in WvW, ergo all mounts are "available", ergo no skip
+	ConditionalState GetSkipState() const {
+	    return ((enableSkipWvWOption_.value() ? ConditionalState::IN_WVW : ConditionalState::NONE) |
+			   (enableSkipUWOption_.value() ? ConditionalState::UNDERWATER : ConditionalState::NONE))
+    		   & MumbleLink::i().currentState();
+    }
+
+	// Similar to GetSkipState(), except there's no context where not hiding all mounts but Warclaw makes sense in WvW, so no option for it
+	ConditionalState GetShowState() const {
+	    return (ConditionalState::IN_WVW |
+			   (enableSkipUWOption_.value() ? ConditionalState::UNDERWATER : ConditionalState::NONE))
+    		   & MumbleLink::i().currentState();
+    }
+	
+	bool ShouldSkip(WheelElement*& we) {
+	    if(!enableSkipUWOption_.value() && !enableSkipWvWOption_.value())
+			return false;
+		auto elems = GetActiveElements(GetSkipState());
+		if(elems.size() == 1) {
+			we = elems.front();
+			return true;
+		}
+
+		return false;
+    }
+
+	[[nodiscard]] bool CanActivate(WheelElement* we) const;
+
 protected:
 	void Sort();
 	void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer,
@@ -75,7 +92,8 @@ protected:
 
 	WheelElement* GetCenterHoveredElement();
 	WheelElement* GetFavorite(int favoriteId);
-	std::vector<WheelElement*> GetActiveElements(bool sorted = true);
+	std::vector<WheelElement*> GetActiveElements(ConditionalState cs, bool sorted = true);
+	bool HasActiveElements(ConditionalState cs) const;
 	PreventPassToGame KeybindEvent(bool center, bool activated);
 	void OnMouseMove(bool& rv);
 	void OnMouseButton(ScanCode sc, bool down, bool& rv);
@@ -96,27 +114,6 @@ protected:
 	ConditionSetPtr conditions_;
 	ActivationKeybind keybind_, centralKeybind_;
 	bool waitingForBypassComplete_ = false;
-
-	struct DelayTest {
-	    bool enabled = false;
-		bool canToggleOff = false;
-		std::function<bool()> test, toggleOffTest;
-
-		[[nodiscard]] bool delayed() const {
-			if(!enabled)
-				return false;
-		    return test() && (!canToggleOff || !toggleOffTest());
-		}
-
-		[[nodiscard]] bool passes() const {
-			if(!enabled)
-				return true;
-		    return !test() ||
-				canToggleOff && toggleOffTest();
-		}
-	};
-
-	DelayTest aboveWater_, outOfCombat_, custom_;
 
 	WheelElement* conditionallyDelayed_ = nullptr;
 	mstime conditionallyDelayedTime_ = 0;
@@ -149,6 +146,8 @@ protected:
 	ConfigurationOption<bool> centerCancelDelayedInputOption_;
 	ConfigurationOption<bool> enableConditionsOption_;
 	ConfigurationOption<bool> enableQueuingOption_;
+	ConfigurationOption<bool> enableSkipUWOption_;
+	ConfigurationOption<bool> enableSkipWvWOption_;
 
 	ConfigurationOption<bool> visibleInMenuOption_;
 

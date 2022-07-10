@@ -41,6 +41,8 @@ Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::st
 	  centerCancelDelayedInputOption_("Cancel queued input with center region", "queue_center_cancel", "wheel_" + nickname_, false),
 	  enableConditionsOption_("Enable conditional keybinds", "conditions_enabled", "wheel_" + nickname_, false),
 	  enableQueuingOption_("Enable input queuing", "queuing_enabled", "wheel_" + nickname_, true),
+	  enableSkipUWOption_("Enable fast underwater mode", "skip_uw_enabled", "wheel_" + nickname_, true),
+	  enableSkipWvWOption_("Enable fast WvW mode", "skip_wvw_enabled", "wheel_" + nickname_, true),
 	  visibleInMenuOption_(displayName_ + "##Visible", "menu_visible", "wheel_" + nickname_, true),
 	  opacityMultiplierOption_("Opacity multiplier", "opacity", "wheel_" + nickname_, 100),
 	  animationScale_("Animation scale", "anim_scale", "wheel_" + nickname_, 1.f),
@@ -56,11 +58,6 @@ Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::st
 	centralKeybind_.callback([&](Activated a) {
 		return KeybindEvent(true, a);
 	});
-
-	aboveWater_.test = []() { return MumbleLink::i().isUnderwater(); };
-	aboveWater_.toggleOffTest = outOfCombat_.toggleOffTest = []() { return MumbleLink::i().isMounted(); };
-	outOfCombat_.test = []() { return MumbleLink::i().isInCombat(); };
-	custom_.test = custom_.toggleOffTest = []() { return false; };
 
 	mouseMoveCallbackID_ = Input::i().mouseMoveEvent().AddCallback([this](bool& rv) { OnMouseMove(rv); });
 	mouseButtonCallbackID_ = Input::i().mouseButtonEvent().AddCallback([this](EventKey ek, bool& rv) { OnMouseButton(ek.sc, ek.down, rv); });
@@ -118,7 +115,7 @@ void Wheel::UpdateHover()
 
 	WheelElement* lastHovered = currentHovered_;
 
-	auto activeElements = GetActiveElements();
+	auto activeElements = GetActiveElements(GetShowState());
 
 	float mpLenSq = mousePos.x * mousePos.x + mousePos.y * mousePos.y;
 
@@ -299,7 +296,12 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 	ImGuiConfigurationWrapper(&ImGui::Checkbox, enableQueuingOption_);
 	ImGuiHelpTooltip("If sending a keybind now would be ignored by the game (e.g., mounting while in combat), enabling queuing will \"queue\" the input until all necessary conditions are satisfied.");
-
+	
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, enableSkipUWOption_);
+	ImGuiHelpTooltip("If only one item is available underwater (e.g., mounting while underwater with Skimmer unlocked and fully mastered), bypass showing the radial menu and trigger the input immediately.");
+	ImGuiConfigurationWrapper(&ImGui::Checkbox, enableSkipWvWOption_);
+	ImGuiHelpTooltip("If only one item is available in WvW (e.g., mounting in WvW), bypass showing the radial menu and trigger the input immediately.");
+	
 	{
 		ImGuiDisabler disable(!enableQueuingOption_.value());
 
@@ -324,22 +326,33 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 	ImGui::Text("Ordering top to bottom is clockwise starting at noon.");
 
-	for(auto it = sortedWheelElements_.begin(); it != sortedWheelElements_.end(); ++it)
+	if(ImGui::BeginTable("##OrderingTable", 6))
 	{
-		const auto extremum = it == sortedWheelElements_.begin() ? 1 : it == std::prev(sortedWheelElements_.end()) ? -1 : 0;
-		auto& e = *it;
-		if(const auto dir = e->DrawPriority(extremum); dir != 0)
-		{
-			if(dir == 1 && e == sortedWheelElements_.front() ||
-				dir == -1 && e == sortedWheelElements_.back())
-				continue;
+		ImGui::TableSetupColumn("Displayed");
+		ImGui::TableSetupColumn("Displayed underwater");
+		ImGui::TableSetupColumn("Enabled underwater");
 
-			auto& eOther = dir == 1 ? *std::prev(it) : *std::next(it);
-			std::swap(e, eOther);
-			const auto tempPriority = eOther->sortingPriority();
-			eOther->sortingPriority(e->sortingPriority());
-			e->sortingPriority(tempPriority);
+		ImGui::TableHeadersRow();
+
+		for(auto it = sortedWheelElements_.begin(); it != sortedWheelElements_.end(); ++it)
+		{
+			const auto extremum = it == sortedWheelElements_.begin() ? 1 : it == std::prev(sortedWheelElements_.end()) ? -1 : 0;
+			auto& e = *it;
+			if(const auto dir = e->DrawPriority(extremum); dir != 0)
+			{
+				if(dir == 1 && e == sortedWheelElements_.front() ||
+					dir == -1 && e == sortedWheelElements_.back())
+					continue;
+
+				auto& eOther = dir == 1 ? *std::prev(it) : *std::next(it);
+				std::swap(e, eOther);
+				const auto tempPriority = eOther->sortingPriority();
+				eOther->sortingPriority(e->sortingPriority());
+				e->sortingPriority(tempPriority);
+			}
 		}
+
+		ImGui::EndTable();
 	}
 
 	if(extraUI_ && extraUI_->misc)
@@ -351,18 +364,14 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 void Wheel::OnUpdate() {
 	if (conditionallyDelayed_) {
 		if (conditionallyDelayedCustom_) {
-			const auto& mumble = MumbleLink::i();
-			if (mumble.gameHasFocus() && !mumble.isMapOpen()
-				&& aboveWater_.passes() && outOfCombat_.passes() && custom_.passes()) {
+			if (CanActivate(conditionallyDelayed_)) {
 				Input::i().SendKeybind(conditionallyDelayed_->keybind().keyCombo(), std::nullopt);
 				ResetConditionallyDelayed(false);
 			}
 		} else {
 			const auto currentTime = TimeInMilliseconds();
 			if (currentTime <= conditionallyDelayedTime_ + maximumConditionalWaitTimeOption_.value() * 1000ull) {
-				const auto& mumble = MumbleLink::i();
-				if (mumble.gameHasFocus() && !mumble.isMapOpen()
-					&& aboveWater_.passes() && outOfCombat_.passes() && custom_.passes()) {
+				if (CanActivate(conditionallyDelayed_)) {
 					if (!conditionallyDelayedTestPasses_)
 						conditionallyDelayedPassesTime_ = currentTime;
 					else if (currentTime >= conditionallyDelayedPassesTime_ + conditionalDelayDelayOption_.value()) {
@@ -440,7 +449,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
 			vp.MaxDepth = 1.0f;
 			ctx->RSSetViewports(1, &vp);
 
-			auto activeElements = GetActiveElements();
+			auto activeElements = GetActiveElements(GetShowState());
 			if (!activeElements.empty())
 			{
 				fVector4 baseSpriteDimensions;
@@ -644,6 +653,22 @@ void Wheel::OnFocusLost()
 	conditionallyDelayedCustom_ = false;
 }
 
+bool Wheel::CanActivate(WheelElement* we) const {
+	const auto& mumble = MumbleLink::i();
+	if(!mumble.gameHasFocus() || mumble.isMapOpen())
+		return false;
+	
+	auto cs = mumble.currentState();
+	if(!we->enabledInCombat() && notNone(cs & ConditionalState::IN_COMBAT))
+		return false;
+	if(!we->enabledUnderwater() && notNone(cs & ConditionalState::UNDERWATER))
+		return false;
+	if(!we->enabledInWvW() && notNone(cs & ConditionalState::IN_WVW))
+		return false;
+
+	return true;
+}
+
 void Wheel::Sort()
 {
 	sortedWheelElements_.resize(wheelElements_.size());
@@ -683,20 +708,29 @@ WheelElement* Wheel::GetFavorite(int favoriteId)
 	return elem->isBound() ? elem : nullptr;
 }
 
-std::vector<WheelElement*> Wheel::GetActiveElements(bool sorted)
+std::vector<WheelElement*> Wheel::GetActiveElements(ConditionalState cs, bool sorted)
 {
 	std::vector<WheelElement*> elems;
 	if (sorted) {
 		for (auto& we : sortedWheelElements_)
-			if (we->isActive())
+			if (we->isActive(cs))
 				elems.push_back(we);
 	} else {
 		for (auto& we : wheelElements_)
-			if (we->isActive())
+			if (we->isActive(cs))
 				elems.push_back(we.get());
 	}
 
 	return elems;
+}
+
+bool Wheel::HasActiveElements(ConditionalState cs) const
+{
+	for (auto& we : wheelElements_)
+			if (we->isActive(cs))
+				return true;
+
+	return false;
 }
 
 void Wheel::OnMouseMove(bool& rv)
@@ -733,7 +767,7 @@ PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
 		isVisible_ = false;
 	else {
 		WheelElement* bypassElement = nullptr;
-		if (activated && doBypassWheel_(bypassElement) && !waitingForBypassComplete_) {
+		if (activated && !waitingForBypassComplete_ && (doBypassWheel_(bypassElement) || ShouldSkip(bypassElement))) {
 			previousUsed_ = bypassElement;
 			isVisible_ = false;
 			waitingForBypassComplete_ = true;
@@ -761,57 +795,6 @@ PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
 
 	return isVisible_ != previousVisibility;
 }
-
-#if 0
-void Wheel::OnInputChange(bool changed, const ScanCodeSet& scs, const std::list<EventKey>& changedKeys, InputResponse& response)
-{
-	if (SettingsMenu::i().isVisible()) {
-		bool isAnyElementBeingModified = keybind_.isBeingModified() || centralKeybind_.isBeingModified() ||
-			std::any_of(wheelElements_.begin(), wheelElements_.end(),
-													[](const auto& we) { return we->keybind().isBeingModified(); });
-
-		if (isAnyElementBeingModified) 	{
-			// If a key was lifted, we consider the key combination *prior* to this key being lifted as the keybind
-			bool keyLifted = false;
-			auto fullKeybind = scs;
-
-			// Explicitly filter out M1 (left mouse button) from keybinds since it breaks too many things
-			fullKeybind.erase(ScanCode::LBUTTON);
-
-			for (const auto& ek : changedKeys) {
-				if (IsSame(ek.sc, ScanCode::LBUTTON))
-					continue;
-
-				if (!ek.down) {
-					fullKeybind.insert(ek.sc);
-					keyLifted = true;
-				}
-			}
-
-
-			keybind_.scanCodes(fullKeybind);
-			centralKeybind_.scanCodes(fullKeybind);
-
-			if (keyLifted) {
-				keybind_.isBeingModified(false);
-				centralKeybind_.isBeingModified(false);
-			}
-
-			for (auto& we : wheelElements_) {
-				we->keybind().scanCodes(fullKeybind);
-				if (keyLifted)
-					we->keybind().isBeingModified(false);
-			}
-
-			response = InputResponse::PREVENT_ALL;
-		}
-
-		return;
-	}
-
-
-}
-#endif
 
 void Wheel::ActivateWheel(bool isMountOverlayLocked)
 {
@@ -898,7 +881,7 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos) 
 		return;
 	}
 
-	if (bool customDelay = custom_.delayed(); customDelay || aboveWater_.delayed() || outOfCombat_.delayed()) {
+	if (bool customDelay = custom_.delayed(we); customDelay || aboveWater_.delayed(we) || outOfCombat_.delayed(we)) {
 		if (mousePos)
 			Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}) and delaying keybind.", cursorResetPosition_->x, cursorResetPosition_->y);
 		else
