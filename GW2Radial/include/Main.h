@@ -1,4 +1,4 @@
 #pragma once
 #include <Common.h>
-#include <Resource.h>
 #include <Enums.h>
+#include <Resource.h>

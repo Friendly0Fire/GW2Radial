@@ -1,17 +1,16 @@
-#include <WheelElement.h>
 #include <Core.h>
-#include <Utility.h>
-#include <Wheel.h>
-#include <common/IconFontCppHeaders/IconsFontAwesome5.h>
 #include <ShaderManager.h>
+#include <Utility.h>
 #include <VSCB.h>
+#include <Wheel.h>
+#include <WheelElement.h>
+#include <common/IconFontCppHeaders/IconsFontAwesome5.h>
 
 namespace GW2Radial
 {
 ConstantBuffer<WheelElement::WheelElementCB> WheelElement::cb_s;
 
-WheelElement::WheelElement(uint               id, const std::string&        nickname, const std::string& category,
-                           const std::string& displayName, const glm::vec4& color, Texture2D             tex)
+WheelElement::WheelElement(uint id, const std::string& nickname, const std::string& category, const std::string& displayName, const glm::vec4& color, Texture2D tex)
     : isShownOption_(displayName + " Visible", nickname + "_visible", category, true)
     , sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, static_cast<int>(id))
     , enableUnderwater_(displayName + " usable under/on water", nickname + "_enable_water", category, defaultEnableUnderwater)
@@ -95,10 +94,10 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx)
     adjustedColor.y         = Lerp(1, adjustedColor.y, colorizeAmount_);
     adjustedColor.z         = Lerp(1, adjustedColor.z, colorizeAmount_);
 
-    auto& sm = ShaderManager::i();
+    auto& sm                = ShaderManager::i();
 
-    cb_s->adjustedColor    = adjustedColor;
-    cb_s->premultiplyAlpha = premultiplyAlpha_;
+    cb_s->adjustedColor     = adjustedColor;
+    cb_s->premultiplyAlpha  = premultiplyAlpha_;
 
     cb_s.Update(ctx);
     ctx->PSSetConstantBuffers(1, 1, cb_s.buffer().GetAddressOf());
@@ -106,22 +105,19 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx)
 
 void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio)
 {
-    glm::vec4 adjustedColor = color_;
-    adjustedColor.x         = Lerp(1, adjustedColor.x, colorizeAmount_);
-    adjustedColor.y         = Lerp(1, adjustedColor.y, colorizeAmount_);
-    adjustedColor.z         = Lerp(1, adjustedColor.z, colorizeAmount_);
+    glm::vec4 adjustedColor  = color_;
+    adjustedColor.x          = Lerp(1, adjustedColor.x, colorizeAmount_);
+    adjustedColor.y          = Lerp(1, adjustedColor.y, colorizeAmount_);
+    adjustedColor.z          = Lerp(1, adjustedColor.z, colorizeAmount_);
 
-    auto& sm = ShaderManager::i();
+    auto& sm                 = ShaderManager::i();
 
     cb_s->elementHoverFadeIn = hoverRatio;
     cb_s->adjustedColor      = shadow ? glm::vec4{ 0.f, 0.f, 0.f, shadowStrength_ } : adjustedColor;
     cb_s->premultiplyAlpha   = shadow ? false : premultiplyAlpha_;
 
     cb_s.Update(ctx);
-    ID3D11Buffer* cbs[] = {
-        wheelCb.Get(),
-        cb_s.buffer().Get()
-    };
+    ID3D11Buffer* cbs[] = { wheelCb.Get(), cb_s.buffer().Get() };
     ctx->PSSetConstantBuffers(0, std::size(cbs), cbs);
 
     auto& vscb             = GetVSCB();
@@ -137,11 +133,11 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 }
 
 void WheelElement::Draw(ID3D11DeviceContext* ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered,
-                        const Wheel*         parent)
+                        const Wheel* parent)
 {
-    const float hoverTimer = SmoothStep(hoverFadeIn(currentTime, parent));
+    const float hoverTimer   = SmoothStep(hoverFadeIn(currentTime, parent));
 
-    float elementAngle = static_cast<float>(n) / static_cast<float>(activeElementsCount) * 2 * static_cast<float>(M_PI);
+    float       elementAngle = static_cast<float>(n) / static_cast<float>(activeElementsCount) * 2 * static_cast<float>(M_PI);
     if (activeElementsCount == 1)
         elementAngle = 0;
     const glm::vec2 elementLocation{ cos(elementAngle - static_cast<float>(M_PI) / 2) * 0.2f, sin(elementAngle - static_cast<float>(M_PI) / 2) * 0.2f };
@@ -203,4 +199,4 @@ float WheelElement::hoverFadeIn(const mstime& currentTime, const Wheel* parent) 
 
     return parent->currentHovered_ == this ? hoverIn : std::min(hoverIn, hoverOut);
 }
-}
+} // namespace GW2Radial

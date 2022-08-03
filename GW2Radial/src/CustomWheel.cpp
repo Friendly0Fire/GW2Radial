@@ -1,14 +1,14 @@
-﻿#include <CustomWheel.h>
-#include <Wheel.h>
+﻿#include <Core.h>
+#include <CustomWheel.h>
 #include <DirectXTK/DDSTextureLoader.h>
 #include <DirectXTK/WICTextureLoader.h>
-#include <filesystem>
-#include <fstream>
-#include <ImGuiPopup.h>
 #include <FileSystem.h>
 #include <ImGuiExtensions.h>
+#include <ImGuiPopup.h>
+#include <Wheel.h>
 #include <backends/imgui_impl_dx11.h>
-#include <Core.h>
+#include <filesystem>
+#include <fstream>
 
 namespace GW2Radial
 {
@@ -16,15 +16,15 @@ float CalcText(ImFont* font, const std::wstring& text)
 {
     const auto& txt = utf8_encode(text);
 
-    auto sz = font->CalcTextSizeA(100.f, FLT_MAX, 0.f, txt.c_str());
+    auto        sz  = font->CalcTextSizeA(100.f, FLT_MAX, 0.f, txt.c_str());
 
     return sz.x;
 }
 
 RenderTarget MakeTextTexture(float fontSize)
 {
-    auto       dev = Core::i().device();
-    const auto fmt = DXGI_FORMAT_R8G8B8A8_UNORM;
+    auto                 dev = Core::i().device();
+    const auto           fmt = DXGI_FORMAT_R8G8B8A8_UNORM;
 
     RenderTarget         rt;
     D3D11_TEXTURE2D_DESC desc;
@@ -59,18 +59,18 @@ RenderTarget MakeTextTexture(float fontSize)
 
 void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blendState, ImFont* font, float fontSize, const std::wstring& text)
 {
-    const uint fgColor = 0xFFFFFFFF;
-    const uint bgColor = 0x00000000;
+    const uint  fgColor = 0xFFFFFFFF;
+    const uint  bgColor = 0x00000000;
 
-    const auto& txt = utf8_encode(text);
+    const auto& txt     = utf8_encode(text);
 
-    auto sz = font->CalcTextSizeA(fontSize, FLT_MAX, 0.f, txt.c_str());
+    auto        sz      = font->CalcTextSizeA(fontSize, FLT_MAX, 0.f, txt.c_str());
 
-    ImVec2 clip(1024.f, fontSize);
+    ImVec2      clip(1024.f, fontSize);
 
-    float xOff = (clip.x - sz.x) * 0.5f;
+    float       xOff = (clip.x - sz.x) * 0.5f;
 
-    ImDrawList imDraw(ImGui::GetDrawListSharedData());
+    ImDrawList  imDraw(ImGui::GetDrawListSharedData());
     imDraw.AddDrawCmd();
     imDraw.PushClipRect(ImVec2(0.f, 0.f), clip);
     imDraw.PushTextureID(font->ContainerAtlas->TexID);
@@ -140,7 +140,9 @@ Texture2D LoadCustomTexture(const std::filesystem::path& path)
 }
 
 CustomWheelsManager::CustomWheelsManager(std::shared_ptr<Texture2D> bgTex, std::vector<std::unique_ptr<Wheel>>& wheels, ImFont* font)
-    : wheels_(wheels), font_(font), backgroundTexture_(bgTex)
+    : wheels_(wheels)
+    , font_(font)
+    , backgroundTexture_(bgTex)
 {
     CD3D11_BLEND_DESC blendDesc(D3D11_DEFAULT);
     blendDesc.RenderTarget[0].BlendEnable    = true;
@@ -172,22 +174,22 @@ void CustomWheelsManager::Draw(ID3D11DeviceContext* ctx)
     const auto& err = failedLoads_.back();
 
     ImGuiPopup("Custom wheel configuration could not be loaded!")
-       .Position({ 0.5f, 0.45f }).Size({ 0.35f, 0.2f })
-       .Display([err](const ImVec2&)
-                {
-                    ImGui::Text("Could not load custom wheel. Error message:");
-                    ImGui::TextWrapped(utf8_encode(err).c_str());
-                }, [&]()
-                {
-                    failedLoads_.pop_back();
-                });
+        .Position({ 0.5f, 0.45f })
+        .Size({ 0.35f, 0.2f })
+        .Display(
+            [err](const ImVec2&)
+            {
+                ImGui::Text("Could not load custom wheel. Error message:");
+                ImGui::TextWrapped(utf8_encode(err).c_str());
+            },
+            [&]() { failedLoads_.pop_back(); });
 }
 
 std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::path& configPath)
 {
     const auto& dataFolder = configPath.parent_path();
 
-    auto fail = [&](const wchar_t* error)
+    auto        fail       = [&](const wchar_t* error)
     {
         failedLoads_.push_back(error + (L": '" + configPath.wstring() + L"'"));
         return nullptr;
@@ -211,17 +213,12 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
     if (wheelNickname == general.end())
         return fail(L"Missing field nickname");
 
-    if (std::any_of(customWheels_.begin(), customWheels_.end(), [&](const auto& w)
-    {
-        return w->nickname() == wheelNickname->second;
-    }))
+    if (std::any_of(customWheels_.begin(), customWheels_.end(), [&](const auto& w) { return w->nickname() == wheelNickname->second; }))
         return fail((L"Nickname " + utf8_decode(std::string(wheelNickname->second)) + L" already exists").c_str());
 
-    auto wheel                  = std::make_unique<Wheel>(backgroundTexture_, wheelNickname->second, wheelDisplayName->second);
-    wheel->outOfCombat_.enabled = ini.GetBoolValue("General", "only_out_of_combat", false);
-    wheel->aboveWater_.enabled  = ini.GetBoolValue("General", "only_above_water", false);
+    auto                          wheel  = std::make_unique<Wheel>(backgroundTexture_, wheelNickname->second, wheelDisplayName->second);
 
-    uint baseId = customWheelNextId_;
+    uint                          baseId = customWheelNextId_;
 
     std::list<CSimpleIniA::Entry> sections;
     ini.GetAllSections(sections);
@@ -234,7 +231,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
         if (_stricmp(sec.pItem, "General") == 0)
             continue;
 
-        const auto& element = *ini.GetSection(sec.pItem);
+        const auto& element                   = *ini.GetSection(sec.pItem);
 
         const auto& elementName               = element.find("name");
         const auto& elementColor              = element.find("color");
@@ -243,7 +240,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
         const auto& elementColorize           = element.find("colorize_strength");
         const auto& elementPremultipliedAlpha = element.find("premultiply_alpha");
 
-        glm::vec4 color{ 1.f };
+        glm::vec4   color{ 1.f };
         if (elementColor != element.end())
         {
             std::array<std::string, 3> colorElems;
@@ -309,10 +306,7 @@ void CustomWheelsManager::Reload()
 
     if (!customWheels_.empty())
     {
-        std::erase_if(wheels_, [&](const auto& ptr)
-        {
-            return std::find(customWheels_.begin(), customWheels_.end(), ptr.get()) != customWheels_.end();
-        });
+        std::erase_if(wheels_, [&](const auto& ptr) { return std::find(customWheels_.begin(), customWheels_.end(), ptr.get()) != customWheels_.end(); });
 
         customWheels_.clear();
     }
@@ -357,4 +351,4 @@ void CustomWheelsManager::Reload()
 
     loaded_ = true;
 }
-}
+} // namespace GW2Radial

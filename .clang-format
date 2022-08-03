@@ -1,16 +1,18 @@
-# Format Style Options - Created with Clang Power Tools
 ---
 AccessModifierOffset: -4
-AlignConsecutiveAssignments: true
-AlignConsecutiveDeclarations: true
-AlignOperands: true
+AlignArrayOfStructures: Left
+AlignConsecutiveAssignments: AcrossEmptyLinesAndComments
+AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments
+AlignOperands: AlignAfterOperator
+AlignTrailingComments: true
 AllowShortBlocksOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
 AlwaysBreakAfterDefinitionReturnType: false
 AlwaysBreakTemplateDeclarations: Yes
 BasedOnStyle: LLVM
-BraceWrapping: 
+BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true
   AfterControlStatement: true
@@ -34,7 +36,7 @@ BreakConstructorInitializers: BeforeComma
 ColumnLimit: 180
 Cpp11BracedListStyle: false
 DerivePointerAlignment: false
-IncludeCategories: 
+IncludeCategories:
   - Regex: ^<.*
     Priority: 1
   - Regex: ^".*
@@ -50,4 +52,7 @@ PointerAlignment: Left
 SpaceAfterTemplateKeyword: false
 TabWidth: 4
 UseTab: Never
+---
+Language: Json
+BasedOnStyle: LLVM
 ...

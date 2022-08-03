@@ -1,104 +1,17 @@
 #include <MountWheel.h>
-#include <Wheel.h>
 #include <MumbleLink.h>
+#include <Wheel.h>
 
 namespace GW2Radial
 {
 MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
     : Wheel(std::move(bgTexture), "mounts", "Mounts")
 {
-    struct MountExtraData : ExtraData
-    {
-        ConfigurationOption<bool> enableUnderwaterSkimmer;
-        ConfigurationOption<int>  dismountDelayOption;
-        ConfigurationOption<bool> quickDismountOption;
-        mstime                    dismountTriggerTime;
-
-        MountExtraData(
-            ConfigurationOption<bool> &&eus,
-            ConfigurationOption<int> && ddo,
-            ConfigurationOption<bool> &&qdo)
-            : enableUnderwaterSkimmer(std::move(eus))
-            , dismountDelayOption(std::move(ddo))
-            , quickDismountOption(std::move(qdo))
-            , dismountTriggerTime(0)
-        {}
-    };
-
-    extraData_ = std::make_shared<MountExtraData>(
-        ConfigurationOption(
-            "Enable underwater Skimmer", "underwater_skimmer",
-            "wheel_" + nickname_, false),
-        ConfigurationOption(
-            "Dismount delay", "dismount_delay",
-            "wheel_" + nickname_, 0),
-        ConfigurationOption(
-            "Quick dismount", "quick_dismount",
-            "wheel_" + nickname_, true)
-        );
-
-    extraUI_.emplace();
-    extraUI_->interaction = [this]()
-    {
-        auto extraData = static_cast<MountExtraData *>(extraData_.get());
-
-        ImGuiConfigurationWrapper(&ImGui::Checkbox, extraData->quickDismountOption);
-        ImGuiHelpTooltip(
-            "If enabled, using any keybind while mounted will directly send a mount keybind to dismount without showing the radial menu.");
-        {
-            ImGuiDisabler disable(!extraData->quickDismountOption.value());
-            ImGuiConfigurationWrapper(
-                &ImGui::SliderInt, extraData->dismountDelayOption, 0, 3000, "%d ms",
-                ImGuiSliderFlags_AlwaysClamp);
-            ImGuiHelpTooltip("Amount of time, in milliseconds, to wait between pressing the keybind and dismounting.");
-        }
-    };
-
-    custom_.test = [this]()
-    {
-        return TimeInMilliseconds() < static_cast<MountExtraData *>(extraData_.get())->dismountTriggerTime;
-    };
-
-    doBypassWheel_ = [this](WheelElement *&we)
-    {
-        auto        data   = static_cast<MountExtraData *>(extraData_.get());
-        const auto &mumble = MumbleLink::i();
-        if (data->quickDismountOption.value() && mumble.isMounted())
-        {
-            if (previousUsed_ != nullptr)
-                we = previousUsed_;
-            else
-            {
-                const auto &activeElems = GetActiveElements(ConditionalState::NONE);
-                if (!activeElems.empty())
-                    we = activeElems.front();
-            }
-
-            if (we)
-            {
-                if (data->dismountDelayOption.value() > 0)
-                    data->dismountTriggerTime = TimeInMilliseconds() + data->dismountDelayOption.value();
-                else
-                    data->dismountTriggerTime = 0;
-                return true;
-            }
-
-            return false;
-        }
-
-        return false;
-    };
-
     iterateEnum<MountType>(
         [&](auto i)
         {
-            AddElement(
-                std::make_unique<WheelElement>(
-                    static_cast<uint>(i),
-                    std::string("mount_") +
-                    GetMountNicknameFromType(i), "Mounts",
-                    GetMountNameFromType(i),
-                    GetMountColorFromType(i)));
+            AddElement(std::make_unique<WheelElement>(static_cast<uint>(i), std::string("mount_") + GetMountNicknameFromType(i), "Mounts", GetMountNameFromType(i),
+                                                      GetMountColorFromType(i)));
         });
 }
 
@@ -130,4 +43,57 @@ glm::vec4 MountWheel::GetMountColorFromType(MountType m)
             return { 1, 1, 1, 1 };
     }
 }
+
+void MountWheel::MenuSectionInteraction()
+{
+    ImGuiConfigurationWrapper(&ImGui::Checkbox, quickDismountOption_);
+    ImGuiHelpTooltip("If enabled, using any keybind while mounted will directly send a mount keybind to dismount without showing the radial menu.");
+    {
+        ImGuiDisabler disable(!quickDismountOption_.value());
+        ImGuiConfigurationWrapper(&ImGui::SliderInt, dismountDelayOption_, 0, 3000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
+        ImGuiHelpTooltip("Amount of time, in milliseconds, to wait between pressing the keybind and dismounting.");
+    }
 }
+
+bool MountWheel::BypassCheck(WheelElement* we)
+{
+    const auto& mumble = MumbleLink::i();
+    if (quickDismountOption_.value() && mumble.isMounted())
+    {
+        if (previousUsed_ != nullptr)
+            we = previousUsed_;
+        else
+        {
+            const auto& activeElems = GetUsableElements(mumble.currentState());
+            if (!activeElems.empty())
+                we = activeElems.front();
+        }
+
+        if (we)
+        {
+            if (dismountDelayOption_.value() > 0)
+                dismountTriggerTime_ = TimeInMilliseconds() + dismountDelayOption_.value();
+            else
+                dismountTriggerTime_ = 0;
+            return true;
+        }
+
+        return false;
+    }
+
+    return false;
+}
+
+bool MountWheel::CustomDelayCheck(WheelElement* wheelElement)
+{
+    if (TimeInMilliseconds() < dismountTriggerTime_)
+    {
+        conditionalDelay_.hidden    = true;
+        conditionalDelay_.immediate = true;
+
+        return true;
+    }
+
+    return false;
+}
+} // namespace GW2Radial
