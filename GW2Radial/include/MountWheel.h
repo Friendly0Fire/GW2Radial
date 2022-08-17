@@ -31,8 +31,6 @@ protected:
                 return "Warclaw";
             case MountType::SKYSCALE:
                 return "Skyscale";
-            case MountType::SKIFF:
-                return "Skiff";
             case MountType::TURTLE:
                 return "Turtle";
             default:
@@ -59,12 +57,47 @@ protected:
                 return "warclaw";
             case MountType::SKYSCALE:
                 return "skyscale";
-            case MountType::SKIFF:
-                return "skiff";
             case MountType::TURTLE:
                 return "turtle";
             default:
                 return "unknown";
+        }
+    }
+
+    static ConditionalProperties GetMountPropsFromType(MountType m)
+    {
+        // Work under the assumption that queuing is enabled and players usually want an underwater mount when underwater,
+        // which means all mounts should only be visible in combat, but NOT under/on water
+        ConditionalProperties baseline = ConditionalProperties::VISIBLE_IN_COMBAT;
+
+        switch (m)
+        {
+            case MountType::RAPTOR:
+                return baseline;
+            case MountType::SPRINGER:
+                return baseline;
+            case MountType::SKIMMER:
+                // Skimmer is usable on water and, for most, underwater, so default to that
+                return baseline | ConditionalProperties::USABLE_ON_WATER | ConditionalProperties::USABLE_UNDERWATER | ConditionalProperties::VISIBLE_ON_WATER |
+                       ConditionalProperties::VISIBLE_UNDERWATER;
+            case MountType::JACKAL:
+                return baseline;
+            case MountType::GRIFFON:
+                return baseline;
+            case MountType::BEETLE:
+                return baseline;
+            case MountType::WARCLAW:
+                // Warclaw is usable and visible in WvW
+                return baseline | ConditionalProperties::USABLE_WVW | ConditionalProperties::VISIBLE_WVW;
+            case MountType::SKYSCALE:
+                return baseline;
+            case MountType::TURTLE:
+                // Turtle is usable on and underwater
+                return baseline | ConditionalProperties::USABLE_ON_WATER | ConditionalProperties::USABLE_UNDERWATER | ConditionalProperties::VISIBLE_ON_WATER |
+                       ConditionalProperties::VISIBLE_UNDERWATER;
+            default:
+            case MountType::NONE:
+                return ConditionalProperties::NONE;
         }
     }
 

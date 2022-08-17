@@ -13,7 +13,7 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
         [&](auto i)
         {
             AddElement(std::make_unique<WheelElement>(static_cast<uint>(i), std::string("mount_") + GetMountNicknameFromType(i), "Mounts", GetMountNameFromType(i),
-                                                      GetMountColorFromType(i)));
+                                                      GetMountColorFromType(i), GetMountPropsFromType(i)));
         });
 }
 
@@ -37,8 +37,6 @@ glm::vec4 MountWheel::GetMountColorFromType(MountType m)
             return { 181 / 255.f, 255 / 255.f, 244 / 255.f, 1 };
         case MountType::SKYSCALE:
             return { 211 / 255.f, 142 / 255.f, 244 / 255.f, 1 };
-        case MountType::SKIFF:
-            return { 255 / 255.f, 255 / 255.f, 255 / 255.f, 1 };
         case MountType::TURTLE:
             return { 56 / 255.f, 228 / 255.f, 85 / 255.f, 1 };
         default:

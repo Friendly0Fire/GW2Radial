@@ -7,11 +7,13 @@ namespace GW2Radial
 NoveltyWheel::NoveltyWheel(std::shared_ptr<Texture2D> bgTexture)
     : Wheel(std::move(bgTexture), "novelties", "Novelties")
 {
+    // Novelties are variable in their restrictions, so show and allow at all times
+    auto props = ConditionalProperties::USABLE_ALL | ConditionalProperties::VISIBLE_ALL;
     iterateEnum<NoveltyType>(
         [&](auto i)
         {
             AddElement(std::make_unique<WheelElement>(static_cast<uint>(i), std::string("novelty_") + GetNoveltyNicknameFromType(i), "Novelties & Masteries",
-                                                      GetNoveltyNameFromType(i), GetNoveltyColorFromType(i)));
+                                                      GetNoveltyNameFromType(i), GetNoveltyColorFromType(i), props));
         });
 }
 
@@ -33,6 +35,8 @@ glm::vec4 NoveltyWheel::GetNoveltyColorFromType(NoveltyType n)
             return { 22 / 255.f, 227 / 255.f, 0 / 255.f, 1 };
         case NoveltyType::FISHING:
             return { 2 / 255.f, 154 / 255.f, 255 / 255.f, 1 };
+        case NoveltyType::SKIFF:
+            return { 255 / 255.f, 255 / 255.f, 255 / 255.f, 1 };
         default:
             return { 1, 1, 1, 1 };
     }

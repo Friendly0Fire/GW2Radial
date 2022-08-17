@@ -77,15 +77,15 @@ Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::st
     blendDesc.RenderTarget[0].DestBlend      = D3D11_BLEND_INV_SRC_ALPHA;
     blendDesc.RenderTarget[0].SrcBlendAlpha  = D3D11_BLEND_ONE;
     blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
-    GW2_HASSERT(dev->CreateBlendState(&blendDesc, blendState_.GetAddressOf()));
+    GW2_CHECKED_HRESULT(dev->CreateBlendState(&blendDesc, blendState_.GetAddressOf()));
 
     CD3D11_SAMPLER_DESC sampDesc(D3D11_DEFAULT);
-    GW2_HASSERT(dev->CreateSamplerState(&sampDesc, baseSampler_.GetAddressOf()));
+    GW2_CHECKED_HRESULT(dev->CreateSamplerState(&sampDesc, baseSampler_.GetAddressOf()));
 
     sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
     sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
     std::fill_n(sampDesc.BorderColor, std::size(sampDesc.BorderColor), 0.f);
-    GW2_HASSERT(dev->CreateSamplerState(&sampDesc, borderSampler_.GetAddressOf()));
+    GW2_CHECKED_HRESULT(dev->CreateSamplerState(&sampDesc, borderSampler_.GetAddressOf()));
 
     if (!cb_s.IsValid())
         cb_s = ShaderManager::i().MakeConstantBuffer<WheelCB>();

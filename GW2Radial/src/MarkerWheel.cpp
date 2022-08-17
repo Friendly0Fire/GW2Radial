@@ -19,12 +19,13 @@ std::map<MarkerType, std::tuple<std::string, std::string, glm::vec4>> data{
 MarkerWheel::MarkerWheel(std::shared_ptr<Texture2D> bgTexture)
     : Wheel(std::move(bgTexture), "markers", "Markers")
 {
-
+    // Markers are usable and visible at all times
+    auto props = ConditionalProperties::USABLE_ALL | ConditionalProperties::VISIBLE_ALL;
     SetAlwaysResetCursorPositionBeforeKeyPress(true);
     for (const auto& [id, val] : data)
     {
         const auto& [nick, name, color] = val;
-        AddElement(std::make_unique<WheelElement>(uint(id), "marker_" + nick, "Markers", name, GetMarkerColorFromType(id)));
+        AddElement(std::make_unique<WheelElement>(uint(id), "marker_" + nick, "Markers", name, GetMarkerColorFromType(id), props));
     }
 }
 
@@ -36,11 +37,12 @@ glm::vec4 MarkerWheel::GetMarkerColorFromType(MarkerType m)
 ObjectMarkerWheel::ObjectMarkerWheel(std::shared_ptr<Texture2D> bgTexture)
     : Wheel(std::move(bgTexture), "object_markers", "Object Markers")
 {
-    ;
+    // Markers are usable and visible at all times
+    auto props = ConditionalProperties::USABLE_ALL | ConditionalProperties::VISIBLE_ALL;
     for (const auto& [id, val] : data)
     {
         const auto& [nick, name, color] = val;
-        AddElement(std::make_unique<WheelElement>(uint(id), "object_marker_" + nick, "ObjectMarkers", name, GetObjectMarkerColorFromType(id)));
+        AddElement(std::make_unique<WheelElement>(uint(id), "object_marker_" + nick, "ObjectMarkers", name, GetObjectMarkerColorFromType(id), props));
     }
 }
 

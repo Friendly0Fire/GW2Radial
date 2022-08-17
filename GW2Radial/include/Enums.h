@@ -16,13 +16,12 @@ enum class MountType : uint
     BEETLE   = IDR_MOUNT6,
     WARCLAW  = IDR_MOUNT7,
     SKYSCALE = IDR_MOUNT8,
-    SKIFF    = IDR_MOUNT9,
-    TURTLE   = IDR_MOUNT10,
+    TURTLE   = IDR_MOUNT9,
 
     FIRST    = RAPTOR,
     LAST     = TURTLE
 };
-const unsigned int MountTypeCount = std::underlying_type_t<MountType>(MountType::LAST) + 1;
+constexpr unsigned int MountTypeCount = std::underlying_type_t<MountType>(MountType::LAST) + 1;
 
 enum class MarkerType : uint
 {
@@ -47,10 +46,11 @@ enum class NoveltyType : uint
     TONIC              = IDR_NOVELTY5,
     JADE_WAYPOINT      = IDR_NOVELTY6,
     FISHING            = IDR_NOVELTY7,
+    SKIFF              = IDR_NOVELTY8,
 
     FIRST              = CHAIR,
-    LAST               = TONIC
+    LAST               = SKIFF
 };
-const unsigned int NoveltyTypeCount = std::underlying_type_t<NoveltyType>(NoveltyType::LAST) + 1;
+constexpr unsigned int NoveltyTypeCount = std::underlying_type_t<NoveltyType>(NoveltyType::LAST) + 1;
 
 } // namespace GW2Radial

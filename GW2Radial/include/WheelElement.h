@@ -21,7 +21,10 @@ enum class ConditionalProperties : uint
     USABLE_IN_COMBAT   = 32,
 
     VISIBLE_WVW        = 64,
-    USABLE_WVW         = 128
+    USABLE_WVW         = 128,
+
+    VISIBLE_ALL        = VISIBLE_UNDERWATER | VISIBLE_ON_WATER | VISIBLE_IN_COMBAT | VISIBLE_WVW,
+    USABLE_ALL         = USABLE_UNDERWATER | USABLE_ON_WATER | USABLE_IN_COMBAT | USABLE_WVW
 };
 
 inline ConditionalProperties operator|(ConditionalProperties a, ConditionalProperties b)

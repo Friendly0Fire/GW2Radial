@@ -29,6 +29,8 @@ protected:
                 return "Jade waypoint";
             case NoveltyType::FISHING:
                 return "Start fishing";
+            case NoveltyType::SKIFF:
+                return "Skiff";
             default:
                 return "[Unknown]";
         }
@@ -51,6 +53,8 @@ protected:
                 return "jade_waypoint";
             case NoveltyType::FISHING:
                 return "fishing";
+            case NoveltyType::SKIFF:
+                return "skiff";
             default:
                 return "unknown";
         }
