@@ -6,6 +6,8 @@ namespace GW2Radial
 {
 MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
     : Wheel(std::move(bgTexture), "mounts", "Mounts")
+    , dismountDelayOption_("Dismount delay", "dismount_delay", "wheel_" + nickname_, 0)
+    , quickDismountOption_("Quick dismount", "quick_dismount", "wheel_" + nickname_, true)
 {
     iterateEnum<MountType>(
         [&](auto i)

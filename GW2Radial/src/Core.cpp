@@ -6,11 +6,11 @@
 #include <ImGuiPopup.h>
 #include <Input.h>
 #include <Log.h>
-#include <Marker.h>
+#include <MarkerWheel.h>
 #include <MiscTab.h>
-#include <Mount.h>
+#include <MountWheel.h>
 #include <MumbleLink.h>
-#include <Novelty.h>
+#include <NoveltyWheel.h>
 #include <SettingsMenu.h>
 #include <ShaderManager.h>
 #include <UpdateCheck.h>
@@ -98,11 +98,11 @@ void Core::InnerInitPreImGui()
 {
     RadialMiscTab::init<RadialMiscTab>();
 
-    bgTex_ = std::make_shared<Texture2D>(std::move(CreateTextureFromResource(device_.Get(), Core::i().dllModule(), IDR_BG)));
-    wheels_.emplace_back(Wheel::Create<Mount>(bgTex_, "mounts", "Mounts"));
-    wheels_.emplace_back(Wheel::Create<Novelty>(bgTex_, "novelties", "Novelties"));
-    wheels_.emplace_back(Wheel::Create<Marker>(bgTex_, "markers", "Markers"));
-    wheels_.emplace_back(Wheel::Create<ObjectMarker>(bgTex_, "object_markers", "Object Markers"));
+    bgTex_ = std::make_shared<Texture2D>(CreateTextureFromResource(device_.Get(), i().dllModule(), IDR_BG));
+    wheels_.push_back(std::make_unique<MountWheel>(bgTex_));
+    wheels_.push_back(std::make_unique<NoveltyWheel>(bgTex_));
+    wheels_.push_back(std::make_unique<MarkerWheel>(bgTex_));
+    wheels_.push_back(std::make_unique<ObjectMarkerWheel>(bgTex_));
 }
 
 void Core::InnerInitPostImGui()

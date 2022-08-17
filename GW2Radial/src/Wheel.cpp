@@ -339,8 +339,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
     if (ImGui::BeginTable("##OrderingTable", 6))
     {
         ImGui::TableSetupColumn("Displayed");
-        ImGui::TableSetupColumn("Displayed underwater");
-        ImGui::TableSetupColumn("Enabled underwater");
+        ImGui::TableSetupColumn("Conditional properties");
 
         ImGui::TableHeadersRow();
 

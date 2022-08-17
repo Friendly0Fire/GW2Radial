@@ -10,12 +10,11 @@ namespace GW2Radial
 {
 ConstantBuffer<WheelElement::WheelElementCB> WheelElement::cb_s;
 
-WheelElement::WheelElement(uint id, const std::string& nickname, const std::string& category, const std::string& displayName, const glm::vec4& color, Texture2D tex)
+WheelElement::WheelElement(uint id, const std::string& nickname, const std::string& category, const std::string& displayName, const glm::vec4& color,
+                           ConditionalProperties defaultProps, Texture2D tex)
     : isShownOption_(displayName + " Visible", nickname + "_visible", category, true)
     , sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, static_cast<int>(id))
-    , enableUnderwater_(displayName + " usable under/on water", nickname + "_enable_water", category, defaultEnableUnderwater)
-    , enableWvW_(displayName + " shown in WvW", nickname + "_wvw", category, defaultEnableWvW)
-    , displayUnderwater_(displayName + " shown under/on water", nickname + "_displayed_water", category, defaultDisplayUnderwater)
+    , props_("", nickname + "_props", category, defaultProps)
     , nickname_(nickname)
     , displayName_(displayName)
     , elementId_(id)
@@ -47,20 +46,62 @@ int WheelElement::DrawPriority(int extremumIndicator)
     ImGui::TableNextColumn();
     ImGuiConfigurationWrapper(&ImGui::Checkbox, ("##Displayed" + nickname_).c_str(), isShownOption_);
 
-    ImGui::TableNextColumn();
-    ImGuiConfigurationWrapper(&ImGui::Checkbox, ("##DisplayedUW" + nickname_).c_str(), displayUnderwater_);
+    auto        props = props_.value();
+    std::string preview;
+    auto        previewFmt = [props, &preview](ConditionalProperties v, ConditionalProperties u, char c) mutable
+    {
+        if (notNone(props & (v | u)))
+        {
+            if (notNone(props & v) && notNone(props & u)) // Visible and usable
+                preview += c + std::string(ICON_FA_CHECK_DOUBLE);
+            else if (notNone(props & v) && isNone(props & u)) // Visible but not usable
+                preview += c + std::string(ICON_FA_EYE);
+            else
+                preview += c + std::string(ICON_FA_HAND_POINTER); // Usable but not visible
+        }
+    };
+
+    previewFmt(ConditionalProperties::VISIBLE_UNDERWATER, ConditionalProperties::USABLE_UNDERWATER, 'U');
+    previewFmt(ConditionalProperties::VISIBLE_ON_WATER, ConditionalProperties::USABLE_ON_WATER, 'O');
+    previewFmt(ConditionalProperties::VISIBLE_IN_COMBAT, ConditionalProperties::USABLE_IN_COMBAT, 'C');
+    previewFmt(ConditionalProperties::VISIBLE_WVW, ConditionalProperties::USABLE_WVW, 'W');
 
     ImGui::TableNextColumn();
-    ImGuiConfigurationWrapper(&ImGui::Checkbox, ("##EnabledUW" + nickname_).c_str(), enableUnderwater_);
+    if (ImGui::BeginCombo(("##ConditionalProps" + nickname_).c_str(), preview.c_str()))
+    {
+        auto chk = [&props, suffix = "##" + nickname_](ConditionalProperties p, const char* display)
+        {
+            bool enabled = notNone(props & p);
+            if (ImGui::Checkbox((display + suffix).c_str(), &enabled))
+                props = enabled ? (props & ~p) : (props | p);
+        };
+
+        chk(ConditionalProperties::VISIBLE_UNDERWATER, "Visible underwater");
+        chk(ConditionalProperties::USABLE_UNDERWATER, "Usable underwater");
+
+        chk(ConditionalProperties::VISIBLE_ON_WATER, "Visible on water");
+        chk(ConditionalProperties::USABLE_ON_WATER, "Usable on water");
+
+        chk(ConditionalProperties::VISIBLE_IN_COMBAT, "Visible in combat");
+        chk(ConditionalProperties::USABLE_IN_COMBAT, "Usable in combat");
+
+        chk(ConditionalProperties::VISIBLE_WVW, "Visible in WvW");
+        chk(ConditionalProperties::USABLE_WVW, "Usable in WvW");
+
+        ImGui::EndCombo();
+    }
+
+    if (props != props_.value())
+        props_.value(props);
 
     ImGui::TableNextColumn();
-    if (!isShownOption_.value() || !isActive(ConditionalState::NONE))
+    if (!isShownOption_.value() || !isActive())
         ImGui::PushFont(Core::i().fontItalic());
     auto displayName = displayName_;
     if (!keybind_.isSet())
         displayName += " [No keybind]";
     ImGui::Text(displayName.c_str());
-    if (!isShownOption_.value() || !isActive(ConditionalState::NONE))
+    if (!isShownOption_.value() || !isActive())
         ImGui::PopFont();
 
     ImGui::PushFont(Core::i().fontIcon());

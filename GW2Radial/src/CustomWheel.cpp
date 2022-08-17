@@ -39,20 +39,20 @@ RenderTarget MakeTextTexture(float fontSize)
     desc.MiscFlags          = 0;
     desc.SampleDesc.Count   = 1;
     desc.SampleDesc.Quality = 0;
-    GW2_HASSERT(dev->CreateTexture2D(&desc, nullptr, &rt.texture));
+    GW2_CHECKED_HRESULT(dev->CreateTexture2D(&desc, nullptr, &rt.texture));
 
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
     srvDesc.Format                    = fmt;
     srvDesc.ViewDimension             = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels       = 1;
     srvDesc.Texture2D.MostDetailedMip = 0;
-    GW2_HASSERT(dev->CreateShaderResourceView(rt.texture.Get(), &srvDesc, &rt.srv));
+    GW2_CHECKED_HRESULT(dev->CreateShaderResourceView(rt.texture.Get(), &srvDesc, &rt.srv));
 
     D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
     rtvDesc.Format             = fmt;
     rtvDesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2D;
     rtvDesc.Texture2D.MipSlice = 0;
-    GW2_HASSERT(dev->CreateRenderTargetView(rt.texture.Get(), &rtvDesc, &rt.rtv));
+    GW2_CHECKED_HRESULT(dev->CreateRenderTargetView(rt.texture.Get(), &rtvDesc, &rt.rtv));
 
     return rt;
 }
@@ -150,7 +150,7 @@ CustomWheelsManager::CustomWheelsManager(std::shared_ptr<Texture2D> bgTex, std::
     blendDesc.RenderTarget[0].DestBlend      = D3D11_BLEND_ZERO;
     blendDesc.RenderTarget[0].SrcBlendAlpha  = D3D11_BLEND_ONE;
     blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-    GW2_HASSERT(Core::i().device()->CreateBlendState(&blendDesc, textBlendState_.GetAddressOf()));
+    GW2_CHECKED_HRESULT(Core::i().device()->CreateBlendState(&blendDesc, textBlendState_.GetAddressOf()));
 }
 
 void CustomWheelsManager::DrawOffscreen(ID3D11DeviceContext* ctx)
@@ -239,6 +239,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
         const auto& elementShadow             = element.find("shadow_strength");
         const auto& elementColorize           = element.find("colorize_strength");
         const auto& elementPremultipliedAlpha = element.find("premultiply_alpha");
+        const auto& elementProps              = element.find("props");
 
         glm::vec4   color{ 1.f };
         if (elementColor != element.end())
@@ -260,6 +261,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
         ces.shadow      = elementShadow == element.end() ? 1.f : static_cast<float>(atof(elementShadow->second));
         ces.colorize    = elementColorize == element.end() ? 1.f : static_cast<float>(atof(elementColorize->second));
         ces.premultiply = false;
+        ces.props       = elementProps == element.end() ? ConditionalProperties::NONE : static_cast<ConditionalProperties>(atoi(elementProps->second));
 
         if (elementIcon != element.end())
         {
@@ -286,7 +288,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
             textDraws_.push_back({ desiredFontSize, utf8_decode(ces.name), ces.rt });
         }
 
-        auto we = std::make_unique<WheelElement>(ces.id, ces.nickname, ces.category, ces.name, ces.color, ces.rt);
+        auto we = std::make_unique<WheelElement>(ces.id, ces.nickname, ces.category, ces.name, ces.color, ces.props, ces.rt);
         we->shadowStrength(ces.shadow);
         we->colorizeAmount(ces.colorize);
         we->premultiplyAlpha(ces.premultiply);

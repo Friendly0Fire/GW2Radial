@@ -74,7 +74,6 @@ protected:
     bool                      BypassCheck(WheelElement*) override;
     bool                      CustomDelayCheck(WheelElement*) override;
 
-    ConfigurationOption<bool> enableUnderwaterSkimmer_;
     ConfigurationOption<int>  dismountDelayOption_;
     ConfigurationOption<bool> quickDismountOption_;
     mstime                    dismountTriggerTime_ = 0;

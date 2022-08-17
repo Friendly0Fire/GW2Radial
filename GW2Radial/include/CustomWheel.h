@@ -44,16 +44,17 @@ public:
 
 struct CustomElementSettings
 {
-    uint         id;
-    std::string  nickname;
-    std::string  category;
-    std::string  name;
-    glm::vec4    color;
-    float        shadow;
-    float        colorize;
+    uint                  id;
+    std::string           nickname;
+    std::string           category;
+    std::string           name;
+    glm::vec4             color;
+    float                 shadow;
+    float                 colorize;
+    ConditionalProperties props;
 
-    RenderTarget rt;
-    bool         premultiply;
+    RenderTarget          rt;
+    bool                  premultiply;
 };
 
 class CustomWheel : public Wheel
