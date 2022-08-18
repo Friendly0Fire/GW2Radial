@@ -336,10 +336,12 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
     ImGui::Text("Ordering top to bottom is clockwise starting at noon.");
 
-    if (ImGui::BeginTable("##OrderingTable", 6))
+    if (ImGui::BeginTable("##OrderingTable", 4, ImGuiTableFlags_SizingStretchProp))
     {
-        ImGui::TableSetupColumn("Displayed");
-        ImGui::TableSetupColumn("Conditional properties");
+        ImGui::TableSetupColumn("Show", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Conditionals", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Name");
+        ImGui::TableSetupColumn("##UpDown", ImGuiTableColumnFlags_WidthFixed);
 
         ImGui::TableHeadersRow();
 

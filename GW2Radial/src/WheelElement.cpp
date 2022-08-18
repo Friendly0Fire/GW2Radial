@@ -46,34 +46,64 @@ int WheelElement::DrawPriority(int extremumIndicator)
     ImGui::TableNextColumn();
     ImGuiConfigurationWrapper(&ImGui::Checkbox, ("##Displayed" + nickname_).c_str(), isShownOption_);
 
-    auto        props = props_.value();
-    std::string preview;
-    auto        previewFmt = [props, &preview](ConditionalProperties v, ConditionalProperties u, char c) mutable
+    auto        props           = props_.value();
+    const float realItemSpacing = ImGui::GetStyle().ItemSpacing.x;
+
+    auto        previewFmt      = [props, realItemSpacing](ConditionalProperties v, ConditionalProperties u, char c) mutable
     {
         if (notNone(props & (v | u)))
         {
+            ImGui::TextUnformatted(&c, &c + 1);
+            ImGui::SameLine();
+            ImGui::PushFont(Core::i().fontIcon());
+            ImGui::SetWindowFontScale(0.9f);
             if (notNone(props & v) && notNone(props & u)) // Visible and usable
-                preview += c + std::string(ICON_FA_CHECK_DOUBLE);
+                ImGui::TextUnformatted(ICON_FA_CHECK_DOUBLE);
             else if (notNone(props & v) && isNone(props & u)) // Visible but not usable
-                preview += c + std::string(ICON_FA_EYE);
+                ImGui::TextUnformatted(ICON_FA_EYE);
             else
-                preview += c + std::string(ICON_FA_HAND_POINTER); // Usable but not visible
+                ImGui::TextUnformatted(ICON_FA_HAND_POINTER); // Usable but not visible
+            ImGui::SetWindowFontScale(1.f);
+            ImGui::PopFont();
+            ImGui::SameLine(0.f, realItemSpacing);
         }
     };
 
+    ImGui::TableNextColumn();
+    float cursorX = ImGui::GetCursorPosX();
+
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().ItemSpacing.x);
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0.f, 0.f));
     previewFmt(ConditionalProperties::VISIBLE_UNDERWATER, ConditionalProperties::USABLE_UNDERWATER, 'U');
     previewFmt(ConditionalProperties::VISIBLE_ON_WATER, ConditionalProperties::USABLE_ON_WATER, 'O');
     previewFmt(ConditionalProperties::VISIBLE_IN_COMBAT, ConditionalProperties::USABLE_IN_COMBAT, 'C');
     previewFmt(ConditionalProperties::VISIBLE_WVW, ConditionalProperties::USABLE_WVW, 'W');
+    ImGui::PopStyleVar(2);
 
-    ImGui::TableNextColumn();
-    if (ImGui::BeginCombo(("##ConditionalProps" + nickname_).c_str(), preview.c_str()))
+    static const float previewMaxWidth = []()
+    {
+        float character = ImGui::CalcTextSize("X").x;
+        ImGui::PushFont(Core::i().fontIcon());
+        ImGui::SetWindowFontScale(0.9f);
+        float iconA = ImGui::CalcTextSize(ICON_FA_CHECK_DOUBLE).x;
+        float iconB = ImGui::CalcTextSize(ICON_FA_EYE).x;
+        float iconC = ImGui::CalcTextSize(ICON_FA_HAND_POINTER).x;
+        ImGui::SetWindowFontScale(1.f);
+        ImGui::PopFont();
+
+        return (character + std::max({ iconA, iconB, iconC })) * 4 + ImGui::GetStyle().ItemSpacing.x * (2 + 4 - 1);
+    }();
+    ImGui::SetCursorPosX(cursorX + previewMaxWidth);
+
+    if (ImGui::BeginCombo(("##ConditionalProps" + nickname_).c_str(), nullptr, ImGuiComboFlags_NoPreview))
     {
         auto chk = [&props, suffix = "##" + nickname_](ConditionalProperties p, const char* display)
         {
             bool enabled = notNone(props & p);
             if (ImGui::Checkbox((display + suffix).c_str(), &enabled))
-                props = enabled ? (props & ~p) : (props | p);
+                props = enabled ? (props | p) : (props & ~p);
         };
 
         chk(ConditionalProperties::VISIBLE_UNDERWATER, "Visible underwater");
@@ -108,20 +138,24 @@ int WheelElement::DrawPriority(int extremumIndicator)
 
     int rv = 0;
     ImGui::TableNextColumn();
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImGui::GetStyle().ItemSpacing * 0.5f);
     if (extremumIndicator != 1)
     {
-        ImGui::SetCursorPosX(ImGuiGetWindowContentRegionWidth() - 2 * ImGui::GetFrameHeightWithSpacing());
         if (ImGui::Button((ICON_FA_ARROW_UP + std::string("##PriorityValueUp") + nickname_).c_str()))
             rv = 1;
     }
-    ImGui::TableNextColumn();
     if (extremumIndicator != -1)
     {
+        static const auto upButtonTextSize = ImGui::CalcTextSize(ICON_FA_ARROW_UP) + ImGui::GetStyle().FramePadding * 2;
+
+        if (extremumIndicator != 0)
+            ImGui::Dummy(upButtonTextSize);
+
         ImGui::SameLine();
-        ImGui::SetCursorPosX(ImGuiGetWindowContentRegionWidth() - ImGui::GetFrameHeightWithSpacing());
         if (ImGui::Button((ICON_FA_ARROW_DOWN + std::string("##PriorityValueDown") + nickname_).c_str()))
             rv = -1;
     }
+    ImGui::PopStyleVar();
     ImGui::PopFont();
     ImGui::PopStyleColor();
 
