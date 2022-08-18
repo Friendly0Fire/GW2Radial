@@ -193,7 +193,7 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 
     cb_s.Update(ctx);
     ID3D11Buffer* cbs[] = { wheelCb.Get(), cb_s.buffer().Get() };
-    ctx->PSSetConstantBuffers(0, std::size(cbs), cbs);
+    ctx->PSSetConstantBuffers(0, uint(std::size(cbs)), cbs);
 
     auto& vscb             = GetVSCB();
     vscb->spriteDimensions = spriteDimensions;

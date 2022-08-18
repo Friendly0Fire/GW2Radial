@@ -460,8 +460,8 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
 
             D3D11_VIEWPORT vp;
             vp.TopLeftX = vp.TopLeftY = 0;
-            vp.Width                  = screenWidth;
-            vp.Height                 = screenHeight;
+            vp.Width                  = float(screenWidth);
+            vp.Height                 = float(screenHeight);
             vp.MinDepth               = 0.0f;
             vp.MaxDepth               = 1.0f;
             ctx->RSSetViewports(1, &vp);
@@ -503,7 +503,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
                         break;
                 }
 
-                for (uint i = activeElements.size() + 1; i < MaxHoverFadeIns; i++)
+                for (uint i = uint(activeElements.size()) + 1; i < MaxHoverFadeIns; i++)
                     hoveredFadeIns[i] = 0.f;
 
                 ShaderManager::i().SetShaders(ctx, vs_, psWheel_);
@@ -615,7 +615,7 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
     cb_s->wheelFadeIn    = fadeIn;
     cb_s->animationTimer = animationTimer;
     cb_s->centerScale    = centerScaleOption_.value();
-    cb_s->elementCount   = activeElements.size();
+    cb_s->elementCount   = int(activeElements.size());
     cb_s->globalOpacity  = opacityMultiplierOption_.value() * 0.01f;
     cb_s->timeLeft       = timeLeft;
     cb_s->showIcon       = showIcon;
