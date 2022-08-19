@@ -86,7 +86,8 @@ public:
     [[nodiscard]] ConditionalState GetSkipState() const
     {
         return ((enableSkipWvWOption_.value() ? ConditionalState::IN_WVW : ConditionalState::NONE) |
-                (enableSkipUWOption_.value() ? ConditionalState::UNDERWATER : ConditionalState::NONE)) &
+                (enableSkipUWOption_.value() ? ConditionalState::UNDERWATER : ConditionalState::NONE) |
+                (enableSkipOWOption_.value() ? ConditionalState::ON_WATER : ConditionalState::NONE)) &
                MumbleLink::i().currentState();
     }
 
@@ -121,7 +122,7 @@ protected:
     virtual void MenuSectionMisc()
     {}
 
-    virtual bool BypassCheck(WheelElement*)
+    virtual bool BypassCheck(WheelElement*&)
     {
         return false;
     }
@@ -131,13 +132,29 @@ protected:
         return false;
     }
 
-    void Sort();
+    union Favorite
+    {
+        int value;
+        struct Bitmask
+        {
+            int baseline : 6;
+
+            int inCombat : 6;
+            int onWater : 6;
+            int underwater : 6;
+            int inWvW : 6;
+        } bits;
+        static_assert(sizeof(Bitmask) == sizeof(int));
+    };
+    static Favorite MakeDefaultFavorite();
+
+    void            Sort();
     void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer, const std::vector<WheelElement*>& activeElements,
                               const std::span<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt);
     void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& baseSpriteDimensions);
 
     WheelElement*                              GetCenterHoveredElement();
-    WheelElement*                              GetFavorite(int favoriteId);
+    WheelElement*                              GetFavorite(Favorite fav) const;
     std::vector<WheelElement*>                 GetVisibleElements(ConditionalState cs, bool sorted = true) const;
     bool                                       HasVisibleElements(ConditionalState cs) const;
     std::vector<WheelElement*>                 GetUsableElements(ConditionalState cs, bool sorted = true) const;
@@ -175,60 +192,60 @@ protected:
         mstime                  testPassesTime = 0;
     };
 
-    ConditionalDelay           conditionalDelay_;
+    ConditionalDelay              conditionalDelay_;
 
-    ConfigurationOption<int>   centerBehaviorOption_;
-    ConfigurationOption<int>   centerFavoriteOption_;
-    ConfigurationOption<int>   delayFavoriteOption_;
+    ConfigurationOption<int>      centerBehaviorOption_;
+    ConfigurationOption<Favorite> centerFavoriteOption_;
+    ConfigurationOption<Favorite> delayFavoriteOption_;
 
-    ConfigurationOption<float> scaleOption_;
-    ConfigurationOption<float> centerScaleOption_;
-    ConfigurationOption<int>   opacityMultiplierOption_;
+    ConfigurationOption<float>    scaleOption_;
+    ConfigurationOption<float>    centerScaleOption_;
+    ConfigurationOption<int>      opacityMultiplierOption_;
 
-    ConfigurationOption<int>   displayDelayOption_;
-    ConfigurationOption<int>   animationTimeOption_;
+    ConfigurationOption<int>      displayDelayOption_;
+    ConfigurationOption<int>      animationTimeOption_;
 
-    ConfigurationOption<bool>  resetCursorOnLockedKeybindOption_;
-    ConfigurationOption<bool>  lockCameraWhenOverlayedOption_;
-    ConfigurationOption<bool>  showOverGameUIOption_;
-    ConfigurationOption<bool>  noHoldOption_;
-    ConfigurationOption<bool>  clickSelectOption_;
-    ConfigurationOption<int>   behaviorOnReleaseBeforeDelay_;
-    ConfigurationOption<bool>  resetCursorAfterKeybindOption_;
+    ConfigurationOption<bool>     resetCursorOnLockedKeybindOption_;
+    ConfigurationOption<bool>     lockCameraWhenOverlayedOption_;
+    ConfigurationOption<bool>     showOverGameUIOption_;
+    ConfigurationOption<bool>     noHoldOption_;
+    ConfigurationOption<bool>     clickSelectOption_;
+    ConfigurationOption<int>      behaviorOnReleaseBeforeDelay_;
+    ConfigurationOption<bool>     resetCursorAfterKeybindOption_;
 
-    ConfigurationOption<int>   maximumConditionalWaitTimeOption_;
-    ConfigurationOption<int>   conditionalDelayDelayOption_;
-    ConfigurationOption<bool>  showDelayTimerOption_;
-    ConfigurationOption<bool>  centerCancelDelayedInputOption_;
-    ConfigurationOption<bool>  enableConditionsOption_;
-    ConfigurationOption<bool>  enableQueuingOption_;
-    ConfigurationOption<bool>  enableSkipOWOption_;
-    ConfigurationOption<bool>  enableSkipUWOption_;
-    ConfigurationOption<bool>  enableSkipWvWOption_;
+    ConfigurationOption<int>      maximumConditionalWaitTimeOption_;
+    ConfigurationOption<int>      conditionalDelayDelayOption_;
+    ConfigurationOption<bool>     showDelayTimerOption_;
+    ConfigurationOption<bool>     centerCancelDelayedInputOption_;
+    ConfigurationOption<bool>     enableConditionsOption_;
+    ConfigurationOption<bool>     enableQueuingOption_;
+    ConfigurationOption<bool>     enableSkipOWOption_;
+    ConfigurationOption<bool>     enableSkipUWOption_;
+    ConfigurationOption<bool>     enableSkipWvWOption_;
 
-    ConfigurationOption<bool>  visibleInMenuOption_;
+    ConfigurationOption<bool>     visibleInMenuOption_;
 
-    ConfigurationOption<float> animationScale_;
+    ConfigurationOption<float>    animationScale_;
 
-    std::optional<Point>       cursorResetPosition_;
-    fVector2                   currentPosition_;
-    mstime                     currentTriggerTime_ = 0;
+    std::optional<Point>          cursorResetPosition_;
+    fVector2                      currentPosition_;
+    mstime                        currentTriggerTime_ = 0;
 
-    WheelElement*              currentHovered_     = nullptr;
-    WheelElement*              previousUsed_       = nullptr;
+    WheelElement*                 currentHovered_     = nullptr;
+    WheelElement*                 previousUsed_       = nullptr;
 
-    std::shared_ptr<Texture2D> backgroundTexture_;
-    ShaderId                   psWheel_, psWheelElement_, psCursor_, psDelayIndicator_, vs_;
-    ComPtr<ID3D11BlendState>   blendState_;
-    ComPtr<ID3D11SamplerState> borderSampler_;
-    ComPtr<ID3D11SamplerState> baseSampler_;
+    std::shared_ptr<Texture2D>    backgroundTexture_;
+    ShaderId                      psWheel_, psWheelElement_, psCursor_, psDelayIndicator_, vs_;
+    ComPtr<ID3D11BlendState>      blendState_;
+    ComPtr<ID3D11SamplerState>    borderSampler_;
+    ComPtr<ID3D11SamplerState>    baseSampler_;
 
-    EventCallbackHandle        mouseMoveCallbackID_;
-    EventCallbackHandle        mouseButtonCallbackID_;
+    EventCallbackHandle           mouseMoveCallbackID_;
+    EventCallbackHandle           mouseButtonCallbackID_;
 
-    fVector3                   wipeMaskData_;
+    fVector3                      wipeMaskData_;
 
-    [[nodiscard]] const char*  GetTabName() const override
+    [[nodiscard]] const char*     GetTabName() const override
     {
         return displayName_.c_str();
     }

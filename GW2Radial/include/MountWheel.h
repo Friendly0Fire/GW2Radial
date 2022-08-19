@@ -104,7 +104,7 @@ protected:
     static glm::vec4          GetMountColorFromType(MountType m);
 
     void                      MenuSectionInteraction() override;
-    bool                      BypassCheck(WheelElement*) override;
+    bool                      BypassCheck(WheelElement*&) override;
     bool                      CustomDelayCheck(WheelElement*) override;
 
     ConfigurationOption<int>  dismountDelayOption_;

@@ -55,7 +55,7 @@ void MountWheel::MenuSectionInteraction()
     }
 }
 
-bool MountWheel::BypassCheck(WheelElement* we)
+bool MountWheel::BypassCheck(WheelElement*& we)
 {
     const auto& mumble = MumbleLink::i();
     if (quickDismountOption_.value() && mumble.isMounted())

@@ -18,14 +18,25 @@ namespace GW2Radial
 {
 ConstantBuffer<Wheel::WheelCB> Wheel::cb_s;
 
+Wheel::Favorite                Wheel::MakeDefaultFavorite()
+{
+    Favorite fav;
+    fav.bits.baseline   = 0;
+    fav.bits.inWvW      = -1;
+    fav.bits.inCombat   = -1;
+    fav.bits.onWater    = -1;
+    fav.bits.underwater = -1;
+    return fav;
+}
+
 Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName)
     : nickname_(std::move(nickname))
     , displayName_(std::move(displayName))
     , keybind_(nickname_, "Show on mouse", nickname_)
     , centralKeybind_(nickname_ + "_cl", "Show in center", nickname_)
     , centerBehaviorOption_("Center behavior", "center_behavior", "wheel_" + nickname_)
-    , centerFavoriteOption_("Favorite choice##Center", "center_favorite.2", "wheel_" + nickname_)
-    , delayFavoriteOption_("Favorite choice##Delay", "delay_favorite", "wheel_" + nickname_)
+    , centerFavoriteOption_("Favorite choice##Center", "center_favorite.2", "wheel_" + nickname_, MakeDefaultFavorite())
+    , delayFavoriteOption_("Favorite choice##Delay", "delay_favorite", "wheel_" + nickname_, MakeDefaultFavorite())
     , scaleOption_("Scale", "scale", "wheel_" + nickname_, 1.f)
     , centerScaleOption_("Center scale", "center_scale", "wheel_" + nickname_, 0.2f)
     , displayDelayOption_("Pop-up delay", "delay", "wheel_" + nickname_)
@@ -225,6 +236,32 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
                          "Mutually exclusive with \"hover to select\".");
     }
 
+    auto favoriteCombo = [](const std::vector<const char*>& names, ConfigurationOption<Favorite>& opt)
+    {
+        Favorite fav    = opt.value();
+
+        auto     single = [&]<bool ShowFirstElement = true>(int v, const char* prefix, const char* tooltip)
+        {
+            if constexpr (ShowFirstElement)
+                v++;
+            ImGui::Combo((prefix + opt.displayName()).c_str(), &v, ShowFirstElement ? names.data() : names.data() + 1, int(ShowFirstElement ? names.size() : names.size() - 1), -1);
+            if constexpr (ShowFirstElement)
+                v--;
+            ImGuiHelpTooltip(tooltip);
+
+            return v;
+        };
+
+        fav.bits.baseline   = single.operator()<false>(fav.bits.baseline, "Default ", "This determines the default favorite option.");
+        fav.bits.inWvW      = single(fav.bits.inWvW, "In WvW ", "This determines the favorite option when in WvW.");
+        fav.bits.inCombat   = single(fav.bits.inCombat, "In combat ", "This determines the favorite option when in combat.");
+        fav.bits.onWater    = single(fav.bits.onWater, "On water ", "This determines the favorite option when on the water surface.");
+        fav.bits.underwater = single(fav.bits.underwater, "Underwater ", "This determines the favorite option when underwater.");
+
+        if (fav.value != opt.value().value)
+            opt.value(fav);
+    };
+
     {
         ImGuiDisabler disable(displayDelayOption_.value() == 0);
 
@@ -247,13 +284,12 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
             const auto               textSize = ImGui::CalcTextSize(delayFavoriteOption_.displayName().c_str());
             const auto               itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
 
-            std::vector<const char*> potentialNames(wheelElements_.size());
+            std::vector<const char*> potentialNames(wheelElements_.size() + 1);
             for (uint i = 0; i < wheelElements_.size(); i++)
-                potentialNames[i] = wheelElements_[i]->displayName().c_str();
+                potentialNames[i + 1] = wheelElements_[i]->displayName().c_str();
+            potentialNames.front() = "(use default)";
 
-            bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
-            ImGuiConfigurationWrapper(cmb, delayFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
-            ImGuiHelpTooltip("If the \"favorite\" option is selected, this determine what the favorite is.");
+            favoriteCombo(potentialNames, delayFavoriteOption_);
         }
     }
 
@@ -269,21 +305,21 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
         ImGuiConfigurationWrapper(rb, "Previous##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
         ImGui::SameLine();
         ImGuiConfigurationWrapper(rb, "Favorite##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
-        ImGuiHelpTooltip("Determines the behavior of the central region of the menu. By default, it does nothing, but it can also (1) trigger the last selected item; (2) trigger "
-                         "a fixed \"favorite\" option.");
+        ImGuiHelpTooltip("Determines the behavior of the central region of the menu. By default, it does nothing, but it can alternatively: "
+                         "(1) trigger the last selected item; "
+                         "(2) trigger a fixed \"favorite\" option.");
 
         if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
         {
             const auto               textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
             const auto               itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
 
-            std::vector<const char*> potentialNames(wheelElements_.size());
+            std::vector<const char*> potentialNames(wheelElements_.size() + 1);
             for (uint i = 0; i < wheelElements_.size(); i++)
-                potentialNames[i] = wheelElements_[i]->displayName().c_str();
+                potentialNames[i + 1] = wheelElements_[i]->displayName().c_str();
+            potentialNames.front() = "(use default)";
 
-            bool (*cmb)(const char*, int*, const char* const*, int, int) = &ImGui::Combo;
-            ImGuiConfigurationWrapper(cmb, centerFavoriteOption_, potentialNames.data(), int(potentialNames.size()), -1);
-            ImGuiHelpTooltip("If the \"favorite\" option is selected, this determine what the favorite is.");
+            favoriteCombo(potentialNames, centerFavoriteOption_);
         }
     }
 
@@ -307,9 +343,12 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
     ImGuiHelpTooltip("If sending a keybind now would be ignored by the game (e.g., mounting while in combat), enabling queuing will \"queue\" the input until all necessary "
                      "conditions are satisfied.");
 
+    ImGuiConfigurationWrapper(&ImGui::Checkbox, enableSkipOWOption_);
+    ImGuiHelpTooltip("If only one item is available on water (e.g., mounting while on water surface with Skimmer unlocked, but Turtle disabled), "
+                     "bypass showing the radial menu and trigger the input immediately.");
     ImGuiConfigurationWrapper(&ImGui::Checkbox, enableSkipUWOption_);
-    ImGuiHelpTooltip("If only one item is available underwater (e.g., mounting while underwater with Skimmer unlocked and fully mastered), bypass showing the radial menu and "
-                     "trigger the input immediately.");
+    ImGuiHelpTooltip("If only one item is available underwater (e.g., mounting while underwater with Skimmer unlocked and fully mastered, but Turtle disabled), "
+                     "bypass showing the radial menu and trigger the input immediately.");
     ImGuiConfigurationWrapper(&ImGui::Checkbox, enableSkipWvWOption_);
     ImGuiHelpTooltip("If only one item is available in WvW (e.g., mounting in WvW), bypass showing the radial menu and trigger the input immediately.");
 
@@ -335,6 +374,12 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
     ImGuiTitle("Visibility & Ordering");
 
     ImGui::Text("Ordering top to bottom is clockwise starting at noon.");
+
+    ImGuiHelpTooltip("Conditionals control the behavior of each menu item depending on current circumstances. The player's state (in combat, on or under water, and in WvW) "
+                     "can be taken into account to modify displayed and usable items. A 'displayed' item is shown in the menu. A 'usable' item is considered to be possible to "
+                     "activate in the current context, but is not necessarily displayed on the radial menu; this can be useful for 'fast mode' utility, e.g. having the Skimmer "
+                     "be the only usable mount underwater and not displaying it, making it hidden in normal play but instantly triggering it when underwater. "
+                     "A 'displayed' but not 'usable' item will be queued (if queuing is enabled) until such a time it is marked as usable.");
 
     if (ImGui::BeginTable("##OrderingTable", 4, ImGuiTableFlags_SizingStretchProp))
     {
@@ -490,10 +535,9 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
                         break;
                     case CenterBehavior::FAVORITE:
                     {
-                        auto fav = centerFavoriteOption_.value();
-                        if (fav >= 0 && fav < wheelElements_.size())
+                        if (auto* fav = GetFavorite(centerFavoriteOption_.value()))
                         {
-                            lastHoverFadeIn = wheelElements_[fav]->hoverFadeIn(currentTime, this);
+                            lastHoverFadeIn = fav->hoverFadeIn(currentTime, this);
                             break;
                         }
                     }
@@ -704,9 +748,23 @@ WheelElement* Wheel::GetCenterHoveredElement()
     }
 }
 
-WheelElement* Wheel::GetFavorite(int favoriteId)
+WheelElement* Wheel::GetFavorite(Favorite fav) const
 {
-    if (favoriteId < 0 || favoriteId >= wheelElements_.size())
+    ConditionalState cs = MumbleLink::i().currentState();
+
+    int              favoriteId;
+    if (notNone(cs & ConditionalState::IN_WVW) && fav.bits.inWvW != -1)
+        favoriteId = fav.bits.inWvW;
+    else if (notNone(cs & ConditionalState::IN_COMBAT) && fav.bits.inCombat != -1)
+        favoriteId = fav.bits.inCombat;
+    else if (notNone(cs & ConditionalState::ON_WATER) && fav.bits.onWater != -1)
+        favoriteId = fav.bits.onWater;
+    else if (notNone(cs & ConditionalState::UNDERWATER) && fav.bits.underwater != -1)
+        favoriteId = fav.bits.underwater;
+    else
+        favoriteId = fav.bits.baseline;
+
+    if (favoriteId < 0 || favoriteId >= int(wheelElements_.size()))
         return nullptr;
 
     auto* elem = wheelElements_[favoriteId].get();
@@ -933,9 +991,7 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos)
     auto cs = MumbleLink::i().currentState();
 
     // We're not checking WvW here; no reason to enqueue an action that would require a map change to execute
-    if (bool shouldAlwaysDelay = CustomDelayCheck(we); shouldAlwaysDelay || notNone(cs & ConditionalState::UNDERWATER) && !HasUsableElements(ConditionalState::UNDERWATER) ||
-                                                       notNone(cs & ConditionalState::ON_WATER) && !HasUsableElements(ConditionalState::ON_WATER) ||
-                                                       notNone(cs & ConditionalState::IN_COMBAT) && !HasUsableElements(ConditionalState::IN_COMBAT))
+    if (bool shouldAlwaysDelay = CustomDelayCheck(we); shouldAlwaysDelay || !we->isUsable(cs))
     {
         if (mousePos)
             Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}) and delaying keybind.", cursorResetPosition_->x, cursorResetPosition_->y);
