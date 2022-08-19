@@ -43,10 +43,12 @@ Please refer to the readme in the `custom_examples` folder for more information 
 
 ## Credits
 - @QuitarHero and @TanukiSoup for extensive testing
+- The Xunlai Addons Discord server members for their continued support
 - Cerulean Dream for providing me with the initial motivator and inspiration in making his AutoHotkey-based radial menu
 - Ghost for the new mount art found in v0.3+
+- [Skiff vector art](https://www.freepik.com/vectors/fishing-boat) created by macrovector
 - [freepik](https://www.freepik.com/) for novelty art
-- deltaconnected and Bhagawan for their amazing addons which helped frame this and direct the approach to take, including the ReShade compatibility fixes
+- deltaconnected and Bhagawan for their amazing addons which helped frame this and direct the approach to take
 - WoodenPotatoes for the great feedback and exposure, as well as the Spud Club for helping with testing
 - /u/that_shaman for another really nice radial menu concept which requires far better Photoshop skills than I have to reproduce
 
@@ -54,7 +56,7 @@ Please refer to the readme in the `custom_examples` folder for more information 
 
 ### Q: I want to thank you in some way, how do I do that?
 
-A: I do this for fun/because I wanted this to exist, but if you really want to, feel free to send me mail in game to my account ``FriendlyFire.6275`` and toss a few gold or mats my way or just say hi!
+A: I do this for fun/because I wanted this to exist. If you really want to, feel free to throw me a few dollars on [Ko-fi](https://ko-fi.com/friendlyfire) or send me mail in game to my account ``FriendlyFire.6275`` and toss a bit of gold or mats my way!
 
 ### Q: The addon won't load or crashes.
 
@@ -66,7 +68,7 @@ A: There can be a lot of reasons for this. Try the following debugging steps:
 4. If it does not exist, your addon loader is not installed correctly. Head over to the [addon loader](https://github.com/gw2-addon-loader/loader-core) project for support.
 5. Inside the log file, look for the line "Loaded gw2radial". If it is not present, the addon loader cannot load the addon correctly. Make sure you have installed the [d3d wrapper](https://github.com/gw2-addon-loader/d3d9_wrapper) addon and look at the other log messages for information on what might be going wrong.
 
-If all else fails, please open an issue.
+If all else fails, please open an issue or [reach out on Discord](https://discord.gg/NrnW29fVpn).
 
 ### Q: What is the "show in center" keybind used for?
 
@@ -84,8 +86,8 @@ A: Absolutely! This whole repository is MIT licensed, so everything here is up f
 
 ### Q: I'm getting a bug/crash/issue that's not mentioned here, what do I do?
 
-A: Please make an issue in the Github page and label it as ``bug`` or ``question`` as relevant to let me know, I'll do my best to help!
+A: Please make an issue in the Github page and label it as ``bug`` or ``question`` as relevant to let me know, I'll do my best to help! You can also [reach out on Discord](https://discord.gg/NrnW29fVpn).
 
 ### Q: I have an idea for a new feature/new addon!
 
-A: Feel free to make an issue in the Github page and label it as ``suggestion``!
+A: Feel free to make an issue in the Github page and label it as ``suggestion``! You can also [reach out on Discord](https://discord.gg/n2fgSAXkEc).
