@@ -58,11 +58,9 @@ jobs:
           mkdir -p x64/Release/gw2radial
           mkdir -p x64/Debug/gw2radial
           mv x64/Release/gw2addon_gw2radial.dll x64/Release/gw2radial/
-          mv x64/Release/getbuffs.dll x64/Release/gw2radial/
           mv x64/Release/readme.md x64/Release/gw2radial/
           mv x64/Debug/gw2addon_gw2radial.dll x64/Debug/gw2radial/
           mv x64/Debug/gw2addon_gw2radial.pdb x64/Debug/gw2radial/
-          mv x64/Debug/getbuffs.dll x64/Debug/gw2radial/
       - name: Zip files for tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
