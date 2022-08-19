@@ -35,8 +35,6 @@ glm::vec4 NoveltyWheel::GetNoveltyColorFromType(NoveltyType n)
             return { 22 / 255.f, 227 / 255.f, 0 / 255.f, 1 };
         case NoveltyType::FISHING:
             return { 2 / 255.f, 154 / 255.f, 255 / 255.f, 1 };
-        case NoveltyType::SKIFF:
-            return { 255 / 255.f, 255 / 255.f, 255 / 255.f, 1 };
         default:
             return { 1, 1, 1, 1 };
     }

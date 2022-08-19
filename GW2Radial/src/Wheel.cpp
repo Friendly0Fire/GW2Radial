@@ -899,15 +899,10 @@ PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
 
 void Wheel::ActivateWheel(bool isMountOverlayLocked)
 {
-    auto& io = ImGui::GetIO();
+    auto& io             = ImGui::GetIO();
 
-    if (alwaysResetCursorPositionBeforeKeyPress_ || resetCursorAfterKeybindOption_.value())
-    {
-        cursorResetPosition_ = { static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y) };
-        Log::i().Print(Severity::Debug, "Storing cursor position ({}, {}) for restore...", cursorResetPosition_->x, cursorResetPosition_->y);
-    }
-    else
-        cursorResetPosition_.reset();
+    cursorResetPosition_ = { static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y) };
+    Log::i().Print(Severity::Debug, "Storing cursor position ({}, {}) for restore...", cursorResetPosition_.x, cursorResetPosition_.y);
 
     // Mount overlay is turned on
     if (isMountOverlayLocked)
@@ -965,15 +960,17 @@ void Wheel::DeactivateWheel()
     else if (!currentHovered_)
         currentHovered_ = GetCenterHoveredElement();
 
+    bool resetMouse = alwaysResetCursorPositionBeforeKeyPress_ || resetCursorAfterKeybindOption_.value() || ResetMouseCheck(currentHovered_);
+
     // Mount overlay is turned off, send the keybind
     if (currentHovered_ != nullptr)
     {
-        SendKeybindOrDelay(currentHovered_, cursorResetPosition_);
+        SendKeybindOrDelay(currentHovered_, resetMouse ? std::make_optional(cursorResetPosition_) : std::nullopt);
         previousUsed_   = currentHovered_;
         currentHovered_ = nullptr;
     }
     else
-        SendKeybindOrDelay(nullptr, cursorResetPosition_);
+        SendKeybindOrDelay(nullptr, resetMouse ? std::make_optional(cursorResetPosition_) : std::nullopt);
 }
 
 void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos)
@@ -982,7 +979,7 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos)
     {
         if (mousePos)
         {
-            Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}).", cursorResetPosition_->x, cursorResetPosition_->y);
+            Log::i().Print(Severity::Debug, "Moving cursor to position ({}, {}).", mousePos->x, mousePos->y);
             Input::i().SendKeybind({}, mousePos);
         }
         return;
@@ -994,7 +991,7 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos)
     if (bool shouldAlwaysDelay = CustomDelayCheck(we); shouldAlwaysDelay || !we->isUsable(cs))
     {
         if (mousePos)
-            Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}) and delaying keybind.", cursorResetPosition_->x, cursorResetPosition_->y);
+            Log::i().Print(Severity::Debug, "Moving cursor to position ({}, {}) and delaying keybind.", mousePos->x, mousePos->y);
         else
             Log::i().Print(Severity::Debug, "Delaying keybind.");
         Input::i().SendKeybind({}, mousePos);
@@ -1010,7 +1007,7 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos)
     else
     {
         if (mousePos)
-            Log::i().Print(Severity::Debug, "Restoring cursor position ({}, {}) and sending keybind.", cursorResetPosition_->x, cursorResetPosition_->y);
+            Log::i().Print(Severity::Debug, "Moving cursor to position ({}, {}) and sending keybind.", mousePos->x, mousePos->y);
         else
             Log::i().Print(Severity::Debug, "Sending keybind.");
 

@@ -33,6 +33,8 @@ protected:
                 return "Skyscale";
             case MountType::TURTLE:
                 return "Turtle";
+            case MountType::SKIFF:
+                return "Skiff";
             default:
                 return "[Unknown]";
         }
@@ -59,6 +61,8 @@ protected:
                 return "skyscale";
             case MountType::TURTLE:
                 return "turtle";
+            case MountType::SKIFF:
+                return "skiff";
             default:
                 return "unknown";
         }
@@ -73,30 +77,32 @@ protected:
         switch (m)
         {
             case MountType::RAPTOR:
-                return baseline;
             case MountType::SPRINGER:
+            case MountType::JACKAL:
+            case MountType::GRIFFON:
+            case MountType::BEETLE:
+            case MountType::SKYSCALE:
                 return baseline;
+
             case MountType::SKIMMER:
                 // Skimmer is usable on water and, for most, underwater, so default to that
                 return baseline | ConditionalProperties::USABLE_ON_WATER | ConditionalProperties::USABLE_UNDERWATER | ConditionalProperties::VISIBLE_ON_WATER |
                        ConditionalProperties::VISIBLE_UNDERWATER;
-            case MountType::JACKAL:
-                return baseline;
-            case MountType::GRIFFON:
-                return baseline;
-            case MountType::BEETLE:
-                return baseline;
+
             case MountType::WARCLAW:
                 // Warclaw is usable and visible in WvW
                 return baseline | ConditionalProperties::USABLE_WVW | ConditionalProperties::VISIBLE_WVW;
-            case MountType::SKYSCALE:
-                return baseline;
+
             case MountType::TURTLE:
                 // Turtle is usable on and underwater
                 return baseline | ConditionalProperties::USABLE_ON_WATER | ConditionalProperties::USABLE_UNDERWATER | ConditionalProperties::VISIBLE_ON_WATER |
                        ConditionalProperties::VISIBLE_UNDERWATER;
+
+            case MountType::SKIFF:
+                // Skiff is usable on water
+                return baseline | ConditionalProperties::USABLE_ON_WATER | ConditionalProperties::VISIBLE_ON_WATER;
+
             default:
-            case MountType::NONE:
                 return ConditionalProperties::NONE;
         }
     }
@@ -106,6 +112,7 @@ protected:
     void                      MenuSectionInteraction() override;
     bool                      BypassCheck(WheelElement*&) override;
     bool                      CustomDelayCheck(WheelElement*) override;
+    bool                      ResetMouseCheck(WheelElement*) override;
 
     ConfigurationOption<int>  dismountDelayOption_;
     ConfigurationOption<bool> quickDismountOption_;

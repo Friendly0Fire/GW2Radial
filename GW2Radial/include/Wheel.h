@@ -132,6 +132,11 @@ protected:
         return false;
     }
 
+    virtual bool ResetMouseCheck(WheelElement*)
+    {
+        return false;
+    }
+
     union Favorite
     {
         int value;
@@ -227,7 +232,7 @@ protected:
 
     ConfigurationOption<float>    animationScale_;
 
-    std::optional<Point>          cursorResetPosition_;
+    Point                         cursorResetPosition_;
     fVector2                      currentPosition_;
     mstime                        currentTriggerTime_ = 0;
 

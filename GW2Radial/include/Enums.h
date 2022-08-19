@@ -17,9 +17,10 @@ enum class MountType : uint
     WARCLAW  = IDR_MOUNT7,
     SKYSCALE = IDR_MOUNT8,
     TURTLE   = IDR_MOUNT9,
+    SKIFF    = IDR_MOUNT10,
 
     FIRST    = RAPTOR,
-    LAST     = TURTLE
+    LAST     = SKIFF
 };
 constexpr unsigned int MountTypeCount = std::underlying_type_t<MountType>(MountType::LAST) + 1;
 
@@ -46,10 +47,9 @@ enum class NoveltyType : uint
     TONIC              = IDR_NOVELTY5,
     JADE_WAYPOINT      = IDR_NOVELTY6,
     FISHING            = IDR_NOVELTY7,
-    SKIFF              = IDR_NOVELTY8,
 
     FIRST              = CHAIR,
-    LAST               = SKIFF
+    LAST               = FISHING
 };
 constexpr unsigned int NoveltyTypeCount = std::underlying_type_t<NoveltyType>(NoveltyType::LAST) + 1;
 

@@ -39,6 +39,8 @@ glm::vec4 MountWheel::GetMountColorFromType(MountType m)
             return { 211 / 255.f, 142 / 255.f, 244 / 255.f, 1 };
         case MountType::TURTLE:
             return { 56 / 255.f, 228 / 255.f, 85 / 255.f, 1 };
+        case MountType::SKIFF:
+            return { 255 / 255.f, 255 / 255.f, 255 / 255.f, 1 };
         default:
             return { 1, 1, 1, 1 };
     }
@@ -95,5 +97,10 @@ bool MountWheel::CustomDelayCheck(WheelElement* wheelElement)
     }
 
     return false;
+}
+
+bool MountWheel::ResetMouseCheck(WheelElement* we)
+{
+    return we == wheelElements_[uint(MountType::SKIFF)].get();
 }
 } // namespace GW2Radial
