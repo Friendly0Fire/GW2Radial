@@ -72,7 +72,7 @@ protected:
     {
         // Work under the assumption that queuing is enabled and players usually want an underwater mount when underwater,
         // which means all mounts should only be visible in combat, but NOT under/on water
-        ConditionalProperties baseline = ConditionalProperties::VISIBLE_IN_COMBAT;
+        ConditionalProperties baseline = ConditionalProperties::USABLE_DEFAULT | ConditionalProperties::VISIBLE_DEFAULT | ConditionalProperties::VISIBLE_IN_COMBAT;
 
         switch (m)
         {
@@ -109,14 +109,16 @@ protected:
 
     static glm::vec4          GetMountColorFromType(MountType m);
 
+    void                      MenuSectionKeybinds(Keybind**) override;
     void                      MenuSectionInteraction() override;
-    bool                      BypassCheck(WheelElement*&) override;
-    bool                      CustomDelayCheck(WheelElement*) override;
+    bool                      BypassCheck(WheelElement*&, Keybind*&) override;
+    bool                      CustomDelayCheck(OptKeybindWheelElement&) override;
     bool                      ResetMouseCheck(WheelElement*) override;
 
     ConfigurationOption<int>  dismountDelayOption_;
     ConfigurationOption<bool> quickDismountOption_;
     mstime                    dismountTriggerTime_ = 0;
+    Keybind                   dismountKeybind_;
 };
 
 } // namespace GW2Radial

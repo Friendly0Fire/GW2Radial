@@ -110,6 +110,26 @@ public:
     [[nodiscard]] bool CanActivate(const WheelElement* we) const;
 
 protected:
+    using OptKeybindWheelElement = std::variant<std::monostate, Keybind*, WheelElement*>;
+
+    static Keybind* GetKeybindFromOpt(OptKeybindWheelElement& o)
+    {
+        if (std::holds_alternative<Keybind*>(o))
+            return std::get<Keybind*>(o);
+        else if (std::holds_alternative<WheelElement*>(o))
+            return &std::get<WheelElement*>(o)->keybind();
+        else
+            return nullptr;
+    }
+
+    static bool OptHasValue(const OptKeybindWheelElement& o)
+    {
+        return o.index() != 0;
+    }
+
+    virtual void MenuSectionKeybinds(Keybind**)
+    {}
+
     virtual void MenuSectionDisplay()
     {}
 
@@ -122,12 +142,12 @@ protected:
     virtual void MenuSectionMisc()
     {}
 
-    virtual bool BypassCheck(WheelElement*&)
+    virtual bool BypassCheck(WheelElement*&, Keybind*&)
     {
         return false;
     }
 
-    virtual bool CustomDelayCheck(WheelElement*)
+    virtual bool CustomDelayCheck(OptKeybindWheelElement&)
     {
         return false;
     }
@@ -169,7 +189,7 @@ protected:
     void                                       OnMouseButton(ScanCode sc, bool down, bool& rv);
     void                                       ActivateWheel(bool isMountOverlayLocked);
     void                                       DeactivateWheel();
-    void                                       SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos);
+    void                                       SendKeybindOrDelay(OptKeybindWheelElement kbwe, std::optional<Point> mousePos);
     void                                       ResetConditionallyDelayed(bool withFadeOut, mstime currentTime = TimeInMilliseconds());
 
     std::string                                nickname_, displayName_;
@@ -188,7 +208,7 @@ protected:
     {
         static constexpr mstime FadeOutTime    = 500;
 
-        WheelElement*           element        = nullptr;
+        OptKeybindWheelElement  element        = {};
         mstime                  time           = TimeInMilliseconds();
         bool                    hidden         = false;
         bool                    immediate      = false;

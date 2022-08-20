@@ -8,6 +8,7 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
     : Wheel(std::move(bgTexture), "mounts", "Mounts")
     , dismountDelayOption_("Dismount delay", "dismount_delay", "wheel_" + nickname_, 0)
     , quickDismountOption_("Quick dismount", "quick_dismount", "wheel_" + nickname_, true)
+    , dismountKeybind_("dismount", "Dismount", "wheel_" + nickname_)
 {
     iterateEnum<MountType>(
         [&](auto i)
@@ -46,6 +47,11 @@ glm::vec4 MountWheel::GetMountColorFromType(MountType m)
     }
 }
 
+void MountWheel::MenuSectionKeybinds(Keybind** currentlyModifiedKeybind)
+{
+    ImGuiKeybindInput(dismountKeybind_, currentlyModifiedKeybind, "Mount/Dismount keybind in game. If set, used to dismount instead of sending an arbitrary mount key.");
+}
+
 void MountWheel::MenuSectionInteraction()
 {
     ImGuiConfigurationWrapper(&ImGui::Checkbox, quickDismountOption_);
@@ -57,7 +63,7 @@ void MountWheel::MenuSectionInteraction()
     }
 }
 
-bool MountWheel::BypassCheck(WheelElement*& we)
+bool MountWheel::BypassCheck(WheelElement*& we, Keybind*& kb)
 {
     const auto& mumble = MumbleLink::i();
     if (quickDismountOption_.value() && mumble.isMounted())
@@ -71,7 +77,10 @@ bool MountWheel::BypassCheck(WheelElement*& we)
                 we = activeElems.front();
         }
 
-        if (we)
+        if (dismountKeybind_.isSet())
+            kb = &dismountKeybind_;
+
+        if (we || kb)
         {
             if (dismountDelayOption_.value() > 0)
                 dismountTriggerTime_ = TimeInMilliseconds() + dismountDelayOption_.value();
@@ -86,7 +95,7 @@ bool MountWheel::BypassCheck(WheelElement*& we)
     return false;
 }
 
-bool MountWheel::CustomDelayCheck(WheelElement* wheelElement)
+bool MountWheel::CustomDelayCheck(OptKeybindWheelElement&)
 {
     if (TimeInMilliseconds() < dismountTriggerTime_)
     {

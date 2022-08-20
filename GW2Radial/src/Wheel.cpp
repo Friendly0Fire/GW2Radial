@@ -175,6 +175,8 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
                       "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back "
                       "after you have selected an option.");
 
+    MenuSectionKeybinds(currentEditedKeybind);
+
     if (ImGuiConfigurationWrapper(&ImGui::Checkbox, enableConditionsOption_) && conditions_)
         conditions_->enable(enableConditionsOption_.value());
 
@@ -375,16 +377,15 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
     ImGui::Text("Ordering top to bottom is clockwise starting at noon.");
 
-    ImGuiHelpTooltip("Conditionals control the behavior of each menu item depending on current circumstances. The player's state (in combat, on or under water, and in WvW) "
+    ImGuiHelpTooltip("Show/Use Conditions control the behavior of each menu item depending on current circumstances. The player's state (in combat, on or under water, and in WvW) "
                      "can be taken into account to modify displayed and usable items. A 'displayed' item is shown in the menu. A 'usable' item is considered to be possible to "
                      "activate in the current context, but is not necessarily displayed on the radial menu; this can be useful for 'fast mode' utility, e.g. having the Skimmer "
                      "be the only usable mount underwater and not displaying it, making it hidden in normal play but instantly triggering it when underwater. "
                      "A 'displayed' but not 'usable' item will be queued (if queuing is enabled) until such a time it is marked as usable.");
 
-    if (ImGui::BeginTable("##OrderingTable", 4, ImGuiTableFlags_SizingStretchProp))
+    if (ImGui::BeginTable("##OrderingTable", 3, ImGuiTableFlags_SizingStretchProp))
     {
-        ImGui::TableSetupColumn("Show", ImGuiTableColumnFlags_WidthFixed);
-        ImGui::TableSetupColumn("Conditionals", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Show/Use Conditions", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Name");
         ImGui::TableSetupColumn("##UpDown", ImGuiTableColumnFlags_WidthFixed);
 
@@ -418,13 +419,13 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 void Wheel::OnUpdate()
 {
     auto& cd = conditionalDelay_;
-    if (cd.element)
+    if (OptHasValue(cd.element))
     {
         if (cd.immediate)
         {
-            if (CanActivate(cd.element))
+            if (std::holds_alternative<Keybind*>(cd.element) || CanActivate(std::get<WheelElement*>(cd.element)))
             {
-                Input::i().SendKeybind(cd.element->keybind().keyCombo(), std::nullopt);
+                Input::i().SendKeybind(GetKeybindFromOpt(cd.element)->keyCombo(), std::nullopt);
                 ResetConditionallyDelayed(false);
             }
         }
@@ -433,13 +434,13 @@ void Wheel::OnUpdate()
             const auto currentTime = TimeInMilliseconds();
             if (currentTime <= cd.time + maximumConditionalWaitTimeOption_.value() * 1000ull)
             {
-                if (CanActivate(cd.element))
+                if (std::holds_alternative<Keybind*>(cd.element) || CanActivate(std::get<WheelElement*>(cd.element)))
                 {
                     if (!cd.testPasses)
                         cd.testPassesTime = currentTime;
                     else if (currentTime >= cd.testPassesTime + conditionalDelayDelayOption_.value())
                     {
-                        Input::i().SendKeybind(cd.element->keybind().keyCombo(), std::nullopt);
+                        Input::i().SendKeybind(GetKeybindFromOpt(cd.element)->keyCombo(), std::nullopt);
                         ResetConditionallyDelayed(true, currentTime);
                     }
                     cd.testPasses = true;
@@ -582,12 +583,14 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
             }
         }
     }
-    else if (showDelayTimerOption_.value() && !conditionalDelay_.hidden && (conditionalDelay_.element || currentTime < conditionalDelay_.time + ConditionalDelay::FadeOutTime))
+    else if (showDelayTimerOption_.value() && !conditionalDelay_.hidden && std::holds_alternative<WheelElement*>(conditionalDelay_.element) &&
+             (std::get<WheelElement*>(conditionalDelay_.element) || currentTime < conditionalDelay_.time + ConditionalDelay::FadeOutTime))
     {
-        float dt       = float(currentTime - conditionalDelay_.time) / 1000.f;
-        float absDt    = dt;
-        float timeLeft = 0.f;
-        if (conditionalDelay_.element == nullptr)
+        auto* delayElement = std::get<WheelElement*>(conditionalDelay_.element);
+        float dt           = float(currentTime - conditionalDelay_.time) / 1000.f;
+        float absDt        = dt;
+        float timeLeft     = 0.f;
+        if (!delayElement)
             absDt = 0.5f - dt;
         else
             timeLeft = 1.f - (currentTime - conditionalDelay_.time) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
@@ -600,7 +603,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
         if (GFXSettings::i().dpiScaling())
             dpiScale = float(Core::i().GetDpiForWindow(Core::i().gameWindow())) / 96.f;
 
-        float    uiScale = float(MumbleLink::i().uiScale());
+        auto     uiScale = float(MumbleLink::i().uiScale());
 
         fVector2 topLeftCorner;
         topLeftCorner.y = 77.f + 10.f * uiScale;
@@ -625,7 +628,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
 
         float spriteSize = bottom - topLeftCorner.y;
 
-        if (dt < 0.3333f && conditionalDelay_.element)
+        if (dt < 0.3333f && delayElement)
         {
             float sizeInterpolant = SmoothStep(dt * 3);
             spriteSize            = std::lerp(spriteSize * 3, spriteSize, sizeInterpolant);
@@ -640,11 +643,11 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
 
         std::array<float, MaxHoverFadeIns> hoveredFadeIns;
         std::fill(hoveredFadeIns.begin(), hoveredFadeIns.end(), 0.f);
-        UpdateConstantBuffer(ctx, spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, hoveredFadeIns, timeLeft, conditionalDelay_.element, false);
-        if (conditionalDelay_.element)
-            conditionalDelay_.element->SetShaderState(ctx);
+        UpdateConstantBuffer(ctx, spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, hoveredFadeIns, timeLeft, delayElement, false);
+        if (delayElement)
+            delayElement->SetShaderState(ctx);
 
-        ID3D11ShaderResourceView* srvs[] = { backgroundTexture_->srv.Get(), conditionalDelay_.element ? conditionalDelay_.element->appearance().srv.Get() : nullptr };
+        ID3D11ShaderResourceView* srvs[] = { backgroundTexture_->srv.Get(), delayElement ? delayElement->appearance().srv.Get() : nullptr };
         ctx->PSSetShaderResources(0, 2, srvs);
         ctx->PSSetSamplers(1, 1, borderSampler_.GetAddressOf());
 
@@ -734,7 +737,7 @@ WheelElement* Wheel::GetCenterHoveredElement()
     if (noHoldOption_.value())
         return nullptr;
 
-    if (centerCancelDelayedInputOption_.value() && conditionalDelay_.element)
+    if (centerCancelDelayedInputOption_.value() && OptHasValue(conditionalDelay_.element))
         return nullptr;
 
     switch (CenterBehavior(centerBehaviorOption_.value()))
@@ -865,12 +868,21 @@ PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
     else
     {
         WheelElement* bypassElement = nullptr;
-        if (activated && !waitingForBypassComplete_ && (BypassCheck(bypassElement) || ShouldSkip(bypassElement)))
+        Keybind*      bypassKeybind = nullptr;
+        if (activated && !waitingForBypassComplete_ && (BypassCheck(bypassElement, bypassKeybind) || ShouldSkip(bypassElement)))
         {
             previousUsed_             = bypassElement;
             isVisible_                = false;
             waitingForBypassComplete_ = true;
-            SendKeybindOrDelay(bypassElement, std::nullopt);
+            if (!bypassKeybind)
+                SendKeybindOrDelay(bypassElement, std::nullopt);
+            else
+            {
+                Log::i().Print(Severity::Debug, "Sending bypass keybind.");
+
+                Input::i().KeyUpActive();
+                Input::i().SendKeybind(bypassKeybind->keyCombo(), std::nullopt);
+            }
         }
 
         if (waitingForBypassComplete_)
@@ -970,12 +982,12 @@ void Wheel::DeactivateWheel()
         currentHovered_ = nullptr;
     }
     else
-        SendKeybindOrDelay(nullptr, resetMouse ? std::make_optional(cursorResetPosition_) : std::nullopt);
+        SendKeybindOrDelay({}, resetMouse ? std::make_optional(cursorResetPosition_) : std::nullopt);
 }
 
-void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos)
+void Wheel::SendKeybindOrDelay(OptKeybindWheelElement kbwe, std::optional<Point> mousePos)
 {
-    if (we == nullptr)
+    if (!OptHasValue(kbwe))
     {
         if (mousePos)
         {
@@ -988,7 +1000,7 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos)
     auto cs = MumbleLink::i().currentState();
 
     // We're not checking WvW here; no reason to enqueue an action that would require a map change to execute
-    if (bool shouldAlwaysDelay = CustomDelayCheck(we); shouldAlwaysDelay || !we->isUsable(cs))
+    if (bool shouldAlwaysDelay = CustomDelayCheck(kbwe); shouldAlwaysDelay || (std::holds_alternative<WheelElement*>(kbwe) && !std::get<WheelElement*>(kbwe)->isUsable(cs)))
     {
         if (mousePos)
             Log::i().Print(Severity::Debug, "Moving cursor to position ({}, {}) and delaying keybind.", mousePos->x, mousePos->y);
@@ -999,7 +1011,7 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos)
         if (shouldAlwaysDelay || enableQueuingOption_.value())
         {
             auto& cd      = conditionalDelay_;
-            cd.element    = we;
+            cd.element    = kbwe;
             cd.time       = TimeInMilliseconds();
             cd.testPasses = false;
         }
@@ -1012,7 +1024,7 @@ void Wheel::SendKeybindOrDelay(WheelElement* we, std::optional<Point> mousePos)
             Log::i().Print(Severity::Debug, "Sending keybind.");
 
         Input::i().KeyUpActive();
-        Input::i().SendKeybind(we->keybind().keyCombo(), mousePos);
+        Input::i().SendKeybind(GetKeybindFromOpt(kbwe)->keyCombo(), mousePos);
     }
 }
 

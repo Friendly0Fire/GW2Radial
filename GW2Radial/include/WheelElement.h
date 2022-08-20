@@ -11,20 +11,23 @@ enum class ConditionalProperties : uint
 {
     NONE               = 0,
 
-    VISIBLE_UNDERWATER = 1,
-    VISIBLE_ON_WATER   = 2,
+    VISIBLE_DEFAULT    = 1,
+    USABLE_DEFAULT     = 2,
 
-    USABLE_UNDERWATER  = 4,
-    USABLE_ON_WATER    = 8,
+    VISIBLE_UNDERWATER = 4,
+    USABLE_UNDERWATER  = 8,
 
-    VISIBLE_IN_COMBAT  = 16,
-    USABLE_IN_COMBAT   = 32,
+    VISIBLE_ON_WATER   = 16,
+    USABLE_ON_WATER    = 32,
 
-    VISIBLE_WVW        = 64,
-    USABLE_WVW         = 128,
+    VISIBLE_IN_COMBAT  = 64,
+    USABLE_IN_COMBAT   = 128,
 
-    VISIBLE_ALL        = VISIBLE_UNDERWATER | VISIBLE_ON_WATER | VISIBLE_IN_COMBAT | VISIBLE_WVW,
-    USABLE_ALL         = USABLE_UNDERWATER | USABLE_ON_WATER | USABLE_IN_COMBAT | USABLE_WVW
+    VISIBLE_WVW        = 256,
+    USABLE_WVW         = 512,
+
+    VISIBLE_ALL        = VISIBLE_DEFAULT | VISIBLE_UNDERWATER | VISIBLE_ON_WATER | VISIBLE_IN_COMBAT | VISIBLE_WVW,
+    USABLE_ALL         = USABLE_DEFAULT | USABLE_UNDERWATER | USABLE_ON_WATER | USABLE_IN_COMBAT | USABLE_WVW
 };
 
 inline ConditionalProperties operator|(ConditionalProperties a, ConditionalProperties b)
@@ -44,6 +47,9 @@ inline ConditionalProperties operator~(ConditionalProperties a)
 
 inline bool IsUsable(ConditionalState cs, ConditionalProperties cp)
 {
+    if (isNone(cs) && isNone(cp & ConditionalProperties::USABLE_DEFAULT))
+        return false;
+
     if (notNone(cs & ConditionalState::IN_COMBAT) && isNone(cp & ConditionalProperties::USABLE_IN_COMBAT))
         return false;
     if (notNone(cs & ConditionalState::IN_WVW) && isNone(cp & ConditionalProperties::USABLE_WVW))
@@ -58,6 +64,9 @@ inline bool IsUsable(ConditionalState cs, ConditionalProperties cp)
 
 inline bool IsVisible(ConditionalState cs, ConditionalProperties cp)
 {
+    if (isNone(cs) && isNone(cp & ConditionalProperties::VISIBLE_DEFAULT))
+        return false;
+
     if (notNone(cs & ConditionalState::IN_COMBAT) && isNone(cp & ConditionalProperties::VISIBLE_IN_COMBAT))
         return false;
     if (notNone(cs & ConditionalState::IN_WVW) && isNone(cp & ConditionalProperties::VISIBLE_WVW))
@@ -79,8 +88,8 @@ public:
 
     int  DrawPriority(int extremumIndicator);
 
-    void SetShaderState(ID3D11DeviceContext* ctx);
-    void SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio);
+    void SetShaderState(ID3D11DeviceContext* ctx) const;
+    void SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio) const;
     void Draw(ID3D11DeviceContext* ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered,
               const class Wheel* parent);
 
@@ -186,19 +195,14 @@ public:
         return keybind_.isSet();
     }
 
-    [[nodiscard]] bool isActive() const
-    {
-        return isBound() && isShownOption_.value();
-    }
-
     [[nodiscard]] bool isUsable(ConditionalState cs) const
     {
-        return isActive() && IsUsable(cs, props_.value());
+        return isBound() && IsUsable(cs, props_.value());
     }
 
     [[nodiscard]] bool isVisible(ConditionalState cs) const
     {
-        return isActive() && IsVisible(cs, props_.value());
+        return isBound() && IsVisible(cs, props_.value());
     }
 
     const Texture2D& appearance() const
@@ -207,7 +211,6 @@ public:
     }
 
 protected:
-    ConfigurationOption<bool>                  isShownOption_;
     ConfigurationOption<int>                   sortingPriorityOption_;
     ConfigurationOption<ConditionalProperties> props_;
 
