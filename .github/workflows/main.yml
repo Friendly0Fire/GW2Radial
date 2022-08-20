@@ -42,7 +42,7 @@ jobs:
       - uses: nuget/setup-nuget@v1
         with:
           nuget-version: '5.x'
-      - run: nuget restore "${env:GITHUB_WORKSPACE}\GW2Clarity.sln"
+      - run: nuget restore "${env:GITHUB_WORKSPACE}\GW2Radial.sln"
 
       - name: 'Setup NuGet Credentials'
         shell: 'bash'
