@@ -377,16 +377,24 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
     ImGui::Text("Ordering top to bottom is clockwise starting at noon.");
 
-    ImGuiHelpTooltip("Show/Use Conditions control the behavior of each menu item depending on current circumstances. The player's state (in combat, on or under water, and in WvW) "
-                     "can be taken into account to modify displayed and usable items. A 'displayed' item is shown in the menu. A 'usable' item is considered to be possible to "
-                     "activate in the current context, but is not necessarily displayed on the radial menu; this can be useful for 'fast mode' utility, e.g. having the Skimmer "
-                     "be the only usable mount underwater and not displaying it, making it hidden in normal play but instantly triggering it when underwater. "
-                     "A 'displayed' but not 'usable' item will be queued (if queuing is enabled) until such a time it is marked as usable.");
+    ImGuiHelpTooltip({
+        {ImGuiHelpTooltipElementType::DEFAULT,
+         "Show/Use Conditions control the behavior of each menu item depending on current circumstances. The character's state (in combat, on or under water, and in WvW) "
+          "can be taken into account to modify displayed and usable items."                                                                                              },
+        { ImGuiHelpTooltipElementType::BULLET, "A \"displayed\" item is shown in the menu."                                                                              },
+        { ImGuiHelpTooltipElementType::BULLET,
+         "A \"usable\" item is considered to be possible to activate in the current context, but is not necessarily displayed on the radial menu. "
+          "This can be useful for \"fast mode\", e.g. having the Skimmer be the only usable mount underwater and not displaying it, "
+          "making it hidden in normal play but instantly triggering it when underwater."                                                                                 },
+        { ImGuiHelpTooltipElementType::BULLET, "A \"displayed\" but not \"usable\" item will be queued (if queuing is enabled) until such a time it is marked as usable."}
+    });
 
-    if (ImGui::BeginTable("##OrderingTable", 3, ImGuiTableFlags_SizingStretchProp))
+    ImGui::PushStyleColor(ImGuiCol_TableRowBg, 0);
+    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, (ImGui::GetColorU32(ImGuiCol_FrameBg) & 0xFFFFFF) | 0x33000000);
+    if (ImGui::BeginTable("##OrderingTable", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_RowBg))
     {
-        ImGui::TableSetupColumn("Show/Use Conditions", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Name");
+        ImGui::TableSetupColumn("Show/Use Conditions", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("##UpDown", ImGuiTableColumnFlags_WidthFixed);
 
         ImGui::TableHeadersRow();
@@ -410,6 +418,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
         ImGui::EndTable();
     }
+    ImGui::PopStyleColor(2);
 
     MenuSectionMisc();
 

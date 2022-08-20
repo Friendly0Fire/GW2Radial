@@ -5,6 +5,7 @@
 #include <Wheel.h>
 #include <WheelElement.h>
 #include <common/IconFontCppHeaders/IconsFontAwesome5.h>
+#include <imgui_internal.h>
 
 namespace GW2Radial
 {
@@ -42,17 +43,47 @@ int WheelElement::DrawPriority(int extremumIndicator)
     ImVec4 col = ToImGui(color_);
     ImGui::PushStyleColor(ImGuiCol_Text, col);
 
-    auto        props           = props_.value();
-    const float realItemSpacing = ImGui::GetStyle().ItemSpacing.x;
+    constexpr float fontOffset      = 5.f;
+    constexpr float fontMultiplier  = 0.6f;
+    const float     realItemSpacing = ImGui::GetStyle().ItemSpacing.x;
+    auto            props           = props_.value();
 
-    auto        previewFmt      = [props, realItemSpacing](ConditionalProperties v, ConditionalProperties u, char c) mutable
+    ImGui::TableNextColumn();
+    if (!isBound() || props == ConditionalProperties::NONE)
+        ImGui::PushFont(Core::i().fontItalic());
+    auto displayName = displayName_;
+    if (!keybind_.isSet())
+        displayName += " [No keybind]";
+    ImGui::TextUnformatted(displayName.c_str());
+    if (!isBound() || props == ConditionalProperties::NONE)
+        ImGui::PopFont();
+
+    ImGui::TableNextColumn();
+
+    static const auto previewMaxDims = []()
+    {
+        auto character = ImGui::CalcTextSize("X");
+        ImGui::PushFont(Core::i().fontIcon());
+        ImGui::SetWindowFontScale(fontMultiplier);
+        float iconA = ImGui::CalcTextSize(ICON_FA_CHECK_DOUBLE).x;
+        float iconB = ImGui::CalcTextSize(ICON_FA_EYE).x;
+        float iconC = ImGui::CalcTextSize(ICON_FA_HAND_POINTER).x;
+        ImGui::SetWindowFontScale(1.f);
+        ImGui::PopFont();
+
+        return ImVec2((character.x + std::max({ iconA, iconB, iconC })) * 5 + ImGui::GetStyle().ItemSpacing.x * (2 + 5 - 1), character.y);
+    }();
+
+    auto previewFmt = [props, realItemSpacing](ConditionalProperties v, ConditionalProperties u, char c) mutable
     {
         if (notNone(props & (v | u)))
         {
+            const float cursorY = ImGui::GetCursorPosY();
             ImGui::TextUnformatted(&c, &c + 1);
             ImGui::SameLine();
             ImGui::PushFont(Core::i().fontIcon());
-            ImGui::SetWindowFontScale(0.9f);
+            ImGui::SetCursorPosY(cursorY + fontOffset);
+            ImGui::SetWindowFontScale(fontMultiplier);
             if (notNone(props & v) && notNone(props & u)) // Visible and usable
                 ImGui::TextUnformatted(ICON_FA_CHECK_DOUBLE);
             else if (notNone(props & v) && isNone(props & u)) // Visible but not usable
@@ -62,39 +93,12 @@ int WheelElement::DrawPriority(int extremumIndicator)
             ImGui::SetWindowFontScale(1.f);
             ImGui::PopFont();
             ImGui::SameLine(0.f, realItemSpacing);
+            ImGui::SetCursorPosY(cursorY);
         }
     };
 
-    ImGui::TableNextColumn();
-    float cursorX = ImGui::GetCursorPosX();
-
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().ItemSpacing.x);
-
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0.f, 0.f));
-    previewFmt(ConditionalProperties::VISIBLE_DEFAULT, ConditionalProperties::USABLE_DEFAULT, 'D');
-    previewFmt(ConditionalProperties::VISIBLE_IN_COMBAT, ConditionalProperties::USABLE_IN_COMBAT, 'C');
-    previewFmt(ConditionalProperties::VISIBLE_UNDERWATER, ConditionalProperties::USABLE_UNDERWATER, 'U');
-    previewFmt(ConditionalProperties::VISIBLE_ON_WATER, ConditionalProperties::USABLE_ON_WATER, 'O');
-    previewFmt(ConditionalProperties::VISIBLE_WVW, ConditionalProperties::USABLE_WVW, 'W');
-    ImGui::PopStyleVar(2);
-
-    static const float previewMaxWidth = []()
-    {
-        float character = ImGui::CalcTextSize("X").x;
-        ImGui::PushFont(Core::i().fontIcon());
-        ImGui::SetWindowFontScale(0.9f);
-        float iconA = ImGui::CalcTextSize(ICON_FA_CHECK_DOUBLE).x;
-        float iconB = ImGui::CalcTextSize(ICON_FA_EYE).x;
-        float iconC = ImGui::CalcTextSize(ICON_FA_HAND_POINTER).x;
-        ImGui::SetWindowFontScale(1.f);
-        ImGui::PopFont();
-
-        return (character + std::max({ iconA, iconB, iconC })) * 5 + ImGui::GetStyle().ItemSpacing.x * (2 + 4 - 1);
-    }();
-    ImGui::SetCursorPosX(cursorX + previewMaxWidth);
-
-    if (ImGui::BeginCombo(("##ConditionalProps" + nickname_).c_str(), nullptr, ImGuiComboFlags_NoPreview))
+    ImGui::SetNextItemWidth(ImGui::GetFrameHeight() + previewMaxDims.x);
+    if (ImGui::BeginCombo(("##ConditionalProps" + nickname_).c_str(), nullptr, ImGuiComboFlags_CustomPreview))
     {
         auto chk = [&props, suffix = "##" + nickname_](ConditionalProperties p, const char* display)
         {
@@ -120,19 +124,22 @@ int WheelElement::DrawPriority(int extremumIndicator)
 
         ImGui::EndCombo();
     }
+    if (ImGui::BeginComboPreview())
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0.f, 0.f));
+        previewFmt(ConditionalProperties::VISIBLE_DEFAULT, ConditionalProperties::USABLE_DEFAULT, 'D');
+        previewFmt(ConditionalProperties::VISIBLE_IN_COMBAT, ConditionalProperties::USABLE_IN_COMBAT, 'C');
+        previewFmt(ConditionalProperties::VISIBLE_UNDERWATER, ConditionalProperties::USABLE_UNDERWATER, 'U');
+        previewFmt(ConditionalProperties::VISIBLE_ON_WATER, ConditionalProperties::USABLE_ON_WATER, 'O');
+        previewFmt(ConditionalProperties::VISIBLE_WVW, ConditionalProperties::USABLE_WVW, 'W');
+        ImGui::PopStyleVar(2);
+
+        ImGui::EndComboPreview();
+    }
 
     if (props != props_.value())
         props_.value(props);
-
-    ImGui::TableNextColumn();
-    if (!isBound() || props == ConditionalProperties::NONE)
-        ImGui::PushFont(Core::i().fontItalic());
-    auto displayName = displayName_;
-    if (!keybind_.isSet())
-        displayName += " [No keybind]";
-    ImGui::TextUnformatted(displayName.c_str());
-    if (!isBound() || props == ConditionalProperties::NONE)
-        ImGui::PopFont();
 
     ImGui::PushFont(Core::i().fontIcon());
 
