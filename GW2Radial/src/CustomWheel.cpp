@@ -272,7 +272,8 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
         ces.shadow      = elementShadow == element.end() ? 1.f : static_cast<float>(atof(elementShadow->second));
         ces.colorize    = elementColorize == element.end() ? 1.f : static_cast<float>(atof(elementColorize->second));
         ces.premultiply = false;
-        ces.props       = elementProps == element.end() ? ConditionalProperties::NONE : static_cast<ConditionalProperties>(atoi(elementProps->second));
+        ces.props =
+            elementProps == element.end() ? ConditionalProperties::USABLE_ALL | ConditionalProperties::VISIBLE_ALL : static_cast<ConditionalProperties>(atoi(elementProps->second));
 
         if (elementIcon != element.end())
         {
