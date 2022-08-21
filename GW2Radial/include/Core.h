@@ -27,6 +27,21 @@ public:
         return wheels_;
     }
 
+    void RunCOMTask(std::function<void()>&& fct)
+    {
+        {
+            std::unique_lock lk(comTaskMutex_);
+            comTask_ = std::move(fct);
+        }
+        comNotify_.notify_one();
+
+        // We must block to wait for the task to end because D3D is in single threaded mode
+        {
+            std::unique_lock lk(comTaskMutex_);
+            comNotify_.wait(lk);
+        }
+    }
+
 protected:
     void InnerDraw() override;
     void InnerUpdate() override;
@@ -61,5 +76,10 @@ protected:
     std::unique_ptr<ConfigurationOption<bool>> firstMessageShown_;
 
     std::shared_ptr<Texture2D>                 bgTex_;
+
+    std::unique_ptr<std::jthread>              comThread_;
+    std::optional<std::function<void()>>       comTask_;
+    std::mutex                                 comTaskMutex_;
+    std::condition_variable                    comNotify_;
 };
 } // namespace GW2Radial

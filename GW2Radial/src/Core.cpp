@@ -19,6 +19,7 @@
 #include <Wheel.h>
 #include <backends/imgui_impl_dx11.h>
 #include <backends/imgui_impl_win32.h>
+#include <detours/detours.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <shellapi.h>
@@ -114,18 +115,41 @@ void Core::InnerInitPostImGui()
 
 void Core::InnerInternalInit()
 {
-    ULONG_PTR contextToken;
-    if (CoGetContextToken(&contextToken) == CO_E_NOTINITIALIZED)
-    {
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
-            CriticalMessageBox(L"Could not initialize COM library: error code 0x%X.", hr);
-    }
+    // COM concurrency model is annoying to deal with, can cause issues if enabled in a different way by another addon
+    // However, with D3D11 in explicit single threaded mode, we CANNOT actually run background tasks, so instead
+    // we only have one task and block the main thread. Stupid, but it isolates our own use/init of COM from others.
+    comThread_ = std::make_unique<std::jthread>(
+        [this](std::stop_token stopToken)
+        {
+            ULONG_PTR contextToken;
+            if (CoGetContextToken(&contextToken) == CO_E_NOTINITIALIZED)
+            {
+                HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+                if (hr != S_FALSE && hr != RPC_E_CHANGED_MODE && FAILED(hr))
+                    CriticalMessageBox(L"Could not initialize COM library: error code 0x%X.", hr);
+            }
+
+            while (!stopToken.stop_requested())
+            {
+                std::unique_lock lk(comTaskMutex_);
+                using namespace std::chrono_literals;
+                comNotify_.wait_for(lk, 100ms);
+
+                if (comTask_)
+                    (*comTask_)();
+                comTask_ = std::nullopt;
+
+                lk.unlock();
+                comNotify_.notify_one();
+            }
+
+            CoUninitialize();
+        });
 }
 
 void Core::InnerShutdown()
 {
-    CoUninitialize();
+    comThread_.reset();
 }
 
 void Core::InnerUpdate()

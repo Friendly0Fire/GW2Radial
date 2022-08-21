@@ -110,9 +110,18 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blen
 
 Texture2D LoadCustomTexture(const std::filesystem::path& path)
 {
+    if (!FileSystem::Exists(path))
+    {
+        FormattedMessageBox(L"Could not load custom radial menu image '%s': file not found.", L"Custom Menu Error", path.wstring().c_str());
+        return {};
+    }
+
     const auto& data = FileSystem::ReadFile(path);
     if (data.empty())
+    {
+        FormattedMessageBox(L"Could not load custom radial menu image '%s': file is empty.", L"Custom Menu Error", path.wstring().c_str());
         return {};
+    }
 
     try
     {
@@ -123,7 +132,9 @@ Texture2D LoadCustomTexture(const std::filesystem::path& path)
         if (path.extension() == L".dds")
             hr = DirectX::CreateDDSTextureFromMemory(dev.Get(), data.data(), data.size(), &res, &tex.srv);
         else
-            hr = DirectX::CreateWICTextureFromMemory(dev.Get(), data.data(), data.size(), &res, &tex.srv);
+        {
+            Core::i().RunCOMTask([&] { hr = DirectX::CreateWICTextureFromMemory(dev.Get(), data.data(), data.size(), &res, &tex.srv); });
+        }
         if (res)
             res->QueryInterface(tex.texture.GetAddressOf());
 
