@@ -1,4 +1,4 @@
-name: Close old issues that need reply
+name: Close stale issues
 
 on:
   schedule:
@@ -8,8 +8,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Close old issues that need reply
+      - name: Close stale issues
         uses: dwieeb/needs-reply@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           issue-label: waiting
+          close-message: This issue was flagged with the "waiting" label and has not been updated in 30 days. It will now be closed automatically, but can be reopened if desired.

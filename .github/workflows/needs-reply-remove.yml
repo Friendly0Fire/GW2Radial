@@ -1,4 +1,4 @@
-name: Remove needs-reply label
+name: Remove waiting label
 
 on:
   issue_comment:
@@ -12,7 +12,7 @@ jobs:
       github.event.comment.author_association != 'OWNER' &&
       github.event.comment.author_association != 'COLLABORATOR'
     steps:
-      - name: Remove needs-reply label
+      - name: Remove waiting label
         uses: octokit/request-action@v2.x
         continue-on-error: true
         with:
