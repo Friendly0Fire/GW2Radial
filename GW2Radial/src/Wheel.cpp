@@ -1,6 +1,7 @@
 #include <Core.h>
 #include <GFXSettings.h>
 #include <ImGuiExtensions.h>
+#include <ImGuiPopup.h>
 #include <Input.h>
 #include <Main.h>
 #include <MumbleLink.h>
@@ -427,6 +428,13 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
 void Wheel::OnUpdate()
 {
+    if (showEmptyPopup_)
+        ImGuiPopup("Radial menu missing keybinds")
+            .Position({ 0.5f, 0.45f })
+            .Size({ 400.f, 200.f }, false)
+            .Display([&](const ImVec2&) { ImGui::TextWrapped("A radial menu was triggered, but no keybinds are currently bound for it, so nothing could be shown."); },
+                     [&]() { showEmptyPopup_ = false; });
+
     auto& cd = conditionalDelay_;
     if (OptHasValue(cd.element))
     {
@@ -840,6 +848,15 @@ bool Wheel::HasUsableElements(ConditionalState cs) const
     return false;
 }
 
+bool Wheel::HasVisibleOrUsableElements(ConditionalState cs) const
+{
+    for (auto& we : wheelElements_)
+        if (we->isUsable(cs) || we->isVisible(cs))
+            return true;
+
+    return false;
+}
+
 void Wheel::OnMouseMove(bool& rv)
 {
     if (isVisible_)
@@ -923,7 +940,22 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
     auto& io             = ImGui::GetIO();
 
     cursorResetPosition_ = { static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y) };
-    Log::i().Print(Severity::Debug, "Storing cursor position ({}, {}) for restore...", cursorResetPosition_.x, cursorResetPosition_.y);
+    LogDebug("Storing cursor position ({}, {}) for restore...", cursorResetPosition_.x, cursorResetPosition_.y);
+
+    if (!HasVisibleOrUsableElements(MumbleLink::i().currentState()))
+    {
+        LogWarn("Triggered menu '{}', but no element is visible or usable!", displayName_);
+        bool isAnyBound = false;
+        for (auto& we : wheelElements_)
+            if (we->isBound())
+            {
+                isAnyBound = true;
+                break;
+            }
+
+        if (!isAnyBound)
+            showEmptyPopup_ = true;
+    }
 
     // Mount overlay is turned on
     if (isMountOverlayLocked)

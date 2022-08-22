@@ -184,6 +184,7 @@ protected:
     bool                                       HasVisibleElements(ConditionalState cs) const;
     std::vector<WheelElement*>                 GetUsableElements(ConditionalState cs, bool sorted = true) const;
     bool                                       HasUsableElements(ConditionalState cs) const;
+    bool                                       HasVisibleOrUsableElements(ConditionalState cs) const;
     PreventPassToGame                          KeybindEvent(bool center, bool activated);
     void                                       OnMouseMove(bool& rv);
     void                                       OnMouseButton(ScanCode sc, bool down, bool& rv);
@@ -269,6 +270,7 @@ protected:
     EventCallbackHandle           mouseButtonCallbackID_;
 
     fVector3                      wipeMaskData_;
+    bool                          showEmptyPopup_ = false;
 
     [[nodiscard]] const char*     GetTabName() const override
     {

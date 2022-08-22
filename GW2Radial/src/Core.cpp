@@ -172,8 +172,8 @@ void Core::InnerDraw()
                 [&](const ImVec2& windowSize)
                 {
                     ImGui::TextWrapped(
-                        "Welcome to GW2Radial! This small addon shows a convenient, customizable radial menu overlay to select a mount or novelty on the fly for Guild Wars 2: "
-                        "Path of Fire. "
+                        "Welcome to GW2Radial! This small addon shows a convenient, customizable radial menu overlay to select a mount, novelty and more on the fly for Guild Wars "
+                        "2. "
                         "To begin, use the shortcut Shift+Alt+M to open the settings menu and take a moment to bind your keys. If you ever need further assistance, please visit "
                         "this project's website at");
 
