@@ -90,8 +90,8 @@ protected:
                        ConditionalProperties::VISIBLE_UNDERWATER;
 
             case MountType::WARCLAW:
-                // Warclaw is usable and visible in WvW
-                return baseline | ConditionalProperties::USABLE_WVW | ConditionalProperties::VISIBLE_WVW;
+                // Warclaw is usable in WvW only
+                return ConditionalProperties::USABLE_WVW;
 
             case MountType::TURTLE:
                 // Turtle is usable on and underwater
