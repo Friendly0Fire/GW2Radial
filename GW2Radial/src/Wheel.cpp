@@ -278,9 +278,12 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
         ImGuiConfigurationWrapper(rb, "Favorite##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::FAVORITE));
         ImGui::SameLine();
         ImGuiConfigurationWrapper(rb, "As if opened##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::DIRECTION));
+        ImGui::SameLine();
+        ImGuiConfigurationWrapper(rb, "Pass to game##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::PASS_TO_GAME));
         ImGuiHelpTooltip(
             "Determines the behavior of the menu if it is dismissed before it becomes visible. By default, it does nothing, but it can also (1) trigger the last selected item; "
-            "(2) trigger a fixed \"favorite\" option; (3) function exactly as if the menu was opened, making it possible to select an item with the mouse without seeing them.");
+            "(2) trigger a fixed \"favorite\" option; (3) function exactly as if the menu was opened, making it possible to select an item with the mouse without seeing them; "
+            "(4) forward the input to the game.");
 
         if (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()) == BehaviorBeforeDelay::FAVORITE)
         {
@@ -989,7 +992,6 @@ void Wheel::DeactivateWheel()
         ResetConditionallyDelayed(true);
         return;
     }
-
     // If keybind release was done before the wheel is visible, check our behavior
     if (currentTriggerTime_ + displayDelayOption_.value() > TimeInMilliseconds())
     {
@@ -1007,6 +1009,11 @@ void Wheel::DeactivateWheel()
             case BehaviorBeforeDelay::DIRECTION:
                 if (!currentHovered_)
                     currentHovered_ = GetCenterHoveredElement();
+                break;
+            case BehaviorBeforeDelay::PASS_TO_GAME:
+                bool centerKeybind = currentPosition_.x == 0.5f && currentPosition_.y == 0.5f;
+                Input::i().SendKeybind((centerKeybind ? centralKeybind_ : keybind_).keyCombo());
+                currentHovered_ = nullptr;
                 break;
         }
     }

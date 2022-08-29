@@ -49,10 +49,10 @@ inline bool IsUsable(ConditionalState cs, ConditionalProperties cp)
 {
     if (isNone(cs) && isNone(cp & ConditionalProperties::USABLE_DEFAULT))
         return false;
+    if (notNone(cs & ConditionalState::IN_WVW) && isNone(cp & ConditionalProperties::USABLE_WVW))
+        return false;
 
     if (notNone(cs & ConditionalState::IN_COMBAT) && isNone(cp & ConditionalProperties::USABLE_IN_COMBAT))
-        return false;
-    if (notNone(cs & ConditionalState::IN_WVW) && isNone(cp & ConditionalProperties::USABLE_WVW))
         return false;
     if (notNone(cs & ConditionalState::UNDERWATER) && isNone(cp & ConditionalProperties::USABLE_UNDERWATER))
         return false;
@@ -66,10 +66,10 @@ inline bool IsVisible(ConditionalState cs, ConditionalProperties cp)
 {
     if (isNone(cs) && isNone(cp & ConditionalProperties::VISIBLE_DEFAULT))
         return false;
+    if (notNone(cs & ConditionalState::IN_WVW) && isNone(cp & ConditionalProperties::VISIBLE_WVW))
+        return false;
 
     if (notNone(cs & ConditionalState::IN_COMBAT) && isNone(cp & ConditionalProperties::VISIBLE_IN_COMBAT))
-        return false;
-    if (notNone(cs & ConditionalState::IN_WVW) && isNone(cp & ConditionalProperties::VISIBLE_WVW))
         return false;
     if (notNone(cs & ConditionalState::UNDERWATER) && isNone(cp & ConditionalProperties::VISIBLE_UNDERWATER))
         return false;

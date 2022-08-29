@@ -23,10 +23,11 @@ public:
 
     enum class BehaviorBeforeDelay : int
     {
-        NOTHING   = 0,
-        PREVIOUS  = 1,
-        FAVORITE  = 2,
-        DIRECTION = 3
+        NOTHING      = 0,
+        PREVIOUS     = 1,
+        FAVORITE     = 2,
+        DIRECTION    = 3,
+        PASS_TO_GAME = 4
     };
 
     Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName);
