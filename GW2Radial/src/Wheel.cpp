@@ -311,9 +311,12 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
         ImGuiConfigurationWrapper(rb, "Previous##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
         ImGui::SameLine();
         ImGuiConfigurationWrapper(rb, "Favorite##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
+        ImGui::SameLine();
+        ImGuiConfigurationWrapper(rb, "Pass to game##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PASS_TO_GAME));
         ImGuiHelpTooltip("Determines the behavior of the central region of the menu. By default, it does nothing, but it can alternatively: "
                          "(1) trigger the last selected item; "
-                         "(2) trigger a fixed \"favorite\" option.");
+                         "(2) trigger a fixed \"favorite\" option;"
+                         "(3) forward the input to the game.");
 
         if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
         {
@@ -982,16 +985,25 @@ void Wheel::ActivateWheel(bool isMountOverlayLocked)
     UpdateHover();
 }
 
+void Wheel::PassToGame()
+{
+    bool centerKeybind = currentPosition_.x == 0.5f && currentPosition_.y == 0.5f;
+    Input::i().SendKeybind((centerKeybind ? centralKeybind_ : keybind_).keyCombo());
+    currentHovered_ = nullptr;
+}
+
+
 void Wheel::DeactivateWheel()
 {
     isVisible_                   = false;
     resetCursorPositionToCenter_ = false;
 
-    if (currentHovered_ == nullptr && centerCancelDelayedInputOption_.value())
+    if (currentHovered_ == nullptr && OptHasValue(conditionalDelay_.element) && centerCancelDelayedInputOption_.value())
     {
         ResetConditionallyDelayed(true);
         return;
     }
+
     // If keybind release was done before the wheel is visible, check our behavior
     if (currentTriggerTime_ + displayDelayOption_.value() > TimeInMilliseconds())
     {
@@ -1011,14 +1023,17 @@ void Wheel::DeactivateWheel()
                     currentHovered_ = GetCenterHoveredElement();
                 break;
             case BehaviorBeforeDelay::PASS_TO_GAME:
-                bool centerKeybind = currentPosition_.x == 0.5f && currentPosition_.y == 0.5f;
-                Input::i().SendKeybind((centerKeybind ? centralKeybind_ : keybind_).keyCombo());
-                currentHovered_ = nullptr;
+                PassToGame();
                 break;
         }
     }
     else if (!currentHovered_)
-        currentHovered_ = GetCenterHoveredElement();
+    {
+        if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::PASS_TO_GAME)
+            PassToGame();
+        else
+            currentHovered_ = GetCenterHoveredElement();
+    }
 
     bool resetMouse = alwaysResetCursorPositionBeforeKeyPress_ || resetCursorAfterKeybindOption_.value() || ResetMouseCheck(currentHovered_);
 

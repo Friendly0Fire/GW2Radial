@@ -16,9 +16,10 @@ class Wheel : public SettingsMenu::Implementer
 public:
     enum class CenterBehavior : int
     {
-        NOTHING  = 0,
-        PREVIOUS = 1,
-        FAVORITE = 2
+        NOTHING      = 0,
+        PREVIOUS     = 1,
+        FAVORITE     = 2,
+        PASS_TO_GAME = 3
     };
 
     enum class BehaviorBeforeDelay : int
@@ -193,6 +194,7 @@ protected:
     void                                       DeactivateWheel();
     void                                       SendKeybindOrDelay(OptKeybindWheelElement kbwe, std::optional<Point> mousePos);
     void                                       ResetConditionallyDelayed(bool withFadeOut, mstime currentTime = TimeInMilliseconds());
+    void                                       PassToGame();
 
     std::string                                nickname_, displayName_;
     bool                                       alwaysResetCursorPositionBeforeKeyPress_ = false;
