@@ -155,7 +155,6 @@ cd "$(ProjectDir)shaders"
     <ClCompile Include="src\MarkerWheel.cpp" />
     <ClCompile Include="src\MountWheel.cpp" />
     <ClCompile Include="src\NoveltyWheel.cpp" />
-    <ClCompile Include="src\VSCB.cpp" />
     <ClCompile Include="src\Wheel.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_USER_CONFIG=&lt;imcfg.h&gt;;D3D_DEBUG_INFO;_DEBUG;GW2Radial_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;SHADERS_DIR=LR"sd($(ProjectDir)shaders\)sd";_WIN32_WINNT=0x0600;$(GitHubDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -172,7 +171,6 @@ cd "$(ProjectDir)shaders"
     <ClInclude Include="include\Resource.h" />
     <ClInclude Include="include\Tag.h" />
     <ClInclude Include="include\Version.h" />
-    <ClInclude Include="include\VSCB.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
   </ItemGroup>

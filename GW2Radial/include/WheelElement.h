@@ -234,6 +234,7 @@ protected:
         bool      premultiplyAlpha;
     };
 
-    static ConstantBuffer<WheelElementCB> cb_s;
+    ConstantBufferSPtr<WheelElementCB>        cb_;
+    static ConstantBufferWPtr<WheelElementCB> cb_s;
 };
 } // namespace GW2Radial

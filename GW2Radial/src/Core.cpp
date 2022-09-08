@@ -103,6 +103,8 @@ void Core::InnerInitPreImGui()
     wheels_.push_back(std::make_unique<NoveltyWheel>(bgTex_));
     wheels_.push_back(std::make_unique<MarkerWheel>(bgTex_));
     wheels_.push_back(std::make_unique<ObjectMarkerWheel>(bgTex_));
+
+    vertexCB_ = ShaderManager::i().MakeConstantBuffer<VertexCB>();
 }
 
 void Core::InnerInitPostImGui()
@@ -149,6 +151,10 @@ void Core::InnerInternalInit()
 void Core::InnerShutdown()
 {
     comThread_.reset();
+    wheels_.clear();
+    customWheels_.reset();
+    bgTex_.reset();
+    vertexCB_.reset();
 }
 
 void Core::InnerUpdate()

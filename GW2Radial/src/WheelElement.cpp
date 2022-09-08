@@ -1,7 +1,6 @@
 #include <Core.h>
 #include <ShaderManager.h>
 #include <Utility.h>
-#include <VSCB.h>
 #include <Wheel.h>
 #include <WheelElement.h>
 #include <common/IconFontCppHeaders/IconsFontAwesome5.h>
@@ -9,7 +8,7 @@
 
 namespace GW2Radial
 {
-ConstantBuffer<WheelElement::WheelElementCB> WheelElement::cb_s;
+ConstantBufferWPtr<WheelElement::WheelElementCB> WheelElement::cb_s;
 
 WheelElement::WheelElement(uint id, const std::string& nickname, const std::string& category, const std::string& displayName, const glm::vec4& color,
                            ConditionalProperties defaultProps, Texture2D tex)
@@ -34,8 +33,13 @@ WheelElement::WheelElement(uint id, const std::string& nickname, const std::stri
     aspectRatio_ = static_cast<float>(desc.Height) / static_cast<float>(desc.Width);
     texWidth_    = static_cast<float>(desc.Width);
 
-    if (!cb_s.IsValid())
-        cb_s = ShaderManager::i().MakeConstantBuffer<WheelElementCB>();
+    if (auto cb = cb_s.lock())
+        cb_ = cb;
+    else
+    {
+        cb_  = ShaderManager::i().MakeConstantBuffer<WheelElementCB>();
+        cb_s = cb_;
+    }
 }
 
 int WheelElement::DrawPriority(int extremumIndicator)
@@ -171,22 +175,6 @@ int WheelElement::DrawPriority(int extremumIndicator)
 
 void WheelElement::SetShaderState(ID3D11DeviceContext* ctx) const
 {
-    glm::vec4 adjustedColor = color_;
-    adjustedColor.x         = Lerp(1, adjustedColor.x, colorizeAmount_);
-    adjustedColor.y         = Lerp(1, adjustedColor.y, colorizeAmount_);
-    adjustedColor.z         = Lerp(1, adjustedColor.z, colorizeAmount_);
-
-    auto& sm                = ShaderManager::i();
-
-    cb_s->adjustedColor     = adjustedColor;
-    cb_s->premultiplyAlpha  = premultiplyAlpha_;
-
-    cb_s.Update(ctx);
-    ctx->PSSetConstantBuffers(1, 1, cb_s.buffer().GetAddressOf());
-}
-
-void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio) const
-{
     glm::vec4 adjustedColor  = color_;
     adjustedColor.x          = Lerp(1, adjustedColor.x, colorizeAmount_);
     adjustedColor.y          = Lerp(1, adjustedColor.y, colorizeAmount_);
@@ -194,15 +182,31 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 
     auto& sm                 = ShaderManager::i();
 
-    cb_s->elementHoverFadeIn = hoverRatio;
-    cb_s->adjustedColor      = shadow ? glm::vec4{ 0.f, 0.f, 0.f, shadowStrength_ } : adjustedColor;
-    cb_s->premultiplyAlpha   = shadow ? false : premultiplyAlpha_;
+    (*cb_)->adjustedColor    = adjustedColor;
+    (*cb_)->premultiplyAlpha = premultiplyAlpha_;
 
-    cb_s.Update(ctx);
-    ID3D11Buffer* cbs[] = { wheelCb.Get(), cb_s.buffer().Get() };
+    cb_->Update(ctx);
+    ctx->PSSetConstantBuffers(1, 1, cb_->buffer().GetAddressOf());
+}
+
+void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio) const
+{
+    glm::vec4 adjustedColor    = color_;
+    adjustedColor.x            = Lerp(1, adjustedColor.x, colorizeAmount_);
+    adjustedColor.y            = Lerp(1, adjustedColor.y, colorizeAmount_);
+    adjustedColor.z            = Lerp(1, adjustedColor.z, colorizeAmount_);
+
+    auto& sm                   = ShaderManager::i();
+
+    (*cb_)->elementHoverFadeIn = hoverRatio;
+    (*cb_)->adjustedColor      = shadow ? glm::vec4{ 0.f, 0.f, 0.f, shadowStrength_ } : adjustedColor;
+    (*cb_)->premultiplyAlpha   = shadow ? false : premultiplyAlpha_;
+
+    cb_->Update(ctx);
+    ID3D11Buffer* cbs[] = { wheelCb.Get(), cb_->buffer().Get() };
     ctx->PSSetConstantBuffers(0, uint(std::size(cbs)), cbs);
 
-    auto& vscb             = GetVSCB();
+    auto& vscb             = *Core::i().vertexCB();
     vscb->spriteDimensions = spriteDimensions;
     if (shadow)
     {

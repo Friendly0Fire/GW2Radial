@@ -46,9 +46,6 @@
     <ClCompile Include="src\CustomWheel.cpp">
       <Filter>Source Files\Radials</Filter>
     </ClCompile>
-    <ClCompile Include="src\VSCB.cpp">
-      <Filter>Source Files\Radials</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Resource.h">
@@ -86,9 +83,6 @@
     </ClInclude>
     <ClInclude Include="include\Version.h">
       <Filter>Source Files\Versioning</Filter>
-    </ClInclude>
-    <ClInclude Include="include\VSCB.h">
-      <Filter>Source Files\Radials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

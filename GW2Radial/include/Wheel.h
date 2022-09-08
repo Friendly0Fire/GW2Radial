@@ -80,7 +80,7 @@ public:
 
     [[nodiscard]] const ComPtr<ID3D11Buffer>& GetConstantBuffer() const
     {
-        return cb_s.buffer();
+        return cb_->buffer();
     }
 
     // Get current state, ignoring flags we don't want when *skipping* the wheel:
@@ -300,6 +300,7 @@ protected:
         bool     showIcon;
     };
 
-    static ConstantBuffer<WheelCB> cb_s;
+    ConstantBufferSPtr<WheelCB>        cb_;
+    static ConstantBufferWPtr<WheelCB> cb_s;
 };
 } // namespace GW2Radial

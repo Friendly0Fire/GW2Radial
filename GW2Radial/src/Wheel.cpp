@@ -7,7 +7,6 @@
 #include <MumbleLink.h>
 #include <ShaderManager.h>
 #include <Utility.h>
-#include <VSCB.h>
 #include <Wheel.h>
 #include <algorithm>
 #include <glm/gtx/euler_angles.hpp>
@@ -17,9 +16,9 @@
 
 namespace GW2Radial
 {
-ConstantBuffer<Wheel::WheelCB> Wheel::cb_s;
+ConstantBufferWPtr<Wheel::WheelCB> Wheel::cb_s;
 
-Wheel::Favorite                Wheel::MakeDefaultFavorite()
+Wheel::Favorite                    Wheel::MakeDefaultFavorite()
 {
     Favorite fav;
     fav.bits.baseline   = 0;
@@ -99,8 +98,13 @@ Wheel::Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::st
     std::fill_n(sampDesc.BorderColor, std::size(sampDesc.BorderColor), 0.f);
     GW2_CHECKED_HRESULT(dev->CreateSamplerState(&sampDesc, borderSampler_.GetAddressOf()));
 
-    if (!cb_s.IsValid())
-        cb_s = ShaderManager::i().MakeConstantBuffer<WheelCB>();
+    if (auto cb = cb_s.lock())
+        cb_ = cb;
+    else
+    {
+        cb_  = ShaderManager::i().MakeConstantBuffer<WheelCB>();
+        cb_s = cb_;
+    }
 }
 
 Wheel::~Wheel()
@@ -681,18 +685,19 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
 void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer, const std::vector<WheelElement*>& activeElements,
                                  const std::span<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt)
 {
-    cb_s->wipeMaskData   = wipeMaskData_;
-    cb_s->wheelFadeIn    = fadeIn;
-    cb_s->animationTimer = animationTimer;
-    cb_s->centerScale    = centerScaleOption_.value();
-    cb_s->elementCount   = int(activeElements.size());
-    cb_s->globalOpacity  = opacityMultiplierOption_.value() * 0.01f;
-    cb_s->timeLeft       = timeLeft;
-    cb_s->showIcon       = showIcon;
-    memcpy_s(cb_s->hoverFadeIns, sizeof(cb_s->hoverFadeIns), hoveredFadeIns.data(), MaxHoverFadeIns * sizeof(float));
+    auto& cb           = *cb_;
+    cb->wipeMaskData   = wipeMaskData_;
+    cb->wheelFadeIn    = fadeIn;
+    cb->animationTimer = animationTimer;
+    cb->centerScale    = centerScaleOption_.value();
+    cb->elementCount   = int(activeElements.size());
+    cb->globalOpacity  = opacityMultiplierOption_.value() * 0.01f;
+    cb->timeLeft       = timeLeft;
+    cb->showIcon       = showIcon;
+    memcpy_s(cb->hoverFadeIns, sizeof(cb->hoverFadeIns), hoveredFadeIns.data(), MaxHoverFadeIns * sizeof(float));
 
-    cb_s.Update(ctx);
-    ctx->PSSetConstantBuffers(0, 1, cb_s.buffer().GetAddressOf());
+    cb.Update(ctx);
+    ctx->PSSetConstantBuffers(0, 1, cb.buffer().GetAddressOf());
 
     glm::mat4x4 tiltMatrix;
     if (tilt)
@@ -709,7 +714,7 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
     else
         tiltMatrix = glm::identity<glm::mat4x4>();
 
-    auto& vscb             = GetVSCB();
+    auto& vscb             = *Core::i().vertexCB();
     vscb->spriteDimensions = spriteDimensions;
     vscb->tiltMatrix       = tiltMatrix;
     vscb->spriteZ          = 0.f;
@@ -719,7 +724,7 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
 
 void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions)
 {
-    auto& vscb             = GetVSCB();
+    auto& vscb             = *Core::i().vertexCB();
     vscb->spriteDimensions = spriteDimensions;
     vscb->spriteZ          = 0.f;
     vscb.Update(ctx);

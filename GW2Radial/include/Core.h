@@ -17,6 +17,13 @@ namespace GW2Radial
 class Core : public BaseCore, public Singleton<Core>
 {
 public:
+    struct VertexCB
+    {
+        fVector4    spriteDimensions;
+        glm::mat4x4 tiltMatrix;
+        float       spriteZ;
+    };
+
     void ForceReloadWheels()
     {
         forceReloadWheels_ = true;
@@ -40,6 +47,11 @@ public:
             std::unique_lock lk(comTaskMutex_);
             comNotify_.wait(lk);
         }
+    }
+
+    ConstantBufferSPtr<VertexCB> vertexCB()
+    {
+        return vertexCB_;
     }
 
 protected:
@@ -76,6 +88,7 @@ protected:
     std::unique_ptr<ConfigurationOption<bool>> firstMessageShown_;
 
     std::shared_ptr<Texture2D>                 bgTex_;
+    ConstantBufferSPtr<VertexCB>               vertexCB_;
 
     std::unique_ptr<std::jthread>              comThread_;
     std::optional<std::function<void()>>       comTask_;
