@@ -23,6 +23,10 @@ enum class MountType : uint
     LAST     = SKIFF
 };
 constexpr unsigned int MountTypeCount = std::underlying_type_t<MountType>(MountType::LAST) + 1;
+constexpr unsigned int MountIndex(MountType m)
+{
+    return unsigned int(m) - unsigned int(MountType::FIRST);
+}
 
 enum class MarkerType : uint
 {

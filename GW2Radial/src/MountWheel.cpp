@@ -110,6 +110,6 @@ bool MountWheel::CustomDelayCheck(OptKeybindWheelElement&)
 
 bool MountWheel::ResetMouseCheck(WheelElement* we)
 {
-    return we == wheelElements_[uint(MountType::SKIFF)].get();
+    return we == wheelElements_[MountIndex(MountType::SKIFF)].get();
 }
 } // namespace GW2Radial
