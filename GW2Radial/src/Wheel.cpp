@@ -932,7 +932,7 @@ PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
             isVisible_ = activated;
 
             // If holding down the button is not necessary, modify behavior
-            if (noHoldOption_.value() && previousVisibility && currentHovered_ == nullptr)
+            if (previousVisibility && (clickSelectOption_.value() || noHoldOption_.value() && currentHovered_ == nullptr))
                 isVisible_ = true;
 
             if (isVisible_ && !previousVisibility)
