@@ -46,7 +46,7 @@ Please refer to the readme in the `custom_examples` folder for more information 
 - The Xunlai Addons Discord server members for their continued support
 - Cerulean Dream for providing me with the initial motivator and inspiration in making his AutoHotkey-based radial menu
 - Ghost for the new mount art found in v0.3+
-- [Skiff vector art](https://www.freepik.com/vectors/fishing-boat) created by macrovector
+- Skiff and fishing icons by John Mausson
 - [freepik](https://www.freepik.com/) for novelty art
 - deltaconnected and Bhagawan for their amazing addons which helped frame this and direct the approach to take
 - WoodenPotatoes for the great feedback and exposure, as well as the Spud Club for helping with testing
