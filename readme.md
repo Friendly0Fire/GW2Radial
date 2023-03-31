@@ -32,6 +32,16 @@ An [*ArenaNET-approved<sup>TM</sup>*](https://www.reddit.com/r/Guildwars2/commen
 - Place ``gw2addon_gw2radial.dll`` in your addons folder inside a new folder named `gw2radial` (with the default game install path, this would be ``C:\Program Files\Guild Wars 2\addons\gw2radial``).
 - Run the game! If everything was setup properly, you should be greeted by a prompt on your first launch.
 
+#### Linux Support
+GW2Radial is **not** developed to support Linux, but with a simple tweak you can get radial working.
+- Using `protontricks`, add the following `dll` overrides:
+  - `d3dcompiler_43`, `d3dcompiler_47`, `d3d11_43`
+
+<details>
+  <summary>Screenshot showing which dlls to install</summary>
+  <img height="400px" src="https://user-images.githubusercontent.com/5796109/229198400-49fe3322-d160-4d65-b59d-ee4025ab03ff.png" />
+</details>
+
 ## Usage
 - When in game, press ``Shift+Alt+M`` for the options menu.
 - Set a keybind to use the overlay. This is the only keybind you will use in practice.
