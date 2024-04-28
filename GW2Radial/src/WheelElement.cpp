@@ -10,7 +10,7 @@ namespace GW2Radial
 {
 ConstantBufferWPtr<WheelElement::WheelElementCB> WheelElement::cb_s;
 
-WheelElement::WheelElement(uint id, const std::string& nickname, const std::string& category, const std::string& displayName, const glm::vec4& color,
+WheelElement::WheelElement(u32 id, const std::string& nickname, const std::string& category, const std::string& displayName, const glm::vec4& color,
                            ConditionalProperties defaultProps, Texture2D tex)
     : sortingPriorityOption_(displayName + " Priority", nickname + "_priority", category, static_cast<int>(id))
     , props_("", nickname + "_props", category, defaultProps)
@@ -23,7 +23,7 @@ WheelElement::WheelElement(uint id, const std::string& nickname, const std::stri
 {
     auto dev = Core::i().device();
     if (!appearance_.srv)
-        appearance_ = CreateTextureFromResource<ID3D11Texture2D>(dev.Get(), Core::i().dllModule(), elementId_);
+        appearance_ = CreateTextureFromResource(dev.Get(), Core::i().dllModule(), elementId_);
 
     GW2_ASSERT(appearance_.srv);
 
@@ -53,13 +53,13 @@ int WheelElement::DrawPriority(int extremumIndicator)
     auto            props           = props_.value();
 
     ImGui::TableNextColumn();
-    if (!isBound() || props == ConditionalProperties::NONE)
+    if (!isBound() || props == ConditionalProperties::None)
         ImGui::PushFont(Core::i().fontItalic());
     auto displayName = displayName_;
     if (!keybind_.isSet())
         displayName += " [No keybind]";
     ImGui::TextUnformatted(displayName.c_str());
-    if (!isBound() || props == ConditionalProperties::NONE)
+    if (!isBound() || props == ConditionalProperties::None)
         ImGui::PopFont();
 
     ImGui::TableNextColumn();
@@ -67,35 +67,31 @@ int WheelElement::DrawPriority(int extremumIndicator)
     static const auto previewMaxDims = []()
     {
         auto character = ImGui::CalcTextSize("X");
-        ImGui::PushFont(Core::i().fontIcon());
         ImGui::SetWindowFontScale(fontMultiplier);
         float iconA = ImGui::CalcTextSize(ICON_FA_CHECK_DOUBLE).x;
         float iconB = ImGui::CalcTextSize(ICON_FA_EYE).x;
         float iconC = ImGui::CalcTextSize(ICON_FA_HAND_POINTER).x;
         ImGui::SetWindowFontScale(1.f);
-        ImGui::PopFont();
 
         return ImVec2((character.x + std::max({ iconA, iconB, iconC })) * 5 + ImGui::GetStyle().ItemSpacing.x * (2 + 5 - 1), character.y);
     }();
 
     auto previewFmt = [props, realItemSpacing](ConditionalProperties v, ConditionalProperties u, char c) mutable
     {
-        if (notNone(props & (v | u)))
+        if (NotNone(props & (v | u)))
         {
             const float cursorY = ImGui::GetCursorPosY();
             ImGui::TextUnformatted(&c, &c + 1);
             ImGui::SameLine();
-            ImGui::PushFont(Core::i().fontIcon());
             ImGui::SetCursorPosY(cursorY + fontOffset);
             ImGui::SetWindowFontScale(fontMultiplier);
-            if (notNone(props & v) && notNone(props & u)) // Visible and usable
+            if (NotNone(props & v) && NotNone(props & u)) // Visible and usable
                 ImGui::TextUnformatted(ICON_FA_CHECK_DOUBLE);
-            else if (notNone(props & v) && isNone(props & u)) // Visible but not usable
+            else if (NotNone(props & v) && IsNone(props & u)) // Visible but not usable
                 ImGui::TextUnformatted(ICON_FA_EYE);
             else
                 ImGui::TextUnformatted(ICON_FA_HAND_POINTER); // Usable but not visible
             ImGui::SetWindowFontScale(1.f);
-            ImGui::PopFont();
             ImGui::SameLine(0.f, realItemSpacing);
             ImGui::SetCursorPosY(cursorY);
         }
@@ -106,25 +102,25 @@ int WheelElement::DrawPriority(int extremumIndicator)
     {
         auto chk = [&props, suffix = "##" + nickname_](ConditionalProperties p, const char* display)
         {
-            bool enabled = notNone(props & p);
+            bool enabled = NotNone(props & p);
             if (ImGui::Checkbox((display + suffix).c_str(), &enabled))
                 props = enabled ? (props | p) : (props & ~p);
         };
 
-        chk(ConditionalProperties::VISIBLE_DEFAULT, "Visible by default");
-        chk(ConditionalProperties::USABLE_DEFAULT, "Usable by default");
+        chk(ConditionalProperties::VisibleDefault, "Visible by default");
+        chk(ConditionalProperties::UsableDefault, "Usable by default");
 
-        chk(ConditionalProperties::VISIBLE_IN_COMBAT, "Visible in combat");
-        chk(ConditionalProperties::USABLE_IN_COMBAT, "Usable in combat");
+        chk(ConditionalProperties::VisibleInCombat, "Visible in combat");
+        chk(ConditionalProperties::UsableInCombat, "Usable in combat");
 
-        chk(ConditionalProperties::VISIBLE_UNDERWATER, "Visible underwater");
-        chk(ConditionalProperties::USABLE_UNDERWATER, "Usable underwater");
+        chk(ConditionalProperties::VisibleUnderwater, "Visible underwater");
+        chk(ConditionalProperties::UsableUnderwater, "Usable underwater");
 
-        chk(ConditionalProperties::VISIBLE_ON_WATER, "Visible on water");
-        chk(ConditionalProperties::USABLE_ON_WATER, "Usable on water");
+        chk(ConditionalProperties::VisibleOnWater, "Visible on water");
+        chk(ConditionalProperties::UsableOnWater, "Usable on water");
 
-        chk(ConditionalProperties::VISIBLE_WVW, "Visible in WvW");
-        chk(ConditionalProperties::USABLE_WVW, "Usable in WvW");
+        chk(ConditionalProperties::VisibleWvW, "Visible in WvW");
+        chk(ConditionalProperties::UsableWvW, "Usable in WvW");
 
         ImGui::EndCombo();
     }
@@ -132,11 +128,11 @@ int WheelElement::DrawPriority(int extremumIndicator)
     {
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0.f, 0.f));
-        previewFmt(ConditionalProperties::VISIBLE_DEFAULT, ConditionalProperties::USABLE_DEFAULT, 'D');
-        previewFmt(ConditionalProperties::VISIBLE_IN_COMBAT, ConditionalProperties::USABLE_IN_COMBAT, 'C');
-        previewFmt(ConditionalProperties::VISIBLE_UNDERWATER, ConditionalProperties::USABLE_UNDERWATER, 'U');
-        previewFmt(ConditionalProperties::VISIBLE_ON_WATER, ConditionalProperties::USABLE_ON_WATER, 'O');
-        previewFmt(ConditionalProperties::VISIBLE_WVW, ConditionalProperties::USABLE_WVW, 'W');
+        previewFmt(ConditionalProperties::VisibleDefault, ConditionalProperties::UsableDefault, 'D');
+        previewFmt(ConditionalProperties::VisibleInCombat, ConditionalProperties::UsableInCombat, 'C');
+        previewFmt(ConditionalProperties::VisibleUnderwater, ConditionalProperties::UsableUnderwater, 'U');
+        previewFmt(ConditionalProperties::VisibleOnWater, ConditionalProperties::UsableOnWater, 'O');
+        previewFmt(ConditionalProperties::VisibleWvW, ConditionalProperties::UsableWvW, 'W');
         ImGui::PopStyleVar(2);
 
         ImGui::EndComboPreview();
@@ -144,8 +140,6 @@ int WheelElement::DrawPriority(int extremumIndicator)
 
     if (props != props_.value())
         props_.value(props);
-
-    ImGui::PushFont(Core::i().fontIcon());
 
     int rv = 0;
     ImGui::TableNextColumn();
@@ -167,7 +161,6 @@ int WheelElement::DrawPriority(int extremumIndicator)
             rv = -1;
     }
     ImGui::PopStyleVar();
-    ImGui::PopFont();
     ImGui::PopStyleColor();
 
     return rv;
@@ -189,7 +182,7 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx) const
     ctx->PSSetConstantBuffers(1, 1, cb_->buffer().GetAddressOf());
 }
 
-void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio) const
+void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const glm::vec4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio) const
 {
     glm::vec4 adjustedColor    = color_;
     adjustedColor.x            = Lerp(1, adjustedColor.x, colorizeAmount_);
@@ -204,7 +197,7 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
 
     cb_->Update(ctx);
     ID3D11Buffer* cbs[] = { wheelCb.Get(), cb_->buffer().Get() };
-    ctx->PSSetConstantBuffers(0, uint(std::size(cbs)), cbs);
+    ctx->PSSetConstantBuffers(0, u32(std::size(cbs)), cbs);
 
     auto& vscb             = *Core::i().vertexCB();
     vscb->spriteDimensions = spriteDimensions;
@@ -218,7 +211,7 @@ void WheelElement::SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spri
     ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
 
-void WheelElement::Draw(ID3D11DeviceContext* ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered,
+void WheelElement::Draw(ID3D11DeviceContext* ctx, int n, glm::vec4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered,
                         const Wheel* parent)
 {
     const float hoverTimer   = SmoothStep(hoverFadeIn(currentTime, parent));

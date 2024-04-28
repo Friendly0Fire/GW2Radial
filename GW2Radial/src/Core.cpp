@@ -1,7 +1,6 @@
 #include <ConfigurationFile.h>
 #include <Core.h>
 #include <CustomWheel.h>
-#include <Direct3D11Loader.h>
 #include <GFXSettings.h>
 #include <ImGuiPopup.h>
 #include <Input.h>
@@ -25,7 +24,7 @@
 
 KeyCombo GetSettingsKeyCombo()
 {
-    return { GetScanCodeFromVirtualKey('M'), Modifier::SHIFT | Modifier::ALT };
+    return { GetScanCodeFromVirtualKey('M'), Modifier::Shift | Modifier::Alt };
 }
 
 namespace GW2Radial
@@ -38,14 +37,14 @@ class RadialMiscTab : public ::MiscTab
 public:
     void AdditionalGUI() override
     {
-        ImGuiTitle("Toggle Menu Visibility");
+        UI::Title("Toggle Menu Visibility");
 
         for (auto& wheel : Core::i().wheels())
         {
-            ImGuiConfigurationWrapper(ImGui::Checkbox, wheel->visibleInMenuOption());
+            ImGui::ConfigurationWrapper(ImGui::Checkbox, wheel->visibleInMenuOption());
         }
 
-        ImGuiTitle("Custom Wheel Tools");
+        UI::Title("Custom Wheel Tools");
 
         ImGui::Checkbox("Reload custom wheels on focus", &reloadOnFocus_);
 
@@ -63,7 +62,7 @@ void Core::InnerFrequentUpdate()
 {
     const auto& mumble = MumbleLink::i();
 
-    uint        map    = mumble.mapId();
+    u32         map    = mumble.mapId();
     if (map != mapId_)
     {
         for (auto& wheel : wheels_)
@@ -109,7 +108,7 @@ void Core::InnerInitPreImGui()
 
 void Core::InnerInitPostImGui()
 {
-    customWheels_      = std::make_unique<CustomWheelsManager>(bgTex_, wheels_, fontDraw_);
+    customWheels_      = std::make_unique<CustomWheelsManager>(bgTex_, wheels_, font_);
 
     firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
 }

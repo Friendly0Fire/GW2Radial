@@ -45,7 +45,7 @@ public:
     void               Draw(ID3D11DeviceContext* ctx);
     void               OnFocusLost();
     void               OnUpdate();
-    void               OnMapChange(uint prevId, uint newId);
+    void               OnMapChange(u32 prevId, u32 newId);
     void               OnCharacterChange(const std::wstring& prevCharacterName, const std::wstring& newCharacterName);
 
     [[nodiscard]] bool drawOverUI() const
@@ -87,9 +87,9 @@ public:
     // e.g. no skip in WvW -> we're never in WvW, ergo all mounts are "available", ergo no skip
     [[nodiscard]] ConditionalState GetSkipState() const
     {
-        return ((enableSkipWvWOption_.value() ? ConditionalState::IN_WVW : ConditionalState::NONE) |
-                (enableSkipUWOption_.value() ? ConditionalState::UNDERWATER : ConditionalState::NONE) |
-                (enableSkipOWOption_.value() ? ConditionalState::ON_WATER : ConditionalState::NONE)) &
+        return ((enableSkipWvWOption_.value() ? ConditionalState::InWvW : ConditionalState::None) |
+                (enableSkipUWOption_.value() ? ConditionalState::Underwater : ConditionalState::None) |
+                (enableSkipOWOption_.value() ? ConditionalState::OnWater : ConditionalState::None)) &
                MumbleLink::i().currentState();
     }
 
@@ -176,9 +176,9 @@ protected:
     static Favorite MakeDefaultFavorite();
 
     void            Sort();
-    void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer, const std::vector<WheelElement*>& activeElements,
+    void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const glm::vec4& spriteDimensions, float fadeIn, float animationTimer, const std::vector<WheelElement*>& activeElements,
                               const std::span<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt);
-    void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& baseSpriteDimensions);
+    void UpdateConstantBuffer(ID3D11DeviceContext* ctx, const glm::vec4& baseSpriteDimensions);
 
     WheelElement*                              GetCenterHoveredElement();
     WheelElement*                              GetFavorite(Favorite fav) const;
@@ -187,7 +187,7 @@ protected:
     std::vector<WheelElement*>                 GetUsableElements(ConditionalState cs, bool sorted = true) const;
     bool                                       HasUsableElements(ConditionalState cs) const;
     bool                                       HasVisibleOrUsableElements(ConditionalState cs) const;
-    PreventPassToGame                          KeybindEvent(bool center, bool activated);
+    PassToGame                                 KeybindEvent(bool center, Activated activated);
     void                                       OnMouseMove(bool& rv);
     void                                       OnMouseButton(ScanCode sc, bool down, bool& rv);
     void                                       ActivateWheel(bool isMountOverlayLocked);
@@ -203,7 +203,7 @@ protected:
     std::vector<std::unique_ptr<WheelElement>> wheelElements_;
     std::vector<WheelElement*>                 sortedWheelElements_;
     bool                                       isVisible_                 = false;
-    uint                                       minElementSortingPriority_ = 0;
+    u32                                        minElementSortingPriority_ = 0;
     ConditionSetPtr                            conditions_;
     ActivationKeybind                          keybind_, centralKeybind_;
     bool                                       waitingForBypassComplete_ = false;
@@ -257,7 +257,7 @@ protected:
     ConfigurationOption<float>    animationScale_;
 
     Point                         cursorResetPosition_;
-    fVector2                      currentPosition_;
+    glm::vec2                     currentPosition_;
     mstime                        currentTriggerTime_ = 0;
 
     WheelElement*                 currentHovered_     = nullptr;
@@ -272,7 +272,7 @@ protected:
     EventCallbackHandle           mouseMoveCallbackID_;
     EventCallbackHandle           mouseButtonCallbackID_;
 
-    fVector3                      wipeMaskData_;
+    glm::vec3                     wipeMaskData_;
     bool                          showEmptyPopup_ = false;
 
     [[nodiscard]] const char*     GetTabName() const override
@@ -285,19 +285,19 @@ protected:
     friend class WheelElement;
     friend class CustomWheelsManager;
 
-    static inline const uint MaxHoverFadeIns = 12;
+    static inline const u32 MaxHoverFadeIns = 12;
 
     struct WheelCB
     {
-        fVector3 wipeMaskData;
-        float    wheelFadeIn;
-        float    animationTimer;
-        float    centerScale;
-        int      elementCount;
-        float    globalOpacity;
-        float    hoverFadeIns[MaxHoverFadeIns];
-        float    timeLeft;
-        bool     showIcon;
+        glm::vec3 wipeMaskData;
+        float     wheelFadeIn;
+        float     animationTimer;
+        float     centerScale;
+        int       elementCount;
+        float     globalOpacity;
+        float     hoverFadeIns[MaxHoverFadeIns];
+        float     timeLeft;
+        bool      showIcon;
     };
 
     ConstantBufferSPtr<WheelCB>        cb_;

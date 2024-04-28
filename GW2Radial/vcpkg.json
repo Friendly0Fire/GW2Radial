@@ -11,6 +11,7 @@
     "xxhash",
     "range-v3",
     "neargye-semver",
-    "atomic-queue"
+    "atomic-queue",
+    "freetype"
   ]
 }

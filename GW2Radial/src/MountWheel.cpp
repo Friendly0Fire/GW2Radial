@@ -10,10 +10,10 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
     , quickDismountOption_("Quick dismount", "quick_dismount", "wheel_" + nickname_, true)
     , dismountKeybind_("dismount", "Dismount", "wheel_" + nickname_)
 {
-    iterateEnum<MountType>(
+    IterateEnum<MountType>(
         [&](auto i)
         {
-            AddElement(std::make_unique<WheelElement>(static_cast<uint>(i), std::string("mount_") + GetMountNicknameFromType(i), "Mounts", GetMountNameFromType(i),
+            AddElement(std::make_unique<WheelElement>(static_cast<u32>(i), std::string("mount_") + GetMountNicknameFromType(i), "Mounts", GetMountNameFromType(i),
                                                       GetMountColorFromType(i), GetMountPropsFromType(i)));
         });
 }
@@ -22,25 +22,25 @@ glm::vec4 MountWheel::GetMountColorFromType(MountType m)
 {
     switch (m)
     {
-        case MountType::RAPTOR:
+        case MountType::Raptor:
             return { 213 / 255.f, 100 / 255.f, 89 / 255.f, 1 };
-        case MountType::SPRINGER:
+        case MountType::Springer:
             return { 212 / 255.f, 198 / 255.f, 94 / 255.f, 1 };
-        case MountType::SKIMMER:
+        case MountType::Skimmer:
             return { 108 / 255.f, 128 / 255.f, 213 / 255.f, 1 };
-        case MountType::JACKAL:
+        case MountType::Jackal:
             return { 120 / 255.f, 183 / 255.f, 197 / 255.f, 1 };
-        case MountType::GRIFFON:
+        case MountType::Griffon:
             return { 136 / 255.f, 123 / 255.f, 195 / 255.f, 1 };
-        case MountType::BEETLE:
+        case MountType::Beetle:
             return { 199 / 255.f, 131 / 255.f, 68 / 255.f, 1 };
-        case MountType::WARCLAW:
+        case MountType::Warclaw:
             return { 181 / 255.f, 255 / 255.f, 244 / 255.f, 1 };
-        case MountType::SKYSCALE:
+        case MountType::Skyscale:
             return { 211 / 255.f, 142 / 255.f, 244 / 255.f, 1 };
         case MountType::TURTLE:
             return { 56 / 255.f, 228 / 255.f, 85 / 255.f, 1 };
-        case MountType::SKIFF:
+        case MountType::Skiff:
             return { 255 / 255.f, 255 / 255.f, 255 / 255.f, 1 };
         default:
             return { 1, 1, 1, 1 };
@@ -49,17 +49,17 @@ glm::vec4 MountWheel::GetMountColorFromType(MountType m)
 
 void MountWheel::MenuSectionKeybinds(Keybind** currentlyModifiedKeybind)
 {
-    ImGuiKeybindInput(dismountKeybind_, currentlyModifiedKeybind, "Mount/Dismount keybind in game. If set, used to dismount instead of sending an arbitrary mount key.");
+    ImGui::KeybindInput(dismountKeybind_, currentlyModifiedKeybind, "Mount/Dismount keybind in game. If set, used to dismount instead of sending an arbitrary mount key.");
 }
 
 void MountWheel::MenuSectionInteraction()
 {
-    ImGuiConfigurationWrapper(&ImGui::Checkbox, quickDismountOption_);
-    ImGuiHelpTooltip("If enabled, using any keybind while mounted will directly send a mount keybind to dismount without showing the radial menu.");
+    ImGui::ConfigurationWrapper(&ImGui::Checkbox, quickDismountOption_);
+    UI::HelpTooltip("If enabled, using any keybind while mounted will directly send a mount keybind to dismount without showing the radial menu.");
     {
-        ImGuiDisabler disable(!quickDismountOption_.value());
-        ImGuiConfigurationWrapper(&ImGui::SliderInt, dismountDelayOption_, 0, 3000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
-        ImGuiHelpTooltip("Amount of time, in milliseconds, to wait between pressing the keybind and dismounting.");
+        UI::Scoped::Disable disable(!quickDismountOption_.value());
+        ImGui::ConfigurationWrapper(&ImGui::SliderInt, dismountDelayOption_, 0, 3000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
+        UI::HelpTooltip("Amount of time, in milliseconds, to wait between pressing the keybind and dismounting.");
     }
 }
 
@@ -110,6 +110,6 @@ bool MountWheel::CustomDelayCheck(OptKeybindWheelElement&)
 
 bool MountWheel::ResetMouseCheck(WheelElement* we)
 {
-    return we == wheelElements_[MountIndex(MountType::SKIFF)].get();
+    return we == wheelElements_[MountIndex(MountType::Skiff)].get();
 }
 } // namespace GW2Radial

@@ -7,56 +7,43 @@
 
 namespace GW2Radial
 {
-enum class ConditionalProperties : uint
+enum class ConditionalProperties : u32
 {
-    NONE               = 0,
+    None              = 0,
 
-    VISIBLE_DEFAULT    = 1,
-    USABLE_DEFAULT     = 2,
+    VisibleDefault    = 1,
+    UsableDefault     = 2,
 
-    VISIBLE_UNDERWATER = 4,
-    USABLE_UNDERWATER  = 8,
+    VisibleUnderwater = 4,
+    UsableUnderwater  = 8,
 
-    VISIBLE_ON_WATER   = 16,
-    USABLE_ON_WATER    = 32,
+    VisibleOnWater    = 16,
+    UsableOnWater     = 32,
 
-    VISIBLE_IN_COMBAT  = 64,
-    USABLE_IN_COMBAT   = 128,
+    VisibleInCombat   = 64,
+    UsableInCombat    = 128,
 
-    VISIBLE_WVW        = 256,
-    USABLE_WVW         = 512,
+    VisibleWvW        = 256,
+    UsableWvW         = 512,
 
-    VISIBLE_ALL        = VISIBLE_DEFAULT | VISIBLE_UNDERWATER | VISIBLE_ON_WATER | VISIBLE_IN_COMBAT | VISIBLE_WVW,
-    USABLE_ALL         = USABLE_DEFAULT | USABLE_UNDERWATER | USABLE_ON_WATER | USABLE_IN_COMBAT | USABLE_WVW
+    VisibleAll        = VisibleDefault | VisibleUnderwater | VisibleOnWater | VisibleInCombat | VisibleWvW,
+    UsableAll         = UsableDefault | UsableUnderwater | UsableOnWater | UsableInCombat | UsableWvW,
+
+    IsFlag
 };
-
-inline ConditionalProperties operator|(ConditionalProperties a, ConditionalProperties b)
-{
-    return static_cast<ConditionalProperties>(static_cast<uint>(a) | static_cast<uint>(b));
-}
-
-inline ConditionalProperties operator&(ConditionalProperties a, ConditionalProperties b)
-{
-    return static_cast<ConditionalProperties>(static_cast<uint>(a) & static_cast<uint>(b));
-}
-
-inline ConditionalProperties operator~(ConditionalProperties a)
-{
-    return static_cast<ConditionalProperties>(~static_cast<uint>(a));
-}
 
 inline bool IsUsable(ConditionalState cs, ConditionalProperties cp)
 {
-    if (isNone(cs) && isNone(cp & ConditionalProperties::USABLE_DEFAULT))
+    if (IsNone(cs) && IsNone(cp & ConditionalProperties::UsableDefault))
         return false;
-    if (notNone(cs & ConditionalState::IN_WVW) && isNone(cp & ConditionalProperties::USABLE_WVW))
+    if (NotNone(cs & ConditionalState::InWvW) && IsNone(cp & ConditionalProperties::UsableWvW))
         return false;
 
-    if (notNone(cs & ConditionalState::IN_COMBAT) && isNone(cp & ConditionalProperties::USABLE_IN_COMBAT))
+    if (NotNone(cs & ConditionalState::InCombat) && IsNone(cp & ConditionalProperties::UsableInCombat))
         return false;
-    if (notNone(cs & ConditionalState::UNDERWATER) && isNone(cp & ConditionalProperties::USABLE_UNDERWATER))
+    if (NotNone(cs & ConditionalState::Underwater) && IsNone(cp & ConditionalProperties::UsableUnderwater))
         return false;
-    if (notNone(cs & ConditionalState::ON_WATER) && isNone(cp & ConditionalProperties::USABLE_ON_WATER))
+    if (NotNone(cs & ConditionalState::OnWater) && IsNone(cp & ConditionalProperties::UsableOnWater))
         return false;
 
     return true;
@@ -64,16 +51,16 @@ inline bool IsUsable(ConditionalState cs, ConditionalProperties cp)
 
 inline bool IsVisible(ConditionalState cs, ConditionalProperties cp)
 {
-    if (isNone(cs) && isNone(cp & ConditionalProperties::VISIBLE_DEFAULT))
+    if (IsNone(cs) && IsNone(cp & ConditionalProperties::VisibleDefault))
         return false;
-    if (notNone(cs & ConditionalState::IN_WVW) && isNone(cp & ConditionalProperties::VISIBLE_WVW))
+    if (NotNone(cs & ConditionalState::InWvW) && IsNone(cp & ConditionalProperties::VisibleWvW))
         return false;
 
-    if (notNone(cs & ConditionalState::IN_COMBAT) && isNone(cp & ConditionalProperties::VISIBLE_IN_COMBAT))
+    if (NotNone(cs & ConditionalState::InCombat) && IsNone(cp & ConditionalProperties::VisibleInCombat))
         return false;
-    if (notNone(cs & ConditionalState::UNDERWATER) && isNone(cp & ConditionalProperties::VISIBLE_UNDERWATER))
+    if (NotNone(cs & ConditionalState::Underwater) && IsNone(cp & ConditionalProperties::VisibleUnderwater))
         return false;
-    if (notNone(cs & ConditionalState::ON_WATER) && isNone(cp & ConditionalProperties::VISIBLE_ON_WATER))
+    if (NotNone(cs & ConditionalState::OnWater) && IsNone(cp & ConditionalProperties::VisibleOnWater))
         return false;
 
     return true;
@@ -82,18 +69,18 @@ inline bool IsVisible(ConditionalState cs, ConditionalProperties cp)
 class WheelElement
 {
 public:
-    WheelElement(uint id, const std::string& nickname, const std::string& category, const std::string& displayName, const glm::vec4& color, ConditionalProperties defaultProps,
+    WheelElement(u32 id, const std::string& nickname, const std::string& category, const std::string& displayName, const glm::vec4& color, ConditionalProperties defaultProps,
                  Texture2D tex = {});
     virtual ~WheelElement() = default;
 
     int  DrawPriority(int extremumIndicator);
 
     void SetShaderState(ID3D11DeviceContext* ctx) const;
-    void SetShaderState(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio) const;
-    void Draw(ID3D11DeviceContext* ctx, int n, fVector4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered,
+    void SetShaderState(ID3D11DeviceContext* ctx, const vec4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio) const;
+    void Draw(ID3D11DeviceContext* ctx, int n, vec4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered,
               const class Wheel* parent);
 
-    uint elementId() const
+    u32  elementId() const
     {
         return elementId_;
     }
@@ -215,7 +202,7 @@ protected:
     ConfigurationOption<ConditionalProperties> props_;
 
     std::string                                nickname_, displayName_;
-    uint                                       elementId_;
+    u32                                        elementId_;
     Keybind                                    keybind_;
     Texture2D                                  appearance_;
     mstime                                     currentHoverTime_ = 0;

@@ -5,56 +5,59 @@
 namespace GW2Radial
 {
 
-enum class MountType : uint
+enum class MountType : u32
 {
-    NONE     = 0xFFFFFFFF,
-    RAPTOR   = IDR_MOUNT1,
-    SPRINGER = IDR_MOUNT2,
-    SKIMMER  = IDR_MOUNT3,
-    JACKAL   = IDR_MOUNT4,
-    GRIFFON  = IDR_MOUNT5,
-    BEETLE   = IDR_MOUNT6,
-    WARCLAW  = IDR_MOUNT7,
-    SKYSCALE = IDR_MOUNT8,
+    None     = 0xFFFFFFFF,
+    Raptor   = IDR_MOUNT1,
+    Springer = IDR_MOUNT2,
+    Skimmer  = IDR_MOUNT3,
+    Jackal   = IDR_MOUNT4,
+    Griffon  = IDR_MOUNT5,
+    Beetle   = IDR_MOUNT6,
+    Warclaw  = IDR_MOUNT7,
+    Skyscale = IDR_MOUNT8,
     TURTLE   = IDR_MOUNT9,
-    SKIFF    = IDR_MOUNT10,
+    Skiff    = IDR_MOUNT10,
 
-    FIRST    = RAPTOR,
-    LAST     = SKIFF
+    First    = Raptor,
+    Last     = Skiff
 };
-constexpr unsigned int MountTypeCount = std::underlying_type_t<MountType>(MountType::LAST) + 1;
+constexpr unsigned int MountTypeCount = std::underlying_type_t<MountType>(MountType::Last) + 1;
 constexpr unsigned int MountIndex(MountType m)
 {
-    return unsigned int(m) - unsigned int(MountType::FIRST);
+    return unsigned int(m) - unsigned int(MountType::First);
 }
 
-enum class MarkerType : uint
+enum class MarkerType : u32
 {
-    ARROW    = IDR_MARKER1,
-    CIRCLE   = IDR_MARKER2,
-    HEART    = IDR_MARKER3,
-    SQUARE   = IDR_MARKER4,
-    STAR     = IDR_MARKER5,
-    SPIRAL   = IDR_MARKER6,
-    TRIANGLE = IDR_MARKER7,
+    Arrow    = IDR_MARKER1,
+    Circle   = IDR_MARKER2,
+    Heart    = IDR_MARKER3,
+    Square   = IDR_MARKER4,
+    Star     = IDR_MARKER5,
+    Spiral   = IDR_MARKER6,
+    Triangle = IDR_MARKER7,
     X        = IDR_MARKER8,
-    CLEAR    = IDR_MARKER9,
+    Clear    = IDR_MARKER9,
+
+    First    = Arrow,
+    Last     = Clear
 };
 
-enum class NoveltyType : uint
+enum class NoveltyType : u32
 {
-    NONE               = 0xFFFFFFFF,
-    CHAIR              = IDR_NOVELTY1,
-    MUSICAL_INSTRUMENT = IDR_NOVELTY2,
-    HELD_ITEM          = IDR_NOVELTY3,
-    TRAVEL_TOY         = IDR_NOVELTY4,
-    TONIC              = IDR_NOVELTY5,
-    JADE_WAYPOINT      = IDR_NOVELTY6,
-    FISHING            = IDR_NOVELTY7,
+    None              = 0xFFFFFFFF,
+    Chair             = IDR_NOVELTY1,
+    MusicalInstrument = IDR_NOVELTY2,
+    HeldItem          = IDR_NOVELTY3,
+    TravelToy         = IDR_NOVELTY4,
+    Tonic             = IDR_NOVELTY5,
+    JadeWaypoint      = IDR_NOVELTY6,
+    Fishing           = IDR_NOVELTY7,
 
-    FIRST              = CHAIR,
-    LAST               = FISHING
+    First             = Chair,
+    Last              = Fishing
 };
-constexpr unsigned int NoveltyTypeCount = std::underlying_type_t<NoveltyType>(NoveltyType::LAST) + 1;
+constexpr unsigned int NoveltyTypeCount = std::underlying_type_t<NoveltyType>(NoveltyType::Last) + 1;
 
 } // namespace GW2Radial

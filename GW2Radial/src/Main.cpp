@@ -1,10 +1,8 @@
 #include <Core.h>
-#include <Direct3D11Loader.h>
 #include <Main.h>
 #include <Tag.h>
 #include <Version.h>
-#include <gw2al_api.h>
-#include <gw2al_d3d9_wrapper.h>
+#include <gw2load/api.h>
 
 const char* GetAddonName()
 {
@@ -27,43 +25,52 @@ BaseCore& GetBaseCore()
     return GW2Radial::Core::i();
 }
 
-gw2al_addon_dsc gAddonDeps[] = {
-    GW2AL_CORE_DEP_ENTRY, D3D_WRAPPER_DEP_ENTRY, {0, 0, 0, 0, 0, 0}
-};
-
-gw2al_addon_dsc  gAddonDsc = { L"gw2radial", L"Radial menu overlay to select mount, novelty and more on fly", 2, 2, 1, gAddonDeps };
-
-gw2al_addon_dsc* gw2addon_get_description()
-{
-    return &gAddonDsc;
-}
-
-gw2al_api_ret gw2addon_load(gw2al_core_vtable* core_api)
-{
-    Direct3D11Loader::reset();
-    Direct3D11Loader::i().Init(core_api);
-    return GW2AL_OK;
-}
-
-gw2al_api_ret gw2addon_unload(int gameExiting)
-{
-    return GW2AL_OK;
-}
-
 std::ofstream g_logStream;
+HMODULE       g_hModule;
+
+extern "C"
+{
+    __declspec(dllexport) bool GW2Load_GetAddonDescription(GW2Load_AddonDescription* desc)
+    {
+        desc->descriptionVersion = GW2Load_CurrentAddonDescriptionVersion;
+        const auto& ver          = GetAddonVersion();
+        desc->majorAddonVersion  = ver.major;
+        desc->minorAddonVersion  = ver.minor;
+        desc->patchAddonVersion  = ver.patch;
+        desc->name               = GetAddonName();
+
+        return true;
+    }
+
+    __declspec(dllexport) bool GW2Load_OnLoad(GW2Load_API* api, IDXGISwapChain* swapChain, ID3D11Device* device, ID3D11DeviceContext* context)
+    {
+        DXGI_SWAP_CHAIN_DESC desc;
+        swapChain->GetDesc(&desc);
+        g_logStream = std::ofstream("gw2radial.log");
+        GW2Radial::Core::Init(g_hModule);
+        GetBaseCore().PostCreateSwapChain(desc.OutputWindow, device, swapChain);
+
+        api->RegisterCallback(GW2Load_HookedFunction::Present, 0, GW2Load_CallbackPoint::BeforeCall, [](IDXGISwapChain* swapChain) { GetBaseCore().Draw(); });
+
+        api->RegisterCallback(GW2Load_HookedFunction::ResizeBuffers, 0, GW2Load_CallbackPoint::BeforeCall,
+                              [](IDXGISwapChain* swapChain, unsigned int width, unsigned int height, DXGI_FORMAT format) { GetBaseCore().PreResizeSwapChain(); });
+
+        api->RegisterCallback(GW2Load_HookedFunction::ResizeBuffers, 0, GW2Load_CallbackPoint::AfterCall,
+                              [](IDXGISwapChain* swapChain, unsigned int width, unsigned int height, DXGI_FORMAT format) { GetBaseCore().PostResizeSwapChain(width, height); });
+
+        return true;
+    }
+}
 
 
-bool WINAPI   DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
+bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 {
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
-            g_logStream = std::ofstream("gw2radial.log");
-
-            GW2Radial::Core::Init(hModule);
+            g_hModule = hModule;
             break;
-        case DLL_PROCESS_DETACH:
-            break;
+        default:;
     }
 
     return true;

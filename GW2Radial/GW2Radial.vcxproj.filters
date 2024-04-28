@@ -89,9 +89,6 @@
     <None Include="rt_rcdat.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Main.def">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="art\finals\rcdata1.bin">
       <Filter>Resource Files</Filter>
     </None>

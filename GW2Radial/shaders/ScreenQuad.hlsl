@@ -11,7 +11,7 @@ struct VS_SCREEN
 	float2 UV : TEXCOORD0;
 };
 
-VS_SCREEN ScreenQuad(in uint id : SV_VertexID)
+VS_SCREEN ScreenQuad(in u32  id : SV_VertexID)
 {
     VS_SCREEN Out = (VS_SCREEN)0;
 
