@@ -60,6 +60,11 @@ extern "C"
 
         return true;
     }
+
+    __declspec(dllexport) void GW2Load_OnClose()
+    {
+        GW2Radial::Core::Shutdown();
+    }
 }
 
 
