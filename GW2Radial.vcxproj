@@ -49,14 +49,18 @@
     <IncludePath>$(ProjectDir)include;$(SolutionDir)extern\GW2Common\include;$(SolutionDir)extern\GW2Common\extern;$(SolutionDir)extern\GW2Common\extern\imgui;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
-    <TargetName>gw2addon_gw2radial</TargetName>
+    <TargetName>gw2radial</TargetName>
+    <IntDir>$(SolutionDir)int\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(ProjectDir)include;$(SolutionDir)extern\GW2Common\include;$(SolutionDir)extern\GW2Common\extern;$(SolutionDir)extern\GW2Common\extern\imgui;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
-    <TargetName>gw2addon_gw2radial</TargetName>
+    <TargetName>gw2radial</TargetName>
+    <IntDir>$(SolutionDir)int\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
@@ -82,12 +86,12 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(SolutionDir)extern\GW2Common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(SolutionDir)int\GW2Common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (
-  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2radial.dll"
-  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2radial.pdb"
+  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\$(TargetName).dll"
+  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\$(TargetName).pdb"
 ) else (
   echo No target defined, skipping copy. To setup automatic copy, define environment variable GW2RADIAL_TARGET_DIR to your GW2 root install directory.
 )</Command>
@@ -125,12 +129,12 @@ git describe --always --dirty --match "NOT A TAG" &gt;&gt; "$(ProjectDir)include
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(SolutionDir)extern\GW2Common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(SolutionDir)int\GW2Common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (
-  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2radial.dll"
-  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2radial.pdb"
+  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\$(TargetName).dll"
+  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\$(TargetName).pdb"
 ) else (
   echo No target defined, skipping copy. To setup automatic copy, define environment variable GW2RADIAL_TARGET_DIR to your GW2 root install directory.
 )</Command>
