@@ -1,9 +1,9 @@
 #include <Core.h>
+#include <IconFontCppHeaders/IconsFontAwesome5.h>
 #include <ShaderManager.h>
 #include <Utility.h>
 #include <Wheel.h>
 #include <WheelElement.h>
-#include <common/IconFontCppHeaders/IconsFontAwesome5.h>
 #include <imgui_internal.h>
 
 namespace GW2Radial

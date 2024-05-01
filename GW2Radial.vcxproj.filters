@@ -86,12 +86,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="rt_rcdat.bin">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="art\finals\rcdata1.bin">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="shaders\common.hlsli">
       <Filter>Resource Files\Shaders</Filter>
     </None>
@@ -116,16 +110,14 @@
     <None Include="vcpkg.json">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="readme.md">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <CopyFileToFolders Include="..\readme.md">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <Image Include="art\Finals\arrow_marker.dds">

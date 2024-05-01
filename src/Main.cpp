@@ -24,4 +24,4 @@ BaseCore& GetBaseCore()
     return GW2Radial::Core::i();
 }
 
-#include "common/../src/Main.inl"
+#include <Main.inl>
