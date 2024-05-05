@@ -24,7 +24,14 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
     AddElement(std::move(cancel));
 
     auto force = std::make_unique<WheelElement>(ToUnderlying(MountType::Last) + 2, "mount_special_force", "Mounts", "Force mount", glm::vec4(1.f), ConditionalProperties::None);
-    force->customBehavior([&](bool visibility) { return showForceOption_.value() && OptHasValue(conditionalDelay_.element); });
+    force->customBehavior(
+        [&](bool visibility)
+        {
+            if (showForceOption_.value() && std::holds_alternative<WheelElement*>(conditionalDelay_.element))
+                return std::get<WheelElement*>(conditionalDelay_.element) == wheelElements_[ToUnderlying(MountType::Skyscale)].get();
+            else
+                return false;
+        });
     AddElement(std::move(force));
 }
 
