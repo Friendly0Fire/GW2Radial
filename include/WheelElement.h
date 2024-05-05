@@ -184,17 +184,24 @@ public:
 
     [[nodiscard]] bool isUsable(ConditionalState cs) const
     {
-        return isBound() && IsUsable(cs, props_.value());
+        return customBehavior_(false) || isBound() && IsUsable(cs, props_.value());
     }
 
     [[nodiscard]] bool isVisible(ConditionalState cs) const
     {
-        return isBound() && IsVisible(cs, props_.value());
+        return customBehavior_(true) || isBound() && IsVisible(cs, props_.value());
     }
 
     const Texture2D& appearance() const
     {
         return appearance_;
+    }
+
+    void customBehavior(std::function<bool(bool)> behavior)
+    {
+        customBehavior_ = behavior;
+        props_.value(ConditionalProperties::None);
+        disableBehaviorControls_ = true;
     }
 
 protected:
@@ -205,13 +212,15 @@ protected:
     u32                                        elementId_;
     Keybind                                    keybind_;
     Texture2D                                  appearance_;
-    mstime                                     currentHoverTime_ = 0;
-    mstime                                     currentExitTime_  = 0;
-    float                                      aspectRatio_      = 1.f;
-    float                                      shadowStrength_   = 0.8f;
-    float                                      colorizeAmount_   = 1.f;
-    float                                      texWidth_         = 0.f;
-    bool                                       premultiplyAlpha_ = false;
+    mstime                                     currentHoverTime_        = 0;
+    mstime                                     currentExitTime_         = 0;
+    float                                      aspectRatio_             = 1.f;
+    float                                      shadowStrength_          = 0.8f;
+    float                                      colorizeAmount_          = 1.f;
+    float                                      texWidth_                = 0.f;
+    bool                                       premultiplyAlpha_        = false;
+    std::function<bool(bool)>                  customBehavior_          = [](bool) { return false; };
+    bool                                       disableBehaviorControls_ = false;
     glm::vec4                                  color_{};
 
     struct WheelElementCB

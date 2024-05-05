@@ -276,21 +276,21 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
         ImGui::Text((behaviorOnReleaseBeforeDelay_.displayName() + ":").c_str());
 
         bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
-        ImGui::ConfigurationWrapper(rb, "Nothing##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::NOTHING));
+        ImGui::ConfigurationWrapper(rb, "Nothing##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::Nothing));
         ImGui::SameLine();
-        ImGui::ConfigurationWrapper(rb, "Previous##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::PREVIOUS));
+        ImGui::ConfigurationWrapper(rb, "Previous##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::Previous));
         ImGui::SameLine();
-        ImGui::ConfigurationWrapper(rb, "Favorite##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::FAVORITE));
+        ImGui::ConfigurationWrapper(rb, "Favorite##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::Favorite));
         ImGui::SameLine();
-        ImGui::ConfigurationWrapper(rb, "As if opened##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::DIRECTION));
+        ImGui::ConfigurationWrapper(rb, "As if opened##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::Direction));
         ImGui::SameLine();
-        ImGui::ConfigurationWrapper(rb, "Pass to game##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::PASS_TO_GAME));
+        ImGui::ConfigurationWrapper(rb, "Pass to game##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::PassToGame));
         UI::HelpTooltip(
             "Determines the behavior of the menu if it is dismissed before it becomes visible. By default, it does nothing, but it can also (1) trigger the last selected item; "
             "(2) trigger a fixed \"favorite\" option; (3) function exactly as if the menu was opened, making it possible to select an item with the mouse without seeing them; "
             "(4) forward the input to the game.");
 
-        if (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()) == BehaviorBeforeDelay::FAVORITE)
+        if (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()) == BehaviorBeforeDelay::Favorite)
         {
             const auto               textSize = ImGui::CalcTextSize(delayFavoriteOption_.displayName().c_str());
             const auto               itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
@@ -311,19 +311,19 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
         ImGui::SameLine();
 
         bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
-        ImGui::ConfigurationWrapper(rb, "Nothing##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::NOTHING));
+        ImGui::ConfigurationWrapper(rb, "Nothing##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::Nothing));
         ImGui::SameLine();
-        ImGui::ConfigurationWrapper(rb, "Previous##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
+        ImGui::ConfigurationWrapper(rb, "Previous##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::Previous));
         ImGui::SameLine();
-        ImGui::ConfigurationWrapper(rb, "Favorite##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
+        ImGui::ConfigurationWrapper(rb, "Favorite##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::Favorite));
         ImGui::SameLine();
-        ImGui::ConfigurationWrapper(rb, "Pass to game##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PASS_TO_GAME));
+        ImGui::ConfigurationWrapper(rb, "Pass to game##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PassToGame));
         UI::HelpTooltip("Determines the behavior of the central region of the menu. By default, it does nothing, but it can alternatively: "
                         "(1) trigger the last selected item; "
                         "(2) trigger a fixed \"favorite\" option;"
                         "(3) forward the input to the game.");
 
-        if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
+        if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::Favorite)
         {
             const auto               textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
             const auto               itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
@@ -522,7 +522,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
         resetCursorPositionToCenter_ = false;
     };
 
-    if (behaviorOnReleaseBeforeDelay_.value() == int(BehaviorBeforeDelay::DIRECTION) && resetCursorPositionToCenter_)
+    if (behaviorOnReleaseBeforeDelay_.value() == int(BehaviorBeforeDelay::Direction) && resetCursorPositionToCenter_)
         resetCursorPositionToCenter();
 
     ID3D11SamplerState* samplers[] = { baseSampler_.Get(), baseSampler_.Get() };
@@ -561,11 +561,11 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
                 auto& lastHoverFadeIn = hoveredFadeIns[activeElements.size()];
                 switch (CenterBehavior(centerBehaviorOption_.value()))
                 {
-                    case CenterBehavior::PREVIOUS:
+                    case CenterBehavior::Previous:
                         if (previousUsed_)
                             lastHoverFadeIn = previousUsed_->hoverFadeIn(currentTime, this);
                         break;
-                    case CenterBehavior::FAVORITE:
+                    case CenterBehavior::Favorite:
                     {
                         if (auto* fav = GetFavorite(centerFavoriteOption_.value()))
                         {
@@ -758,9 +758,9 @@ bool Wheel::CanActivate(const WheelElement* we) const
 void Wheel::Sort()
 {
     sortedWheelElements_.resize(wheelElements_.size());
-    std::transform(wheelElements_.begin(), wheelElements_.end(), sortedWheelElements_.begin(), [](auto& p) { return p.get(); });
+    std::ranges::transform(wheelElements_, sortedWheelElements_.begin(), [](auto& p) { return p.get(); });
 
-    std::sort(sortedWheelElements_.begin(), sortedWheelElements_.end(), [](const WheelElement* a, const WheelElement* b) { return a->sortingPriority() < b->sortingPriority(); });
+    std::ranges::sort(sortedWheelElements_, [](const WheelElement* a, const WheelElement* b) { return a->sortingPriority() < b->sortingPriority(); });
     minElementSortingPriority_ = sortedWheelElements_.front()->sortingPriority();
 }
 
@@ -774,9 +774,9 @@ WheelElement* Wheel::GetCenterHoveredElement()
 
     switch (CenterBehavior(centerBehaviorOption_.value()))
     {
-        case CenterBehavior::PREVIOUS:
+        case CenterBehavior::Previous:
             return previousUsed_;
-        case CenterBehavior::FAVORITE:
+        case CenterBehavior::Favorite:
             return GetFavorite(centerFavoriteOption_.value());
         default:
             return nullptr;
@@ -1021,24 +1021,24 @@ void Wheel::DeactivateWheel()
             default:
                 currentHovered_ = nullptr;
                 break;
-            case BehaviorBeforeDelay::FAVORITE:
+            case BehaviorBeforeDelay::Favorite:
                 currentHovered_ = GetFavorite(delayFavoriteOption_.value());
                 break;
-            case BehaviorBeforeDelay::PREVIOUS:
+            case BehaviorBeforeDelay::Previous:
                 currentHovered_ = previousUsed_;
                 break;
-            case BehaviorBeforeDelay::DIRECTION:
+            case BehaviorBeforeDelay::Direction:
                 if (!currentHovered_)
                     currentHovered_ = GetCenterHoveredElement();
                 break;
-            case BehaviorBeforeDelay::PASS_TO_GAME:
+            case BehaviorBeforeDelay::PassToGame:
                 PassToGame();
                 break;
         }
     }
     else if (!currentHovered_)
     {
-        if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::PASS_TO_GAME)
+        if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::PassToGame)
             PassToGame();
         else
             currentHovered_ = GetCenterHoveredElement();

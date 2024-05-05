@@ -16,19 +16,19 @@ class Wheel : public SettingsMenu::Implementer
 public:
     enum class CenterBehavior : int
     {
-        NOTHING      = 0,
-        PREVIOUS     = 1,
-        FAVORITE     = 2,
-        PASS_TO_GAME = 3
+        Nothing    = 0,
+        Previous   = 1,
+        Favorite   = 2,
+        PassToGame = 3
     };
 
     enum class BehaviorBeforeDelay : int
     {
-        NOTHING      = 0,
-        PREVIOUS     = 1,
-        FAVORITE     = 2,
-        DIRECTION    = 3,
-        PASS_TO_GAME = 4
+        Nothing    = 0,
+        Previous   = 1,
+        Favorite   = 2,
+        Direction  = 3,
+        PassToGame = 4
     };
 
     Wheel(std::shared_ptr<Texture2D> bgTexture, std::string nickname, std::string displayName);

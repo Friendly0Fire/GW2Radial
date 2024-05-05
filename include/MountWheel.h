@@ -31,7 +31,7 @@ protected:
                 return "Warclaw";
             case MountType::Skyscale:
                 return "Skyscale";
-            case MountType::TURTLE:
+            case MountType::Turtle:
                 return "Turtle";
             case MountType::Skiff:
                 return "Skiff";
@@ -59,7 +59,7 @@ protected:
                 return "warclaw";
             case MountType::Skyscale:
                 return "skyscale";
-            case MountType::TURTLE:
+            case MountType::Turtle:
                 return "turtle";
             case MountType::Skiff:
                 return "skiff";
@@ -93,7 +93,7 @@ protected:
                 // Warclaw is usable in WvW only
                 return ConditionalProperties::UsableWvW;
 
-            case MountType::TURTLE:
+            case MountType::Turtle:
                 // Turtle is usable on and underwater
                 return baseline | ConditionalProperties::UsableOnWater | ConditionalProperties::UsableUnderwater | ConditionalProperties::VisibleOnWater |
                        ConditionalProperties::VisibleUnderwater;
@@ -117,6 +117,8 @@ protected:
 
     ConfigurationOption<int>  dismountDelayOption_;
     ConfigurationOption<bool> quickDismountOption_;
+    ConfigurationOption<bool> showCancelOption_;
+    ConfigurationOption<bool> showForceOption_;
     mstime                    dismountTriggerTime_ = 0;
     Keybind                   dismountKeybind_;
 };

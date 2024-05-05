@@ -16,7 +16,7 @@ enum class MountType : u32
     Beetle   = IDR_MOUNT6,
     Warclaw  = IDR_MOUNT7,
     Skyscale = IDR_MOUNT8,
-    TURTLE   = IDR_MOUNT9,
+    Turtle   = IDR_MOUNT9,
     Skiff    = IDR_MOUNT10,
 
     First    = Raptor,

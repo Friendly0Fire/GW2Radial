@@ -9,6 +9,8 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
     , dismountDelayOption_("Dismount delay", "dismount_delay", "wheel_" + nickname_, 0)
     , quickDismountOption_("Quick dismount", "quick_dismount", "wheel_" + nickname_, true)
     , dismountKeybind_("dismount", "Dismount", "wheel_" + nickname_)
+    , showCancelOption_("Show cancel option", "cancel_option", "wheel_" + nickname_, false)
+    , showForceOption_("Show force option", "force_option", "wheel_" + nickname_, false)
 {
     IterateEnum<MountType>(
         [&](auto i)
@@ -16,6 +18,14 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
             AddElement(std::make_unique<WheelElement>(static_cast<u32>(i), std::string("mount_") + GetMountNicknameFromType(i), "Mounts", GetMountNameFromType(i),
                                                       GetMountColorFromType(i), GetMountPropsFromType(i)));
         });
+
+    auto cancel = std::make_unique<WheelElement>(ToUnderlying(MountType::Last) + 1, "mount_special_cancel", "Mounts", "Cancel queue", glm::vec4(1.f), ConditionalProperties::None);
+    cancel->customBehavior([&](bool visibility) { return showCancelOption_.value() && OptHasValue(conditionalDelay_.element); });
+    AddElement(std::move(cancel));
+
+    auto force = std::make_unique<WheelElement>(ToUnderlying(MountType::Last) + 2, "mount_special_force", "Mounts", "Force mount", glm::vec4(1.f), ConditionalProperties::None);
+    force->customBehavior([&](bool visibility) { return showForceOption_.value() && OptHasValue(conditionalDelay_.element); });
+    AddElement(std::move(force));
 }
 
 glm::vec4 MountWheel::GetMountColorFromType(MountType m)
@@ -38,7 +48,7 @@ glm::vec4 MountWheel::GetMountColorFromType(MountType m)
             return { 181 / 255.f, 255 / 255.f, 244 / 255.f, 1 };
         case MountType::Skyscale:
             return { 211 / 255.f, 142 / 255.f, 244 / 255.f, 1 };
-        case MountType::TURTLE:
+        case MountType::Turtle:
             return { 56 / 255.f, 228 / 255.f, 85 / 255.f, 1 };
         case MountType::Skiff:
             return { 255 / 255.f, 255 / 255.f, 255 / 255.f, 1 };
@@ -61,6 +71,13 @@ void MountWheel::MenuSectionInteraction()
         ImGui::ConfigurationWrapper(&ImGui::SliderInt, dismountDelayOption_, 0, 3000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
         UI::HelpTooltip("Amount of time, in milliseconds, to wait between pressing the keybind and dismounting.");
     }
+
+    ImGui::ConfigurationWrapper(&ImGui::Checkbox, showCancelOption_);
+    UI::HelpTooltip("If enabled, will display an extra slice in the mount wheel when a mount has been queued. Selecting this option will cancel the queue.");
+
+    ImGui::ConfigurationWrapper(&ImGui::Checkbox, showForceOption_);
+    UI::HelpTooltip("If enabled, will display an extra slice in the mount wheel when a mount has been queued. Selecting this option will force the queued mount key to be sent and "
+                    "clear the queue.");
 }
 
 bool MountWheel::BypassCheck(WheelElement*& we, Keybind*& kb)

@@ -24,4 +24,6 @@ BaseCore& GetBaseCore()
     return GW2Radial::Core::i();
 }
 
+extern "C" __declspec(dllexport) const unsigned int GW2Load_Version = 0xdeadb00f;
+
 #include <Main.inl>

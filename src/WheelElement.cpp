@@ -64,82 +64,85 @@ int WheelElement::DrawPriority(int extremumIndicator)
 
     ImGui::TableNextColumn();
 
-    static const auto previewMaxDims = []()
+    if (!disableBehaviorControls_)
     {
-        auto character = ImGui::CalcTextSize("X");
-        ImGui::SetWindowFontScale(fontMultiplier);
-        float iconA = ImGui::CalcTextSize(ICON_FA_CHECK_DOUBLE).x;
-        float iconB = ImGui::CalcTextSize(ICON_FA_EYE).x;
-        float iconC = ImGui::CalcTextSize(ICON_FA_HAND_POINTER).x;
-        ImGui::SetWindowFontScale(1.f);
-
-        return ImVec2((character.x + std::max({ iconA, iconB, iconC })) * 5 + ImGui::GetStyle().ItemSpacing.x * (2 + 5 - 1), character.y);
-    }();
-
-    auto previewFmt = [props, realItemSpacing](ConditionalProperties v, ConditionalProperties u, char c) mutable
-    {
-        if (NotNone(props & (v | u)))
+        static const auto previewMaxDims = []
         {
-            const float cursorY = ImGui::GetCursorPosY();
-            ImGui::TextUnformatted(&c, &c + 1);
-            ImGui::SameLine();
-            ImGui::SetCursorPosY(cursorY + fontOffset);
+            auto character = ImGui::CalcTextSize("X");
             ImGui::SetWindowFontScale(fontMultiplier);
-            if (NotNone(props & v) && NotNone(props & u)) // Visible and usable
-                ImGui::TextUnformatted(ICON_FA_CHECK_DOUBLE);
-            else if (NotNone(props & v) && IsNone(props & u)) // Visible but not usable
-                ImGui::TextUnformatted(ICON_FA_EYE);
-            else
-                ImGui::TextUnformatted(ICON_FA_HAND_POINTER); // Usable but not visible
+            float iconA = ImGui::CalcTextSize(ICON_FA_CHECK_DOUBLE).x;
+            float iconB = ImGui::CalcTextSize(ICON_FA_EYE).x;
+            float iconC = ImGui::CalcTextSize(ICON_FA_HAND_POINTER).x;
             ImGui::SetWindowFontScale(1.f);
-            ImGui::SameLine(0.f, realItemSpacing);
-            ImGui::SetCursorPosY(cursorY);
-        }
-    };
 
-    ImGui::SetNextItemWidth(ImGui::GetFrameHeight() + previewMaxDims.x);
-    if (ImGui::BeginCombo(("##ConditionalProps" + nickname_).c_str(), nullptr, ImGuiComboFlags_CustomPreview))
-    {
-        auto chk = [&props, suffix = "##" + nickname_](ConditionalProperties p, const char* display)
+            return ImVec2((character.x + std::max({ iconA, iconB, iconC })) * 5 + ImGui::GetStyle().ItemSpacing.x * (2 + 5 - 1), character.y);
+        }();
+
+        auto previewFmt = [props, realItemSpacing](ConditionalProperties v, ConditionalProperties u, char c) mutable
         {
-            bool enabled = NotNone(props & p);
-            if (ImGui::Checkbox((display + suffix).c_str(), &enabled))
-                props = enabled ? (props | p) : (props & ~p);
+            if (NotNone(props & (v | u)))
+            {
+                const float cursorY = ImGui::GetCursorPosY();
+                ImGui::TextUnformatted(&c, &c + 1);
+                ImGui::SameLine();
+                ImGui::SetCursorPosY(cursorY + fontOffset);
+                ImGui::SetWindowFontScale(fontMultiplier);
+                if (NotNone(props & v) && NotNone(props & u)) // Visible and usable
+                    ImGui::TextUnformatted(ICON_FA_CHECK_DOUBLE);
+                else if (NotNone(props & v) && IsNone(props & u)) // Visible but not usable
+                    ImGui::TextUnformatted(ICON_FA_EYE);
+                else
+                    ImGui::TextUnformatted(ICON_FA_HAND_POINTER); // Usable but not visible
+                ImGui::SetWindowFontScale(1.f);
+                ImGui::SameLine(0.f, realItemSpacing);
+                ImGui::SetCursorPosY(cursorY);
+            }
         };
 
-        chk(ConditionalProperties::VisibleDefault, "Visible by default");
-        chk(ConditionalProperties::UsableDefault, "Usable by default");
+        ImGui::SetNextItemWidth(ImGui::GetFrameHeight() + previewMaxDims.x);
+        if (ImGui::BeginCombo(("##ConditionalProps" + nickname_).c_str(), nullptr, ImGuiComboFlags_CustomPreview))
+        {
+            auto chk = [&props, suffix = "##" + nickname_](ConditionalProperties p, const char* display)
+            {
+                bool enabled = NotNone(props & p);
+                if (ImGui::Checkbox((display + suffix).c_str(), &enabled))
+                    props = enabled ? (props | p) : (props & ~p);
+            };
 
-        chk(ConditionalProperties::VisibleInCombat, "Visible in combat");
-        chk(ConditionalProperties::UsableInCombat, "Usable in combat");
+            chk(ConditionalProperties::VisibleDefault, "Visible by default");
+            chk(ConditionalProperties::UsableDefault, "Usable by default");
 
-        chk(ConditionalProperties::VisibleUnderwater, "Visible underwater");
-        chk(ConditionalProperties::UsableUnderwater, "Usable underwater");
+            chk(ConditionalProperties::VisibleInCombat, "Visible in combat");
+            chk(ConditionalProperties::UsableInCombat, "Usable in combat");
 
-        chk(ConditionalProperties::VisibleOnWater, "Visible on water");
-        chk(ConditionalProperties::UsableOnWater, "Usable on water");
+            chk(ConditionalProperties::VisibleUnderwater, "Visible underwater");
+            chk(ConditionalProperties::UsableUnderwater, "Usable underwater");
 
-        chk(ConditionalProperties::VisibleWvW, "Visible in WvW");
-        chk(ConditionalProperties::UsableWvW, "Usable in WvW");
+            chk(ConditionalProperties::VisibleOnWater, "Visible on water");
+            chk(ConditionalProperties::UsableOnWater, "Usable on water");
 
-        ImGui::EndCombo();
+            chk(ConditionalProperties::VisibleWvW, "Visible in WvW");
+            chk(ConditionalProperties::UsableWvW, "Usable in WvW");
+
+            ImGui::EndCombo();
+        }
+        if (ImGui::BeginComboPreview())
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0.f, 0.f));
+            previewFmt(ConditionalProperties::VisibleDefault, ConditionalProperties::UsableDefault, 'D');
+            previewFmt(ConditionalProperties::VisibleInCombat, ConditionalProperties::UsableInCombat, 'C');
+            previewFmt(ConditionalProperties::VisibleUnderwater, ConditionalProperties::UsableUnderwater, 'U');
+            previewFmt(ConditionalProperties::VisibleOnWater, ConditionalProperties::UsableOnWater, 'O');
+            previewFmt(ConditionalProperties::VisibleWvW, ConditionalProperties::UsableWvW, 'W');
+            ImGui::PopStyleVar(2);
+
+            ImGui::EndComboPreview();
+        }
+
+        if (props != props_.value())
+            props_.value(props);
     }
-    if (ImGui::BeginComboPreview())
-    {
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0.f, 0.f));
-        previewFmt(ConditionalProperties::VisibleDefault, ConditionalProperties::UsableDefault, 'D');
-        previewFmt(ConditionalProperties::VisibleInCombat, ConditionalProperties::UsableInCombat, 'C');
-        previewFmt(ConditionalProperties::VisibleUnderwater, ConditionalProperties::UsableUnderwater, 'U');
-        previewFmt(ConditionalProperties::VisibleOnWater, ConditionalProperties::UsableOnWater, 'O');
-        previewFmt(ConditionalProperties::VisibleWvW, ConditionalProperties::UsableWvW, 'W');
-        ImGui::PopStyleVar(2);
-
-        ImGui::EndComboPreview();
-    }
-
-    if (props != props_.value())
-        props_.value(props);
 
     int rv = 0;
     ImGui::TableNextColumn();
