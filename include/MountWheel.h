@@ -114,6 +114,7 @@ protected:
     bool                      BypassCheck(WheelElement*&, Keybind*&) override;
     bool                      CustomDelayCheck(OptKeybindWheelElement&) override;
     bool                      ResetMouseCheck(WheelElement*) override;
+    Keybind*                  GetKeybindFromOpt(OptKeybindWheelElement& o) override;
 
     ConfigurationOption<int>  dismountDelayOption_;
     ConfigurationOption<bool> quickDismountOption_;

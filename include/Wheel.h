@@ -114,7 +114,12 @@ public:
 protected:
     using OptKeybindWheelElement = std::variant<std::monostate, Keybind*, WheelElement*>;
 
-    static Keybind* GetKeybindFromOpt(OptKeybindWheelElement& o)
+    static bool OptHasValue(const OptKeybindWheelElement& o)
+    {
+        return o.index() != 0;
+    }
+
+    virtual Keybind* GetKeybindFromOpt(OptKeybindWheelElement& o)
     {
         if (std::holds_alternative<Keybind*>(o))
             return std::get<Keybind*>(o);
@@ -122,11 +127,6 @@ protected:
             return &std::get<WheelElement*>(o)->keybind();
         else
             return nullptr;
-    }
-
-    static bool OptHasValue(const OptKeybindWheelElement& o)
-    {
-        return o.index() != 0;
     }
 
     virtual void MenuSectionKeybinds(Keybind**)
@@ -222,6 +222,7 @@ protected:
     };
 
     ConditionalDelay              conditionalDelay_;
+    WheelElement*                 conditionalDelayDisplay_ = nullptr;
 
     ConfigurationOption<int>      centerBehaviorOption_;
     ConfigurationOption<Favorite> centerFavoriteOption_;

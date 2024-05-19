@@ -456,7 +456,9 @@ void Wheel::OnUpdate()
         {
             if (std::holds_alternative<Keybind*>(cd.element) || CanActivate(std::get<WheelElement*>(cd.element)))
             {
-                Input::i().SendKeybind(GetKeybindFromOpt(cd.element)->keyCombo(), std::nullopt);
+                auto kb = GetKeybindFromOpt(cd.element);
+                if (kb)
+                    Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
                 ResetConditionallyDelayed(false);
             }
         }
@@ -471,7 +473,9 @@ void Wheel::OnUpdate()
                         cd.testPassesTime = currentTime;
                     else if (currentTime >= cd.testPassesTime + conditionalDelayDelayOption_.value())
                     {
-                        Input::i().SendKeybind(GetKeybindFromOpt(cd.element)->keyCombo(), std::nullopt);
+                        auto kb = GetKeybindFromOpt(cd.element);
+                        if (kb)
+                            Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
                         ResetConditionallyDelayed(true, currentTime);
                     }
                     cd.testPasses = true;
@@ -614,75 +618,86 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
             }
         }
     }
-    else if (showDelayTimerOption_.value() && !conditionalDelay_.hidden && std::holds_alternative<WheelElement*>(conditionalDelay_.element) &&
-             (std::get<WheelElement*>(conditionalDelay_.element) || currentTime < conditionalDelay_.time + ConditionalDelay::FadeOutTime))
+
+    auto delayFadeOutTime = conditionalDelay_.time + maximumConditionalWaitTimeOption_.value() * 1000ull;
+    if (showDelayTimerOption_.value() && !conditionalDelay_.hidden && currentTime < delayFadeOutTime + ConditionalDelay::FadeOutTime)
     {
-        auto* delayElement = std::get<WheelElement*>(conditionalDelay_.element);
-        float dt           = float(currentTime - conditionalDelay_.time) / 1000.f;
-        float absDt        = dt;
-        float timeLeft     = 0.f;
-        if (!delayElement)
-            absDt = 0.5f - dt;
-        else
-            timeLeft = 1.f - (currentTime - conditionalDelay_.time) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
-        const auto& io = ImGui::GetIO();
-
-        ShaderManager::i().SetShaders(ctx, vs_, psDelayIndicator_);
-        ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
-
-        float dpiScale = 1.f;
-        if (GFXSettings::i().dpiScaling())
-            dpiScale = float(Core::i().GetDpiForWindow(Core::i().gameWindow())) / 96.f;
-
-        auto      uiScale = float(MumbleLink::i().uiScale());
-
-        glm::vec2 topLeftCorner;
-        topLeftCorner.y = 77.f + 10.f * uiScale;
-        if (uiScale == 0)
-            topLeftCorner.y += 2.f;
-
-        float bottom         = 13.f + 1.f * uiScale;
-        topLeftCorner.x      = 450.f / 107.f * topLeftCorner.y;
-
-        float widthMinScale  = std::min(1.f, screenSize.x / 1024.f);
-        float heightMinScale = std::min(1.f, screenSize.y / 768.f);
-
-        float minScale       = std::min(widthMinScale, heightMinScale);
-
-        topLeftCorner.x *= dpiScale * minScale;
-        topLeftCorner.y *= dpiScale * minScale;
-        bottom *= dpiScale * minScale;
-
-        topLeftCorner.x += screenSize.x * 0.5f;
-        topLeftCorner.y  = screenSize.y - topLeftCorner.y;
-        bottom           = screenSize.y - bottom;
-
-        float spriteSize = bottom - topLeftCorner.y;
-
-        if (dt < 0.3333f && delayElement)
+        auto* delayElement = [&]
         {
-            float sizeInterpolant = SmoothStep(dt * 3);
-            spriteSize            = std::lerp(spriteSize * 3, spriteSize, sizeInterpolant);
-            topLeftCorner.x       = std::lerp(0.5f * screenSize.x, topLeftCorner.x, 0.25f + sizeInterpolant * 0.75f);
-            topLeftCorner.y       = std::lerp(0.5f * screenSize.y, topLeftCorner.y, 0.25f + sizeInterpolant * 0.75f);
-        }
-
-        glm::vec4 spriteDimensions{ topLeftCorner.x * screenSize.z, topLeftCorner.y * screenSize.w, spriteSize * screenSize.z, spriteSize * screenSize.w };
-
-        spriteDimensions.x += spriteDimensions.z * 0.5f;
-        spriteDimensions.y += spriteDimensions.w * 0.5f;
-
-        std::array<float, MaxHoverFadeIns> hoveredFadeIns;
-        std::fill(hoveredFadeIns.begin(), hoveredFadeIns.end(), 0.f);
-        UpdateConstantBuffer(ctx, spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, hoveredFadeIns, timeLeft, delayElement, false);
+            if (std::holds_alternative<WheelElement*>(conditionalDelay_.element))
+                return std::get<WheelElement*>(conditionalDelay_.element);
+            else
+                return conditionalDelayDisplay_;
+        }();
         if (delayElement)
+        {
+            bool  inFadeOut = currentTime >= delayFadeOutTime;
+
+            float dt        = float(currentTime - conditionalDelay_.time) / 1000.f;
+            float absDt     = dt;
+            float timeLeft  = 0.f;
+            if (inFadeOut)
+                absDt = 1.f - (dt - maximumConditionalWaitTimeOption_.value()) / (ConditionalDelay::FadeOutTime / 1000.f);
+            else
+                timeLeft = 1.f - (currentTime - conditionalDelay_.time) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
+            const auto& io = ImGui::GetIO();
+
+            ShaderManager::i().SetShaders(ctx, vs_, psDelayIndicator_);
+            ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
+
+            float dpiScale = 1.f;
+            if (GFXSettings::i().dpiScaling())
+                dpiScale = float(Core::i().GetDpiForWindow(Core::i().gameWindow())) / 96.f;
+
+            auto      uiScale = float(MumbleLink::i().uiScale());
+
+            glm::vec2 topLeftCorner;
+            topLeftCorner.y = 77.f + 10.f * uiScale;
+            if (uiScale == 0)
+                topLeftCorner.y += 2.f;
+
+            float bottom         = 13.f + 1.f * uiScale;
+            topLeftCorner.x      = 450.f / 107.f * topLeftCorner.y;
+
+            float widthMinScale  = std::min(1.f, screenSize.x / 1024.f);
+            float heightMinScale = std::min(1.f, screenSize.y / 768.f);
+
+            float minScale       = std::min(widthMinScale, heightMinScale);
+
+            topLeftCorner.x *= dpiScale * minScale;
+            topLeftCorner.y *= dpiScale * minScale;
+            bottom *= dpiScale * minScale;
+
+            topLeftCorner.x += screenSize.x * 0.5f;
+            topLeftCorner.y  = screenSize.y - topLeftCorner.y;
+            bottom           = screenSize.y - bottom;
+
+            float spriteSize = bottom - topLeftCorner.y;
+
+            if (dt < 0.3333f && !inFadeOut)
+            {
+                float sizeInterpolant = SmoothStep(dt * 3);
+                spriteSize            = std::lerp(spriteSize * 3, spriteSize, sizeInterpolant);
+                topLeftCorner.x       = std::lerp(0.5f * screenSize.x, topLeftCorner.x, 0.25f + sizeInterpolant * 0.75f);
+                topLeftCorner.y       = std::lerp(0.5f * screenSize.y, topLeftCorner.y, 0.25f + sizeInterpolant * 0.75f);
+            }
+
+            glm::vec4 spriteDimensions{ topLeftCorner.x * screenSize.z, topLeftCorner.y * screenSize.w, spriteSize * screenSize.z, spriteSize * screenSize.w };
+
+            spriteDimensions.x += spriteDimensions.z * 0.5f;
+            spriteDimensions.y += spriteDimensions.w * 0.5f;
+
+            std::array<float, MaxHoverFadeIns> hoveredFadeIns;
+            std::fill(hoveredFadeIns.begin(), hoveredFadeIns.end(), 0.f);
+            UpdateConstantBuffer(ctx, spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, hoveredFadeIns, timeLeft, delayElement, false);
             delayElement->SetShaderState(ctx);
 
-        ID3D11ShaderResourceView* srvs[] = { backgroundTexture_->srv.Get(), delayElement ? delayElement->appearance().srv.Get() : nullptr };
-        ctx->PSSetShaderResources(0, 2, srvs);
-        ctx->PSSetSamplers(1, 1, borderSampler_.GetAddressOf());
+            ID3D11ShaderResourceView* srvs[] = { backgroundTexture_->srv.Get(), delayElement->appearance().srv.Get() };
+            ctx->PSSetShaderResources(0, 2, srvs);
+            ctx->PSSetSamplers(1, 1, borderSampler_.GetAddressOf());
 
-        DrawScreenQuad(ctx);
+            DrawScreenQuad(ctx);
+        }
     }
 }
 
@@ -1096,13 +1111,22 @@ void Wheel::SendKeybindOrDelay(OptKeybindWheelElement kbwe, std::optional<Point>
             Log::i().Print(Severity::Debug, "Sending keybind.");
 
         Input::i().KeyUpActive();
-        Input::i().SendKeybind(GetKeybindFromOpt(kbwe)->keyCombo(), mousePos);
+        auto kb = GetKeybindFromOpt(kbwe);
+        if (kb)
+            Input::i().SendKeybind(kb->keyCombo(), mousePos);
     }
 }
 
 void Wheel::ResetConditionallyDelayed(bool withFadeOut, mstime currentTime)
 {
+    if (withFadeOut && std::holds_alternative<WheelElement*>(conditionalDelay_.element))
+        conditionalDelayDisplay_ = std::get<WheelElement*>(conditionalDelay_.element);
+    else
+        conditionalDelayDisplay_ = nullptr;
+
     conditionalDelay_      = {};
-    conditionalDelay_.time = withFadeOut ? currentTime : currentTime - ConditionalDelay::FadeOutTime;
+    conditionalDelay_.time = currentTime - maximumConditionalWaitTimeOption_.value() * 1000ull;
+    if (!withFadeOut)
+        conditionalDelay_.time -= ConditionalDelay::FadeOutTime;
 }
 } // namespace GW2Radial

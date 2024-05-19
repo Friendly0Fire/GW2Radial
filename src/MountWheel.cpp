@@ -19,16 +19,17 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
                                                       GetMountColorFromType(i), GetMountPropsFromType(i)));
         });
 
-    auto cancel = std::make_unique<WheelElement>(ToUnderlying(MountType::Last) + 1, "mount_special_cancel", "Mounts", "Cancel queue", glm::vec4(1.f), ConditionalProperties::None);
-    cancel->customBehavior([&](bool visibility) { return showCancelOption_.value() && OptHasValue(conditionalDelay_.element); });
+    auto cancel =
+        std::make_unique<WheelElement>(ToUnderlying(MountSpecial::Cancel), "mount_special_cancel", "Mounts", "Cancel queue", glm::vec4(0.8f), ConditionalProperties::None);
+    cancel->customBehavior([&](bool visibility) { return enableQueuingOption_.value() && showCancelOption_.value() && OptHasValue(conditionalDelay_.element); });
     AddElement(std::move(cancel));
 
-    auto force = std::make_unique<WheelElement>(ToUnderlying(MountType::Last) + 2, "mount_special_force", "Mounts", "Force mount", glm::vec4(1.f), ConditionalProperties::None);
+    auto force = std::make_unique<WheelElement>(ToUnderlying(MountSpecial::Force), "mount_special_force", "Mounts", "Force mount", glm::vec4(0.8f), ConditionalProperties::None);
     force->customBehavior(
         [&](bool visibility)
         {
-            if (showForceOption_.value() && std::holds_alternative<WheelElement*>(conditionalDelay_.element))
-                return std::get<WheelElement*>(conditionalDelay_.element) == wheelElements_[ToUnderlying(MountType::Skyscale)].get();
+            if (enableQueuingOption_.value() && showForceOption_.value() && std::holds_alternative<WheelElement*>(conditionalDelay_.element))
+                return std::get<WheelElement*>(conditionalDelay_.element) == wheelElements_[MountIndex(MountType::Skyscale)].get();
             else
                 return false;
         });
@@ -79,12 +80,16 @@ void MountWheel::MenuSectionInteraction()
         UI::HelpTooltip("Amount of time, in milliseconds, to wait between pressing the keybind and dismounting.");
     }
 
-    ImGui::ConfigurationWrapper(&ImGui::Checkbox, showCancelOption_);
-    UI::HelpTooltip("If enabled, will display an extra slice in the mount wheel when a mount has been queued. Selecting this option will cancel the queue.");
+    if (enableQueuingOption_.value())
+    {
+        ImGui::ConfigurationWrapper(&ImGui::Checkbox, showCancelOption_);
+        UI::HelpTooltip("If enabled, will display an extra slice in the mount wheel when a mount has been queued. Selecting this option will cancel the queue.");
 
-    ImGui::ConfigurationWrapper(&ImGui::Checkbox, showForceOption_);
-    UI::HelpTooltip("If enabled, will display an extra slice in the mount wheel when a mount has been queued. Selecting this option will force the queued mount key to be sent and "
-                    "clear the queue.");
+        ImGui::ConfigurationWrapper(&ImGui::Checkbox, showForceOption_);
+        UI::HelpTooltip(
+            "If enabled, will display an extra slice in the mount wheel when a mount has been queued. Selecting this option will force the queued mount key to be sent and "
+            "clear the queue.");
+    }
 }
 
 bool MountWheel::BypassCheck(WheelElement*& we, Keybind*& kb)
@@ -135,5 +140,26 @@ bool MountWheel::CustomDelayCheck(OptKeybindWheelElement&)
 bool MountWheel::ResetMouseCheck(WheelElement* we)
 {
     return we == wheelElements_[MountIndex(MountType::Skiff)].get();
+}
+
+Keybind* MountWheel::GetKeybindFromOpt(OptKeybindWheelElement& o)
+{
+    if (std::holds_alternative<WheelElement*>(o))
+    {
+        auto* we = std::get<WheelElement*>(o);
+        if (we == wheelElements_[MountIndex(MountSpecial::Cancel)].get())
+        {
+            ResetConditionallyDelayed(true);
+            return nullptr;
+        }
+        else if (we == wheelElements_[MountIndex(MountSpecial::Force)].get())
+        {
+            auto delayedElement = conditionalDelay_.element;
+            ResetConditionallyDelayed(true);
+            return GetKeybindFromOpt(delayedElement);
+        }
+    }
+
+    return Wheel::GetKeybindFromOpt(o);
 }
 } // namespace GW2Radial
