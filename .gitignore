@@ -263,7 +263,6 @@ __pycache__/
 int/
 temp/
 
-include/git.h
-include/github.h
+include/Version.h
 
 vcpkg_installed

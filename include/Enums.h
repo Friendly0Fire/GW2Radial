@@ -22,10 +22,21 @@ enum class MountType : u32
     First    = Raptor,
     Last     = Skiff
 };
-constexpr unsigned int MountTypeCount = std::underlying_type_t<MountType>(MountType::Last) + 1;
-constexpr unsigned int MountIndex(MountType m)
+constexpr u32 MountTypeCount = std::underlying_type_t<MountType>(MountType::Last) + 1;
+constexpr u32 MountIndex(MountType m)
 {
-    return unsigned int(m) - unsigned int(MountType::First);
+    return u32(m) - u32(MountType::First);
+}
+
+enum class MountSpecial : u32
+{
+    Cancel = ToUnderlying(MountType::Last) + 1,
+    Force  = ToUnderlying(MountType::Last) + 2,
+};
+
+constexpr u32 MountIndex(MountSpecial m)
+{
+    return u32(m) - u32(MountType::First);
 }
 
 enum class MarkerType : u32

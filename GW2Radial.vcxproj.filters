@@ -17,9 +17,6 @@
     <Filter Include="Source Files\Radials">
       <UniqueIdentifier>{8fa92bfb-91a9-4631-9e79-04259d80efbd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Versioning">
-      <UniqueIdentifier>{5066aeab-7442-4db0-8d6e-c7f444556d3b}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core.cpp">
@@ -78,11 +75,8 @@
     <ClInclude Include="include\CustomWheel.h">
       <Filter>Source Files\Radials</Filter>
     </ClInclude>
-    <ClInclude Include="include\Tag.h">
-      <Filter>Source Files\Versioning</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Version.h">
-      <Filter>Source Files\Versioning</Filter>
+    <ClInclude Include="include\Defs.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

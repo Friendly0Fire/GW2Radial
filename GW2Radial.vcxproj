@@ -104,10 +104,7 @@
       <Command>mkdir "$(ProjectDir)int"
 del "$(ProjectDir)int\Shaders.zip"
 cd "$(ProjectDir)shaders"
-"$(SolutionDir)tools\zip.exe" "$(ProjectDir)int\Shaders.zip"  *.*
-
-echo | set /p dummyName="#define GIT_HASH " &gt; "$(ProjectDir)include\git.h"
-git describe --always --dirty --match "NOT A TAG" &gt;&gt; "$(ProjectDir)include\git.h"</Command>
+"$(SolutionDir)tools\zip.exe" "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -165,14 +162,13 @@ cd "$(ProjectDir)shaders"
   <ItemGroup>
     <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\CustomWheel.h" />
+    <ClInclude Include="include\Defs.h" />
     <ClInclude Include="include\Enums.h" />
     <ClInclude Include="include\Main.h" />
     <ClInclude Include="include\MarkerWheel.h" />
     <ClInclude Include="include\MountWheel.h" />
     <ClInclude Include="include\NoveltyWheel.h" />
     <ClInclude Include="include\Resource.h" />
-    <ClInclude Include="include\Tag.h" />
-    <ClInclude Include="include\Version.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
   </ItemGroup>
