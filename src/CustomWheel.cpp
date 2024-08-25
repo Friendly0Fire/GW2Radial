@@ -62,8 +62,9 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blen
 
     ImDrawList* imDraws[] = { &imDraw };
     ImDrawData  imData;
-    imData.Valid         = true;
-    imData.CmdLists      = imDraws;
+    imData.Valid = true;
+    imData.CmdLists.clear();
+    imData.CmdLists.push_back(&imDraw);
     imData.CmdListsCount = 1;
     imData.TotalIdxCount = imDraw.IdxBuffer.Size;
     imData.TotalVtxCount = imDraw.VtxBuffer.Size;
