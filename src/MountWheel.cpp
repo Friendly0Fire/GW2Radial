@@ -29,7 +29,10 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
         [&](bool visibility)
         {
             if (enableQueuingOption_.value() && showForceOption_.value() && std::holds_alternative<WheelElement*>(conditionalDelay_.element))
-                return std::get<WheelElement*>(conditionalDelay_.element) == wheelElements_[MountIndex(MountType::Skyscale)].get();
+            {
+                const auto* element = std::get<WheelElement*>(conditionalDelay_.element);
+                return element == wheelElements_[MountIndex(MountType::Skyscale)].get() || element == wheelElements_[MountIndex(MountType::Warclaw)].get();
+            }
             else
                 return false;
         });

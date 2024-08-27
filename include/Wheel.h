@@ -286,7 +286,7 @@ protected:
     friend class WheelElement;
     friend class CustomWheelsManager;
 
-    static inline const u32 MaxHoverFadeIns = 12;
+    static inline const u32 MaxHoverFadeIns = 20;
 
     struct WheelCB
     {
