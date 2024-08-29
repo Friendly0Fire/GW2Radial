@@ -476,7 +476,8 @@ void Wheel::OnUpdate()
                         auto kb = GetKeybindFromOpt(cd.element);
                         if (kb)
                             Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
-                        ResetConditionallyDelayed(true, currentTime);
+                        if (clearConditionalDelayOnSend_)
+                            ResetConditionallyDelayed(true, currentTime);
                     }
                     cd.testPasses = true;
                 }
@@ -1031,24 +1032,27 @@ void Wheel::DeactivateWheel()
     // If keybind release was done before the wheel is visible, check our behavior
     if (currentTriggerTime_ + displayDelayOption_.value() > TimeInMilliseconds())
     {
-        switch (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()))
+        if (!SpecialBehaviorBeforeDelay())
         {
-            default:
-                currentHovered_ = nullptr;
-                break;
-            case BehaviorBeforeDelay::Favorite:
-                currentHovered_ = GetFavorite(delayFavoriteOption_.value());
-                break;
-            case BehaviorBeforeDelay::Previous:
-                currentHovered_ = previousUsed_;
-                break;
-            case BehaviorBeforeDelay::Direction:
-                if (!currentHovered_)
-                    currentHovered_ = GetCenterHoveredElement();
-                break;
-            case BehaviorBeforeDelay::PassToGame:
-                PassToGame();
-                break;
+            switch (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()))
+            {
+                default:
+                    currentHovered_ = nullptr;
+                    break;
+                case BehaviorBeforeDelay::Favorite:
+                    currentHovered_ = GetFavorite(delayFavoriteOption_.value());
+                    break;
+                case BehaviorBeforeDelay::Previous:
+                    currentHovered_ = previousUsed_;
+                    break;
+                case BehaviorBeforeDelay::Direction:
+                    if (!currentHovered_)
+                        currentHovered_ = GetCenterHoveredElement();
+                    break;
+                case BehaviorBeforeDelay::PassToGame:
+                    PassToGame();
+                    break;
+            }
         }
     }
     else if (!currentHovered_)

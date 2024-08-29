@@ -11,7 +11,10 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
     , dismountKeybind_("dismount", "Dismount", "wheel_" + nickname_)
     , showCancelOption_("Show cancel option", "cancel_option", "wheel_" + nickname_, false)
     , showForceOption_("Show force option", "force_option", "wheel_" + nickname_, false)
+    , beforeDelayForceOption_("Override before delay choice with force option", "default_force_option", "wheel_" + nickname_, false)
 {
+    clearConditionalDelayOnSend_ = false;
+
     IterateEnum<MountType>(
         [&](auto i)
         {
@@ -36,7 +39,17 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
             else
                 return false;
         });
+    force_ = force.get();
     AddElement(std::move(force));
+}
+
+void MountWheel::OnUpdate()
+{
+    Wheel::OnUpdate();
+
+    // If we mounted up while we had a mount queued, we don't want to try mounting again, that'd dismount us instead!
+    if (conditionalDelay_.element.index() != 0 && MumbleLink::i().currentMount() != MumbleLink::MountType::None)
+        ResetConditionallyDelayed(true);
 }
 
 glm::vec4 MountWheel::GetMountColorFromType(MountType m)
@@ -91,7 +104,10 @@ void MountWheel::MenuSectionInteraction()
         ImGui::ConfigurationWrapper(&ImGui::Checkbox, showForceOption_);
         UI::HelpTooltip(
             "If enabled, will display an extra slice in the mount wheel when a mount has been queued. Selecting this option will force the queued mount key to be sent and "
-            "clear the queue.");
+            "clear the queue. Only available for Skyscale and Warclaw.");
+
+        ImGui::ConfigurationWrapper(&ImGui::Checkbox, beforeDelayForceOption_);
+        UI::HelpTooltip("If enabled, the behavior when released before delay has lapsed will be overridden to the force mount option. Only available for Skyscale and Warclaw.");
     }
 }
 
@@ -158,11 +174,27 @@ Keybind* MountWheel::GetKeybindFromOpt(OptKeybindWheelElement& o)
         else if (we == wheelElements_[MountIndex(MountSpecial::Force)].get())
         {
             auto delayedElement = conditionalDelay_.element;
-            ResetConditionallyDelayed(true);
             return GetKeybindFromOpt(delayedElement);
         }
     }
 
     return Wheel::GetKeybindFromOpt(o);
 }
+
+bool MountWheel::SpecialBehaviorBeforeDelay()
+{
+    if (!beforeDelayForceOption_.value())
+        return false;
+
+    if (!std::holds_alternative<WheelElement*>(conditionalDelay_.element))
+        return false;
+
+    const auto* element = std::get<WheelElement*>(conditionalDelay_.element);
+    if (element != wheelElements_[MountIndex(MountType::Skyscale)].get() && element != wheelElements_[MountIndex(MountType::Warclaw)].get())
+        return false;
+
+    currentHovered_ = force_;
+    return true;
+}
+
 } // namespace GW2Radial

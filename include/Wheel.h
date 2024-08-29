@@ -44,7 +44,7 @@ public:
 
     void               Draw(ID3D11DeviceContext* ctx);
     void               OnFocusLost();
-    void               OnUpdate();
+    virtual void       OnUpdate();
     void               OnMapChange(u32 prevId, u32 newId);
     void               OnCharacterChange(const std::wstring& prevCharacterName, const std::wstring& newCharacterName);
 
@@ -159,6 +159,11 @@ protected:
         return false;
     }
 
+    virtual bool SpecialBehaviorBeforeDelay()
+    {
+        return false;
+    }
+
     union Favorite
     {
         int value;
@@ -206,7 +211,8 @@ protected:
     u32                                        minElementSortingPriority_ = 0;
     ConditionSetPtr                            conditions_;
     ActivationKeybind                          keybind_, centralKeybind_;
-    bool                                       waitingForBypassComplete_ = false;
+    bool                                       waitingForBypassComplete_    = false;
+    bool                                       clearConditionalDelayOnSend_ = true;
 
     struct ConditionalDelay
     {

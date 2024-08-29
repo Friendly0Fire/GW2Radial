@@ -10,6 +10,8 @@ class MountWheel : public Wheel
 public:
     MountWheel(std::shared_ptr<Texture2D> bgTexture);
 
+    void OnUpdate() override;
+
 protected:
     static const char* GetMountNameFromType(MountType m)
     {
@@ -90,8 +92,8 @@ protected:
                        ConditionalProperties::VisibleUnderwater;
 
             case MountType::Warclaw:
-                // Warclaw is usable in WvW only
-                return ConditionalProperties::UsableWvW;
+                // Warclaw is usable in WvW
+                return baseline | ConditionalProperties::UsableWvW;
 
             case MountType::Turtle:
                 // Turtle is usable on and underwater
@@ -115,13 +117,16 @@ protected:
     bool                      CustomDelayCheck(OptKeybindWheelElement&) override;
     bool                      ResetMouseCheck(WheelElement*) override;
     Keybind*                  GetKeybindFromOpt(OptKeybindWheelElement& o) override;
+    bool                      SpecialBehaviorBeforeDelay() override;
 
     ConfigurationOption<int>  dismountDelayOption_;
     ConfigurationOption<bool> quickDismountOption_;
     ConfigurationOption<bool> showCancelOption_;
     ConfigurationOption<bool> showForceOption_;
+    ConfigurationOption<bool> beforeDelayForceOption_;
     mstime                    dismountTriggerTime_ = 0;
     Keybind                   dismountKeybind_;
+    WheelElement*             force_;
 };
 
 } // namespace GW2Radial
