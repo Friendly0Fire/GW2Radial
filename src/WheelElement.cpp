@@ -53,6 +53,7 @@ int WheelElement::DrawPriority(int extremumIndicator)
     auto            props           = props_.value();
 
     ImGui::TableNextColumn();
+    ImGui::AlignTextToFramePadding();
     if (!isBound() || props == ConditionalProperties::None)
         ImGui::PushFont(Core::i().fontItalic());
     auto displayName = displayName_;
@@ -85,7 +86,6 @@ int WheelElement::DrawPriority(int extremumIndicator)
                 const float cursorY = ImGui::GetCursorPosY();
                 ImGui::TextUnformatted(&c, &c + 1);
                 ImGui::SameLine();
-                ImGui::SetCursorPosY(cursorY + fontOffset);
                 ImGui::SetWindowFontScale(fontMultiplier);
                 if (NotNone(props & v) && NotNone(props & u)) // Visible and usable
                     ImGui::TextUnformatted(ICON_FA_CHECK_DOUBLE);
@@ -95,7 +95,6 @@ int WheelElement::DrawPriority(int extremumIndicator)
                     ImGui::TextUnformatted(ICON_FA_HAND_POINTER); // Usable but not visible
                 ImGui::SetWindowFontScale(1.f);
                 ImGui::SameLine(0.f, realItemSpacing);
-                ImGui::SetCursorPosY(cursorY);
             }
         };
 
