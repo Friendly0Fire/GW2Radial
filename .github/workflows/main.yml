@@ -36,9 +36,6 @@ jobs:
           toolset: 14.30
           sdk: 10.0.22000.0
 
-      - name: Generate version information
-        run: powershell "${env:GITHUB_WORKSPACE}\Version.ps1" -ref "${{github.ref}}" -sha "${{github.sha}}"
-
       - uses: nuget/setup-nuget@v1
         with:
           nuget-version: '5.x'
