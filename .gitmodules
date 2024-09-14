@@ -1,3 +1,3 @@
-[submodule "GW2Common"]
+[submodule "extern/GW2Common"]
 	path = extern/GW2Common
 	url = git@github.com:Friendly0Fire/GW2Common.git
