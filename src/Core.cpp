@@ -113,7 +113,7 @@ void Core::InnerInitPostImGui()
     firstMessageShown_ = std::make_unique<ConfigurationOption<bool>>("", "first_message_shown_v1", "Core", false);
 }
 
-void Core::InnerInternalInit(GW2Load_API* api)
+void Core::InnerInternalInit()
 {
     // COM concurrency model is annoying to deal with, can cause issues if enabled in a different way by another addon
     // However, with D3D11 in explicit single threaded mode, we CANNOT actually run background tasks, so instead

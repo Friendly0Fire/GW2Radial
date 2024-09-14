@@ -62,7 +62,7 @@ protected:
     void InnerOnFocusLost() override;
     void InnerInitPreImGui() override;
     void InnerInitPostImGui() override;
-    void InnerInternalInit(GW2Load_API* api) override;
+    void InnerInternalInit() override;
     void InnerShutdown() override;
 
     u32  GetShaderArchiveID() const override

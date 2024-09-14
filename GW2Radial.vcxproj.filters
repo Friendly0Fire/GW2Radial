@@ -80,6 +80,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Main.def">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="shaders\common.hlsli">
       <Filter>Resource Files\Shaders</Filter>
     </None>
