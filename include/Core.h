@@ -2,10 +2,10 @@
 
 #include <CustomWheel.h>
 #include <Defs.h>
-#include <Direct3D11Loader.h>
 #include <Main.h>
 #include <Singleton.h>
 #include <Wheel.h>
+#include <Win.h>
 #include <d3d11_1.h>
 #include <dxgi.h>
 
@@ -19,7 +19,7 @@ class Core : public BaseCore, public Singleton<Core>
 public:
     struct VertexCB
     {
-        fVector4    spriteDimensions;
+        glm::vec4   spriteDimensions;
         glm::mat4x4 tiltMatrix;
         float       spriteZ;
     };
@@ -62,10 +62,10 @@ protected:
     void InnerOnFocusLost() override;
     void InnerInitPreImGui() override;
     void InnerInitPostImGui() override;
-    void InnerInternalInit() override;
+    void InnerInternalInit(GW2Load_API* api) override;
     void InnerShutdown() override;
 
-    uint GetShaderArchiveID() const override
+    u32  GetShaderArchiveID() const override
     {
         return IDR_SHADERS;
     }
@@ -79,7 +79,7 @@ protected:
     }
 
     bool                                       forceReloadWheels_ = false;
-    uint                                       mapId_             = 0;
+    u32                                        mapId_             = 0;
     std::wstring                               characterName_;
 
     std::vector<std::unique_ptr<Wheel>>        wheels_;

@@ -46,17 +46,21 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(ProjectDir)common\imgui;$(ProjectDir)common\d3d9_wrapper\include;$(ProjectDir)common\loader-core\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include;$(SolutionDir)extern\GW2Common\include;$(SolutionDir)extern\GW2Common\extern;$(SolutionDir)extern\GW2Common\extern\imgui;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
-    <TargetName>gw2addon_gw2radial</TargetName>
+    <TargetName>gw2radial</TargetName>
+    <IntDir>$(SolutionDir)int\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)include\;$(ProjectDir);$(ProjectDir)common\ZipLib\Source\ZipLib;$(ProjectDir)common\include;$(ProjectDir)common\imgui;$(ProjectDir)common\d3d9_wrapper\include;$(ProjectDir)common\loader-core\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)include;$(SolutionDir)extern\GW2Common\include;$(SolutionDir)extern\GW2Common\extern;$(SolutionDir)extern\GW2Common\extern\imgui;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
-    <TargetName>gw2addon_gw2radial</TargetName>
+    <TargetName>gw2radial</TargetName>
+    <IntDir>$(SolutionDir)int\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
@@ -82,13 +86,12 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
-      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(ProjectDir)common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(SolutionDir)int\GW2Common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (
-  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2addon_gw2radial.dll"
-  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2addon_gw2radial.pdb"
+  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\$(TargetName).dll"
+  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\$(TargetName).pdb"
 ) else (
   echo No target defined, skipping copy. To setup automatic copy, define environment variable GW2RADIAL_TARGET_DIR to your GW2 root install directory.
 )</Command>
@@ -101,10 +104,7 @@
       <Command>mkdir "$(ProjectDir)int"
 del "$(ProjectDir)int\Shaders.zip"
 cd "$(ProjectDir)shaders"
-"$(SolutionDir)tools\zip.exe" "$(ProjectDir)int\Shaders.zip"  *.*
-
-echo | set /p dummyName="#define GIT_HASH " &gt; "$(ProjectDir)include\git.h"
-git describe --always --dirty --match "NOT A TAG" &gt;&gt; "$(ProjectDir)include\git.h"</Command>
+"$(SolutionDir)tools\zip.exe" "$(ProjectDir)int\Shaders.zip"  *.*</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -126,13 +126,12 @@ git describe --always --dirty --match "NOT A TAG" &gt;&gt; "$(ProjectDir)include
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>main.def</ModuleDefinitionFile>
-      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(ProjectDir)common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(SolutionDir)int\GW2Common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (
-  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2addon_gw2radial.dll"
-  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\gw2addon_gw2radial.pdb"
+  copy /Y $(TargetPath) "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\$(TargetName).dll"
+  copy /Y $(OutDir)$(TargetName).pdb "$(GW2RADIAL_TARGET_DIR)\addons\gw2radial\$(TargetName).pdb"
 ) else (
   echo No target defined, skipping copy. To setup automatic copy, define environment variable GW2RADIAL_TARGET_DIR to your GW2 root install directory.
 )</Command>
@@ -163,26 +162,21 @@ cd "$(ProjectDir)shaders"
   <ItemGroup>
     <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\CustomWheel.h" />
+    <ClInclude Include="include\Defs.h" />
     <ClInclude Include="include\Enums.h" />
     <ClInclude Include="include\Main.h" />
     <ClInclude Include="include\MarkerWheel.h" />
     <ClInclude Include="include\MountWheel.h" />
     <ClInclude Include="include\NoveltyWheel.h" />
     <ClInclude Include="include\Resource.h" />
-    <ClInclude Include="include\Tag.h" />
-    <ClInclude Include="include\Version.h" />
     <ClInclude Include="include\Wheel.h" />
     <ClInclude Include="include\WheelElement.h" />
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="..\readme.md">
-      <FileType>Document</FileType>
+    <None Include="readme.md">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
-    </CopyFileToFolders>
-    <None Include="art\finals\rcdata1.bin" />
-    <None Include="Main.def" />
-    <None Include="rt_rcdat.bin" />
+    </None>
     <None Include="shaders\common.hlsli" />
     <None Include="vcpkg.json" />
   </ItemGroup>
@@ -258,11 +252,8 @@ cd "$(ProjectDir)shaders"
     <Image Include="art\Finals\x_marker.dds" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="common\GW2Common.vcxproj">
+    <ProjectReference Include="extern\GW2Common\GW2Common.vcxproj">
       <Project>{1ad7929b-fe1e-4fa2-be57-df9b0fc1526d}</Project>
-    </ProjectReference>
-    <ProjectReference Include="common\ziplib\Source\ZipLib\ZipLib.vcxproj">
-      <Project>{5c9fd859-ddf9-4510-8397-b329b0ae8c48}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -17,9 +17,6 @@
     <Filter Include="Source Files\Radials">
       <UniqueIdentifier>{8fa92bfb-91a9-4631-9e79-04259d80efbd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Versioning">
-      <UniqueIdentifier>{5066aeab-7442-4db0-8d6e-c7f444556d3b}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core.cpp">
@@ -78,23 +75,11 @@
     <ClInclude Include="include\CustomWheel.h">
       <Filter>Source Files\Radials</Filter>
     </ClInclude>
-    <ClInclude Include="include\Tag.h">
-      <Filter>Source Files\Versioning</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Version.h">
-      <Filter>Source Files\Versioning</Filter>
+    <ClInclude Include="include\Defs.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="rt_rcdat.bin">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Main.def">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="art\finals\rcdata1.bin">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="shaders\common.hlsli">
       <Filter>Resource Files\Shaders</Filter>
     </None>
@@ -119,16 +104,14 @@
     <None Include="vcpkg.json">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="readme.md">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <CopyFileToFolders Include="..\readme.md">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <Image Include="art\Finals\arrow_marker.dds">

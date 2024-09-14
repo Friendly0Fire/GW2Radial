@@ -15,19 +15,19 @@ protected:
     {
         switch (m)
         {
-            case NoveltyType::CHAIR:
+            case NoveltyType::Chair:
                 return "Chair";
-            case NoveltyType::MUSICAL_INSTRUMENT:
+            case NoveltyType::MusicalInstrument:
                 return "Musical instrument";
-            case NoveltyType::HELD_ITEM:
+            case NoveltyType::HeldItem:
                 return "Held item";
-            case NoveltyType::TRAVEL_TOY:
+            case NoveltyType::TravelToy:
                 return "Travel toy";
-            case NoveltyType::TONIC:
+            case NoveltyType::Tonic:
                 return "Tonic";
-            case NoveltyType::JADE_WAYPOINT:
+            case NoveltyType::JadeWaypoint:
                 return "Jade waypoint";
-            case NoveltyType::FISHING:
+            case NoveltyType::Fishing:
                 return "Start fishing";
             default:
                 return "[Unknown]";
@@ -37,19 +37,19 @@ protected:
     {
         switch (m)
         {
-            case NoveltyType::CHAIR:
+            case NoveltyType::Chair:
                 return "chair";
-            case NoveltyType::MUSICAL_INSTRUMENT:
+            case NoveltyType::MusicalInstrument:
                 return "musical_instrument";
-            case NoveltyType::HELD_ITEM:
+            case NoveltyType::HeldItem:
                 return "held_item";
-            case NoveltyType::TRAVEL_TOY:
+            case NoveltyType::TravelToy:
                 return "travel_toy";
-            case NoveltyType::TONIC:
+            case NoveltyType::Tonic:
                 return "tonic";
-            case NoveltyType::JADE_WAYPOINT:
+            case NoveltyType::JadeWaypoint:
                 return "jade_waypoint";
-            case NoveltyType::FISHING:
+            case NoveltyType::Fishing:
                 return "fishing";
             default:
                 return "unknown";

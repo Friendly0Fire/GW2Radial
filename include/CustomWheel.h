@@ -11,9 +11,9 @@ class CustomWheelsManager
     std::vector<std::unique_ptr<Wheel>>& wheels_;
     std::vector<Wheel*>                  customWheels_;
     std::vector<std::wstring>            failedLoads_;
-    static constexpr uint                CustomWheelStartId = 10000;
-    static constexpr uint                CustomWheelIdStep  = 1000;
-    uint                                 customWheelNextId_ = CustomWheelStartId;
+    static constexpr u32                 CustomWheelStartId = 10000;
+    static constexpr u32                 CustomWheelIdStep  = 1000;
+    u32                                  customWheelNextId_ = CustomWheelStartId;
     ImFont*                              font_              = nullptr;
     bool                                 loaded_            = false;
     ComPtr<ID3D11BlendState>             textBlendState_;
@@ -44,7 +44,7 @@ public:
 
 struct CustomElementSettings
 {
-    uint                  id;
+    u32                   id;
     std::string           nickname;
     std::string           category;
     std::string           name;

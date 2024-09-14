@@ -15,6 +15,9 @@
 #define IDR_MOUNT9    219
 #define IDR_MOUNT10   220
 
+#define IDR_MOUNTC    221
+#define IDR_MOUNTF    222
+
 #define IDR_NOVELTIES 241
 #define IDR_NOVELTY1  241
 #define IDR_NOVELTY2  242

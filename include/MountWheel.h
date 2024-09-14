@@ -10,30 +10,32 @@ class MountWheel : public Wheel
 public:
     MountWheel(std::shared_ptr<Texture2D> bgTexture);
 
+    void OnUpdate() override;
+
 protected:
     static const char* GetMountNameFromType(MountType m)
     {
         switch (m)
         {
-            case MountType::RAPTOR:
+            case MountType::Raptor:
                 return "Raptor";
-            case MountType::SPRINGER:
+            case MountType::Springer:
                 return "Springer";
-            case MountType::SKIMMER:
+            case MountType::Skimmer:
                 return "Skimmer";
-            case MountType::JACKAL:
+            case MountType::Jackal:
                 return "Jackal";
-            case MountType::GRIFFON:
+            case MountType::Griffon:
                 return "Griffon";
-            case MountType::BEETLE:
+            case MountType::Beetle:
                 return "Roller Beetle";
-            case MountType::WARCLAW:
+            case MountType::Warclaw:
                 return "Warclaw";
-            case MountType::SKYSCALE:
+            case MountType::Skyscale:
                 return "Skyscale";
-            case MountType::TURTLE:
+            case MountType::Turtle:
                 return "Turtle";
-            case MountType::SKIFF:
+            case MountType::Skiff:
                 return "Skiff";
             default:
                 return "[Unknown]";
@@ -43,25 +45,25 @@ protected:
     {
         switch (m)
         {
-            case MountType::RAPTOR:
+            case MountType::Raptor:
                 return "raptor";
-            case MountType::SPRINGER:
+            case MountType::Springer:
                 return "springer";
-            case MountType::SKIMMER:
+            case MountType::Skimmer:
                 return "skimmer";
-            case MountType::JACKAL:
+            case MountType::Jackal:
                 return "jackal";
-            case MountType::GRIFFON:
+            case MountType::Griffon:
                 return "griffon";
-            case MountType::BEETLE:
+            case MountType::Beetle:
                 return "beetle";
-            case MountType::WARCLAW:
+            case MountType::Warclaw:
                 return "warclaw";
-            case MountType::SKYSCALE:
+            case MountType::Skyscale:
                 return "skyscale";
-            case MountType::TURTLE:
+            case MountType::Turtle:
                 return "turtle";
-            case MountType::SKIFF:
+            case MountType::Skiff:
                 return "skiff";
             default:
                 return "unknown";
@@ -72,38 +74,38 @@ protected:
     {
         // Work under the assumption that queuing is enabled and players usually want an underwater mount when underwater,
         // which means all mounts should only be visible in combat, but NOT under/on water
-        ConditionalProperties baseline = ConditionalProperties::USABLE_DEFAULT | ConditionalProperties::VISIBLE_DEFAULT | ConditionalProperties::VISIBLE_IN_COMBAT;
+        ConditionalProperties baseline = ConditionalProperties::UsableDefault | ConditionalProperties::VisibleDefault | ConditionalProperties::VisibleInCombat;
 
         switch (m)
         {
-            case MountType::RAPTOR:
-            case MountType::SPRINGER:
-            case MountType::JACKAL:
-            case MountType::GRIFFON:
-            case MountType::BEETLE:
-            case MountType::SKYSCALE:
+            case MountType::Raptor:
+            case MountType::Springer:
+            case MountType::Jackal:
+            case MountType::Griffon:
+            case MountType::Beetle:
+            case MountType::Skyscale:
                 return baseline;
 
-            case MountType::SKIMMER:
+            case MountType::Skimmer:
                 // Skimmer is usable on water and, for most, underwater, so default to that
-                return baseline | ConditionalProperties::USABLE_ON_WATER | ConditionalProperties::USABLE_UNDERWATER | ConditionalProperties::VISIBLE_ON_WATER |
-                       ConditionalProperties::VISIBLE_UNDERWATER;
+                return baseline | ConditionalProperties::UsableOnWater | ConditionalProperties::UsableUnderwater | ConditionalProperties::VisibleOnWater |
+                       ConditionalProperties::VisibleUnderwater;
 
-            case MountType::WARCLAW:
-                // Warclaw is usable in WvW only
-                return ConditionalProperties::USABLE_WVW;
+            case MountType::Warclaw:
+                // Warclaw is usable in WvW
+                return baseline | ConditionalProperties::UsableWvW;
 
-            case MountType::TURTLE:
+            case MountType::Turtle:
                 // Turtle is usable on and underwater
-                return baseline | ConditionalProperties::USABLE_ON_WATER | ConditionalProperties::USABLE_UNDERWATER | ConditionalProperties::VISIBLE_ON_WATER |
-                       ConditionalProperties::VISIBLE_UNDERWATER;
+                return baseline | ConditionalProperties::UsableOnWater | ConditionalProperties::UsableUnderwater | ConditionalProperties::VisibleOnWater |
+                       ConditionalProperties::VisibleUnderwater;
 
-            case MountType::SKIFF:
+            case MountType::Skiff:
                 // Skiff is usable on water
-                return baseline | ConditionalProperties::USABLE_ON_WATER | ConditionalProperties::VISIBLE_ON_WATER;
+                return baseline | ConditionalProperties::UsableOnWater | ConditionalProperties::VisibleOnWater;
 
             default:
-                return ConditionalProperties::NONE;
+                return ConditionalProperties::None;
         }
     }
 
@@ -114,11 +116,17 @@ protected:
     bool                      BypassCheck(WheelElement*&, Keybind*&) override;
     bool                      CustomDelayCheck(OptKeybindWheelElement&) override;
     bool                      ResetMouseCheck(WheelElement*) override;
+    Keybind*                  GetKeybindFromOpt(OptKeybindWheelElement& o) override;
+    bool                      SpecialBehaviorBeforeDelay() override;
 
     ConfigurationOption<int>  dismountDelayOption_;
     ConfigurationOption<bool> quickDismountOption_;
+    ConfigurationOption<bool> showCancelOption_;
+    ConfigurationOption<bool> showForceOption_;
+    ConfigurationOption<bool> beforeDelayForceOption_;
     mstime                    dismountTriggerTime_ = 0;
     Keybind                   dismountKeybind_;
+    WheelElement*             force_;
 };
 
 } // namespace GW2Radial

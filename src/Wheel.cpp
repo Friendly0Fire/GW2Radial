@@ -9,6 +9,7 @@
 #include <Utility.h>
 #include <Wheel.h>
 #include <algorithm>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -122,7 +123,7 @@ void Wheel::UpdateHover()
 {
     const auto& io = ImGui::GetIO();
 
-    fVector2    mousePos;
+    glm::vec2   mousePos;
     mousePos.x = io.MousePos.x / float(Core::i().screenWidth());
     mousePos.y = io.MousePos.y / float(Core::i().screenHeight());
     mousePos.x -= currentPosition_.x;
@@ -137,7 +138,7 @@ void Wheel::UpdateHover()
     float         mpLenSq        = mousePos.x * mousePos.x + mousePos.y * mousePos.y;
 
     // Middle circle does not count as a hover event
-    if (!activeElements.empty() && mpLenSq > SQUARE(scaleOption_.value() * 0.125f * 0.8f * centerScaleOption_.value()))
+    if (!activeElements.empty() && mpLenSq > Square(scaleOption_.value() * 0.125f * 0.8f * centerScaleOption_.value()))
     {
         float mouseAngle = atan2(-mousePos.y, -mousePos.x) - 0.5f * float(M_PI);
         if (mouseAngle < 0)
@@ -166,27 +167,27 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 {
     ImGui::PushID((nickname_ + "Elements").c_str());
 
-    ImGuiTitle("In-game Keybinds");
+    UI::Title("In-game Keybinds");
 
     ImGui::TextUnformatted("Set the following to your in-game keybinds (F11, Control Options).");
 
     for (auto& we : wheelElements_)
-        ImGuiKeybindInput(we->keybind(), currentEditedKeybind, nullptr);
+        ImGui::KeybindInput(we->keybind(), currentEditedKeybind, nullptr);
 
-    ImGuiTitle("Keybinds");
+    UI::Title("Keybinds");
 
-    ImGuiKeybindInput((Keybind&)keybind_, currentEditedKeybind, "Pressing this key combination will open the radial menu at your cursor's current location.");
-    ImGuiKeybindInput((Keybind&)centralKeybind_, currentEditedKeybind,
-                      "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back "
-                      "after you have selected an option.");
+    ImGui::KeybindInput((Keybind&)keybind_, currentEditedKeybind, "Pressing this key combination will open the radial menu at your cursor's current location.");
+    ImGui::KeybindInput((Keybind&)centralKeybind_, currentEditedKeybind,
+                        "Pressing this key combination will open the radial menu in the middle of the screen. Your cursor will be moved to the middle of the screen and moved back "
+                        "after you have selected an option.");
 
     MenuSectionKeybinds(currentEditedKeybind);
 
-    if (ImGuiConfigurationWrapper(&ImGui::Checkbox, enableConditionsOption_) && conditions_)
+    if (ImGui::ConfigurationWrapper(&ImGui::Checkbox, enableConditionsOption_) && conditions_)
         conditions_->enable(enableConditionsOption_.value());
 
     {
-        ImGuiDisabler disable(!conditions_ || !enableConditionsOption_.value());
+        UI::Scoped::Disable disable(!conditions_ || !enableConditionsOption_.value());
 
         ImGui::Indent();
 
@@ -195,52 +196,52 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
         ImGui::Unindent();
     }
 
-    ImGuiTitle("Display Options");
+    UI::Title("Display Options");
 
-    ImGuiConfigurationWrapper(&ImGui::SliderInt, opacityMultiplierOption_, 0, 100, "%d %%", ImGuiSliderFlags_AlwaysClamp);
-    ImGuiHelpTooltip("Transparency of the entire overlay. Setting to 0% hides it entirely.");
+    ImGui::ConfigurationWrapper(&ImGui::SliderInt, opacityMultiplierOption_, 0, 100, "%d %%", ImGuiSliderFlags_AlwaysClamp);
+    UI::HelpTooltip("Transparency of the entire overlay. Setting to 0% hides it entirely.");
 
-    ImGuiConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
-    ImGuiHelpTooltip("Amount of time, in milliseconds, for the radial menu to fade in.");
+    ImGui::ConfigurationWrapper(&ImGui::SliderInt, animationTimeOption_, 0, 2000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
+    UI::HelpTooltip("Amount of time, in milliseconds, for the radial menu to fade in.");
 
-    ImGuiConfigurationWrapper(&ImGui::SliderFloat, animationScale_, 0.f, 1.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-    ImGuiHelpTooltip("Intensity of the 3D animations.");
+    ImGui::ConfigurationWrapper(&ImGui::SliderFloat, animationScale_, 0.f, 1.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+    UI::HelpTooltip("Intensity of the 3D animations.");
 
-    ImGuiConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.25f, 4.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-    ImGuiHelpTooltip("Scale factor for the size of the whole radial menu.");
+    ImGui::ConfigurationWrapper(&ImGui::SliderFloat, scaleOption_, 0.25f, 4.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+    UI::HelpTooltip("Scale factor for the size of the whole radial menu.");
 
-    ImGuiConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.05f, 0.5f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-    ImGuiHelpTooltip("Scale factor for the size of just the central region of the radial menu.");
+    ImGui::ConfigurationWrapper(&ImGui::SliderFloat, centerScaleOption_, 0.05f, 0.5f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+    UI::HelpTooltip("Scale factor for the size of just the central region of the radial menu.");
 
-    ImGuiConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 3000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
-    ImGuiHelpTooltip("Amount of time, in milliseconds, to wait before displaying the radial menu. The input bound to the central region can still be sent by releasing the key, "
-                     "even before the menu is visible.");
+    ImGui::ConfigurationWrapper(&ImGui::SliderInt, displayDelayOption_, 0, 3000, "%d ms", ImGuiSliderFlags_AlwaysClamp);
+    UI::HelpTooltip("Amount of time, in milliseconds, to wait before displaying the radial menu. The input bound to the central region can still be sent by releasing the key, "
+                    "even before the menu is visible.");
 
-    ImGuiConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
-    ImGuiHelpTooltip("Either show the radial menu over or under the game's UI.");
+    ImGui::ConfigurationWrapper(&ImGui::Checkbox, showOverGameUIOption_);
+    UI::HelpTooltip("Either show the radial menu over or under the game's UI.");
 
     MenuSectionDisplay();
 
-    ImGuiTitle("Interaction Options");
+    UI::Title("Interaction Options");
 
     {
-        ImGuiDisabler disable(clickSelectOption_.value());
+        UI::Scoped::Disable disable(clickSelectOption_.value());
         if (clickSelectOption_.value())
             noHoldOption_.value() = false;
 
-        ImGuiConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
-        ImGuiHelpTooltip("This option will activate whichever option is hovered first. Any key pressed to activate the menu can be released immediately without dismissing it. "
-                         "Mutually exclusive with \"click to select\".");
+        ImGui::ConfigurationWrapper(&ImGui::Checkbox, noHoldOption_);
+        UI::HelpTooltip("This option will activate whichever option is hovered first. Any key pressed to activate the menu can be released immediately without dismissing it. "
+                        "Mutually exclusive with \"click to select\".");
     }
 
     {
-        ImGuiDisabler disable(noHoldOption_.value());
+        UI::Scoped::Disable disable(noHoldOption_.value());
         if (noHoldOption_.value())
             clickSelectOption_.value() = false;
 
-        ImGuiConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
-        ImGuiHelpTooltip("This option will only activate an option when it is clicked on. Any key pressed to activate the menu can be released immediately without dismissing it. "
-                         "Mutually exclusive with \"hover to select\".");
+        ImGui::ConfigurationWrapper(&ImGui::Checkbox, clickSelectOption_);
+        UI::HelpTooltip("This option will only activate an option when it is clicked on. Any key pressed to activate the menu can be released immediately without dismissing it. "
+                        "Mutually exclusive with \"hover to select\".");
     }
 
     auto favoriteCombo = [](const std::vector<const char*>& names, ConfigurationOption<Favorite>& opt)
@@ -254,7 +255,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
             ImGui::Combo((prefix + opt.displayName()).c_str(), &v, ShowFirstElement ? names.data() : names.data() + 1, int(ShowFirstElement ? names.size() : names.size() - 1), -1);
             if constexpr (ShowFirstElement)
                 v--;
-            ImGuiHelpTooltip(tooltip);
+            UI::HelpTooltip(tooltip);
 
             return v;
         };
@@ -270,32 +271,32 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
     };
 
     {
-        ImGuiDisabler disable(displayDelayOption_.value() == 0);
+        UI::Scoped::Disable disable(displayDelayOption_.value() == 0);
 
         ImGui::Text((behaviorOnReleaseBeforeDelay_.displayName() + ":").c_str());
 
         bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
-        ImGuiConfigurationWrapper(rb, "Nothing##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::NOTHING));
+        ImGui::ConfigurationWrapper(rb, "Nothing##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::Nothing));
         ImGui::SameLine();
-        ImGuiConfigurationWrapper(rb, "Previous##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::PREVIOUS));
+        ImGui::ConfigurationWrapper(rb, "Previous##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::Previous));
         ImGui::SameLine();
-        ImGuiConfigurationWrapper(rb, "Favorite##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::FAVORITE));
+        ImGui::ConfigurationWrapper(rb, "Favorite##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::Favorite));
         ImGui::SameLine();
-        ImGuiConfigurationWrapper(rb, "As if opened##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::DIRECTION));
+        ImGui::ConfigurationWrapper(rb, "As if opened##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::Direction));
         ImGui::SameLine();
-        ImGuiConfigurationWrapper(rb, "Pass to game##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::PASS_TO_GAME));
-        ImGuiHelpTooltip(
+        ImGui::ConfigurationWrapper(rb, "Pass to game##ReleaseBeforeDelay", behaviorOnReleaseBeforeDelay_, int(BehaviorBeforeDelay::PassToGame));
+        UI::HelpTooltip(
             "Determines the behavior of the menu if it is dismissed before it becomes visible. By default, it does nothing, but it can also (1) trigger the last selected item; "
             "(2) trigger a fixed \"favorite\" option; (3) function exactly as if the menu was opened, making it possible to select an item with the mouse without seeing them; "
             "(4) forward the input to the game.");
 
-        if (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()) == BehaviorBeforeDelay::FAVORITE)
+        if (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()) == BehaviorBeforeDelay::Favorite)
         {
             const auto               textSize = ImGui::CalcTextSize(delayFavoriteOption_.displayName().c_str());
             const auto               itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
 
             std::vector<const char*> potentialNames(wheelElements_.size() + 1);
-            for (uint i = 0; i < wheelElements_.size(); i++)
+            for (u32 i = 0; i < wheelElements_.size(); i++)
                 potentialNames[i + 1] = wheelElements_[i]->displayName().c_str();
             potentialNames.front() = "(use default)";
 
@@ -304,31 +305,31 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
     }
 
     {
-        ImGuiDisabler disable(noHoldOption_.value());
+        UI::Scoped::Disable disable(noHoldOption_.value());
 
         ImGui::Text((centerBehaviorOption_.displayName() + ":").c_str());
         ImGui::SameLine();
 
         bool (*rb)(const char*, int*, int) = &ImGui::RadioButton;
-        ImGuiConfigurationWrapper(rb, "Nothing##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::NOTHING));
+        ImGui::ConfigurationWrapper(rb, "Nothing##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::Nothing));
         ImGui::SameLine();
-        ImGuiConfigurationWrapper(rb, "Previous##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PREVIOUS));
+        ImGui::ConfigurationWrapper(rb, "Previous##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::Previous));
         ImGui::SameLine();
-        ImGuiConfigurationWrapper(rb, "Favorite##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::FAVORITE));
+        ImGui::ConfigurationWrapper(rb, "Favorite##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::Favorite));
         ImGui::SameLine();
-        ImGuiConfigurationWrapper(rb, "Pass to game##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PASS_TO_GAME));
-        ImGuiHelpTooltip("Determines the behavior of the central region of the menu. By default, it does nothing, but it can alternatively: "
-                         "(1) trigger the last selected item; "
-                         "(2) trigger a fixed \"favorite\" option;"
-                         "(3) forward the input to the game.");
+        ImGui::ConfigurationWrapper(rb, "Pass to game##CenterBehavior", centerBehaviorOption_, int(CenterBehavior::PassToGame));
+        UI::HelpTooltip("Determines the behavior of the central region of the menu. By default, it does nothing, but it can alternatively: "
+                        "(1) trigger the last selected item; "
+                        "(2) trigger a fixed \"favorite\" option;"
+                        "(3) forward the input to the game.");
 
-        if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::FAVORITE)
+        if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::Favorite)
         {
             const auto               textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
             const auto               itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
 
             std::vector<const char*> potentialNames(wheelElements_.size() + 1);
-            for (uint i = 0; i < wheelElements_.size(); i++)
+            for (u32 i = 0; i < wheelElements_.size(); i++)
                 potentialNames[i + 1] = wheelElements_[i]->displayName().c_str();
             potentialNames.front() = "(use default)";
 
@@ -336,69 +337,72 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
         }
     }
 
-    ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
-    ImGuiHelpTooltip("Moves the cursor to the center of the screen when the \"show in center\" keybind is used.");
+    ImGui::ConfigurationWrapper(&ImGui::Checkbox, resetCursorOnLockedKeybindOption_);
+    UI::HelpTooltip("Moves the cursor to the center of the screen when the \"show in center\" keybind is used.");
 
-    ImGuiConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
-    ImGuiHelpTooltip("Prevents the camera from being affected by mouse movements while the menu is displayed.");
+    ImGui::ConfigurationWrapper(&ImGui::Checkbox, lockCameraWhenOverlayedOption_);
+    UI::HelpTooltip("Prevents the camera from being affected by mouse movements while the menu is displayed.");
 
     if (!alwaysResetCursorPositionBeforeKeyPress_)
     {
-        ImGuiConfigurationWrapper(&ImGui::Checkbox, resetCursorAfterKeybindOption_);
-        ImGuiHelpTooltip("Once the menu is dismissed, moves the cursor to where it was on screen before the menu was displayed.");
+        ImGui::ConfigurationWrapper(&ImGui::Checkbox, resetCursorAfterKeybindOption_);
+        UI::HelpTooltip("Once the menu is dismissed, moves the cursor to where it was on screen before the menu was displayed.");
     }
 
     MenuSectionInteraction();
 
-    ImGuiTitle("Queuing Options");
+    UI::Title("Queuing Options");
 
-    ImGuiConfigurationWrapper(&ImGui::Checkbox, enableQueuingOption_);
-    ImGuiHelpTooltip("If sending a keybind now would be ignored by the game (e.g., mounting while in combat), enabling queuing will \"queue\" the input until all necessary "
-                     "conditions are satisfied.");
+    ImGui::ConfigurationWrapper(&ImGui::Checkbox, enableQueuingOption_);
+    UI::HelpTooltip("If sending a keybind now would be ignored by the game (e.g., mounting while in combat), enabling queuing will \"queue\" the input until all necessary "
+                    "conditions are satisfied.");
 
-    ImGuiConfigurationWrapper(&ImGui::Checkbox, enableSkipOWOption_);
-    ImGuiHelpTooltip("If only one item is available on water (e.g., mounting while on water surface with Skimmer unlocked, but Turtle disabled), "
-                     "bypass showing the radial menu and trigger the input immediately.");
-    ImGuiConfigurationWrapper(&ImGui::Checkbox, enableSkipUWOption_);
-    ImGuiHelpTooltip("If only one item is available underwater (e.g., mounting while underwater with Skimmer unlocked and fully mastered, but Turtle disabled), "
-                     "bypass showing the radial menu and trigger the input immediately.");
-    ImGuiConfigurationWrapper(&ImGui::Checkbox, enableSkipWvWOption_);
-    ImGuiHelpTooltip("If only one item is available in WvW (e.g., mounting in WvW), bypass showing the radial menu and trigger the input immediately.");
+    ImGui::ConfigurationWrapper(&ImGui::Checkbox, enableSkipOWOption_);
+    UI::HelpTooltip("If only one item is available on water (e.g., mounting while on water surface with Skimmer unlocked, but Turtle disabled), "
+                    "bypass showing the radial menu and trigger the input immediately.");
+    ImGui::ConfigurationWrapper(&ImGui::Checkbox, enableSkipUWOption_);
+    UI::HelpTooltip("If only one item is available underwater (e.g., mounting while underwater with Skimmer unlocked and fully mastered, but Turtle disabled), "
+                    "bypass showing the radial menu and trigger the input immediately.");
+    ImGui::ConfigurationWrapper(&ImGui::Checkbox, enableSkipWvWOption_);
+    UI::HelpTooltip("If only one item is available in WvW (e.g., mounting in WvW), bypass showing the radial menu and trigger the input immediately.");
 
     {
-        ImGuiDisabler disable(!enableQueuingOption_.value());
+        UI::Scoped::Disable disable(!enableQueuingOption_.value());
 
         ImGui::PushItemWidth(0.33f * ImGui::GetWindowWidth());
-        ImGuiConfigurationWrapper(&ImGuiInputIntFormat, conditionalDelayDelayOption_, "%d ms", 1, 100, 0);
-        ImGuiHelpTooltip("Time, in milliseconds, to wait before sending a queued input once all conditions pass. Increasing this value can make activation more reliable.");
-        ImGuiConfigurationWrapper(&ImGuiInputIntFormat, maximumConditionalWaitTimeOption_, "%d s", 1, 10, 0);
-        ImGuiHelpTooltip("Maximum amount of time, in seconds, to wait with a queued input before dismissing it.");
+        ImGui::ConfigurationWrapper(&ImGui::InputIntFormat, conditionalDelayDelayOption_, "%d ms", 1, 100, 0);
+        UI::HelpTooltip("Time, in milliseconds, to wait before sending a queued input once all conditions pass. Increasing this value can make activation more reliable.");
+        ImGui::ConfigurationWrapper(&ImGui::InputIntFormat, maximumConditionalWaitTimeOption_, "%d s", 1, 10, 0);
+        UI::HelpTooltip("Maximum amount of time, in seconds, to wait with a queued input before dismissing it.");
         ImGui::PopItemWidth();
 
         {
-            ImGuiDisabler disable2(noHoldOption_.value());
-            ImGuiConfigurationWrapper(&ImGui::Checkbox, centerCancelDelayedInputOption_);
-            ImGuiHelpTooltip("If the center region has no bound behavior, this option makes it cancel any queued input.");
+            UI::Scoped::Disable disable2(noHoldOption_.value());
+            ImGui::ConfigurationWrapper(&ImGui::Checkbox, centerCancelDelayedInputOption_);
+            UI::HelpTooltip("If the center region has no bound behavior, this option makes it cancel any queued input.");
         }
 
         MenuSectionQueuing();
     }
 
-    ImGuiTitle("Visibility & Ordering");
+    UI::Title("Visibility & Ordering");
 
     ImGui::Text("Ordering top to bottom is clockwise starting at noon.");
 
-    ImGuiHelpTooltip({
-        {ImGuiHelpTooltipElementType::DEFAULT,
+    // FIXME
+#if 0
+    UI::HelpTooltip({
+        {UI::HelpTooltipElementType::DEFAULT,
          "Show/Use Conditions control the behavior of each menu item depending on current circumstances. The character's state (in combat, on or under water, and in WvW) "
           "can be taken into account to modify displayed and usable items."                                                                                              },
-        { ImGuiHelpTooltipElementType::BULLET, "A \"displayed\" item is shown in the menu."                                                                              },
-        { ImGuiHelpTooltipElementType::BULLET,
+        { UI::HelpTooltipElementType::BULLET, "A \"displayed\" item is shown in the menu."                                                                              },
+        { UI::HelpTooltipElementType::BULLET,
          "A \"usable\" item is considered to be possible to activate in the current context, but is not necessarily displayed on the radial menu. "
           "This can be useful for \"fast mode\", e.g. having the Skimmer be the only usable mount underwater and not displaying it, "
           "making it hidden in normal play but instantly triggering it when underwater."                                                                                 },
-        { ImGuiHelpTooltipElementType::BULLET, "A \"displayed\" but not \"usable\" item will be queued (if queuing is enabled) until such a time it is marked as usable."}
+        { UI::HelpTooltipElementType::BULLET, "A \"displayed\" but not \"usable\" item will be queued (if queuing is enabled) until such a time it is marked as usable."}
     });
+#endif
 
     ImGui::PushStyleColor(ImGuiCol_TableRowBg, 0);
     ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, (ImGui::GetColorU32(ImGuiCol_FrameBg) & 0xFFFFFF) | 0x33000000);
@@ -452,7 +456,9 @@ void Wheel::OnUpdate()
         {
             if (std::holds_alternative<Keybind*>(cd.element) || CanActivate(std::get<WheelElement*>(cd.element)))
             {
-                Input::i().SendKeybind(GetKeybindFromOpt(cd.element)->keyCombo(), std::nullopt);
+                auto kb = GetKeybindFromOpt(cd.element);
+                if (kb)
+                    Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
                 ResetConditionallyDelayed(false);
             }
         }
@@ -467,8 +473,11 @@ void Wheel::OnUpdate()
                         cd.testPassesTime = currentTime;
                     else if (currentTime >= cd.testPassesTime + conditionalDelayDelayOption_.value())
                     {
-                        Input::i().SendKeybind(GetKeybindFromOpt(cd.element)->keyCombo(), std::nullopt);
-                        ResetConditionallyDelayed(true, currentTime);
+                        auto kb = GetKeybindFromOpt(cd.element);
+                        if (kb)
+                            Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
+                        if (clearConditionalDelayOnSend_)
+                            ResetConditionallyDelayed(true, currentTime);
                     }
                     cd.testPasses = true;
                 }
@@ -481,7 +490,7 @@ void Wheel::OnUpdate()
     }
 }
 
-void Wheel::OnMapChange(uint prevId, uint newId)
+void Wheel::OnMapChange(u32 prevId, u32 newId)
 {
     ResetConditionallyDelayed(false);
 }
@@ -499,7 +508,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
     const int  screenWidth                 = Core::i().screenWidth();
     const int  screenHeight                = Core::i().screenHeight();
 
-    fVector4   screenSize                  = { float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight };
+    glm::vec4  screenSize                  = { float(screenWidth), float(screenHeight), 1.f / screenWidth, 1.f / screenHeight };
 
     const auto currentTime                 = TimeInMilliseconds();
 
@@ -518,7 +527,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
         resetCursorPositionToCenter_ = false;
     };
 
-    if (behaviorOnReleaseBeforeDelay_.value() == int(BehaviorBeforeDelay::DIRECTION) && resetCursorPositionToCenter_)
+    if (behaviorOnReleaseBeforeDelay_.value() == int(BehaviorBeforeDelay::Direction) && resetCursorPositionToCenter_)
         resetCursorPositionToCenter();
 
     ID3D11SamplerState* samplers[] = { baseSampler_.Get(), baseSampler_.Get() };
@@ -542,7 +551,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
             auto activeElements = GetVisibleElements(MumbleLink::i().currentState());
             if (!activeElements.empty())
             {
-                fVector4 baseSpriteDimensions;
+                glm::vec4 baseSpriteDimensions;
                 baseSpriteDimensions.x = currentPosition_.x;
                 baseSpriteDimensions.y = currentPosition_.y;
                 baseSpriteDimensions.z = scaleOption_.value() * 0.5f * screenSize.y * screenSize.z;
@@ -557,11 +566,11 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
                 auto& lastHoverFadeIn = hoveredFadeIns[activeElements.size()];
                 switch (CenterBehavior(centerBehaviorOption_.value()))
                 {
-                    case CenterBehavior::PREVIOUS:
+                    case CenterBehavior::Previous:
                         if (previousUsed_)
                             lastHoverFadeIn = previousUsed_->hoverFadeIn(currentTime, this);
                         break;
-                    case CenterBehavior::FAVORITE:
+                    case CenterBehavior::Favorite:
                     {
                         if (auto* fav = GetFavorite(centerFavoriteOption_.value()))
                         {
@@ -575,7 +584,7 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
                         break;
                 }
 
-                for (uint i = uint(activeElements.size()) + 1; i < MaxHoverFadeIns; i++)
+                for (u32 i = u32(activeElements.size()) + 1; i < MaxHoverFadeIns; i++)
                     hoveredFadeIns[i] = 0.f;
 
                 ShaderManager::i().SetShaders(ctx, vs_, psWheel_);
@@ -603,86 +612,97 @@ void Wheel::Draw(ID3D11DeviceContext* ctx)
                 ShaderManager::i().SetShaders(ctx, vs_, psCursor_);
                 ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
 
-                fVector4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f * screenSize.y * screenSize.z, 0.08f };
+                glm::vec4 spriteDimensions = { io.MousePos.x * screenSize.z, io.MousePos.y * screenSize.w, 0.08f * screenSize.y * screenSize.z, 0.08f };
 
                 UpdateConstantBuffer(ctx, spriteDimensions);
                 DrawScreenQuad(ctx);
             }
         }
     }
-    else if (showDelayTimerOption_.value() && !conditionalDelay_.hidden && std::holds_alternative<WheelElement*>(conditionalDelay_.element) &&
-             (std::get<WheelElement*>(conditionalDelay_.element) || currentTime < conditionalDelay_.time + ConditionalDelay::FadeOutTime))
+
+    auto delayFadeOutTime = conditionalDelay_.time + maximumConditionalWaitTimeOption_.value() * 1000ull;
+    if (showDelayTimerOption_.value() && !conditionalDelay_.hidden && currentTime < delayFadeOutTime + ConditionalDelay::FadeOutTime)
     {
-        auto* delayElement = std::get<WheelElement*>(conditionalDelay_.element);
-        float dt           = float(currentTime - conditionalDelay_.time) / 1000.f;
-        float absDt        = dt;
-        float timeLeft     = 0.f;
-        if (!delayElement)
-            absDt = 0.5f - dt;
-        else
-            timeLeft = 1.f - (currentTime - conditionalDelay_.time) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
-        const auto& io = ImGui::GetIO();
-
-        ShaderManager::i().SetShaders(ctx, vs_, psDelayIndicator_);
-        ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
-
-        float dpiScale = 1.f;
-        if (GFXSettings::i().dpiScaling())
-            dpiScale = float(Core::i().GetDpiForWindow(Core::i().gameWindow())) / 96.f;
-
-        auto     uiScale = float(MumbleLink::i().uiScale());
-
-        fVector2 topLeftCorner;
-        topLeftCorner.y = 77.f + 10.f * uiScale;
-        if (uiScale == 0)
-            topLeftCorner.y += 2.f;
-
-        float bottom         = 13.f + 1.f * uiScale;
-        topLeftCorner.x      = 450.f / 107.f * topLeftCorner.y;
-
-        float widthMinScale  = std::min(1.f, screenSize.x / 1024.f);
-        float heightMinScale = std::min(1.f, screenSize.y / 768.f);
-
-        float minScale       = std::min(widthMinScale, heightMinScale);
-
-        topLeftCorner.x *= dpiScale * minScale;
-        topLeftCorner.y *= dpiScale * minScale;
-        bottom *= dpiScale * minScale;
-
-        topLeftCorner.x += screenSize.x * 0.5f;
-        topLeftCorner.y  = screenSize.y - topLeftCorner.y;
-        bottom           = screenSize.y - bottom;
-
-        float spriteSize = bottom - topLeftCorner.y;
-
-        if (dt < 0.3333f && delayElement)
+        auto* delayElement = [&]
         {
-            float sizeInterpolant = SmoothStep(dt * 3);
-            spriteSize            = std::lerp(spriteSize * 3, spriteSize, sizeInterpolant);
-            topLeftCorner.x       = std::lerp(0.5f * screenSize.x, topLeftCorner.x, 0.25f + sizeInterpolant * 0.75f);
-            topLeftCorner.y       = std::lerp(0.5f * screenSize.y, topLeftCorner.y, 0.25f + sizeInterpolant * 0.75f);
-        }
-
-        fVector4 spriteDimensions{ topLeftCorner.x * screenSize.z, topLeftCorner.y * screenSize.w, spriteSize * screenSize.z, spriteSize * screenSize.w };
-
-        spriteDimensions.x += spriteDimensions.z * 0.5f;
-        spriteDimensions.y += spriteDimensions.w * 0.5f;
-
-        std::array<float, MaxHoverFadeIns> hoveredFadeIns;
-        std::fill(hoveredFadeIns.begin(), hoveredFadeIns.end(), 0.f);
-        UpdateConstantBuffer(ctx, spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, hoveredFadeIns, timeLeft, delayElement, false);
+            if (std::holds_alternative<WheelElement*>(conditionalDelay_.element))
+                return std::get<WheelElement*>(conditionalDelay_.element);
+            else
+                return conditionalDelayDisplay_;
+        }();
         if (delayElement)
+        {
+            bool  inFadeOut = currentTime >= delayFadeOutTime;
+
+            float dt        = float(currentTime - conditionalDelay_.time) / 1000.f;
+            float absDt     = dt;
+            float timeLeft  = 0.f;
+            if (inFadeOut)
+                absDt = 1.f - (dt - maximumConditionalWaitTimeOption_.value()) / (ConditionalDelay::FadeOutTime / 1000.f);
+            else
+                timeLeft = 1.f - (currentTime - conditionalDelay_.time) / (float(maximumConditionalWaitTimeOption_.value()) * 1000.f);
+            const auto& io = ImGui::GetIO();
+
+            ShaderManager::i().SetShaders(ctx, vs_, psDelayIndicator_);
+            ctx->OMSetBlendState(blendState_.Get(), nullptr, 0xffffffff);
+
+            float dpiScale = 1.f;
+            if (GFXSettings::i().dpiScaling())
+                dpiScale = float(Core::i().GetDpiForWindow(Core::i().gameWindow())) / 96.f;
+
+            auto      uiScale = float(MumbleLink::i().uiScale());
+
+            glm::vec2 topLeftCorner;
+            topLeftCorner.y = 77.f + 10.f * uiScale;
+            if (uiScale == 0)
+                topLeftCorner.y += 2.f;
+
+            float bottom         = 13.f + 1.f * uiScale;
+            topLeftCorner.x      = 450.f / 107.f * topLeftCorner.y;
+
+            float widthMinScale  = std::min(1.f, screenSize.x / 1024.f);
+            float heightMinScale = std::min(1.f, screenSize.y / 768.f);
+
+            float minScale       = std::min(widthMinScale, heightMinScale);
+
+            topLeftCorner.x *= dpiScale * minScale;
+            topLeftCorner.y *= dpiScale * minScale;
+            bottom *= dpiScale * minScale;
+
+            topLeftCorner.x += screenSize.x * 0.5f;
+            topLeftCorner.y  = screenSize.y - topLeftCorner.y;
+            bottom           = screenSize.y - bottom;
+
+            float spriteSize = bottom - topLeftCorner.y;
+
+            if (dt < 0.3333f && !inFadeOut)
+            {
+                float sizeInterpolant = SmoothStep(dt * 3);
+                spriteSize            = std::lerp(spriteSize * 3, spriteSize, sizeInterpolant);
+                topLeftCorner.x       = std::lerp(0.5f * screenSize.x, topLeftCorner.x, 0.25f + sizeInterpolant * 0.75f);
+                topLeftCorner.y       = std::lerp(0.5f * screenSize.y, topLeftCorner.y, 0.25f + sizeInterpolant * 0.75f);
+            }
+
+            glm::vec4 spriteDimensions{ topLeftCorner.x * screenSize.z, topLeftCorner.y * screenSize.w, spriteSize * screenSize.z, spriteSize * screenSize.w };
+
+            spriteDimensions.x += spriteDimensions.z * 0.5f;
+            spriteDimensions.y += spriteDimensions.w * 0.5f;
+
+            std::array<float, MaxHoverFadeIns> hoveredFadeIns;
+            std::fill(hoveredFadeIns.begin(), hoveredFadeIns.end(), 0.f);
+            UpdateConstantBuffer(ctx, spriteDimensions, std::min(absDt * 2, 1.f), fmod(currentTime / 1010.f, 55000.f), {}, hoveredFadeIns, timeLeft, delayElement, false);
             delayElement->SetShaderState(ctx);
 
-        ID3D11ShaderResourceView* srvs[] = { backgroundTexture_->srv.Get(), delayElement ? delayElement->appearance().srv.Get() : nullptr };
-        ctx->PSSetShaderResources(0, 2, srvs);
-        ctx->PSSetSamplers(1, 1, borderSampler_.GetAddressOf());
+            ID3D11ShaderResourceView* srvs[] = { backgroundTexture_->srv.Get(), delayElement->appearance().srv.Get() };
+            ctx->PSSetShaderResources(0, 2, srvs);
+            ctx->PSSetSamplers(1, 1, borderSampler_.GetAddressOf());
 
-        DrawScreenQuad(ctx);
+            DrawScreenQuad(ctx);
+        }
     }
 }
 
-void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions, float fadeIn, float animationTimer, const std::vector<WheelElement*>& activeElements,
+void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const glm::vec4& spriteDimensions, float fadeIn, float animationTimer, const std::vector<WheelElement*>& activeElements,
                                  const std::span<float>& hoveredFadeIns, float timeLeft, bool showIcon, bool tilt)
 {
     auto& cb           = *cb_;
@@ -722,7 +742,7 @@ void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& sprit
     ctx->VSSetConstantBuffers(0, 1, vscb.buffer().GetAddressOf());
 }
 
-void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const fVector4& spriteDimensions)
+void Wheel::UpdateConstantBuffer(ID3D11DeviceContext* ctx, const glm::vec4& spriteDimensions)
 {
     auto& vscb             = *Core::i().vertexCB();
     vscb->spriteDimensions = spriteDimensions;
@@ -754,9 +774,9 @@ bool Wheel::CanActivate(const WheelElement* we) const
 void Wheel::Sort()
 {
     sortedWheelElements_.resize(wheelElements_.size());
-    std::transform(wheelElements_.begin(), wheelElements_.end(), sortedWheelElements_.begin(), [](auto& p) { return p.get(); });
+    std::ranges::transform(wheelElements_, sortedWheelElements_.begin(), [](auto& p) { return p.get(); });
 
-    std::sort(sortedWheelElements_.begin(), sortedWheelElements_.end(), [](const WheelElement* a, const WheelElement* b) { return a->sortingPriority() < b->sortingPriority(); });
+    std::ranges::sort(sortedWheelElements_, [](const WheelElement* a, const WheelElement* b) { return a->sortingPriority() < b->sortingPriority(); });
     minElementSortingPriority_ = sortedWheelElements_.front()->sortingPriority();
 }
 
@@ -770,9 +790,9 @@ WheelElement* Wheel::GetCenterHoveredElement()
 
     switch (CenterBehavior(centerBehaviorOption_.value()))
     {
-        case CenterBehavior::PREVIOUS:
+        case CenterBehavior::Previous:
             return previousUsed_;
-        case CenterBehavior::FAVORITE:
+        case CenterBehavior::Favorite:
             return GetFavorite(centerFavoriteOption_.value());
         default:
             return nullptr;
@@ -784,13 +804,13 @@ WheelElement* Wheel::GetFavorite(Favorite fav) const
     ConditionalState cs = MumbleLink::i().currentState();
 
     int              favoriteId;
-    if (notNone(cs & ConditionalState::IN_WVW) && fav.bits.inWvW != -1)
+    if (NotNone(cs & ConditionalState::InWvW) && fav.bits.inWvW != -1)
         favoriteId = fav.bits.inWvW;
-    else if (notNone(cs & ConditionalState::IN_COMBAT) && fav.bits.inCombat != -1)
+    else if (NotNone(cs & ConditionalState::InCombat) && fav.bits.inCombat != -1)
         favoriteId = fav.bits.inCombat;
-    else if (notNone(cs & ConditionalState::ON_WATER) && fav.bits.onWater != -1)
+    else if (NotNone(cs & ConditionalState::OnWater) && fav.bits.onWater != -1)
         favoriteId = fav.bits.onWater;
-    else if (notNone(cs & ConditionalState::UNDERWATER) && fav.bits.underwater != -1)
+    else if (NotNone(cs & ConditionalState::Underwater) && fav.bits.underwater != -1)
         favoriteId = fav.bits.underwater;
     else
         favoriteId = fav.bits.baseline;
@@ -887,7 +907,7 @@ void Wheel::OnMouseButton(ScanCode sc, bool down, bool& rv)
     if (clickSelectOption_.value() && isVisible_)
     {
         const bool previousVisibility = isVisible_;
-        isVisible_                    = isVisible_ && sc != ScanCode::LBUTTON;
+        isVisible_                    = isVisible_ && sc != ScanCode::LButton;
         if (!isVisible_ && previousVisibility)
         {
             rv = true;
@@ -896,7 +916,7 @@ void Wheel::OnMouseButton(ScanCode sc, bool down, bool& rv)
     }
 }
 
-PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
+PassToGame Wheel::KeybindEvent(bool center, Activated activated)
 {
     const bool previousVisibility = isVisible_;
 
@@ -906,7 +926,7 @@ PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
     {
         WheelElement* bypassElement = nullptr;
         Keybind*      bypassKeybind = nullptr;
-        if (activated && !waitingForBypassComplete_ && (BypassCheck(bypassElement, bypassKeybind) || ShouldSkip(bypassElement)))
+        if (activated == Activated::Yes && !waitingForBypassComplete_ && (BypassCheck(bypassElement, bypassKeybind) || ShouldSkip(bypassElement)))
         {
             previousUsed_             = bypassElement;
             isVisible_                = false;
@@ -924,12 +944,12 @@ PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
 
         if (waitingForBypassComplete_)
         {
-            if (!activated)
+            if (activated == Activated::No)
                 waitingForBypassComplete_ = false;
         }
         else
         {
-            isVisible_ = activated;
+            isVisible_ = activated == Activated::Yes;
 
             // If holding down the button is not necessary, modify behavior
             if (previousVisibility && (clickSelectOption_.value() || noHoldOption_.value() && currentHovered_ == nullptr))
@@ -943,7 +963,7 @@ PreventPassToGame Wheel::KeybindEvent(bool center, bool activated)
     if (!isVisible_ && previousVisibility)
         DeactivateWheel();
 
-    return isVisible_ != previousVisibility;
+    return isVisible_ != previousVisibility ? PassToGame::Prevent : PassToGame::Allow;
 }
 
 void Wheel::ActivateWheel(bool isMountOverlayLocked)
@@ -1012,29 +1032,32 @@ void Wheel::DeactivateWheel()
     // If keybind release was done before the wheel is visible, check our behavior
     if (currentTriggerTime_ + displayDelayOption_.value() > TimeInMilliseconds())
     {
-        switch (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()))
+        if (!SpecialBehaviorBeforeDelay())
         {
-            default:
-                currentHovered_ = nullptr;
-                break;
-            case BehaviorBeforeDelay::FAVORITE:
-                currentHovered_ = GetFavorite(delayFavoriteOption_.value());
-                break;
-            case BehaviorBeforeDelay::PREVIOUS:
-                currentHovered_ = previousUsed_;
-                break;
-            case BehaviorBeforeDelay::DIRECTION:
-                if (!currentHovered_)
-                    currentHovered_ = GetCenterHoveredElement();
-                break;
-            case BehaviorBeforeDelay::PASS_TO_GAME:
-                PassToGame();
-                break;
+            switch (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()))
+            {
+                default:
+                    currentHovered_ = nullptr;
+                    break;
+                case BehaviorBeforeDelay::Favorite:
+                    currentHovered_ = GetFavorite(delayFavoriteOption_.value());
+                    break;
+                case BehaviorBeforeDelay::Previous:
+                    currentHovered_ = previousUsed_;
+                    break;
+                case BehaviorBeforeDelay::Direction:
+                    if (!currentHovered_)
+                        currentHovered_ = GetCenterHoveredElement();
+                    break;
+                case BehaviorBeforeDelay::PassToGame:
+                    PassToGame();
+                    break;
+            }
         }
     }
     else if (!currentHovered_)
     {
-        if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::PASS_TO_GAME)
+        if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::PassToGame)
             PassToGame();
         else
             currentHovered_ = GetCenterHoveredElement();
@@ -1092,13 +1115,22 @@ void Wheel::SendKeybindOrDelay(OptKeybindWheelElement kbwe, std::optional<Point>
             Log::i().Print(Severity::Debug, "Sending keybind.");
 
         Input::i().KeyUpActive();
-        Input::i().SendKeybind(GetKeybindFromOpt(kbwe)->keyCombo(), mousePos);
+        auto kb = GetKeybindFromOpt(kbwe);
+        if (kb)
+            Input::i().SendKeybind(kb->keyCombo(), mousePos);
     }
 }
 
 void Wheel::ResetConditionallyDelayed(bool withFadeOut, mstime currentTime)
 {
+    if (withFadeOut && std::holds_alternative<WheelElement*>(conditionalDelay_.element))
+        conditionalDelayDisplay_ = std::get<WheelElement*>(conditionalDelay_.element);
+    else
+        conditionalDelayDisplay_ = nullptr;
+
     conditionalDelay_      = {};
-    conditionalDelay_.time = withFadeOut ? currentTime : currentTime - ConditionalDelay::FadeOutTime;
+    conditionalDelay_.time = currentTime - maximumConditionalWaitTimeOption_.value() * 1000ull;
+    if (!withFadeOut)
+        conditionalDelay_.time -= ConditionalDelay::FadeOutTime;
 }
 } // namespace GW2Radial

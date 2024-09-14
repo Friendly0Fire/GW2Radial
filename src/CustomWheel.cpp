@@ -26,13 +26,13 @@ RenderTarget MakeTextTexture(float fontSize)
     auto       dev = Core::i().device();
     const auto fmt = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    return MakeRenderTarget(dev, 1024, static_cast<uint>(fontSize), fmt);
+    return MakeRenderTarget(dev, 1024, static_cast<u32>(fontSize), fmt);
 }
 
 void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blendState, ImFont* font, float fontSize, const std::wstring& text)
 {
-    const uint  fgColor = 0xFFFFFFFF;
-    const uint  bgColor = 0x00000000;
+    const u32   fgColor = 0xFFFFFFFF;
+    const u32   bgColor = 0x00000000;
 
     const auto& txt     = utf8_encode(text);
 
@@ -62,8 +62,9 @@ void DrawText(ID3D11DeviceContext* ctx, RenderTarget& rt, ID3D11BlendState* blen
 
     ImDrawList* imDraws[] = { &imDraw };
     ImDrawData  imData;
-    imData.Valid         = true;
-    imData.CmdLists      = imDraws;
+    imData.Valid = true;
+    imData.CmdLists.clear();
+    imData.CmdLists.push_back(&imDraw);
     imData.CmdListsCount = 1;
     imData.TotalIdxCount = imDraw.IdxBuffer.Size;
     imData.TotalVtxCount = imDraw.VtxBuffer.Size;
@@ -201,7 +202,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
 
     auto                          wheel  = std::make_unique<Wheel>(backgroundTexture_, wheelNickname->second, wheelDisplayName->second);
 
-    uint                          baseId = customWheelNextId_;
+    u32                           baseId = customWheelNextId_;
 
     std::list<CSimpleIniA::Entry> sections;
     ini.GetAllSections(sections);
@@ -245,7 +246,7 @@ std::unique_ptr<Wheel> CustomWheelsManager::BuildWheel(const std::filesystem::pa
         ces.colorize    = elementColorize == element.end() ? 1.f : static_cast<float>(atof(elementColorize->second));
         ces.premultiply = false;
         ces.props =
-            elementProps == element.end() ? ConditionalProperties::USABLE_ALL | ConditionalProperties::VISIBLE_ALL : static_cast<ConditionalProperties>(atoi(elementProps->second));
+            elementProps == element.end() ? ConditionalProperties::UsableAll | ConditionalProperties::VisibleAll : static_cast<ConditionalProperties>(atoi(elementProps->second));
 
         if (elementIcon != element.end())
         {
