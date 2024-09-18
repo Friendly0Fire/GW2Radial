@@ -45,12 +45,15 @@ jobs:
           -username "Friendly0Fire"
           -password "${{ secrets.GITHUB_TOKEN }}"
 
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
       - name: Build Release
         if: startsWith(github.ref, 'refs/tags/v')
-        run: msbuild.exe "${env:GITHUB_WORKSPACE}\GW2Radial.sln" /t:Build /p:Configuration=Release /p:Platform=x64 /p:GitHubDefs=USE_GITHUB_VER
+        run: msbuild "${env:GITHUB_WORKSPACE}\GW2Radial.sln" /t:Build /p:Configuration=Release /p:Platform=x64 /p:GitHubDefs=USE_GITHUB_VER
 
       - name: Build Debug
-        run: msbuild.exe "${env:GITHUB_WORKSPACE}\GW2Radial.sln" /t:Build /p:Configuration=Debug /p:Platform=x64 /p:GitHubDefs=USE_GITHUB_VER
+        run: msbuild "${env:GITHUB_WORKSPACE}\GW2Radial.sln" /t:Build /p:Configuration=Debug /p:Platform=x64 /p:GitHubDefs=USE_GITHUB_VER
 
       - name: Save nightly build from master
         uses: actions/upload-artifact@v4
