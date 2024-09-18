@@ -29,6 +29,7 @@ jobs:
         with:
           submodules: recursive
           fetch-tags: true
+          fetch-depth: 0
 
       - uses: nuget/setup-nuget@v2
         with:
