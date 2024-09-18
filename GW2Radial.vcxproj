@@ -49,7 +49,7 @@
     <IncludePath>$(ProjectDir)include;$(SolutionDir)extern\GW2Common\include;$(SolutionDir)extern\GW2Common\extern;$(SolutionDir)extern\GW2Common\extern\imgui;$(SolutionDir)extern\GW2Common\extern\d3d9_wrapper\include;$(SolutionDir)extern\GW2Common\extern\loader-core\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
-    <TargetName>gw2radial</TargetName>
+    <TargetName>gw2addon_gw2radial</TargetName>
     <IntDir>$(SolutionDir)int\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -58,7 +58,7 @@
     <IncludePath>$(ProjectDir)include;$(SolutionDir)extern\GW2Common\include;$(SolutionDir)extern\GW2Common\extern;$(SolutionDir)extern\GW2Common\extern\imgui;$(SolutionDir)extern\GW2Common\extern\d3d9_wrapper\include;$(SolutionDir)extern\GW2Common\extern\loader-core\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src\;$(SourcePath)</SourcePath>
-    <TargetName>gw2radial</TargetName>
+    <TargetName>gw2addon_gw2radial</TargetName>
     <IntDir>$(SolutionDir)int\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -87,6 +87,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(SolutionDir)int\GW2Common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(SolutionDir)Main.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (
@@ -127,6 +128,7 @@ cd "$(ProjectDir)shaders"
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Wininet.lib;Shlwapi.lib;d3dcompiler.lib;WindowsCodecs.lib;$(SolutionDir)int\GW2Common\$(Platform)\$(Configuration)\BaseResource.res;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(SolutionDir)Main.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>if exist "$(GW2RADIAL_TARGET_DIR)" (
