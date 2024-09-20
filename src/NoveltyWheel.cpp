@@ -40,4 +40,9 @@ glm::vec4 NoveltyWheel::GetNoveltyColorFromType(NoveltyType n)
     }
 }
 
+bool NoveltyWheel::ResetMouseCheck(WheelElement* we)
+{
+    return we == wheelElements_[NoveltyIndex(NoveltyType::SummonDoorway)].get();
+}
+
 } // namespace GW2Radial

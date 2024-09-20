@@ -65,10 +65,17 @@ enum class NoveltyType : u32
     Tonic             = IDR_NOVELTY5,
     JadeWaypoint      = IDR_NOVELTY6,
     Fishing           = IDR_NOVELTY7,
+    ScanForRift       = IDR_NOVELTY8,
+    SummonDoorway     = IDR_NOVELTY9,
 
     First             = Chair,
-    Last              = Fishing
+    Last              = SummonDoorway
 };
 constexpr unsigned int NoveltyTypeCount = std::underlying_type_t<NoveltyType>(NoveltyType::Last) + 1;
+
+constexpr u32          NoveltyIndex(NoveltyType m)
+{
+    return u32(m) - u32(NoveltyType::First);
+}
 
 } // namespace GW2Radial

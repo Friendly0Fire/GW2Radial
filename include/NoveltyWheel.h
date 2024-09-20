@@ -18,17 +18,21 @@ protected:
             case NoveltyType::Chair:
                 return "Chair";
             case NoveltyType::MusicalInstrument:
-                return "Musical instrument";
+                return "Musical Instrument";
             case NoveltyType::HeldItem:
-                return "Held item";
+                return "Held Item";
             case NoveltyType::TravelToy:
-                return "Travel toy";
+                return "Travel Toy";
             case NoveltyType::Tonic:
                 return "Tonic";
             case NoveltyType::JadeWaypoint:
-                return "Jade waypoint";
+                return "Jade Waypoint";
             case NoveltyType::Fishing:
-                return "Start fishing";
+                return "Start Fishing";
+            case NoveltyType::ScanForRift:
+                return "Scan for Rift";
+            case NoveltyType::SummonDoorway:
+                return "Summon Conjured Doorway";
             default:
                 return "[Unknown]";
         }
@@ -51,10 +55,16 @@ protected:
                 return "jade_waypoint";
             case NoveltyType::Fishing:
                 return "fishing";
+            case NoveltyType::ScanForRift:
+                return "scan_for_rift";
+            case NoveltyType::SummonDoorway:
+                return "summon_doorway";
             default:
                 return "unknown";
         }
     }
+
+    bool             ResetMouseCheck(WheelElement* we) override;
 
     static glm::vec4 GetNoveltyColorFromType(NoveltyType n);
 };
