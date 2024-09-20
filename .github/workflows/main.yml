@@ -63,27 +63,24 @@ jobs:
         with:
           name: nightly-${{ github.sha }}
           path: |
-            bin/x64/Debug/gw2addon_gw2radial.dll
-            bin/x64/Debug/gw2addon_gw2radial.pdb
+            ${{ github.workspace }}/bin/x64/Debug/gw2addon_gw2radial.dll
+            ${{ github.workspace }}/bin/x64/Debug/gw2addon_gw2radial.pdb
       - name: Move files for tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          mkdir -p bin/x64/Release/gw2radial
-          mkdir -p bin/x64/Debug/gw2radial
-          mv bin/x64/Release/gw2addon_gw2radial.dll bin/x64/Release/gw2radial/
-          mv bin/x64/Debug/gw2addon_gw2radial.dll bin/x64/Debug/gw2radial/
-          mv bin/x64/Debug/gw2addon_gw2radial.pdb bin/x64/Debug/gw2radial/
+          mkdir -p ${{ github.workspace }}/bin/x64/Release/gw2radial
+          mkdir -p ${{ github.workspace }}/bin/x64/Debug/gw2radial
+          mv ${{ github.workspace }}/bin/x64/Release/gw2addon_gw2radial.dll ${{ github.workspace }}/bin/x64/Release/gw2radial/
+          mv ${{ github.workspace }}/bin/x64/Debug/gw2addon_gw2radial.dll ${{ github.workspace }}/bin/x64/Debug/gw2radial/
+          mv ${{ github.workspace }}/bin/x64/Debug/gw2addon_gw2radial.pdb ${{ github.workspace }}/bin/x64/Debug/gw2radial/
       - name: Zip files for tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          cd bin/x64/Release
-          7z a ../../gw2radial.zip gw2radial/
-          7z a ../../gw2radial_pdb.zip gw2addon_gw2radial.pdb
-          cd ../..
-          cd bin/x64/Debug
-          7z a ../../gw2radial_debug.zip gw2radial/
-          cd ../..
-          cd ../..
+          cd ${{ github.workspace }}/bin/x64/Release
+          7z a ${{ github.workspace }}/gw2radial.zip gw2radial/
+          7z a ${{ github.workspace }}/gw2radial_pdb.zip gw2addon_gw2radial.pdb
+          cd ${{ github.workspace }}/bin/x64/Debug
+          7z a .${{ github.workspace }}/gw2radial_debug.zip gw2radial/
       - name: Create release draft for tag
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
@@ -91,7 +88,7 @@ jobs:
           draft: true
           prerelease: ${{ contains(github.ref, '-pre') }}
           files: |
-            gw2radial.zip
-            gw2radial_pdb.zip
-            gw2radial_debug.zip
+            ${{ github.workspace }}/gw2radial.zip
+            ${{ github.workspace }}/gw2radial_pdb.zip
+            ${{ github.workspace }}/gw2radial_debug.zip
 
