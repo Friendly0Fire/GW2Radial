@@ -80,7 +80,7 @@ jobs:
           7z a ${{ github.workspace }}/gw2radial.zip gw2radial/
           7z a ${{ github.workspace }}/gw2radial_pdb.zip gw2addon_gw2radial.pdb
           cd ${{ github.workspace }}/bin/x64/Debug
-          7z a .${{ github.workspace }}/gw2radial_debug.zip gw2radial/
+          7z a ${{ github.workspace }}/gw2radial_debug.zip gw2radial/
       - name: Create release draft for tag
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
