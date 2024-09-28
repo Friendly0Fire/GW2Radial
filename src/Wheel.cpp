@@ -244,27 +244,45 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
                         "Mutually exclusive with \"hover to select\".");
     }
 
-    auto favoriteCombo = [](const std::vector<const char*>& names, ConfigurationOption<Favorite>& opt)
+    auto favoriteCombo = [](const std::vector<std::unique_ptr<WheelElement>>& elements, ConfigurationOption<Favorite>& opt)
     {
         Favorite fav    = opt.value();
 
-        auto     single = [&]<bool ShowFirstElement = true>(int v, const char* prefix, const char* tooltip)
+        auto     single = [&opt](int v, const char* prefix, const char* tooltip, std::ranges::forward_range auto&& elements, bool showDefault = true)
         {
-            if constexpr (ShowFirstElement)
-                v++;
-            ImGui::Combo((prefix + opt.displayName()).c_str(), &v, ShowFirstElement ? names.data() : names.data() + 1, int(ShowFirstElement ? names.size() : names.size() - 1), -1);
-            if constexpr (ShowFirstElement)
-                v--;
+            static const char* defaultString = "(default value)";
+            if (ImGui::BeginCombo((prefix + opt.displayName()).c_str(),
+                                  v >= 0 ? std::get<1>(*std::ranges::next(std::ranges::begin(elements), v))->displayName().c_str() : defaultString))
+            {
+                if (showDefault)
+                    if (ImGui::Selectable(defaultString, v == -1))
+                        v = -1;
+
+                for (auto&& [index, element] : elements)
+                {
+                    if (ImGui::Selectable(element->displayName().c_str(), index == v))
+                        v = index;
+                }
+                ImGui::EndCombo();
+            }
             UI::HelpTooltip(tooltip);
 
             return v;
         };
 
-        fav.bits.baseline   = single.operator()<false>(fav.bits.baseline, "Default ", "This determines the default favorite option.");
-        fav.bits.inWvW      = single(fav.bits.inWvW, "In WvW ", "This determines the favorite option when in WvW.");
-        fav.bits.inCombat   = single(fav.bits.inCombat, "In combat ", "This determines the favorite option when in combat.");
-        fav.bits.onWater    = single(fav.bits.onWater, "On water ", "This determines the favorite option when on the water surface.");
-        fav.bits.underwater = single(fav.bits.underwater, "Underwater ", "This determines the favorite option when underwater.");
+        namespace rv      = std::ranges::views;
+
+        const auto& all   = elements | rv::enumerate;
+        auto        wvw   = elements | rv::enumerate | rv::filter([](auto&& e) { return std::get<1>(e)->isUsable(ConditionalState::InWvW); });
+
+        fav.bits.baseline = single(fav.bits.baseline, "Default ", "This determines the default favorite option.", all, false);
+        if (!std::ranges::empty(wvw | rv::drop(1)))
+            fav.bits.inWvW = single(fav.bits.inWvW, "In WvW ", "This determines the favorite option when in WvW.", wvw);
+        else
+            fav.bits.inWvW = 0;
+        fav.bits.inCombat   = single(fav.bits.inCombat, "In combat ", "This determines the favorite option when in combat.", all);
+        fav.bits.onWater    = single(fav.bits.onWater, "On water ", "This determines the favorite option when on the water surface.", all);
+        fav.bits.underwater = single(fav.bits.underwater, "Underwater ", "This determines the favorite option when underwater.", all);
 
         if (fav.value != opt.value().value)
             opt.value(fav);
@@ -292,15 +310,10 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
         if (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()) == BehaviorBeforeDelay::Favorite)
         {
-            const auto               textSize = ImGui::CalcTextSize(delayFavoriteOption_.displayName().c_str());
-            const auto               itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
+            const auto textSize = ImGui::CalcTextSize(delayFavoriteOption_.displayName().c_str());
+            const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
 
-            std::vector<const char*> potentialNames(wheelElements_.size() + 1);
-            for (u32 i = 0; i < wheelElements_.size(); i++)
-                potentialNames[i + 1] = wheelElements_[i]->displayName().c_str();
-            potentialNames.front() = "(use default)";
-
-            favoriteCombo(potentialNames, delayFavoriteOption_);
+            favoriteCombo(wheelElements_, delayFavoriteOption_);
         }
     }
 
@@ -325,15 +338,10 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
         if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::Favorite)
         {
-            const auto               textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
-            const auto               itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
+            const auto textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
+            const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
 
-            std::vector<const char*> potentialNames(wheelElements_.size() + 1);
-            for (u32 i = 0; i < wheelElements_.size(); i++)
-                potentialNames[i + 1] = wheelElements_[i]->displayName().c_str();
-            potentialNames.front() = "(use default)";
-
-            favoriteCombo(potentialNames, centerFavoriteOption_);
+            favoriteCombo(wheelElements_, centerFavoriteOption_);
         }
     }
 

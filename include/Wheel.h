@@ -166,7 +166,7 @@ protected:
 
     union Favorite
     {
-        int value;
+        u32 value;
         struct Bitmask
         {
             int baseline : 6;
@@ -176,7 +176,7 @@ protected:
             int underwater : 6;
             int inWvW : 6;
         } bits;
-        static_assert(sizeof(Bitmask) == sizeof(int));
+        static_assert(sizeof(Bitmask) == sizeof(u32));
     };
     static Favorite MakeDefaultFavorite();
 

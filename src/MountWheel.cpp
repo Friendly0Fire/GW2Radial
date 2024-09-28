@@ -186,6 +186,9 @@ bool MountWheel::SpecialBehaviorBeforeDelay()
     if (!beforeDelayForceOption_.value())
         return false;
 
+    if (MumbleLink::i().isInWvW())
+        return false;
+
     if (!std::holds_alternative<WheelElement*>(conditionalDelay_.element))
         return false;
 
