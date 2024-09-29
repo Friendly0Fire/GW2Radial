@@ -460,20 +460,34 @@ void Wheel::OnUpdate()
     auto& cd = conditionalDelay_;
     if (OptHasValue(cd.element))
     {
-        if (cd.immediate)
-        {
-            if (std::holds_alternative<Keybind*>(cd.element) || CanActivate(std::get<WheelElement*>(cd.element)))
-            {
-                auto kb = GetKeybindFromOpt(cd.element);
-                if (kb)
-                    Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
-                ResetConditionallyDelayed(false);
-            }
-        }
+        const auto currentTime = TimeInMilliseconds();
+        if (currentTime > cd.time + maximumConditionalWaitTimeOption_.value() * 1000ull)
+            ResetConditionallyDelayed(true, currentTime);
         else
         {
-            const auto currentTime = TimeInMilliseconds();
-            if (currentTime <= cd.time + maximumConditionalWaitTimeOption_.value() * 1000ull)
+            if (cd.immediate)
+            {
+                if (cd.time <= currentTime && (std::holds_alternative<Keybind*>(cd.element) || CanActivate(std::get<WheelElement*>(cd.element))))
+                {
+                    auto kb = GetKeybindFromOpt(cd.element);
+                    if (kb)
+                        Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
+
+                    if (clearConditionalDelayOnSend_)
+                        ResetConditionallyDelayed(false, currentTime);
+                    else
+                    {
+                        if (cd.testPasses)
+                        {
+                            cd.time       = currentTime + 1000;
+                            cd.testPasses = false;
+                        }
+                        else
+                            cd.hidden = cd.immediate = false;
+                    }
+                }
+            }
+            else
             {
                 if (std::holds_alternative<Keybind*>(cd.element) || CanActivate(std::get<WheelElement*>(cd.element)))
                 {
@@ -486,14 +500,14 @@ void Wheel::OnUpdate()
                             Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
                         if (clearConditionalDelayOnSend_)
                             ResetConditionallyDelayed(true, currentTime);
+                        else
+                            cd.testPassesTime = currentTime + 3000 - conditionalDelayDelayOption_.value(); // At most retry once every 3 seconds
                     }
                     cd.testPasses = true;
                 }
                 else
                     cd.testPasses = false;
             }
-            else
-                ResetConditionallyDelayed(true, currentTime);
         }
     }
 }
@@ -1096,37 +1110,22 @@ void Wheel::SendKeybindOrDelay(OptKeybindWheelElement kbwe, std::optional<Point>
         return;
     }
 
-    auto cs = MumbleLink::i().currentState();
+    auto cs                = MumbleLink::i().currentState();
 
     // We're not checking WvW here; no reason to enqueue an action that would require a map change to execute
-    if (bool shouldAlwaysDelay = CustomDelayCheck(kbwe); shouldAlwaysDelay || (std::holds_alternative<WheelElement*>(kbwe) && !std::get<WheelElement*>(kbwe)->isUsable(cs)))
-    {
-        if (mousePos)
-            Log::i().Print(Severity::Debug, "Moving cursor to position ({}, {}) and delaying keybind.", mousePos->x, mousePos->y);
-        else
-            Log::i().Print(Severity::Debug, "Delaying keybind.");
-        Input::i().SendKeybind({}, mousePos);
+    bool shouldAlwaysDelay = CustomDelayCheck(kbwe);
+    bool shouldDelay       = shouldAlwaysDelay || (enableQueuingOption_.value() && std::holds_alternative<WheelElement*>(kbwe) && !std::get<WheelElement*>(kbwe)->isUsable(cs));
 
-        if (shouldAlwaysDelay || enableQueuingOption_.value())
-        {
-            auto& cd      = conditionalDelay_;
-            cd.element    = kbwe;
-            cd.time       = TimeInMilliseconds();
-            cd.testPasses = false;
-        }
-    }
+    if (mousePos)
+        Log::i().Print(Severity::Debug, "Moving cursor to position ({}, {}) and queuing keybind.", mousePos->x, mousePos->y);
     else
-    {
-        if (mousePos)
-            Log::i().Print(Severity::Debug, "Moving cursor to position ({}, {}) and sending keybind.", mousePos->x, mousePos->y);
-        else
-            Log::i().Print(Severity::Debug, "Sending keybind.");
+        Log::i().Print(Severity::Debug, "Queuing keybind.");
+    Input::i().SendKeybind({}, mousePos);
 
-        Input::i().KeyUpActive();
-        auto kb = GetKeybindFromOpt(kbwe);
-        if (kb)
-            Input::i().SendKeybind(kb->keyCombo(), mousePos);
-    }
+    auto& cd      = conditionalDelay_;
+    cd.element    = kbwe;
+    cd.time       = TimeInMilliseconds();
+    cd.testPasses = cd.immediate = cd.hidden = !shouldDelay;
 }
 
 void Wheel::ResetConditionallyDelayed(bool withFadeOut, mstime currentTime)

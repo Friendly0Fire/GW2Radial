@@ -49,7 +49,7 @@ void MountWheel::OnUpdate()
 
     // If we mounted up while we had a mount queued, we don't want to try mounting again, that'd dismount us instead!
     if (conditionalDelay_.element.index() != 0 && MumbleLink::i().currentMount() != MumbleLink::MountType::None)
-        ResetConditionallyDelayed(true);
+        ResetConditionallyDelayed(!conditionalDelay_.hidden);
 }
 
 glm::vec4 MountWheel::GetMountColorFromType(MountType m)
