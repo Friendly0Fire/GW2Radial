@@ -1,0 +1,42 @@
+{
+  "FileVersion": 2,
+  "Id": "7efe6dcc-544a-4116-9ef2-13c0431356e6",
+  "Items": [
+    {
+      "Id": "abf9149d-f185-4fb5-92c6-9933ebaf21eb",
+      "Command": "Debug|x64",
+      "ProjectConfig": "Debug",
+      "ProjectPlatform": "x64",
+      "Items": [
+        {
+          "Id": "5c6aaf97-21f0-4b48-991c-61d90d6d0ff6",
+          "Command": "WindowsLocalDebugger",
+          "Items": [
+            {
+              "Id": "8d1db380-5ab2-4f5d-a03d-bb24e0043262",
+              "Command": "-autologin"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "1120fb87-7bc8-4453-a578-f001da50eab1",
+      "Command": "Release|x64",
+      "ProjectConfig": "Release",
+      "ProjectPlatform": "x64",
+      "Items": [
+        {
+          "Id": "487d5d27-1ea9-4961-8128-3d45f9efb918",
+          "Command": "WindowsLocalDebugger",
+          "Items": [
+            {
+              "Id": "860a1829-8441-495a-a135-72dc148bd958",
+              "Command": "-autologin"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
