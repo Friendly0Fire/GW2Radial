@@ -244,27 +244,45 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
                         "Mutually exclusive with \"hover to select\".");
     }
 
-    auto favoriteCombo = [](const std::vector<const char*>& names, ConfigurationOption<Favorite>& opt)
+    auto favoriteCombo = [](const std::vector<std::unique_ptr<WheelElement>>& elements, ConfigurationOption<Favorite>& opt)
     {
         Favorite fav    = opt.value();
 
-        auto     single = [&]<bool ShowFirstElement = true>(int v, const char* prefix, const char* tooltip)
+        auto     single = [&opt](int v, const char* prefix, const char* tooltip, std::ranges::forward_range auto&& elements, bool showDefault = true)
         {
-            if constexpr (ShowFirstElement)
-                v++;
-            ImGui::Combo((prefix + opt.displayName()).c_str(), &v, ShowFirstElement ? names.data() : names.data() + 1, int(ShowFirstElement ? names.size() : names.size() - 1), -1);
-            if constexpr (ShowFirstElement)
-                v--;
+            static const char* defaultString = "(default value)";
+            if (ImGui::BeginCombo((prefix + opt.displayName()).c_str(),
+                                  v >= 0 ? std::get<1>(*std::ranges::next(std::ranges::begin(elements), v))->displayName().c_str() : defaultString))
+            {
+                if (showDefault)
+                    if (ImGui::Selectable(defaultString, v == -1))
+                        v = -1;
+
+                for (auto&& [index, element] : elements)
+                {
+                    if (ImGui::Selectable(element->displayName().c_str(), index == v))
+                        v = index;
+                }
+                ImGui::EndCombo();
+            }
             UI::HelpTooltip(tooltip);
 
             return v;
         };
 
-        fav.bits.baseline   = single.operator()<false>(fav.bits.baseline, "Default ", "This determines the default favorite option.");
-        fav.bits.inWvW      = single(fav.bits.inWvW, "In WvW ", "This determines the favorite option when in WvW.");
-        fav.bits.inCombat   = single(fav.bits.inCombat, "In combat ", "This determines the favorite option when in combat.");
-        fav.bits.onWater    = single(fav.bits.onWater, "On water ", "This determines the favorite option when on the water surface.");
-        fav.bits.underwater = single(fav.bits.underwater, "Underwater ", "This determines the favorite option when underwater.");
+        namespace rv      = std::ranges::views;
+
+        const auto& all   = elements | rv::enumerate;
+        auto        wvw   = elements | rv::enumerate | rv::filter([](auto&& e) { return std::get<1>(e)->isUsable(ConditionalState::InWvW); });
+
+        fav.bits.baseline = single(fav.bits.baseline, "Default ", "This determines the default favorite option.", all, false);
+        if (!std::ranges::empty(wvw | rv::drop(1)))
+            fav.bits.inWvW = single(fav.bits.inWvW, "In WvW ", "This determines the favorite option when in WvW.", wvw);
+        else
+            fav.bits.inWvW = 0;
+        fav.bits.inCombat   = single(fav.bits.inCombat, "In combat ", "This determines the favorite option when in combat.", all);
+        fav.bits.onWater    = single(fav.bits.onWater, "On water ", "This determines the favorite option when on the water surface.", all);
+        fav.bits.underwater = single(fav.bits.underwater, "Underwater ", "This determines the favorite option when underwater.", all);
 
         if (fav.value != opt.value().value)
             opt.value(fav);
@@ -292,15 +310,10 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
         if (BehaviorBeforeDelay(behaviorOnReleaseBeforeDelay_.value()) == BehaviorBeforeDelay::Favorite)
         {
-            const auto               textSize = ImGui::CalcTextSize(delayFavoriteOption_.displayName().c_str());
-            const auto               itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
+            const auto textSize = ImGui::CalcTextSize(delayFavoriteOption_.displayName().c_str());
+            const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
 
-            std::vector<const char*> potentialNames(wheelElements_.size() + 1);
-            for (u32 i = 0; i < wheelElements_.size(); i++)
-                potentialNames[i + 1] = wheelElements_[i]->displayName().c_str();
-            potentialNames.front() = "(use default)";
-
-            favoriteCombo(potentialNames, delayFavoriteOption_);
+            favoriteCombo(wheelElements_, delayFavoriteOption_);
         }
     }
 
@@ -325,15 +338,10 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
 
         if (CenterBehavior(centerBehaviorOption_.value()) == CenterBehavior::Favorite)
         {
-            const auto               textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
-            const auto               itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
+            const auto textSize = ImGui::CalcTextSize(centerFavoriteOption_.displayName().c_str());
+            const auto itemSize = ImGui::CalcItemWidth() - textSize.x - ImGui::GetCurrentWindowRead()->WindowPadding.x;
 
-            std::vector<const char*> potentialNames(wheelElements_.size() + 1);
-            for (u32 i = 0; i < wheelElements_.size(); i++)
-                potentialNames[i + 1] = wheelElements_[i]->displayName().c_str();
-            potentialNames.front() = "(use default)";
-
-            favoriteCombo(potentialNames, centerFavoriteOption_);
+            favoriteCombo(wheelElements_, centerFavoriteOption_);
         }
     }
 
@@ -452,20 +460,34 @@ void Wheel::OnUpdate()
     auto& cd = conditionalDelay_;
     if (OptHasValue(cd.element))
     {
-        if (cd.immediate)
-        {
-            if (std::holds_alternative<Keybind*>(cd.element) || CanActivate(std::get<WheelElement*>(cd.element)))
-            {
-                auto kb = GetKeybindFromOpt(cd.element);
-                if (kb)
-                    Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
-                ResetConditionallyDelayed(false);
-            }
-        }
+        const auto currentTime = TimeInMilliseconds();
+        if (currentTime > cd.time + maximumConditionalWaitTimeOption_.value() * 1000ull)
+            ResetConditionallyDelayed(true, currentTime);
         else
         {
-            const auto currentTime = TimeInMilliseconds();
-            if (currentTime <= cd.time + maximumConditionalWaitTimeOption_.value() * 1000ull)
+            if (cd.immediate)
+            {
+                if (cd.time <= currentTime && (std::holds_alternative<Keybind*>(cd.element) || CanActivate(std::get<WheelElement*>(cd.element))))
+                {
+                    auto kb = GetKeybindFromOpt(cd.element);
+                    if (kb)
+                        Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
+
+                    if (clearConditionalDelayOnSend_)
+                        ResetConditionallyDelayed(false, currentTime);
+                    else
+                    {
+                        if (cd.testPasses)
+                        {
+                            cd.time       = currentTime + 1000;
+                            cd.testPasses = false;
+                        }
+                        else
+                            cd.hidden = cd.immediate = false;
+                    }
+                }
+            }
+            else
             {
                 if (std::holds_alternative<Keybind*>(cd.element) || CanActivate(std::get<WheelElement*>(cd.element)))
                 {
@@ -478,14 +500,14 @@ void Wheel::OnUpdate()
                             Input::i().SendKeybind(kb->keyCombo(), std::nullopt);
                         if (clearConditionalDelayOnSend_)
                             ResetConditionallyDelayed(true, currentTime);
+                        else
+                            cd.testPassesTime = currentTime + 3000 - conditionalDelayDelayOption_.value(); // At most retry once every 3 seconds
                     }
                     cd.testPasses = true;
                 }
                 else
                     cd.testPasses = false;
             }
-            else
-                ResetConditionallyDelayed(true, currentTime);
         }
     }
 }
@@ -1088,37 +1110,22 @@ void Wheel::SendKeybindOrDelay(OptKeybindWheelElement kbwe, std::optional<Point>
         return;
     }
 
-    auto cs = MumbleLink::i().currentState();
+    auto cs                = MumbleLink::i().currentState();
 
     // We're not checking WvW here; no reason to enqueue an action that would require a map change to execute
-    if (bool shouldAlwaysDelay = CustomDelayCheck(kbwe); shouldAlwaysDelay || (std::holds_alternative<WheelElement*>(kbwe) && !std::get<WheelElement*>(kbwe)->isUsable(cs)))
-    {
-        if (mousePos)
-            Log::i().Print(Severity::Debug, "Moving cursor to position ({}, {}) and delaying keybind.", mousePos->x, mousePos->y);
-        else
-            Log::i().Print(Severity::Debug, "Delaying keybind.");
-        Input::i().SendKeybind({}, mousePos);
+    bool shouldAlwaysDelay = CustomDelayCheck(kbwe);
+    bool shouldDelay       = shouldAlwaysDelay || (enableQueuingOption_.value() && std::holds_alternative<WheelElement*>(kbwe) && !std::get<WheelElement*>(kbwe)->isUsable(cs));
 
-        if (shouldAlwaysDelay || enableQueuingOption_.value())
-        {
-            auto& cd      = conditionalDelay_;
-            cd.element    = kbwe;
-            cd.time       = TimeInMilliseconds();
-            cd.testPasses = false;
-        }
-    }
+    if (mousePos)
+        Log::i().Print(Severity::Debug, "Moving cursor to position ({}, {}) and queuing keybind.", mousePos->x, mousePos->y);
     else
-    {
-        if (mousePos)
-            Log::i().Print(Severity::Debug, "Moving cursor to position ({}, {}) and sending keybind.", mousePos->x, mousePos->y);
-        else
-            Log::i().Print(Severity::Debug, "Sending keybind.");
+        Log::i().Print(Severity::Debug, "Queuing keybind.");
+    Input::i().SendKeybind({}, mousePos);
 
-        Input::i().KeyUpActive();
-        auto kb = GetKeybindFromOpt(kbwe);
-        if (kb)
-            Input::i().SendKeybind(kb->keyCombo(), mousePos);
-    }
+    auto& cd      = conditionalDelay_;
+    cd.element    = kbwe;
+    cd.time       = TimeInMilliseconds();
+    cd.testPasses = cd.immediate = cd.hidden = !shouldDelay;
 }
 
 void Wheel::ResetConditionallyDelayed(bool withFadeOut, mstime currentTime)
