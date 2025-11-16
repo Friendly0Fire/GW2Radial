@@ -261,7 +261,7 @@ void Wheel::DrawMenu(Keybind** currentEditedKeybind)
                 for (auto&& [index, element] : elements)
                 {
                     if (ImGui::Selectable(element->displayName().c_str(), index == v))
-                        v = index;
+                        v = static_cast<int>(index);
                 }
                 ImGui::EndCombo();
             }
