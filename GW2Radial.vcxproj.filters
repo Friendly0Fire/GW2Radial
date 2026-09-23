@@ -43,6 +43,9 @@
     <ClCompile Include="src\CustomWheel.cpp">
       <Filter>Source Files\Radials</Filter>
     </ClCompile>
+    <ClCompile Include="src\WheelRenderer.cpp">
+      <Filter>Source Files\Radials</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Resource.h">
@@ -77,6 +80,9 @@
     </ClInclude>
     <ClInclude Include="include\Defs.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\WheelRenderer.h">
+      <Filter>Source Files\Radials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

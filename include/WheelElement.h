@@ -73,14 +73,9 @@ public:
                  Texture2D tex = {});
     virtual ~WheelElement() = default;
 
-    int  DrawPriority(int extremumIndicator);
+    int DrawPriority(int extremumIndicator);
 
-    void SetShaderState(ID3D11DeviceContext* ctx) const;
-    void SetShaderState(ID3D11DeviceContext* ctx, const vec4& spriteDimensions, const ComPtr<ID3D11Buffer>& wheelCb, bool shadow, float hoverRatio) const;
-    void Draw(ID3D11DeviceContext* ctx, int n, vec4 spriteDimensions, size_t activeElementsCount, const mstime& currentTime, const WheelElement* elementHovered,
-              const class Wheel* parent);
-
-    u32  elementId() const
+    u32 elementId() const
     {
         return elementId_;
     }
@@ -124,8 +119,6 @@ public:
     {
         currentExitTime_ = cht;
     }
-
-    float hoverFadeIn(const mstime& currentTime, const Wheel* parent) const;
 
     float shadowStrength() const
     {
@@ -204,6 +197,11 @@ public:
         disableBehaviorControls_ = true;
     }
 
+    float aspectRatio() const
+    {
+        return aspectRatio_;
+    }
+
 protected:
     ConfigurationOption<int>                   sortingPriorityOption_;
     ConfigurationOption<ConditionalProperties> props_;
@@ -222,15 +220,5 @@ protected:
     std::function<bool(bool)>                  customBehavior_          = [](bool) { return false; };
     bool                                       disableBehaviorControls_ = false;
     glm::vec4                                  color_{};
-
-    struct WheelElementCB
-    {
-        glm::vec4 adjustedColor;
-        float     elementHoverFadeIn;
-        bool      premultiplyAlpha;
-    };
-
-    ConstantBufferSPtr<WheelElementCB>        cb_;
-    static ConstantBufferWPtr<WheelElementCB> cb_s;
 };
 } // namespace GW2Radial

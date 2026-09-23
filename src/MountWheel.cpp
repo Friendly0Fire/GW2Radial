@@ -36,8 +36,7 @@ MountWheel::MountWheel(std::shared_ptr<Texture2D> bgTexture)
                 const auto* element = std::get<WheelElement*>(conditionalDelay_.element);
                 return element == wheelElements_[MountIndex(MountType::Skyscale)].get() || element == wheelElements_[MountIndex(MountType::Warclaw)].get();
             }
-            else
-                return false;
+            return false;
         });
     force_ = force.get();
     AddElement(std::move(force));
@@ -104,10 +103,10 @@ void MountWheel::MenuSectionInteraction()
         ImGui::ConfigurationWrapper(&ImGui::Checkbox, showForceOption_);
         UI::HelpTooltip(
             "If enabled, will display an extra slice in the mount wheel when a mount has been queued. Selecting this option will force the queued mount key to be sent and "
-            "clear the queue. Only available for Skyscale and Warclaw.");
+            "clear the queue.");
 
         ImGui::ConfigurationWrapper(&ImGui::Checkbox, beforeDelayForceOption_);
-        UI::HelpTooltip("If enabled, the behavior when released before delay has lapsed will be overridden to the force mount option. Only available for Skyscale and Warclaw.");
+        UI::HelpTooltip("If enabled, the behavior when released before delay has lapsed will be overridden to the force mount option.");
     }
 }
 
